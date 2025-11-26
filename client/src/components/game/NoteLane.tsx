@@ -65,15 +65,15 @@ export function NoteLane({ notes, currentTime }: NoteLaneProps) {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
             <motion.div whileHover={{ x: -4 }} className="cursor-pointer">
-              <ChevronLeft className="w-5 h-5 text-neon-pink" strokeWidth={3} />
+              <ChevronLeft className="w-5 h-5 text-neon-green" strokeWidth={3} />
             </motion.div>
-            <span className="text-neon-pink font-rajdhani font-bold text-sm">Q</span>
+            <span className="text-neon-green font-rajdhani font-bold text-sm">Q</span>
           </div>
-          <span className="text-white/40 text-xs tracking-wider">DECK A</span>
+          <span className="text-neon-green/60 text-xs tracking-wider font-rajdhani">DECK A</span>
           <div className="flex items-center gap-1">
-            <span className="text-neon-pink font-rajdhani font-bold text-sm">W</span>
+            <span className="text-neon-green font-rajdhani font-bold text-sm">W</span>
             <motion.div whileHover={{ x: 4 }} className="cursor-pointer">
-              <ChevronRight className="w-5 h-5 text-neon-pink" strokeWidth={3} />
+              <ChevronRight className="w-5 h-5 text-neon-green" strokeWidth={3} />
             </motion.div>
           </div>
         </div>
@@ -82,15 +82,15 @@ export function NoteLane({ notes, currentTime }: NoteLaneProps) {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
             <motion.div whileHover={{ x: -4 }} className="cursor-pointer">
-              <ChevronLeft className="w-5 h-5 text-neon-purple" strokeWidth={3} />
+              <ChevronLeft className="w-5 h-5 text-neon-red" strokeWidth={3} />
             </motion.div>
-            <span className="text-neon-purple font-rajdhani font-bold text-sm">O</span>
+            <span className="text-neon-red font-rajdhani font-bold text-sm">O</span>
           </div>
-          <span className="text-white/40 text-xs tracking-wider">DECK B</span>
+          <span className="text-neon-red/60 text-xs tracking-wider font-rajdhani">DECK B</span>
           <div className="flex items-center gap-1">
-            <span className="text-neon-purple font-rajdhani font-bold text-sm">P</span>
+            <span className="text-neon-red font-rajdhani font-bold text-sm">P</span>
             <motion.div whileHover={{ x: 4 }} className="cursor-pointer">
-              <ChevronRight className="w-5 h-5 text-neon-purple" strokeWidth={3} />
+              <ChevronRight className="w-5 h-5 text-neon-red" strokeWidth={3} />
             </motion.div>
           </div>
         </div>

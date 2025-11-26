@@ -87,11 +87,15 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
       {/* Hitline at top edge, aligned with spawn point of visible deck */}
       <div className={`absolute z-40 -top-16 ${side === 'left' ? 'left-0' : 'right-0'}`}>
         <motion.div 
-          className="w-1 h-16 bg-neon-cyan/70 shadow-[0_0_20px_cyan]"
+          className={`w-1 h-16 ${side === 'left' ? 'bg-neon-green/70 shadow-[0_0_20px_rgb(0,255,0)]' : 'bg-neon-red/70 shadow-[0_0_20px_rgb(255,0,0)]'}`}
           animate={{
             boxShadow: indicatorGlow 
-              ? "0 0 50px 20px cyan, 0 0 30px 10px cyan" 
-              : "0 0 20px cyan"
+              ? side === 'left'
+                ? "0 0 50px 20px rgb(0,255,0), 0 0 30px 10px rgb(0,255,0)"
+                : "0 0 50px 20px rgb(255,0,0), 0 0 30px 10px rgb(255,0,0)"
+              : side === 'left'
+              ? "0 0 20px rgb(0,255,0)"
+              : "0 0 20px rgb(255,0,0)"
           }}
           transition={{ duration: 0.1 }}
         />
@@ -106,7 +110,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
         >
           {/* The Interactive Wheel (Spins) */}
           <motion.div
-            className="w-full h-full rounded-full border-4 border-neon-purple/50 overflow-hidden relative bg-black cursor-grab active:cursor-grabbing shadow-[0_0_30px_rgba(190,0,255,0.3)]"
+            className={`w-full h-full rounded-full border-4 overflow-hidden relative bg-black cursor-grab active:cursor-grabbing ${side === 'left' ? 'border-neon-green/50 shadow-[0_0_30px_rgba(0,255,0,0.3)]' : 'border-neon-red/50 shadow-[0_0_30px_rgba(255,0,0,0.3)]'}`}
             style={{ rotate: rotation }}
             drag="x"
             dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}

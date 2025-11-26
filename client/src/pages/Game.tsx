@@ -81,7 +81,7 @@ export default function Game() {
       <main className="flex-1 relative z-10 flex flex-col items-center justify-center gap-8 px-4">
         
         {/* Decks Row */}
-        <div className="flex items-center justify-center gap-8 lg:gap-24">
+        <div className="flex items-center justify-center gap-12 lg:gap-48">
           {/* Left Deck */}
           <div className="hidden lg:block">
              <CamelotWheel 
