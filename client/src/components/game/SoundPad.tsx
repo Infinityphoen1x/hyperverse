@@ -29,10 +29,10 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
       if (e.repeat) return;
       const key = e.key.toLowerCase();
       switch (key) {
-        case 'a': checkHitAndFeedback(0); break;
-        case 's': checkHitAndFeedback(1); break;
-        case 'k': checkHitAndFeedback(2); break;
-        case 'l': checkHitAndFeedback(3); break;
+        case '3': checkHitAndFeedback(0); break;
+        case '4': checkHitAndFeedback(1); break;
+        case '8': checkHitAndFeedback(2); break;
+        case '9': checkHitAndFeedback(3); break;
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -56,7 +56,7 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
               currentTime={currentTime}
             />
             <div className="text-xs text-muted-foreground font-rajdhani font-bold tracking-wider">
-              KEY: {['A', 'S', 'K', 'L'][i]}
+              KEY: {['3', '4', '8', '9'][i]}
             </div>
           </div>
         ))}

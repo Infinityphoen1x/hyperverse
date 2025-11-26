@@ -111,7 +111,7 @@ export default function Game() {
       
       {/* Controls Hint */}
       <div className="absolute bottom-4 w-full text-center text-white/20 text-xs">
-        USE [A][S][K][L] FOR PADS // SPIN DECKS WITH MOUSE
+        USE [3][4][8][9] FOR PADS // SPIN [Q][A] LEFT, [P][L] RIGHT
       </div>
     </div>
   );

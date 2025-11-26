@@ -20,6 +20,21 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
   const [rotation, setRotation] = useState(0);
   const [indicatorGlow, setIndicatorGlow] = useState(false);
 
+  // Keyboard controls for spinning
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.repeat) return;
+      const key = e.key.toLowerCase();
+      if (side === 'left' && (key === 'q' || key === 'a')) {
+        onSpin();
+      } else if (side === 'right' && (key === 'p' || key === 'l')) {
+        onSpin();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [side, onSpin]);
+
   // Filter relevant notes
   const wheelLane = side === 'left' ? -1 : -2;
   const activeNotes = notes.filter(n => n.lane === wheelLane && !n.hit && !n.missed);
