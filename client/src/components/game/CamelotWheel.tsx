@@ -10,6 +10,17 @@ interface CamelotWheelProps {
   currentTime: number;
 }
 
+// Seeded random for consistent results per note ID
+function seededRandom(seed: string): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    const char = seed.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash % 1000) / 1000;
+}
+
 export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelProps) {
   const [rotation, setRotation] = useState(0);
   const [indicatorGlow, setIndicatorGlow] = useState(false);
@@ -18,17 +29,27 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
   const wheelLane = side === 'left' ? -1 : -2;
   const activeNotes = notes.filter(n => n.lane === wheelLane && !n.hit && !n.missed);
 
-  // Detect when a note hits the indicator (near top, progress ~0.95+)
+  // Detect when a note hits the hitline
   useEffect(() => {
-    const hitNotes = activeNotes.filter(note => {
+    const hittingNotes = activeNotes.filter(note => {
       const timeUntilHit = note.time - currentTime;
       const progress = 1 - (timeUntilHit / 2000);
       const visualProgress = Math.max(0, Math.min(1, progress));
-      // Hit window: very close to the top (95%+ progress towards rim)
-      return visualProgress >= 0.95;
+      
+      // Get the target endpoint for this note
+      const randomValue = seededRandom(note.id);
+      const targetAngle = randomValue * 180; // 0-180 degrees for semicircle
+      
+      // Convert angle to position on rim
+      // For a circle: x = 50 + 50*cos(angle), y = 50 + 50*sin(angle)
+      const radians = (targetAngle * Math.PI) / 180;
+      const targetY = 50 + 50 * Math.sin(radians);
+      
+      // Check if at the rim (progress ~1.0) and near top (targetY close to 0)
+      return visualProgress >= 0.95 && Math.abs(targetY - 0) < 5; // 5% tolerance for hitline
     });
 
-    if (hitNotes.length > 0) {
+    if (hittingNotes.length > 0) {
       setIndicatorGlow(true);
       setTimeout(() => setIndicatorGlow(false), 200);
     }
@@ -47,13 +68,13 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
       {/* Semicircle Container */}
       <div className="relative h-64 w-32 md:h-80 md:w-40 overflow-visible">
         
-        {/* Judgement Indicator - Overlaid on top of deck, centered on y-axis */}
+        {/* Judgement Indicator - Centered at top of deck, overlaid */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 z-40 -translate-y-1/2">
           <motion.div 
             className="w-1 h-16 bg-neon-cyan/70 shadow-[0_0_20px_cyan]"
             animate={{
               boxShadow: indicatorGlow 
-                ? "0 0 40px 15px cyan, 0 0 20px 5px cyan" 
+                ? "0 0 50px 20px cyan, 0 0 30px 10px cyan" 
                 : "0 0 20px cyan"
             }}
             transition={{ duration: 0.1 }}
@@ -87,7 +108,6 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
           </motion.div>
 
           {/* Note Layer (Sits on top, non-spinning container) */}
-          {/* Dots move from center UPWARD toward top rim to match the indicator line above */}
           <div className="absolute inset-0 pointer-events-none rounded-full">
              <AnimatePresence>
                {activeNotes.map(note => {
@@ -98,8 +118,19 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
                  const progress = 1 - (timeUntilHit / 2000);
                  const visualProgress = Math.max(0, Math.min(1, progress));
                  
-                 // Vertical movement: from center (50%) to top (0%)
-                 const topPos = 50 - (visualProgress * 50);
+                 // Generate a random target position on the semicircle rim
+                 const randomValue = seededRandom(note.id);
+                 const targetAngle = randomValue * 180; // 0-180 degrees for semicircle
+                 
+                 // Convert angle to x,y position on rim
+                 // For a circle: x = 50 + 50*cos(angle), y = 50 + 50*sin(angle)
+                 const radians = (targetAngle * Math.PI) / 180;
+                 const targetX = 50 + 50 * Math.cos(radians);
+                 const targetY = 50 + 50 * Math.sin(radians);
+                 
+                 // Interpolate from center to target
+                 const currentX = 50 + (targetX - 50) * visualProgress;
+                 const currentY = 50 + (targetY - 50) * visualProgress;
                  
                  const scale = 0.5 + (visualProgress * 0.5);
                  const opacity = visualProgress > 0 ? Math.min(1, visualProgress * 1.5) : 0;
@@ -107,9 +138,10 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
                  return (
                    <motion.div
                      key={note.id}
-                     className="absolute left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+                     className="absolute -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none"
                      style={{
-                       top: `${topPos}%`,
+                       left: `${currentX}%`,
+                       top: `${currentY}%`,
                        scale,
                        opacity
                      }}
