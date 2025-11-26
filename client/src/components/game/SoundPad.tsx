@@ -1,5 +1,4 @@
 import { motion, AnimatePresence } from "framer-motion";
-import padTexture from "@assets/generated_images/glowing_neon_square_drum_pad_texture.png";
 import { useEffect, useState } from "react";
 import { Note } from "@/lib/gameEngine";
 
@@ -90,12 +89,12 @@ function PadButton({ index, onClick, notes, currentTime }: { index: number; onCl
       style={{ isolation: 'isolate' }}
     >
       {/* Pad Background */}
-      <div className="absolute inset-0 rounded-xl overflow-hidden border-2 border-neon-pink/30 bg-black/50 shadow-[0_0_10px_rgba(255,0,100,0.1)] group-hover:shadow-[0_0_20px_rgba(255,0,100,0.4)] group-hover:border-neon-pink/60 transition-all duration-200">
-        <img 
-          src={padTexture} 
-          alt="pad-texture" 
-          className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-hard-light"
-        />
+      <div className={`absolute inset-0 rounded-xl overflow-hidden border-2 
+        ${index === 0 ? 'bg-neon-pink/30 border-neon-pink/50' : ''}
+        ${index === 1 ? 'bg-neon-cyan/30 border-neon-cyan/50' : ''}
+        ${index === 2 ? 'bg-neon-purple/30 border-neon-purple/50' : ''}
+        ${index === 3 ? 'bg-neon-blue/30 border-neon-blue/50' : ''}
+        shadow-[0_0_10px_rgba(255,0,100,0.1)] group-hover:shadow-[0_0_20px_rgba(255,0,100,0.4)] group-hover:border-opacity-100 transition-all duration-200`}>
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-20" />
       </div>
 
