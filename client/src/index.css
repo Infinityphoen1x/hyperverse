@@ -14,6 +14,8 @@
   --color-neon-purple: hsl(var(--neon-purple));
   --color-neon-pink: hsl(var(--neon-pink));
   --color-neon-cyan: hsl(var(--neon-cyan));
+  --color-neon-green: hsl(var(--neon-green));
+  --color-neon-red: hsl(var(--neon-red));
   
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
@@ -49,6 +51,8 @@
   --neon-purple: 280 100% 60%;
   --neon-pink: 320 100% 60%;
   --neon-cyan: 180 100% 50%;
+  --neon-green: 120 100% 50%;
+  --neon-red: 0 100% 50%;
 
   --card: 240 25% 15%;
   --card-foreground: 180 20% 90%;

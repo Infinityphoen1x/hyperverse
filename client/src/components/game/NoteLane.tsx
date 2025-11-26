@@ -8,14 +8,16 @@ interface NoteLaneProps {
 }
 
 export function NoteLane({ notes, currentTime }: NoteLaneProps) {
-  // Get visible notes (soundpad notes only, lanes 0-3)
+  // Get visible notes (soundpad + deck notes)
   const visibleNotes = notes.filter(n => {
     const timeUntilHit = n.time - currentTime;
-    return n.lane >= 0 && n.lane <= 3 && timeUntilHit > -200 && timeUntilHit < 2000;
+    return (n.lane >= -2 && n.lane <= 3) && timeUntilHit > -200 && timeUntilHit < 2000;
   });
 
   const getColorClass = (lane: number): string => {
     switch (lane) {
+      case -1: return 'bg-neon-green shadow-[0_0_15px_rgb(0,255,0)]';
+      case -2: return 'bg-neon-red shadow-[0_0_15px_rgb(255,0,0)]';
       case 0: return 'bg-neon-pink shadow-[0_0_15px_rgb(255,0,127)]';
       case 1: return 'bg-neon-cyan shadow-[0_0_15px_rgb(0,255,255)]';
       case 2: return 'bg-neon-purple shadow-[0_0_15px_rgb(190,0,255)]';
@@ -25,6 +27,8 @@ export function NoteLane({ notes, currentTime }: NoteLaneProps) {
   };
 
   const getNoteKey = (lane: number): string => {
+    if (lane === -1) return 'A';
+    if (lane === -2) return 'B';
     return ['3', '4', '8', '9'][lane];
   };
 
@@ -65,15 +69,15 @@ export function NoteLane({ notes, currentTime }: NoteLaneProps) {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
             <motion.div whileHover={{ x: -4 }} className="cursor-pointer">
-              <ChevronLeft className="w-5 h-5 text-neon-green" strokeWidth={3} />
+              <ChevronLeft className="w-5 h-5" style={{ color: 'hsl(120, 100%, 50%)' }} strokeWidth={3} />
             </motion.div>
-            <span className="text-neon-green font-rajdhani font-bold text-sm">Q</span>
+            <span className="font-rajdhani font-bold text-sm" style={{ color: 'hsl(120, 100%, 50%)' }}>Q</span>
           </div>
-          <span className="text-neon-green/60 text-xs tracking-wider font-rajdhani">DECK A</span>
+          <span className="text-xs tracking-wider font-rajdhani" style={{ color: 'hsl(120, 100%, 50%, 0.6)' }}>DECK A</span>
           <div className="flex items-center gap-1">
-            <span className="text-neon-green font-rajdhani font-bold text-sm">W</span>
+            <span className="font-rajdhani font-bold text-sm" style={{ color: 'hsl(120, 100%, 50%)' }}>W</span>
             <motion.div whileHover={{ x: 4 }} className="cursor-pointer">
-              <ChevronRight className="w-5 h-5 text-neon-green" strokeWidth={3} />
+              <ChevronRight className="w-5 h-5" style={{ color: 'hsl(120, 100%, 50%)' }} strokeWidth={3} />
             </motion.div>
           </div>
         </div>
@@ -82,15 +86,15 @@ export function NoteLane({ notes, currentTime }: NoteLaneProps) {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
             <motion.div whileHover={{ x: -4 }} className="cursor-pointer">
-              <ChevronLeft className="w-5 h-5 text-neon-red" strokeWidth={3} />
+              <ChevronLeft className="w-5 h-5" style={{ color: 'hsl(0, 100%, 50%)' }} strokeWidth={3} />
             </motion.div>
-            <span className="text-neon-red font-rajdhani font-bold text-sm">O</span>
+            <span className="font-rajdhani font-bold text-sm" style={{ color: 'hsl(0, 100%, 50%)' }}>O</span>
           </div>
-          <span className="text-neon-red/60 text-xs tracking-wider font-rajdhani">DECK B</span>
+          <span className="text-xs tracking-wider font-rajdhani" style={{ color: 'hsl(0, 100%, 50%, 0.6)' }}>DECK B</span>
           <div className="flex items-center gap-1">
-            <span className="text-neon-red font-rajdhani font-bold text-sm">P</span>
+            <span className="font-rajdhani font-bold text-sm" style={{ color: 'hsl(0, 100%, 50%)' }}>P</span>
             <motion.div whileHover={{ x: 4 }} className="cursor-pointer">
-              <ChevronRight className="w-5 h-5 text-neon-red" strokeWidth={3} />
+              <ChevronRight className="w-5 h-5" style={{ color: 'hsl(0, 100%, 50%)' }} strokeWidth={3} />
             </motion.div>
           </div>
         </div>
