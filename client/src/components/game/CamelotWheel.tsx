@@ -41,12 +41,11 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
       const targetAngle = randomValue * 180; // 0-180 degrees for semicircle
       
       // Convert angle to position on rim
-      // For a circle: x = 50 + 50*cos(angle), y = 50 + 50*sin(angle)
       const radians = (targetAngle * Math.PI) / 180;
       const targetY = 50 + 50 * Math.sin(radians);
       
-      // Check if at the rim (progress ~1.0) and near top (targetY close to 0)
-      return visualProgress >= 0.95 && Math.abs(targetY - 0) < 5; // 5% tolerance for hitline
+      // Check if at the rim (progress ~1.0) and near spawn point (targetY close to 50)
+      return visualProgress >= 0.95 && Math.abs(targetY - 50) < 3; // Tight tolerance for hitline at spawn point
     });
 
     if (hittingNotes.length > 0) {
@@ -66,12 +65,12 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
     <div className="flex flex-col items-center gap-6 relative">
 
       {/* Semicircle Container */}
-      <div className="relative h-64 w-32 md:h-80 md:w-40 overflow-visible">
+      <div className="relative h-64 w-32 md:h-80 md:w-40 overflow-hidden">
         
-        {/* Judgement Indicator - Centered at top of deck, overlaid */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-40 -translate-y-1/2">
+        {/* Judgement Indicator - At spawn point (50% top), overlaid, on y-axis */}
+        <div className="absolute left-1/2 -translate-x-1/2 z-40" style={{ top: '50%' }}>
           <motion.div 
-            className="w-1 h-16 bg-neon-cyan/70 shadow-[0_0_20px_cyan]"
+            className="w-1 h-12 bg-neon-cyan/70 shadow-[0_0_20px_cyan] -translate-y-1/2"
             animate={{
               boxShadow: indicatorGlow 
                 ? "0 0 50px 20px cyan, 0 0 30px 10px cyan" 
@@ -81,9 +80,9 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
           />
         </div>
 
-        {/* Inner Container for the Full Wheel - Show RIGHT half for Left Deck, LEFT half for Right Deck */}
+        {/* Inner Container for the Full Wheel - positioned to show only from spawn point (50%) onwards */}
         <div 
-          className={`absolute top-0 w-64 h-64 md:w-80 md:h-80 ${side === 'left' ? 'right-0' : 'left-0'}`}
+          className={`absolute top-1/2 -translate-y-1/2 w-64 h-64 md:w-80 md:h-80 ${side === 'left' ? 'right-0' : 'left-0'}`}
         >
           {/* The Interactive Wheel (Spins) */}
           <motion.div
@@ -105,53 +104,52 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
              <div className="absolute inset-0 m-auto w-20 h-20 rounded-full bg-black border-2 border-neon-cyan flex items-center justify-center z-20">
                 <div className="w-2 h-2 bg-white rounded-full animate-ping" />
              </div>
+
+             {/* Note Layer - INSIDE the rotating wheel so dots spin with it */}
+             <div className="absolute inset-0 pointer-events-none rounded-full">
+               <AnimatePresence>
+                 {activeNotes.map(note => {
+                   const timeUntilHit = note.time - currentTime;
+                   if (timeUntilHit > 2000 || timeUntilHit < -200) return null;
+                   
+                   // Progress: 0 = at center, 1 = at rim
+                   const progress = 1 - (timeUntilHit / 2000);
+                   const visualProgress = Math.max(0, Math.min(1, progress));
+                   
+                   // Generate a random target position on the semicircle rim
+                   const randomValue = seededRandom(note.id);
+                   const targetAngle = randomValue * 180; // 0-180 degrees for semicircle
+                   
+                   // Convert angle to x,y position on rim
+                   const radians = (targetAngle * Math.PI) / 180;
+                   const targetX = 50 + 50 * Math.cos(radians);
+                   const targetY = 50 + 50 * Math.sin(radians);
+                   
+                   // Interpolate from center to target
+                   const currentX = 50 + (targetX - 50) * visualProgress;
+                   const currentY = 50 + (targetY - 50) * visualProgress;
+                   
+                   const scale = 0.5 + (visualProgress * 0.5);
+                   const opacity = visualProgress > 0 ? Math.min(1, visualProgress * 1.5) : 0;
+
+                   return (
+                     <motion.div
+                       key={note.id}
+                       className="absolute -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none"
+                       style={{
+                         left: `${currentX}%`,
+                         top: `${currentY}%`,
+                         scale,
+                         opacity
+                       }}
+                     >
+                       <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-neon-pink shadow-[0_0_15px_magenta] border-2 border-white" />
+                     </motion.div>
+                   );
+                 })}
+               </AnimatePresence>
+             </div>
           </motion.div>
-
-          {/* Note Layer (Sits on top, non-spinning container) */}
-          <div className="absolute inset-0 pointer-events-none rounded-full">
-             <AnimatePresence>
-               {activeNotes.map(note => {
-                 const timeUntilHit = note.time - currentTime;
-                 if (timeUntilHit > 2000 || timeUntilHit < -200) return null;
-                 
-                 // Progress: 0 = at center, 1 = at rim
-                 const progress = 1 - (timeUntilHit / 2000);
-                 const visualProgress = Math.max(0, Math.min(1, progress));
-                 
-                 // Generate a random target position on the semicircle rim
-                 const randomValue = seededRandom(note.id);
-                 const targetAngle = randomValue * 180; // 0-180 degrees for semicircle
-                 
-                 // Convert angle to x,y position on rim
-                 // For a circle: x = 50 + 50*cos(angle), y = 50 + 50*sin(angle)
-                 const radians = (targetAngle * Math.PI) / 180;
-                 const targetX = 50 + 50 * Math.cos(radians);
-                 const targetY = 50 + 50 * Math.sin(radians);
-                 
-                 // Interpolate from center to target
-                 const currentX = 50 + (targetX - 50) * visualProgress;
-                 const currentY = 50 + (targetY - 50) * visualProgress;
-                 
-                 const scale = 0.5 + (visualProgress * 0.5);
-                 const opacity = visualProgress > 0 ? Math.min(1, visualProgress * 1.5) : 0;
-
-                 return (
-                   <motion.div
-                     key={note.id}
-                     className="absolute -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none"
-                     style={{
-                       left: `${currentX}%`,
-                       top: `${currentY}%`,
-                       scale,
-                       opacity
-                     }}
-                   >
-                     <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-neon-pink shadow-[0_0_15px_magenta] border-2 border-white" />
-                   </motion.div>
-                 );
-               })}
-             </AnimatePresence>
-          </div>
         </div>
       </div>
       
