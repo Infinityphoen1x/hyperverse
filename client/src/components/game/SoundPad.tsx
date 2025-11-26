@@ -98,27 +98,6 @@ function PadButton({ index, onClick, notes, currentTime }: { index: number; onCl
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-20" />
       </div>
 
-      {/* Judgement Rings Overlay */}
-      <AnimatePresence>
-        {activeNotes.map(note => {
-          const timeUntilHit = note.time - currentTime;
-          if (timeUntilHit > 1000 || timeUntilHit < -200) return null;
-          
-          const scale = 1 + (timeUntilHit / 1000);
-
-          return (
-            <motion.div
-              key={note.id}
-              initial={{ opacity: 0, scale: 2 }}
-              animate={{ opacity: 1, scale: scale }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0 }}
-              className="absolute inset-[-8px] border-2 border-neon-cyan rounded-xl pointer-events-none z-20 shadow-[0_0_10px_cyan]"
-              style={{ scale }}
-            />
-          );
-        })}
-      </AnimatePresence>
 
       {/* Hit Flash - Success */}
       <AnimatePresence>
