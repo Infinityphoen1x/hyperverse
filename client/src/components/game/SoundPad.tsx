@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import padTexture from "@assets/generated_images/glowing_neon_square_drum_pad_texture.png";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Note } from "@/lib/gameEngine";
 
 interface SoundPadProps {
@@ -10,21 +10,40 @@ interface SoundPadProps {
 }
 
 export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
+  
+  // Shared Hit Logic for Feedback
+  const checkHitAndFeedback = (index: number) => {
+    onPadHit(index);
+    
+    // Check for visual feedback (simulated "good" hit)
+    const laneNotes = notes.filter(n => n.lane === index);
+    const hasHittableNote = laneNotes.some(n => !n.hit && !n.missed && Math.abs(n.time - currentTime) < 300);
+    
+    if (hasHittableNote) {
+      // Dispatch a custom event or use a ref/state down the tree?
+      // Since PadButton manages its own state, we need to signal it.
+      // We can pass a "triggerFlash" prop? No, simpler to expose a ref or use a shared event bus?
+      // Or, just lift the state up?
+      // Let's use a simple custom event for this mockup to avoid lifting state complexity
+      window.dispatchEvent(new CustomEvent(`pad-hit-${index}`));
+    }
+  };
+
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.repeat) return;
       const key = e.key.toLowerCase();
       switch (key) {
-        case 'a': onPadHit(0); break;
-        case 's': onPadHit(1); break;
-        case 'k': onPadHit(2); break;
-        case 'l': onPadHit(3); break;
+        case 'a': checkHitAndFeedback(0); break;
+        case 's': checkHitAndFeedback(1); break;
+        case 'k': checkHitAndFeedback(2); break;
+        case 'l': checkHitAndFeedback(3); break;
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onPadHit]);
+  }, [onPadHit, notes, currentTime]); // Added deps to ensure closure captures latest notes
 
   return (
     <div className="p-6 glass-panel rounded-xl border border-neon-pink/30 relative bg-black/40">
@@ -38,7 +57,7 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
           <div key={i} className="flex flex-col items-center gap-2">
             <PadButton 
               index={i} 
-              onClick={() => onPadHit(i)} 
+              onClick={() => checkHitAndFeedback(i)} 
               notes={notes.filter(n => n.lane === i)}
               currentTime={currentTime}
             />
@@ -55,11 +74,22 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
 function PadButton({ index, onClick, notes, currentTime }: { index: number; onClick: () => void; notes: Note[]; currentTime: number }) {
   
   const activeNotes = notes.filter(n => !n.hit && !n.missed);
+  const [isHitSuccess, setIsHitSuccess] = useState(false);
+
+  // Listen for the specific event for this pad
+  useEffect(() => {
+    const handler = () => {
+      setIsHitSuccess(true);
+      setTimeout(() => setIsHitSuccess(false), 200);
+    };
+    window.addEventListener(`pad-hit-${index}`, handler);
+    return () => window.removeEventListener(`pad-hit-${index}`, handler);
+  }, [index]);
 
   return (
     <motion.button
       whileTap={{ scale: 0.90 }}
-      onClick={onClick}
+      onMouseDown={onClick} // Trigger via parent's handler which dispatches event
       // Reduced size to prevent overlap: w-20/h-20 on mobile, w-24/h-24 on desktop
       className="relative w-20 h-20 md:w-24 md:h-24 rounded-xl group focus:outline-none"
       data-testid={`pad-${index}`}
@@ -97,14 +127,24 @@ function PadButton({ index, onClick, notes, currentTime }: { index: number; onCl
         })}
       </AnimatePresence>
 
-      {/* Hit Flash */}
+      {/* Hit Flash - Success */}
+      <AnimatePresence>
+        {isHitSuccess && (
+          <motion.div 
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 rounded-xl z-40 bg-white"
+            style={{ boxShadow: "0 0 40px 20px cyan" }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Standard Press Feedback */}
       <motion.div 
-        className="absolute inset-0 bg-neon-cyan/0 rounded-xl mix-blend-screen z-30"
-        whileTap={{ 
-          backgroundColor: "rgba(0, 255, 255, 0.6)",
-          boxShadow: "0 0 30px 5px rgba(0, 255, 255, 0.8)"
-        }}
-        transition={{ duration: 0.05 }}
+        className="absolute inset-0 bg-white/20 rounded-xl z-30"
+        initial={{ opacity: 0 }}
+        whileTap={{ opacity: 1 }}
       />
     </motion.button>
   );
