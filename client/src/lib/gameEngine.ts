@@ -12,6 +12,9 @@ export interface Note {
   missed: boolean;
 }
 
+// Session-based repeating pattern for consistent randomness per session
+const PATTERN_ANGLES = [10, 45, 80, 120, 160, 35, 90, 140, 25, 70, 130, 155];
+
 // Mock song data generator
 const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[] => {
   const notes: Note[] = [];
@@ -19,6 +22,7 @@ const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[]
   const interval = 60000 / bpm;
   
   let currentTime = 2000; // Start after 2s
+  let noteCount = 0;
   
   while (currentTime < duration) {
     // Randomize lanes
@@ -35,6 +39,8 @@ const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[]
       hit: false,
       missed: false,
     });
+    
+    noteCount++;
     
     // Difficulty adjustment: more notes for harder levels
     const skipChance = difficulty === 'EASY' ? 0.5 : difficulty === 'MEDIUM' ? 0.2 : 0;

@@ -20,11 +20,6 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
     const hasHittableNote = laneNotes.some(n => !n.hit && !n.missed && Math.abs(n.time - currentTime) < 300);
     
     if (hasHittableNote) {
-      // Dispatch a custom event or use a ref/state down the tree?
-      // Since PadButton manages its own state, we need to signal it.
-      // We can pass a "triggerFlash" prop? No, simpler to expose a ref or use a shared event bus?
-      // Or, just lift the state up?
-      // Let's use a simple custom event for this mockup to avoid lifting state complexity
       window.dispatchEvent(new CustomEvent(`pad-hit-${index}`));
     }
   };
@@ -43,7 +38,7 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onPadHit, notes, currentTime]); // Added deps to ensure closure captures latest notes
+  }, [onPadHit, notes, currentTime]);
 
   return (
     <div className="p-6 glass-panel rounded-xl border border-neon-pink/30 relative bg-black/40">
@@ -89,8 +84,7 @@ function PadButton({ index, onClick, notes, currentTime }: { index: number; onCl
   return (
     <motion.button
       whileTap={{ scale: 0.90 }}
-      onMouseDown={onClick} // Trigger via parent's handler which dispatches event
-      // Reduced size to prevent overlap: w-20/h-20 on mobile, w-24/h-24 on desktop
+      onMouseDown={onClick}
       className="relative w-20 h-20 md:w-24 md:h-24 rounded-xl group focus:outline-none"
       data-testid={`pad-${index}`}
       style={{ isolation: 'isolate' }}

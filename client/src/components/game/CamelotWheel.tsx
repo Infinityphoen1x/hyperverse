@@ -10,15 +10,10 @@ interface CamelotWheelProps {
   currentTime: number;
 }
 
-// Seeded random for consistent results per note ID
-function seededRandom(seed: string): number {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    const char = seed.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash % 1000) / 1000;
+// Session-based pattern: use note index to get consistent pattern across game
+function getPatternAngle(noteIndex: number): number {
+  const pattern = [10, 45, 80, 120, 160, 35, 90, 140, 25, 70, 130, 155]; // 12-note pattern
+  return pattern[noteIndex % pattern.length];
 }
 
 export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelProps) {
@@ -36,16 +31,16 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
       const progress = 1 - (timeUntilHit / 2000);
       const visualProgress = Math.max(0, Math.min(1, progress));
       
-      // Get the target endpoint for this note
-      const randomValue = seededRandom(note.id);
-      const targetAngle = randomValue * 180; // 0-180 degrees for semicircle
+      // Get the target endpoint for this note using pattern
+      const noteIndex = parseInt(note.id.split('-')[1]) || 0;
+      const targetAngle = getPatternAngle(noteIndex);
       
       // Convert angle to position on rim
       const radians = (targetAngle * Math.PI) / 180;
       const targetY = 50 + 50 * Math.sin(radians);
       
       // Check if at the rim (progress ~1.0) and near spawn point (targetY close to 50)
-      return visualProgress >= 0.95 && Math.abs(targetY - 50) < 3; // Tight tolerance for hitline at spawn point
+      return visualProgress >= 0.95 && Math.abs(targetY - 50) < 3;
     });
 
     if (hittingNotes.length > 0) {
@@ -64,21 +59,21 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
   return (
     <div className="flex flex-col items-center gap-6 relative">
 
+      {/* Hitline at top edge, aligned with spawn point of visible deck */}
+      <div className="fixed left-1/2 -translate-x-1/2 z-40" style={{ top: 'calc(50% - 128px)' }}>
+        <motion.div 
+          className="w-1 h-16 bg-neon-cyan/70 shadow-[0_0_20px_cyan]"
+          animate={{
+            boxShadow: indicatorGlow 
+              ? "0 0 50px 20px cyan, 0 0 30px 10px cyan" 
+              : "0 0 20px cyan"
+          }}
+          transition={{ duration: 0.1 }}
+        />
+      </div>
+
       {/* Semicircle Container */}
       <div className="relative h-64 w-32 md:h-80 md:w-40 overflow-hidden">
-        
-        {/* Judgement Indicator - At spawn point (50% top), overlaid, on y-axis */}
-        <div className="absolute left-1/2 -translate-x-1/2 z-40" style={{ top: '50%' }}>
-          <motion.div 
-            className="w-1 h-12 bg-neon-cyan/70 shadow-[0_0_20px_cyan] -translate-y-1/2"
-            animate={{
-              boxShadow: indicatorGlow 
-                ? "0 0 50px 20px cyan, 0 0 30px 10px cyan" 
-                : "0 0 20px cyan"
-            }}
-            transition={{ duration: 0.1 }}
-          />
-        </div>
 
         {/* Inner Container for the Full Wheel - positioned to show only from spawn point (50%) onwards */}
         <div 
@@ -116,9 +111,9 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
                    const progress = 1 - (timeUntilHit / 2000);
                    const visualProgress = Math.max(0, Math.min(1, progress));
                    
-                   // Generate a random target position on the semicircle rim
-                   const randomValue = seededRandom(note.id);
-                   const targetAngle = randomValue * 180; // 0-180 degrees for semicircle
+                   // Get the target position using pattern
+                   const noteIndex = parseInt(note.id.split('-')[1]) || 0;
+                   const targetAngle = getPatternAngle(noteIndex);
                    
                    // Convert angle to x,y position on rim
                    const radians = (targetAngle * Math.PI) / 180;
