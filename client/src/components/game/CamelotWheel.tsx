@@ -60,7 +60,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
     <div className="flex flex-col items-center gap-6 relative">
 
       {/* Hitline at top edge, aligned with spawn point of visible deck */}
-      <div className="absolute left-1/2 -translate-x-1/2 z-40 -top-16">
+      <div className={`absolute z-40 -top-16 ${side === 'left' ? 'right-0' : 'left-0'}`}>
         <motion.div 
           className="w-1 h-16 bg-neon-cyan/70 shadow-[0_0_20px_cyan]"
           animate={{
