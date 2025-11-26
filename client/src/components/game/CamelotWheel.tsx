@@ -27,10 +27,10 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
   return (
     <div className="flex flex-col items-center gap-6 relative">
       
-      {/* Judgement Indicator - ABOVE the deck */}
-      <div className="flex items-center gap-2 z-30">
+      {/* Judgement Indicator - ABOVE the deck, vertical (parallel to y-axis) */}
+      <div className="flex flex-col items-center gap-1 z-30">
         <div className="text-neon-cyan text-xs font-orbitron tracking-widest">HIT</div>
-        <div className="w-16 h-1 bg-neon-cyan/50 shadow-[0_0_10px_cyan]" />
+        <div className="w-1 h-12 bg-neon-cyan/50 shadow-[0_0_10px_cyan]" />
       </div>
 
       {/* Semicircle Container */}
