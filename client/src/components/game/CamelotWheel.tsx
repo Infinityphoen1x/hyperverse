@@ -19,31 +19,76 @@ function getPatternAngle(noteIndex: number): number {
 export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelProps) {
   const [rotation, setRotation] = useState(0);
   const [indicatorGlow, setIndicatorGlow] = useState(false);
+  const keysPressed = useState<Set<string>>(new Set())[0];
+  const rotationRef = useState(0);
 
-  // Keyboard controls for spinning
+  // Smooth continuous rotation while holding keys
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.repeat) return;
       const key = e.key.toLowerCase();
-      const spinAmount = 30; // degrees per keypress
       
-      if (side === 'left' && key === 'q') {
-        setRotation((prev) => prev - spinAmount);
-        onSpin();
-      } else if (side === 'left' && key === 'w') {
-        setRotation((prev) => prev + spinAmount);
-        onSpin();
-      } else if (side === 'right' && key === 'o') {
-        setRotation((prev) => prev - spinAmount);
-        onSpin();
-      } else if (side === 'right' && key === 'p') {
-        setRotation((prev) => prev + spinAmount);
-        onSpin();
+      const leftKeys = ['q', 'w'];
+      const rightKeys = ['o', 'p'];
+      
+      if ((side === 'left' && leftKeys.includes(key)) || (side === 'right' && rightKeys.includes(key))) {
+        keysPressed.add(key);
       }
     };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      keysPressed.delete(key);
+    };
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [side, onSpin]);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [side, keysPressed]);
+
+  // Continuous rotation loop using RAF
+  useEffect(() => {
+    let animationId: number;
+    const rotationSpeed = 2; // degrees per frame
+    const spinThreshold = 30; // trigger onSpin every N degrees
+    let lastSpinRotation = 0;
+
+    const animate = () => {
+      let rotationDelta = 0;
+
+      // Check which keys are pressed
+      if (side === 'left') {
+        if (keysPressed.has('q')) rotationDelta -= rotationSpeed;
+        if (keysPressed.has('w')) rotationDelta += rotationSpeed;
+      } else {
+        if (keysPressed.has('o')) rotationDelta -= rotationSpeed;
+        if (keysPressed.has('p')) rotationDelta += rotationSpeed;
+      }
+
+      if (rotationDelta !== 0) {
+        setRotation((prev) => {
+          const newRotation = prev + rotationDelta;
+          rotationRef[1](newRotation);
+
+          // Trigger onSpin event periodically based on rotation distance
+          if (Math.abs(newRotation - lastSpinRotation) >= spinThreshold) {
+            onSpin();
+            lastSpinRotation = newRotation;
+          }
+
+          return newRotation;
+        });
+      }
+
+      animationId = requestAnimationFrame(animate);
+    };
+
+    animationId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationId);
+  }, [side, onSpin, keysPressed]);
 
   // Filter relevant notes
   const wheelLane = side === 'left' ? -1 : -2;
