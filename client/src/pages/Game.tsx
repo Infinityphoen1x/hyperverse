@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useGameEngine, Difficulty } from "@/lib/gameEngine";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { SoundPad } from "@/components/game/SoundPad";
+import { NoteLane } from "@/components/game/NoteLane";
 import { motion } from "framer-motion";
 
 export default function Game() {
@@ -77,35 +78,46 @@ export default function Game() {
       </header>
 
       {/* Main Game Area */}
-      <main className="flex-1 relative z-10 flex items-center justify-center gap-8 lg:gap-24">
+      <main className="flex-1 relative z-10 flex flex-col items-center justify-center gap-8 px-4">
         
-        {/* Left Deck */}
-        <div className="hidden lg:block">
-           <CamelotWheel 
-             side="left" 
-             onSpin={() => hitNote(-1)} 
-             notes={notes} 
-             currentTime={currentTime} 
-           />
+        {/* Decks Row */}
+        <div className="flex items-center justify-center gap-8 lg:gap-24">
+          {/* Left Deck */}
+          <div className="hidden lg:block">
+             <CamelotWheel 
+               side="left" 
+               onSpin={() => hitNote(-1)} 
+               notes={notes} 
+               currentTime={currentTime} 
+             />
+          </div>
+
+          {/* Right Deck */}
+          <div className="hidden lg:block">
+             <CamelotWheel 
+               side="right" 
+               onSpin={() => hitNote(-2)} 
+               notes={notes} 
+               currentTime={currentTime} 
+             />
+          </div>
         </div>
 
-        {/* Center Sound Pads */}
+        {/* Note Lane */}
+        <div className="w-full flex justify-center">
+          <NoteLane 
+            notes={notes} 
+            currentTime={currentTime} 
+          />
+        </div>
+
+        {/* Center Sound Pads - Moved Down */}
         <div className="relative z-20 scale-110">
           <SoundPad 
             onPadHit={hitNote} 
             notes={notes} 
             currentTime={currentTime} 
           />
-        </div>
-
-        {/* Right Deck */}
-        <div className="hidden lg:block">
-           <CamelotWheel 
-             side="right" 
-             onSpin={() => hitNote(-2)} 
-             notes={notes} 
-             currentTime={currentTime} 
-           />
         </div>
       </main>
       
