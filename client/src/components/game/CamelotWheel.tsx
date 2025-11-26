@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import wheelImg from "@assets/generated_images/neon_glowing_cyber_turntable_interface.png";
 import { Note } from "@/lib/gameEngine";
 
@@ -25,20 +25,17 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
   };
 
   return (
-    <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center">
+    <div className="relative w-64 h-32 md:w-80 md:h-40 flex justify-center overflow-hidden">
       
-      {/* Judgement Marker (Static above the wheel at 12 o'clock) */}
-      <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-col items-center z-30">
-        <div className="text-neon-cyan text-xs font-orbitron tracking-widest mb-1">HIT</div>
+      {/* Judgement Marker (Static above the wheel at 12 o'clock - effectively the top rim) */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 flex flex-col items-center z-30">
+        <div className="text-neon-cyan text-xs font-orbitron tracking-widest mb-1 drop-shadow-[0_0_5px_rgba(0,0,0,1)]">HIT</div>
         <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[20px] border-t-neon-cyan drop-shadow-[0_0_10px_cyan]" />
-        <div className="w-[2px] h-8 bg-neon-cyan/50" />
       </div>
 
-      {/* Outer Glow Ring */}
-      <div className="absolute inset-0 rounded-full border border-white/10 scale-110" />
-
-      {/* The Wheel Container */}
-      <div className="relative w-full h-full">
+      {/* The Wheel Container - Rotated to show top half */}
+      <div className="relative w-64 h-64 md:w-80 md:h-80 -mt-0"> {/* Negative margin if needed, but overflow:hidden on parent handles the cut */}
+        
         {/* The Interactive Wheel (Spins) */}
         <motion.div
           className="w-full h-full rounded-full border-4 border-neon-purple/50 overflow-hidden relative bg-black cursor-grab active:cursor-grabbing shadow-[0_0_30px_rgba(190,0,255,0.3)]"
@@ -62,8 +59,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
         </motion.div>
 
         {/* Note Layer (Does not spin with wheel, sits on top) */}
-        {/* Notes move from CENTER to TOP RIM (12 o'clock) */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
+        <div className="absolute inset-0 pointer-events-none rounded-full">
            <AnimatePresence>
              {activeNotes.map(note => {
                const timeUntilHit = note.time - currentTime;
@@ -72,20 +68,14 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
                
                // Progress: 0 = at center, 1 = at rim
                const progress = 1 - (timeUntilHit / 2000);
-               
-               // We want the dot to move from center (50% 50%) to top center (50% 0%)
-               // Top of wheel is 0% top. Center is 50% top.
-               // Interpolate top from 50% to 0%.
-               
-               // Clamped visual progress for overshoot
                const visualProgress = Math.max(0, progress);
                
-               // Start at 50% (center), end at 0% (top)
+               // Move from center (50%) to top (0%)
                const topPosition = 50 - (visualProgress * 50); 
                
                // Scale effect: Start small, get bigger at rim
                const scale = 0.5 + (visualProgress * 0.5);
-               const opacity = Math.min(1, visualProgress * 2); // Fade in from center
+               const opacity = Math.min(1, visualProgress * 2); 
 
                return (
                  <motion.div
@@ -97,8 +87,9 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
                      opacity
                    }}
                    initial={{ opacity: 0, top: '50%' }}
+                   exit={{ opacity: 0, scale: 1.5 }}
                  >
-                   <div className="w-6 h-6 rounded-full bg-neon-pink shadow-[0_0_15px_magenta] border-2 border-white" />
+                   <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-neon-pink shadow-[0_0_15px_magenta] border-2 border-white" />
                  </motion.div>
                );
              })}
@@ -107,7 +98,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
       </div>
       
       {/* Label */}
-      <div className="absolute -bottom-10 left-0 right-0 text-center text-neon-blue font-orbitron text-sm tracking-widest">
+      <div className="absolute bottom-2 left-0 right-0 text-center text-neon-blue font-orbitron text-sm tracking-widest z-30 pointer-events-none">
         DECK {side === 'left' ? 'A' : 'B'}
       </div>
     </div>
