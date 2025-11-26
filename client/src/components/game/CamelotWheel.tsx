@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import wheelImg from "@assets/generated_images/neon_glowing_cyber_turntable_interface.png";
 import { Note } from "@/lib/gameEngine";
 
@@ -12,10 +12,27 @@ interface CamelotWheelProps {
 
 export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelProps) {
   const [rotation, setRotation] = useState(0);
+  const [indicatorGlow, setIndicatorGlow] = useState(false);
 
   // Filter relevant notes
   const wheelLane = side === 'left' ? -1 : -2;
   const activeNotes = notes.filter(n => n.lane === wheelLane && !n.hit && !n.missed);
+
+  // Detect when a note hits the indicator (near top, progress ~0.95+)
+  useEffect(() => {
+    const hitNotes = activeNotes.filter(note => {
+      const timeUntilHit = note.time - currentTime;
+      const progress = 1 - (timeUntilHit / 2000);
+      const visualProgress = Math.max(0, Math.min(1, progress));
+      // Hit window: very close to the top (95%+ progress towards rim)
+      return visualProgress >= 0.95;
+    });
+
+    if (hitNotes.length > 0) {
+      setIndicatorGlow(true);
+      setTimeout(() => setIndicatorGlow(false), 200);
+    }
+  }, [activeNotes, currentTime]);
 
   const handleDrag = (_: any, info: any) => {
     setRotation((prev) => prev + info.delta.x);
@@ -26,16 +43,23 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
 
   return (
     <div className="flex flex-col items-center gap-6 relative">
-      
-      {/* Judgement Indicator - ABOVE the deck, vertical (parallel to y-axis) */}
-      <div className="flex flex-col items-center gap-1 z-30">
-        <div className="text-neon-cyan text-xs font-orbitron tracking-widest">HIT</div>
-        <div className="w-1 h-12 bg-neon-cyan/50 shadow-[0_0_10px_cyan]" />
-      </div>
 
       {/* Semicircle Container */}
-      <div className="relative h-64 w-32 md:h-80 md:w-40 overflow-hidden">
+      <div className="relative h-64 w-32 md:h-80 md:w-40 overflow-visible">
         
+        {/* Judgement Indicator - Overlaid on top of deck, centered on y-axis */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-40 -translate-y-1/2">
+          <motion.div 
+            className="w-1 h-16 bg-neon-cyan/70 shadow-[0_0_20px_cyan]"
+            animate={{
+              boxShadow: indicatorGlow 
+                ? "0 0 40px 15px cyan, 0 0 20px 5px cyan" 
+                : "0 0 20px cyan"
+            }}
+            transition={{ duration: 0.1 }}
+          />
+        </div>
+
         {/* Inner Container for the Full Wheel - Show RIGHT half for Left Deck, LEFT half for Right Deck */}
         <div 
           className={`absolute top-0 w-64 h-64 md:w-80 md:h-80 ${side === 'left' ? 'right-0' : 'left-0'}`}
