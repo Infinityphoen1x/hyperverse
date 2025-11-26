@@ -25,9 +25,19 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.repeat) return;
       const key = e.key.toLowerCase();
-      if (side === 'left' && (key === 'q' || key === 'o')) {
+      const spinAmount = 30; // degrees per keypress
+      
+      if (side === 'left' && key === 'q') {
+        setRotation((prev) => prev - spinAmount);
         onSpin();
-      } else if (side === 'right' && (key === 'w' || key === 'p')) {
+      } else if (side === 'left' && key === 'w') {
+        setRotation((prev) => prev + spinAmount);
+        onSpin();
+      } else if (side === 'right' && key === 'o') {
+        setRotation((prev) => prev - spinAmount);
+        onSpin();
+      } else if (side === 'right' && key === 'p') {
+        setRotation((prev) => prev + spinAmount);
         onSpin();
       }
     };
