@@ -24,31 +24,15 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
     }
   };
 
-  // Layout Configuration:
-  // User wants judgement line on the "y-axis that splits the decks" (The Center Axis).
-  // This means the judgement lines should be on the "Inner" sides of the decks.
-  // Deck A (Left): Judgement on Right side. Shows Right Half (D shape).
-  // Deck B (Right): Judgement on Left side. Shows Left Half (C shape).
-
   return (
     <div className="flex flex-col items-center gap-4 relative">
       
       {/* Semicircle Container */}
       <div className="relative h-64 w-32 md:h-80 md:w-40 overflow-hidden">
         
-        {/* Inner Container for the Full Wheel */}
-        {/* 
-           If side='left' (Deck A), we want to show the Right Half.
-           So we position the wheel such that the Left Half is cropped out (off to the left).
-           left: -100% of width? No, left: -32px? 
-           Container width is 128px (w-32). Wheel width is 256px (w-64).
-           If we put left: -128px, the right half is visible.
-        */}
+        {/* Inner Container for the Full Wheel - Show Left Half for Left Deck, Right Half for Right Deck */}
         <div 
-          className={`absolute top-0 w-64 h-64 md:w-80 md:h-80 ${side === 'left' ? 'right-0' : 'left-0'}`}
-          style={{ 
-            left: side === 'left' ? '-100%' : '0' 
-          }}
+          className={`absolute top-0 w-64 h-64 md:w-80 md:h-80 ${side === 'left' ? 'left-0' : 'right-0'}`}
         >
           {/* The Interactive Wheel (Spins) */}
           <motion.div
@@ -83,41 +67,27 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
                  const progress = 1 - (timeUntilHit / 2000);
                  const visualProgress = Math.max(0, progress);
                  
-                 // Movement Logic:
-                 // Deck A (Left): Shows Right Half. Center is at Left Edge (0%). Rim is at Right Edge (100%).
-                 // Move 50% -> 100% relative to the full circle container?
-                 // Full circle center is 50%. Right Rim is 100%.
-                 // So Deck A dots move 50% -> 100%.
-
-                 // Deck B (Right): Shows Left Half. Center is at Right Edge (100% of visible?).
-                 // Full circle center is 50%. Left Rim is 0%.
-                 // So Deck B dots move 50% -> 0%.
+                 // Movement Logic: dots travel radially from center to outer rim
+                 // Left Deck: Center (50%) -> Left Rim (0%)
+                 // Right Deck: Center (50%) -> Right Rim (100%)
                  
-                 let leftPos = '50%';
-                 if (side === 'left') {
-                   // Deck A: Center (50%) -> Right Rim (100%)
-                   const pos = 50 + (visualProgress * 50);
-                   leftPos = `${pos}%`;
-                 } else {
-                   // Deck B: Center (50%) -> Left Rim (0%)
-                   const pos = 50 - (visualProgress * 50);
-                   leftPos = `${pos}%`;
-                 }
+                 const baseLeft = side === 'left' ? 0 : 100; // Target rim position
+                 const currentLeft = 50 + (baseLeft - 50) * visualProgress; // Interpolate from 50% to target
                  
                  const scale = 0.5 + (visualProgress * 0.5);
-                 const opacity = Math.min(1, visualProgress * 2); 
+                 const opacity = visualProgress > 0 ? Math.min(1, visualProgress * 1.5) : 0;
 
                  return (
                    <motion.div
                      key={note.id}
                      className="absolute top-1/2 -translate-y-1/2 z-20"
-                     style={{ 
-                       left: leftPos,
-                       x: '-50%',
+                     animate={{
+                       left: `${currentLeft}%`,
                        scale,
                        opacity
                      }}
-                     initial={{ opacity: 0 }}
+                     transition={{ duration: 0.016 }} // ~60fps updates
+                     initial={{ opacity: 0, left: '50%', scale: 0.5 }}
                    >
                      <div className="w-4 h-4 md:w-6 md:h-6 rounded-full bg-neon-pink shadow-[0_0_15px_magenta] border-2 border-white" />
                    </motion.div>
@@ -127,10 +97,10 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
           </div>
         </div>
         
-        {/* Judgement Line (Overlay on the Container) */}
+        {/* Judgement Line (Inner edge - the y-axis split between decks) */}
         {/* 
-            Left Deck: Judgement on Right Edge
-            Right Deck: Judgement on Left Edge
+            Left Deck: Judgement on Right Edge (inner)
+            Right Deck: Judgement on Left Edge (inner)
         */}
         <div className={`absolute top-0 bottom-0 w-1 bg-neon-cyan/50 z-30 ${side === 'left' ? 'right-0' : 'left-0'} shadow-[0_0_10px_cyan]`} />
         
