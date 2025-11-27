@@ -343,7 +343,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
           const RELEASE_WINDOW = 300; // ms - release accuracy window
           
           // Calculate expected release time
-          const pressTime = (activeNote as any).pressTime || holdStartTime;
+          const pressTime = activeNote.pressTime || holdStartTime;
           const expectedReleaseTime = pressTime + HOLD_DURATION;
           const timeSinceExpectedRelease = currentTime - expectedReleaseTime;
           

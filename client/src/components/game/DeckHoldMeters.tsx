@@ -16,7 +16,7 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
   const prevHoldStartTimes = useRef<Record<number, number>>({ '-1': 0, '-2': 0 });
 
   // Detect when hold ends (holdStartTime goes from non-zero to 0)
-  // Completion is based on fixed 500ms hold duration (decoupled from dots)
+  // Completion is based on fixed 1000ms hold duration (decoupled from dots)
   useEffect(() => {
     [-1, -2].forEach((lane) => {
       const prevTime = prevHoldStartTimes.current[lane] || 0;
@@ -31,7 +31,7 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
         let finalProgress = 0;
         let isComplete = false;
         if (activeNote) {
-          const HOLD_DURATION = 500; // ms - fixed hold duration
+          const HOLD_DURATION = 1000; // ms - fixed hold duration
           const holdDuration = currentTime - prevTime;
           finalProgress = Math.min(holdDuration / HOLD_DURATION, 1.0);
           isComplete = finalProgress >= 0.95; // Consider 95%+ as complete
@@ -59,7 +59,7 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
   }, [holdStartTimes, currentTime, notes]);
 
   // Get hold progress based on holdStartTimes passed from parent
-  // Meter charges from 0% at press to 100% at press + 500ms hold duration
+  // Meter charges from 0% at press to 100% at press + 1000ms hold duration
   // Decoupled from deck dots, driven purely by hold note accuracy timing
   const getHoldProgress = (lane: number): number => {
     try {

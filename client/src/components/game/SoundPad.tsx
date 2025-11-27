@@ -20,7 +20,7 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
         n && Number.isFinite(n.lane) && n.lane === index
       ) : [];
       const hasHittableNote = laneNotes.some(n => 
-        n && !n.hit && !n.missed && !(n as any).tapMissFailure && Number.isFinite(n.time) && Math.abs(n.time - currentTime) < 300
+        n && !n.hit && !n.missed && !n.tapMissFailure && Number.isFinite(n.time) && Math.abs(n.time - currentTime) < 300
       );
       
       if (hasHittableNote) {
@@ -76,7 +76,7 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
 function PadButton({ index, onClick, notes, currentTime }: { index: number; onClick: () => void; notes: Note[]; currentTime: number }) {
   
   const activeNotes = Array.isArray(notes) ? notes.filter(n => 
-    n && !n.hit && !n.missed && !(n as any).tapMissFailure && Number.isFinite(n.time)
+    n && !n.hit && !n.missed && !n.tapMissFailure && Number.isFinite(n.time)
   ) : [];
   const [isHitSuccess, setIsHitSuccess] = useState(false);
   const [isPressed, setIsPressed] = useState(false);

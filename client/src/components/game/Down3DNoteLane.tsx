@@ -429,22 +429,22 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 let holdProgress = 0;
                 let isGreyed = false;
                 
-                // Too early failure - show growing greyscale animation until judgement, then shrinking for 500ms
+                // Too early failure - show growing greyscale animation until judgement, then shrinking for 1000ms
                 if (isTooEarlyFailure) {
                   isGreyed = true;
                   if (timeUntilHit > 0) {
                     // Phase 1: Growing until note reaches judgement line
                     holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
                   } else {
-                    // Phase 2: Note has passed judgement line - show 500ms shrinking animation
+                    // Phase 2: Note has passed judgement line - show 1000ms shrinking animation
                     // Time since note arrived at judgement (note.time marks arrival)
                     const timePastJudgement = Math.max(0, currentTime - note.time);
-                    // Safety check: if more than 600ms has passed (500ms animation + 100ms buffer), hide it
-                    if (timePastJudgement > 600) {
+                    // Safety check: if more than 1100ms has passed (1000ms animation + 100ms buffer), hide it
+                    if (timePastJudgement > 1100) {
                       return null; // Animation complete, remove note
                     }
-                    // Shrink from 1.0 to 2.0 over 500ms
-                    const shrinkProgress = Math.min(timePastJudgement / 500, 1.0);
+                    // Shrink from 1.0 to 2.0 over 1000ms
+                    const shrinkProgress = Math.min(timePastJudgement / 1000, 1.0);
                     holdProgress = 1.0 + shrinkProgress;
                   }
                 } else if (isHoldReleaseFailure || isHoldMissFailure) {
