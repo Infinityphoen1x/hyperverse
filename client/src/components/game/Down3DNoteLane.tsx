@@ -193,12 +193,12 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
   // Judgement dot positions (where soundpad keys are)
   const getJudgementPos = (lane: number): { x: number; y: number } => {
     const positions: Record<number, { x: number; y: number }> = {
-      '0': { x: 150, y: 520 }, // W - left pad
-      '1': { x: 250, y: 520 }, // E - left-center pad
-      '2': { x: 350, y: 520 }, // I - right-center pad
-      '3': { x: 450, y: 520 }, // O - right pad
+      '0': { x: 150, y: 530 }, // W - bottom-left pad
+      '1': { x: 250, y: 290 }, // E - top-left pad
+      '2': { x: 350, y: 290 }, // I - top-right pad
+      '3': { x: 450, y: 530 }, // O - bottom-right pad
     };
-    return positions[lane as keyof typeof positions] || { x: 300, y: 520 };
+    return positions[lane as keyof typeof positions] || { x: 300, y: 530 };
   };
 
   const VANISHING_POINT_X = 350;
