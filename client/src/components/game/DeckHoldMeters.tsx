@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { Note } from "@/lib/gameEngine";
 
 interface DeckHoldMetersProps {
@@ -10,10 +11,48 @@ interface DeckHoldMetersProps {
 }
 
 export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart, onHoldEnd }: DeckHoldMetersProps) {
+  const [localHoldStart, setLocalHoldStart] = useState<Record<number, number>>({ '-1': 0, '-2': 0 });
+
+  // Listen for Q and P key presses directly
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.repeat) return;
+      const key = e.key.toLowerCase();
+      
+      if (key === 'q') {
+        setLocalHoldStart(prev => ({ ...prev, '-1': currentTime }));
+        onHoldStart(-1);
+      } else if (key === 'p') {
+        setLocalHoldStart(prev => ({ ...prev, '-2': currentTime }));
+        onHoldStart(-2);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      
+      if (key === 'q') {
+        setLocalHoldStart(prev => ({ ...prev, '-1': 0 }));
+        onHoldEnd(-1);
+      } else if (key === 'p') {
+        setLocalHoldStart(prev => ({ ...prev, '-2': 0 }));
+        onHoldEnd(-2);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [currentTime, onHoldStart, onHoldEnd]);
+
   // Get hold progress based on actual key press time
   const getHoldProgress = (lane: number): number => {
-    const holdStartTime = holdStartTimes[lane];
-    if (holdStartTime === 0) return 0; // No active hold
+    const laneKey = String(lane);
+    const holdStartTime = localHoldStart[laneKey];
+    if (!holdStartTime || holdStartTime === 0) return 0; // No active hold
     
     const actualHoldDuration = currentTime - holdStartTime;
     const maxHoldDuration = 2000;
