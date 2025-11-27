@@ -495,7 +495,9 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
                   }
                 } else if (wasActivated && !isCurrentlyHeld && note.hit) {
                   // After successful hold release - show normal shrinking for 1000ms, then disappear
-                  const timeSinceRelease = currentTime - holdStartTime;
+                  // Use releaseTime (when we actually released) not holdStartTime (when we pressed)
+                  const releaseTime = note.releaseTime || holdStartTime; // Fallback to press time if not set
+                  const timeSinceRelease = currentTime - releaseTime;
                   if (timeSinceRelease > 1000) {
                     return null; // Animation complete, hide trapezoid
                   }
