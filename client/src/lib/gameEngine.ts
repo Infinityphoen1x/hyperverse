@@ -235,11 +235,10 @@ export const useGameEngine = (difficulty: Difficulty) => {
           return false;
         }
         
-        // Check timing: note must be within visible/playable window
+        // Check timing: note must be within valid activation window
         const timeSinceNoteSpawn = currentTime - n.time;
-        // Note is visible from -4000 (4s before) to +2000 (2s after at hitline)
-        // Current press must be within -4100 to +100 (validation window)
-        const isInValidWindow = timeSinceNoteSpawn >= -4100 && timeSinceNoteSpawn <= 100;
+        // Valid activation window: -3000 to +100 (too-early = before -3000, early-valid = -3000 to -100, normal = -100 to +100)
+        const isInValidWindow = timeSinceNoteSpawn >= -3000 && timeSinceNoteSpawn <= 100;
         
         return isInValidWindow;
       });
