@@ -447,12 +447,16 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 // All failed holds (missed) show shrinking greyscale animation for 500ms
                 if (note.missed) {
                   isGreyed = true;
-                  const timesSinceMiss = currentTime - note.time;
-                  if (timesSinceMiss > 500) {
+                  // Calculate shrink animation: note.time is spawn time, missed happens at note.time + 2000 at latest
+                  // Estimate missed time as max(note.time + 2000, currentTime - 500) to start shrink 500ms ago or later
+                  const estimatedMissTime = Math.max(note.time + 2000, currentTime - 500);
+                  const timeSinceEstimatedMiss = Math.max(0, currentTime - estimatedMissTime);
+                  if (timeSinceEstimatedMiss > 500) {
                     return null; // Animation complete, hide trapezoid
                   }
-                  // All missed holds (too-early, premature release) shrink to completion
-                  holdProgress = 2.0;
+                  // Shrink animation: go from 1.0 to 2.0 over 500ms
+                  const missedShrinkProgress = timeSinceEstimatedMiss / 500; // 0 to 1 over 500ms
+                  holdProgress = 1.0 + missedShrinkProgress; // 1.0 to 2.0
                 } else if (isCurrentlyHeld && isValidActivation) {
                   // Phase 2: Being held - trapezoid shrinks over 2000ms (dot's journey to hitline)
                   // CRITICAL: When hold pressed early, "near end" stays LOCKED at press position
@@ -465,8 +469,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                   const DOT_TRAVEL_TIME = 2000; // Dot takes 2000ms to reach hitline
                   
                   // Near end anchors at where it was when key pressed (prevents jumping)
-                  // It only moves if pressed AFTER note visually reached that point
-                  const lockedNearProgress = Math.max(phase1ProgressAtPress, 1.0);
+                  // Clamp to [0, 1] so it starts from the growing phase
+                  const lockedNearProgress = Math.min(Math.max(phase1ProgressAtPress, 0), 1.0);
                   
                   if (!Number.isFinite(actualHoldDuration) || actualHoldDuration < 0) {
                     // Just started holding - show current Phase 1 position but transition smoothly
