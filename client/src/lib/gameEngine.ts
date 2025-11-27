@@ -153,7 +153,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           
           // Cleanup: Remove notes that are far past their visibility window
           // TAP notes: remove if > 3000ms past miss window (2000ms before + 500ms after + 500ms buffer)
-          // HOLD notes: remove if > 6600ms past spawn (4000ms lead + 1300ms release window + 1100ms animation + 200ms buffer)
+          // HOLD notes: remove if > 6600ms past spawn (4000ms lead + 1100ms hold+release + 1100ms animation + 400ms buffer)
           // Failure animations can occur late, so we need extra time for them to complete
           const noteDuration = n.type === 'TAP' ? 2500 : 6600; // visibility + hold window + animation + buffer
           if (time > n.time + noteDuration) {
@@ -379,12 +379,12 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
             setCombo(0);
             setHealth(h => Math.max(0, h - 2));
           }
-          // Check if release is within accuracy window (±300ms from expected release)
+          // Check if release is within accuracy window (±100ms from expected release)
           else if (Math.abs(timeSinceExpectedRelease) <= RELEASE_WINDOW) {
             // Successful hold - calculate accuracy tier
-            let points = 100; // Good
-            if (Math.abs(timeSinceExpectedRelease) < 50) points = 300; // Perfect
-            else if (Math.abs(timeSinceExpectedRelease) < 100) points = 200; // Great
+            let points = 100; // Good (50-100ms)
+            if (Math.abs(timeSinceExpectedRelease) < 50) points = 300; // Perfect (0-50ms)
+            else if (Math.abs(timeSinceExpectedRelease) < 100) points = 200; // Great (50-100ms)
             
             setNotes(prev => {
               return prev.map(n => 
