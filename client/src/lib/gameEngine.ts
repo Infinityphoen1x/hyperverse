@@ -122,17 +122,27 @@ export const useGameEngine = (difficulty: Difficulty) => {
       const time = now - startTimeRef.current;
       setCurrentTime(time);
       
-      // Check for missed notes
-      setNotes(prev => prev.map(n => {
-        if (!n.hit && !n.missed && time > n.time + 200) {
-          setCombo(0);
-          setHealth(h => Math.max(0, h - 5));
-          return { ...n, missed: true };
-        }
-        return n;
-      }));
+      // Check for missed notes - track if game should end
+      let shouldGameOver = false;
+      setNotes(prev => {
+        let newHealth = 100; // Will be updated from state inside this callback
+        const newNotes = prev.map(n => {
+          if (!n.hit && !n.missed && time > n.time + 200) {
+            setCombo(0);
+            setHealth(h => {
+              newHealth = Math.max(0, h - 5);
+              if (newHealth <= 0) shouldGameOver = true;
+              return newHealth;
+            });
+            return { ...n, missed: true };
+          }
+          return n;
+        });
+        
+        return newNotes;
+      });
 
-      if (health <= 0) {
+      if (shouldGameOver) {
         setGameState('GAMEOVER');
         return; // Stop loop
       }
@@ -141,7 +151,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
     };
     
     requestRef.current = requestAnimationFrame(loop);
-  }, [difficulty, health]);
+  }, [difficulty]);
 
   const hitNote = useCallback((lane: number) => {
     try {
