@@ -154,8 +154,9 @@ export const useGameEngine = (difficulty: Difficulty) => {
               shouldMarkFailed = true;
               failureType = 'tapMissFailure';
             }
-            // HOLD notes: miss if past activation window (note.time + 300ms) without being pressed
-            else if ((n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && time > n.time + 300) {
+            // HOLD notes: miss ONLY if past activation window AND was NEVER pressed (no holdStartTime recorded)
+            // If a hold was pressed, release timing determines if it succeeded, NOT this check
+            else if ((n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && time > n.time + 300 && (!n.pressTime || n.pressTime === undefined)) {
               shouldMarkFailed = true;
               failureType = 'holdMissFailure';
             }
