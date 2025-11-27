@@ -247,14 +247,16 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               const farX = VANISHING_POINT_X + Math.cos(rad) * farDistance;
               const farY = VANISHING_POINT_Y + Math.sin(rad) * farDistance;
               
-              // Width scales based on perspective distance
-              // Near end (at judgement line) is wider, far end is narrower
-              const nearDistanceScale = nearDistance / MAX_DISTANCE;
-              const farDistanceScale = farDistance / MAX_DISTANCE;
+              // Width scales based on ray geometry - perpendicular distance between adjacent rays
+              // Rays are 60° apart, so perpendicular width at distance d is: d * 2 * sin(30°) = d
+              // Apply a pixel-scale factor to match SVG coordinates
+              const rayWidthScale = 0.35; // scaling factor for the perpendicular distance between rays
               
-              const scale = 0.12 + (Math.min(holdProgress, 1.0) * 0.88);
-              const farWidth = 12 + (farDistanceScale * 18);   // Narrow at far end (vanishing point)
-              const nearWidth = 30 + (nearDistanceScale * 50); // Wide at near end (judgement line)
+              const farWidth = farDistance * rayWidthScale;
+              const nearWidth = nearDistance * rayWidthScale;
+              
+              // Glow intensity scales with how close to judgement line
+              const glowScale = 0.2 + (Math.min(holdProgress, 1.0) * 0.8);
               
               // Perpendicular direction
               const perpRad = rad + Math.PI / 2;
@@ -282,7 +284,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
                   stroke="rgba(255,255,255,0.6)"
                   strokeWidth="2"
                   style={{
-                    filter: `drop-shadow(0 0 ${20 * scale}px ${color})`,
+                    filter: `drop-shadow(0 0 ${20 * glowScale}px ${color})`,
                   }}
                 />
               );
