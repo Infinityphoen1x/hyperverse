@@ -123,7 +123,7 @@ export default function Game() {
       {/* Beatmap Loader */}
       <BeatmapLoader 
         difficulty={difficulty}
-        onBeatmapLoad={(_, youtubeVideoId, notes) => {
+        onBeatmapLoad={(youtubeVideoId, notes) => {
           if (youtubeVideoId) {
             setYoutubeVideoId(youtubeVideoId);
           }

@@ -67,14 +67,26 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
         
         if (key.toLowerCase() === 'title') metadata.title = value;
         if (key.toLowerCase() === 'artist') metadata.artist = value;
-        if (key.toLowerCase() === 'bpm') metadata.bpm = parseInt(value);
-        if (key.toLowerCase() === 'duration') metadata.duration = parseInt(value);
+        if (key.toLowerCase() === 'bpm') {
+          const bpm = parseInt(value);
+          if (!isNaN(bpm)) metadata.bpm = bpm;
+        }
+        if (key.toLowerCase() === 'duration') {
+          const dur = parseInt(value);
+          if (!isNaN(dur)) metadata.duration = dur;
+        }
         if (key.toLowerCase() === 'youtube') metadata.youtube = value;
       }
     }
     
     if (!metadata || !foundDifficulty) {
       console.error('Missing metadata or difficulty section');
+      return null;
+    }
+
+    // Validate metadata has required values
+    if (!metadata.title || !metadata.artist || metadata.bpm <= 0 || metadata.duration <= 0) {
+      console.error('Invalid metadata: title, artist, bpm, and duration must be set and positive');
       return null;
     }
     

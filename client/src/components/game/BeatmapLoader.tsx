@@ -24,7 +24,7 @@ function extractYouTubeId(url: string): string | null {
 
 interface BeatmapLoaderProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-  onBeatmapLoad: (beatmapText: string, youtubeVideoId?: string, notes?: any[]) => void;
+  onBeatmapLoad: (youtubeVideoId?: string, notes?: any[]) => void;
 }
 
 export function BeatmapLoader({ difficulty, onBeatmapLoad }: BeatmapLoaderProps) {
@@ -57,13 +57,17 @@ export function BeatmapLoader({ difficulty, onBeatmapLoad }: BeatmapLoaderProps)
     }
 
     const convertedNotes = convertBeatmapNotes(parsed.notes);
-    onBeatmapLoad(beatmapText, youtubeVideoId, convertedNotes);
+    
+    // Validate that beatmap has notes
+    if (convertedNotes.length === 0) {
+      setError("Beatmap has no notes");
+      return;
+    }
+
+    onBeatmapLoad(youtubeVideoId, convertedNotes);
     setIsLoaded(true);
     setBeatmapText("");
     setIsOpen(false);
-
-    // Reset loaded state after a moment
-    setTimeout(() => setIsLoaded(false), 2000);
   };
 
   return (
