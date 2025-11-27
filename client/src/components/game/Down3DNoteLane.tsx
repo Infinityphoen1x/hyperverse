@@ -437,13 +437,14 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                     holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
                   } else {
                     // Phase 2: Note has passed judgement line - show 500ms shrinking animation
-                    const timePastJudgement = currentTime - note.time;
+                    // Time since note arrived at judgement (note.time marks arrival)
+                    const timePastJudgement = Math.max(0, currentTime - note.time);
                     // Safety check: if more than 600ms has passed (500ms animation + 100ms buffer), hide it
-                    if (timePastJudgement >= 600) {
+                    if (timePastJudgement > 600) {
                       return null; // Animation complete, remove note
                     }
                     // Shrink from 1.0 to 2.0 over 500ms
-                    const shrinkProgress = Math.min(Math.max(timePastJudgement, 0) / 500, 1.0);
+                    const shrinkProgress = Math.min(timePastJudgement / 500, 1.0);
                     holdProgress = 1.0 + shrinkProgress;
                   }
                 } else if (isHoldReleaseFailure || isHoldMissFailure) {
