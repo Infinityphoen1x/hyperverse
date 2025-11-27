@@ -422,6 +422,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 const isCurrentlyHeld = holdStartTime > 0;
                 const wasActivated = activeHolds.has(note.id);
                 const isTooEarlyFailure = (note as any).tooEarlyFailure || false;
+                const isHoldReleaseFailure = (note as any).holdReleaseFailure || false;
+                const isHoldMissFailure = (note as any).holdMissFailure || false;
                 
                 // Define timing windows
                 // "Strict beginning": -3000ms (presses before this trigger no Phase 2, show grey)
@@ -452,8 +454,18 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                   if (timeUntilHit > 0) {
                     holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
                   } else {
-                    holdProgress = 0.99; // Stay near max without jumping to Phase 2
+                    holdProgress = 0.99;
                   }
+                } else if (isHoldReleaseFailure || isHoldMissFailure) {
+                  // Hold release failure or missed hold - show shrinking greyscale animation for 500ms
+                  isGreyed = true;
+                  const estimatedFailTime = isHoldReleaseFailure ? holdStartTime : Math.max(note.time + 2000, currentTime - 500);
+                  const timeSinceEstimatedFail = Math.max(0, currentTime - estimatedFailTime);
+                  if (timeSinceEstimatedFail > 500) {
+                    return null; // Animation complete
+                  }
+                  const shrinkProgress = timeSinceEstimatedFail / 500;
+                  holdProgress = 1.0 + shrinkProgress;
                 } else if (note.missed) {
                   isGreyed = true;
                   // Calculate shrink animation: note.time is spawn time, missed happens at note.time + 2000 at latest

@@ -125,28 +125,31 @@ export const useGameEngine = (difficulty: Difficulty) => {
       // Check for missed notes - track if game should end
       let shouldGameOver = false;
       setNotes(prev => {
-        let newHealth = 100; // Will be updated from state inside this callback
+        let newHealth = 100;
         const newNotes = prev.map(n => {
-          if (!n.hit && !n.missed) {
-            let isMissed = false;
+          if (!n.hit && !n.missed && !(n as any).tapMissFailure && !(n as any).holdReleaseFailure && !(n as any).tooEarlyFailure) {
+            let shouldMarkFailed = false;
+            let failureType = '';
             
             // TAP notes: miss if >200ms past note time
             if (n.type === 'TAP' && time > n.time + 200) {
-              isMissed = true;
+              shouldMarkFailed = true;
+              failureType = 'tapMissFailure';
             }
-            // HOLD notes: miss if past the entire hold window (note.time + 2000ms) without being hit
+            // HOLD notes: miss if past the entire hold window (note.time + 2000ms) without being held
             else if ((n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && time > n.time + 2000) {
-              isMissed = true;
+              shouldMarkFailed = true;
+              failureType = 'holdMissFailure';
             }
             
-            if (isMissed) {
+            if (shouldMarkFailed) {
               setCombo(0);
               setHealth(h => {
                 newHealth = Math.max(0, h - 2);
                 if (newHealth <= 0) shouldGameOver = true;
                 return newHealth;
               });
-              return { ...n, missed: true };
+              return { ...n, [failureType]: true } as any;
             }
           }
           return n;
@@ -185,6 +188,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
           n && 
           !n.hit && 
           !n.missed && 
+          !(n as any).tapMissFailure &&
           n.lane === lane && 
           Number.isFinite(n.time) &&
           Number.isFinite(currentTime) &&
@@ -227,9 +231,9 @@ export const useGameEngine = (difficulty: Difficulty) => {
         return;
       }
       
-      // Find any hold note on this lane that hasn't been played, missed, or marked as too-early
+      // Find any hold note on this lane that hasn't been played, missed, or marked as failed
       const anyNote = notes.find(n => {
-        if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT') || n.hit || n.missed || (n as any).tooEarlyFailure) {
+        if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT') || n.hit || n.missed || (n as any).tooEarlyFailure || (n as any).holdMissFailure || (n as any).holdReleaseFailure) {
           return false;
         }
         return true;

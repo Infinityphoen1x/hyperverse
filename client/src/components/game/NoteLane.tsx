@@ -8,15 +8,15 @@ interface NoteLaneProps {
 }
 
 export function NoteLane({ notes, currentTime }: NoteLaneProps) {
-  // Separate soundpad notes (lanes 0-3) and deck notes (lanes -1, -2)
+  // Separate soundpad notes (lanes 0-3) and deck notes (lanes -1, -2) - exclude notes with failure flags
   const soundpadNotes = Array.isArray(notes) ? notes.filter(n => {
-    if (!n || !Number.isFinite(n.time) || !Number.isFinite(n.lane)) return false;
+    if (!n || !Number.isFinite(n.time) || !Number.isFinite(n.lane) || n.hit || n.missed || (n as any).tapMissFailure) return false;
     const timeUntilHit = n.time - currentTime;
     return (n.lane >= 0 && n.lane <= 3) && timeUntilHit > -200 && timeUntilHit < 2000;
   }) : [];
 
   const deckNotes = Array.isArray(notes) ? notes.filter(n => {
-    if (!n || !Number.isFinite(n.time) || !Number.isFinite(n.lane)) return false;
+    if (!n || !Number.isFinite(n.time) || !Number.isFinite(n.lane) || n.hit || n.missed || (n as any).holdMissFailure || (n as any).holdReleaseFailure || (n as any).tooEarlyFailure) return false;
     const timeUntilHit = n.time - currentTime;
     return (n.lane === -1 || n.lane === -2) && timeUntilHit > -200 && timeUntilHit < 2000;
   }) : [];
