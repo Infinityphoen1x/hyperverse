@@ -85,16 +85,14 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
       // Not actively holding
       if (holdStartTime === 0) return 0;
       
-      // Currently holding an active note with dot present - show real-time progress
-      const actualHoldDuration = currentTime - holdStartTime;
-      if (actualHoldDuration < 0 || !Number.isFinite(actualHoldDuration)) {
-        return 0; // Negative duration = clock issue
-      }
+      // Meter charges based on DOT'S DISTANCE TRAVELED, not time held
+      // Dot spawns at activeNote.time, reaches hitline at activeNote.time + 2000
+      // Progress: how far has the dot traveled from spawn to hitline
+      const distanceTraveledFromSpawn = currentTime - activeNote.time;
+      const totalDotJourney = 2000; // ms from spawn to hitline
+      const progress = distanceTraveledFromSpawn / totalDotJourney;
       
-      const maxHoldDuration = 4000;
-      const progress = actualHoldDuration / maxHoldDuration;
-      
-      // Clamp to valid range
+      // Clamp to valid range [0, 1]
       return Math.min(Math.max(progress, 0), 1);
     } catch (error) {
       console.warn(`getHoldProgress error: ${error}`);
