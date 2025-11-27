@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useGameEngine, Difficulty, GameErrors, Note } from "@/lib/gameEngine";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
+import { SoundPad } from "@/components/game/SoundPad";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
 import { DeckHoldMeters } from "@/components/game/DeckHoldMeters";
-import { KeyIndicators } from "@/components/game/KeyIndicators";
 import { VisualEffects } from "@/components/game/VisualEffects";
 import { YouTubeOverlay } from "@/components/game/YouTubeOverlay";
 import { BeatmapLoader } from "@/components/game/BeatmapLoader";
@@ -227,8 +227,14 @@ export default function Game() {
            />
         </div>
 
-        {/* Key Indicators */}
-        <KeyIndicators />
+        {/* Sound Pads - At Bottom Center */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 scale-75">
+          <SoundPad 
+            onPadHit={hitNote} 
+            notes={notes} 
+            currentTime={currentTime} 
+          />
+        </div>
       </main>
       
       {/* Controls Hint */}
