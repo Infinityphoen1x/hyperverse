@@ -60,7 +60,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
   // Continuous rotation loop using RAF
   useEffect(() => {
     let animationId: number;
-    const rotationSpeed = 3; // degrees per frame (matches dot approach speed)
+    const rotationSpeed = 0.5; // degrees per frame (slow enough to see dot reach hitline)
     const spinThreshold = 30; // trigger onSpin every N degrees
     let lastSpinRotation = 0;
 
