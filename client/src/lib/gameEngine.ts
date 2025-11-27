@@ -272,9 +272,8 @@ export const useGameEngine = (difficulty: Difficulty) => {
       // Check if in valid window (-3000 to +100)
       // Note: < -3000 already handled above, so this only checks > 100
       if (timeSinceNoteSpawn > 100) {
-        // Clear any hold state for this lane if note is outside valid window
+        // Note has passed the valid activation window - silently skip (normal behavior)
         setHoldStartTimes(prev => ({ ...prev, [lane]: 0 }));
-        GameErrors.log(`trackHoldStart: Note on lane ${lane} is outside valid window`);
         return;
       }
       
