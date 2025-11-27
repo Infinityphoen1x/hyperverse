@@ -18,7 +18,7 @@ const PATTERN_ANGLES = [10, 45, 80, 120, 160, 35, 90, 140, 25, 70, 130, 155];
 // Mock song data generator
 const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[] => {
   const notes: Note[] = [];
-  const bpm = difficulty === 'EASY' ? 100 : difficulty === 'MEDIUM' ? 128 : 150;
+  const bpm = difficulty === 'EASY' ? 30 : difficulty === 'MEDIUM' ? 60 : 90;
   const interval = 60000 / bpm;
   
   let currentTime = 2000; // Start after 2s

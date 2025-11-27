@@ -38,11 +38,11 @@ export function NoteLane({ notes, currentTime }: NoteLaneProps) {
   };
 
   return (
-    <div className="relative w-full max-w-3xl mx-auto space-y-6">
+    <div className="relative mx-auto space-y-6" style={{ width: '1000px', maxWidth: '100%' }}>
       {/* Soundpad Lane */}
       <div>
         <div className="text-xs text-white/40 mb-2 px-2 font-rajdhani tracking-wider">PAD NOTES</div>
-        <div className="relative h-16 bg-black/40 border-2 border-white/10 rounded-lg overflow-hidden backdrop-blur-sm">
+        <div className="relative h-16 bg-black/40 border-2 border-white/10 rounded-lg overflow-hidden backdrop-blur-sm" style={{ width: '100%' }}>
           
           {/* Hitline indicator at right edge */}
           <div className="absolute right-0 top-0 bottom-0 w-1 bg-neon-cyan/70 shadow-[0_0_20px_cyan] z-20" />
