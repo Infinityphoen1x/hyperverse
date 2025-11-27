@@ -85,12 +85,12 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
       // Not actively holding
       if (holdStartTime === 0) return 0;
       
-      // Meter charges based on DOT'S DISTANCE TRAVELED, not time held
+      // Meter charges based on DOT'S DISTANCE FROM HITLINE (inverse of distance traveled)
       // Dot spawns at activeNote.time, reaches hitline at activeNote.time + 2000
-      // Progress: how far has the dot traveled from spawn to hitline
+      // Shorter distance to hitline = higher meter (1.0 when dot just spawned, 0.0 when dot hits)
       const distanceTraveledFromSpawn = currentTime - activeNote.time;
       const totalDotJourney = 2000; // ms from spawn to hitline
-      const progress = distanceTraveledFromSpawn / totalDotJourney;
+      const progress = 1.0 - (distanceTraveledFromSpawn / totalDotJourney); // Inverted
       
       // Clamp to valid range [0, 1]
       return Math.min(Math.max(progress, 0), 1);
