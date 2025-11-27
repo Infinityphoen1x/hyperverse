@@ -173,8 +173,8 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
             // HOLD notes: miss ONLY if past activation window AND was NEVER pressed
             // If pressTime is set, the hold was activated - let trackHoldEnd determine success via release timing
             // This prevents race conditions where main loop marks failed before release is evaluated
-            else if ((n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && time > n.time + 1300) {
-              // Only fail if WELL past release window (1000 + 300 = 1300ms after note spawn)
+            else if ((n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && time > n.time + 1100) {
+              // Only fail if WELL past release window (1000 + 100 = 1100ms after note spawn)
               // AND was never pressed (pressTime not set)
               if (!n.pressTime || n.pressTime === undefined) {
                 shouldMarkFailed = true;
@@ -362,7 +362,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         // If there's an active note, check release timing accuracy
         if (activeNote) {
           const HOLD_DURATION = 1000; // ms - must hold for this long (slowed for easier timing)
-          const RELEASE_WINDOW = 300; // ms - release accuracy window
+          const RELEASE_WINDOW = 100; // ms - release accuracy window (tighter timing)
           
           // Calculate expected release time
           const pressTime = activeNote.pressTime || holdStartTime;

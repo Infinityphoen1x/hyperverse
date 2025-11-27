@@ -628,13 +628,16 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 farDistance = 1 + (shrinkProgress * (JUDGEMENT_RADIUS - 1));
               }
               
+              // Glow only when player is holding the key for this lane
+              const isKeyBeingHeld = holdStartTimes[note.lane] > 0;
+              
               // Glow intensity scales with how close to judgement line (capped at Phase 1)
-              const glowScale = 0.2 + (Math.min(holdProgress, 1.0) * 0.8);
+              const glowScale = isKeyBeingHeld ? 0.2 + (Math.min(holdProgress, 1.0) * 0.8) : 0.05;
               
               // Phase 2 intensity: decrease glow as trapezoid collapses
               const phase2Progress = Math.max(0, holdProgress - 1.0) / 1.0; // 0 to 1 during Phase 2
               const phase2Glow = phase2Progress > 0 ? (1 - phase2Progress) * 0.8 : 0;
-              const finalGlowScale = Math.max(glowScale - phase2Glow, 0.1);
+              const finalGlowScale = isKeyBeingHeld ? Math.max(glowScale - phase2Glow, 0.1) : 0.05;
               
               // Calculate trapezoid corners using flanking rays
               // Far end corners (at vanishing point on flanking rays)
