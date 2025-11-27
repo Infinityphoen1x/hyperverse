@@ -11,82 +11,22 @@ interface Down3DNoteLaneProps {
 }
 
 export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { time: 0, noteId: '' }, [-2]: { time: 0, noteId: '' } }, onNoteMissed, health = 200 }: Down3DNoteLaneProps) {
-  // Track which hold notes have been activated (entered Phase 2)
-  const [activeHolds, setActiveHolds] = useState<Set<string>>(new Set());
-  const prevHoldStartTimes = useRef<Record<number, { time: number; noteId: string }>>({});
-
-  // Detect when a hold starts (holdStartTime becomes non-zero)
-  useEffect(() => {
-    try {
-      if (!Array.isArray(notes) || !holdStartTimes || typeof holdStartTimes !== 'object') {
-        return; // Invalid data, skip
-      }
-
-      const lanes = [-1, -2];
-      lanes.forEach((lane) => {
-        if (!Number.isFinite(lane)) return; // Skip invalid lanes
-        
-        const prevTime = prevHoldStartTimes.current[lane]?.time || 0;
-        const currTime = holdStartTimes[lane]?.time || 0;
-        
-        if (!Number.isFinite(prevTime) || !Number.isFinite(currTime)) {
-          return; // Skip if times are invalid
-        }
-        
-        // Hold just started
-        if (prevTime === 0 && currTime > 0) {
-          // Find the hold note that should be active NOW (closest spawn time within valid window)
-          setActiveHolds(prev => {
-            const newSet = new Set(prev);
-            
-            // Find the note with spawn time (note.time) closest to currentTime
-            // This ensures we're holding the note that's actually being triggered NOW
-            let bestNote: Note | null = null;
-            let bestDistance = Infinity;
-            
-            if (Array.isArray(notes)) {
-              for (let i = 0; i < notes.length; i++) {
-                const n = notes[i];
-                if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT')) continue;
-                if (n.hit || n.missed || !n.id) continue;
-                if (n.holdReleaseFailure || n.tooEarlyFailure || n.holdMissFailure) continue;
-                
-                const distance = Math.abs(n.time - currentTime);
-                if (distance < bestDistance) {
-                  bestDistance = distance;
-                  bestNote = n;
-                }
-              }
-            }
-            
-            if (bestNote && bestNote.id) {
-              newSet.add(bestNote.id);
-            }
-            return newSet;
-          });
-        }
-        
-        // Hold ended - remove from active holds
-        if (prevTime > 0 && currTime === 0) {
-          setActiveHolds(prev => {
-            const newSet = new Set(prev);
-            // Find and remove the active note for this lane
-            const firstActiveNote = notes.find(n => 
-              n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && n.id && activeHolds.has(n.id)
-            );
-            if (firstActiveNote?.id) {
-              newSet.delete(firstActiveNote.id);
-            }
-            return newSet;
-          });
-        }
-      });
-      
-      prevHoldStartTimes.current = { ...holdStartTimes };
-    } catch (error) {
-      console.warn(`Down3DNoteLane hold tracking error: ${error}`);
+  // Helper: Calculate phase progress (0 to 2)
+  // Phase 1 (0 to 1): Note approaching, trapezoid growing
+  // Phase 2 (1 to 2): Note at/past judgement, trapezoid shrinking
+  const getPhaseProgress = (timeUntilHit: number, pressTime: number, currentTime: number): number => {
+    const LEAD_TIME = 4000;
+    const HOLD_DURATION = 1000;
+    
+    if (timeUntilHit > 0) {
+      // Phase 1: Note approaching
+      return (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+    } else {
+      // Phase 2: Note at/past judgement, shrink based on hold duration
+      const holdDuration = currentTime - pressTime;
+      return Math.min(1.0 + (holdDuration / HOLD_DURATION), 2.0);
     }
-  }, [holdStartTimes, notes, currentTime]);
+  };
 
   // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
   // TAP notes: appear 2000ms before hit, show glitch 500ms after miss, then disappear
@@ -409,25 +349,16 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
                   return null; // Skip if calculations would be invalid
                 }
                 
-                const holdData = holdStartTimes[note.lane];
-                const holdStartTime = holdData?.time || 0;
-                const isCurrentlyHeld = holdStartTime > 0;
-                const wasActivated = activeHolds.has(note.id);
+                const pressTime = note.pressTime || 0;
+                const isCurrentlyHeld = pressTime > 0;
                 const isTooEarlyFailure = note.tooEarlyFailure || false;
                 const isHoldReleaseFailure = note.holdReleaseFailure || false;
                 const isHoldMissFailure = note.holdMissFailure || false;
                 
                 // Define timing windows - accuracy-based (pure time-based, decoupled from deck dots)
-                // Valid activation: ±300ms from note.time (same as TAP notes)
                 const ACTIVATION_WINDOW = 300;
-                
-                const timeWhenPressed = holdStartTime;
-                const timeSinceNoteSpawn = timeWhenPressed - note.time;
-                
-                // Check if press is within accuracy window
+                const timeSinceNoteSpawn = pressTime - note.time;
                 const isTooEarly = isCurrentlyHeld && Math.abs(timeSinceNoteSpawn) > ACTIVATION_WINDOW;
-                
-                // Valid activation: within ±300ms of note arrival
                 const isValidActivation = isCurrentlyHeld && !isTooEarly;
                 
                 let holdProgress = 0;
@@ -437,99 +368,42 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
                 if (isTooEarlyFailure) {
                   isGreyed = true;
                   if (timeUntilHit > 0) {
-                    // Phase 1: Growing until note reaches judgement line
                     holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
                   } else {
-                    // Phase 2: Note has passed judgement line - show 1000ms shrinking animation
-                    // Animation starts from when the failure was detected (failureTime MUST be set by gameEngine)
                     const failureTime = note.failureTime;
                     if (!failureTime) {
                       console.warn(`tooEarlyFailure missing failureTime: ${note.id}`);
-                      return null; // Safety: skip if malformed
+                      return null;
                     }
                     const timeSinceShrinkStart = Math.max(0, currentTime - failureTime);
-                    // Safety check: if more than 1100ms has passed (1000ms animation + 100ms buffer), hide it
-                    if (timeSinceShrinkStart > 1100) {
-                      return null; // Animation complete, remove note
-                    }
-                    // Shrink from 1.0 to 2.0 over 1000ms
+                    if (timeSinceShrinkStart > 1100) return null;
                     const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
                     holdProgress = 1.0 + shrinkProgress;
                   }
                 } else if (isHoldReleaseFailure || isHoldMissFailure) {
-                  // Hold release failure or missed hold - show shrinking greyscale animation for 1000ms (decoupled from deck)
                   isGreyed = true;
-                  // Animation starts from failureTime when the failure was detected (MUST be set by gameEngine)
                   const failureTime = note.failureTime;
                   if (!failureTime) {
                     console.warn(`Failure note missing failureTime: ${note.id}`);
-                    return null; // Safety: skip if malformed
+                    return null;
                   }
                   const timeSinceShrinkStart = Math.max(0, currentTime - failureTime);
-                  if (timeSinceShrinkStart > 1100) {
-                    return null; // Animation complete
-                  }
+                  if (timeSinceShrinkStart > 1100) return null;
                   const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
                   holdProgress = 1.0 + shrinkProgress;
                 } else if (isCurrentlyHeld && isValidActivation && !isTooEarlyFailure && !isHoldReleaseFailure && !isHoldMissFailure) {
-                  // Phase control: determined by NOTE position, not hold duration
-                  // Phase 1 (until judgement): Show growth - trapezoid grows from vanishing point toward judgement
-                  // Phase 2 (after judgement): Show shrinking - trapezoid shrinks over 1000ms with release timing cue
-                  
-                  if (timeUntilHit > 0) {
-                    // PHASE 1: Note still approaching judgement line
-                    // Show growth even if held early - smooth transition from growth to shrink
-                    const phase1Progress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-                    holdProgress = Math.min(1.0, phase1Progress); // Grow until it hits 1.0 at judgement
-                  } else {
-                    // PHASE 2: Note has reached/passed judgement line
-                    // Start shrinking animation based on how long player has been holding
-                    const actualHoldDuration = currentTime - holdStartTime;
-                    const HOLD_DURATION = 1000; // ms - must hold for this long, accuracy-based
-                    const shrinkAmount = actualHoldDuration / HOLD_DURATION; // 0 to 1 during 1000ms hold
-                    holdProgress = Math.min(1.0 + shrinkAmount, 2.0);
-                  }
-                } else if (wasActivated && !isCurrentlyHeld && note.hit) {
-                  // After successful hold release - continue shrinking animation from where it was
-                  // Keep using holdStartTime so the animation shows the full release window arc
-                  const timeSincePress = currentTime - holdStartTime;
-                  if (timeSincePress > 2000) {
-                    return null; // Animation complete (1000ms hold + 1000ms post-release), hide trapezoid
-                  }
-                  // Continue shrinking from holdProgress at time of press (shows successful release timing)
-                  const shrinkAmount = timeSincePress / 1000;
-                  holdProgress = Math.min(1.0 + shrinkAmount, 2.0);
-                } else if (isCurrentlyHeld && isTooEarly && !wasActivated && note.tooEarlyFailure) {
-                  // Too early press marked as failure (>300ms early): stay in Phase 1 and show GREY
-                  // Only greyscale if this note was actually marked as tooEarlyFailure
+                  holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime);
+                } else if (isCurrentlyHeld && note.hit) {
+                  const timeSincePress = currentTime - pressTime;
+                  if (timeSincePress > 2000) return null;
+                  holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime);
+                } else if (isCurrentlyHeld && isTooEarly && note.tooEarlyFailure) {
                   isGreyed = true;
-                  if (timeUntilHit > 0) {
-                    holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-                  } else {
-                    holdProgress = 0.99;
-                  }
+                  holdProgress = timeUntilHit > 0 ? (LEAD_TIME - timeUntilHit) / LEAD_TIME : 0.99;
                 } else if (isCurrentlyHeld) {
-                  // Fallback: Note is currently being held but hasn't been categorized yet
-                  // Phase control based on NOTE position (not hold duration)
-                  if (timeUntilHit > 0) {
-                    // PHASE 1: Note still approaching - show growth
-                    const phase1Progress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-                    holdProgress = Math.min(1.0, phase1Progress);
-                  } else {
-                    // PHASE 2: Note at/past judgement - show shrinking
-                    const actualHoldDuration = currentTime - holdStartTime;
-                    const HOLD_DURATION = 1000;
-                    const shrinkAmount = actualHoldDuration / HOLD_DURATION;
-                    holdProgress = Math.min(1.0 + shrinkAmount, 2.0);
-                  }
+                  holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime);
                 } else {
-                  // Phase 1: Not activated yet - trapezoid grows during approach
-                  if (timeUntilHit > 0) {
-                    holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-                  } else {
-                    // Note time passed but not activated - stay at Phase 1 max, don't jump
-                    holdProgress = 0.99;
-                  }
+                  holdProgress = timeUntilHit > 0 ? (LEAD_TIME - timeUntilHit) / LEAD_TIME : 0.99;
                 }
                 
                 // Validate holdProgress
@@ -578,7 +452,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
                 // Calculate where the near end was at moment of press
                 // Only valid if press was within the activation window (±300ms from note.time)
                 // If press was too late, cap at judgement line
-                const timeUntilHitAtPress = note.time - holdStartTime;
+                const timeUntilHitAtPress = note.time - pressTime;
                 const holdProgressAtPress = (LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME;
                 
                 // Lock near end to position at moment of press
