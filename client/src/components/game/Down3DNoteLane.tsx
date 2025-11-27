@@ -222,21 +222,18 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               
               const isInPhase2 = holdProgress >= 1.0;
               
-              // Near end: goes from vanishing point (1) to judgement line (187) in phase 1, stays at 187 in phase 2
-              const nearDistance = isInPhase2 
-                ? JUDGEMENT_RADIUS
-                : 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
+              // Far end: stays at vanishing point (1) - this is the far edge of the tunnel
+              const farDistance = 1;
               
-              // Far end distance (far = vanishing point at center)
-              let farDistance;
+              // Near end: grows from vanishing point (1) to judgement line (187) in phase 1, then shrinks back in phase 2
+              let nearDistance;
               if (isInPhase2) {
                 const shrinkProgress = holdProgress - 1.0; // 0 to 1.0 during phase 2
-                // In Phase 2, trapezoid shrinks: far end moves from JUDGEMENT_RADIUS back to vanishing point
-                // This creates the shrinking effect as the note is held
-                farDistance = JUDGEMENT_RADIUS * (1 - shrinkProgress) + 1 * shrinkProgress;
+                // In Phase 2, near end shrinks back from judgement line toward vanishing point
+                nearDistance = JUDGEMENT_RADIUS * (1 - shrinkProgress) + 1 * shrinkProgress;
               } else {
-                // Phase 1: far end grows from vanishing point outward toward JUDGEMENT_RADIUS
-                farDistance = 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
+                // Phase 1: near end grows from vanishing point outward toward judgement line
+                nearDistance = 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
               }
               
               // Calculate positions
