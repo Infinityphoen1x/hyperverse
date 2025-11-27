@@ -165,8 +165,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
         const normalizedDiff = angleDiff > 180 ? 360 - angleDiff : angleDiff;
         const isAtHitline = normalizedDiff < 10;
         
-        if (isAtHitline && !hitlineReached) {
-          setHitlineReached(true); // Update state - triggers separate effect
+        if (isAtHitline) {
           setIndicatorGlow(true);
           setTimeout(() => setIndicatorGlow(false), 200);
         }
@@ -174,14 +173,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
         GameErrors.log(`CamelotWheel hitline check error: ${error instanceof Error ? error.message : 'Unknown'}`);
       }
     };
-  }, [holdStartTime, isKeyPressed, side, notes, hitlineReached]);
-
-  // Call onHoldEnd when hitline is reached - separate from RAF
-  useEffect(() => {
-    if (hitlineReached) {
-      setTimeout(() => onHoldEnd(), 0);
-    }
-  }, [hitlineReached, onHoldEnd]);
+  }, [holdStartTime, side, notes]);
 
   const handleDrag = (_: any, info: any) => {
     try {
