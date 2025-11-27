@@ -453,15 +453,22 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                   if (timeUntilHit > 0) {
                     // Phase 1: Growing until note reaches judgement line
                     holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-                  } else {
-                    // Note has passed judgement line - show 500ms shrinking animation
+                  } else if (timeUntilHit <= 0) {
+                    // Phase 2: Note has passed judgement line - show 500ms shrinking animation
                     const timePastJudgement = currentTime - note.time;
-                    if (timePastJudgement > 500) {
-                      return null; // Animation complete, hide note
+                    // Safety check: if more than 600ms has passed (500ms animation + 100ms buffer), hide it
+                    if (timePastJudgement >= 600) {
+                      return null; // Animation complete, remove note
                     }
-                    // Shrink from 1.0 to 2.0 over 500ms
-                    const shrinkProgress = timePastJudgement / 500;
-                    holdProgress = 1.0 + shrinkProgress;
+                    // Only show shrinking if at least 0ms has passed since judgement
+                    if (timePastJudgement < 0) {
+                      // Edge case: shouldn't happen, but clamp to Phase 1
+                      holdProgress = 1.0;
+                    } else {
+                      // Shrink from 1.0 to 2.0 over 500ms
+                      const shrinkProgress = Math.min(timePastJudgement / 500, 1.0);
+                      holdProgress = 1.0 + shrinkProgress;
+                    }
                   }
                 } else if (isHoldReleaseFailure || isHoldMissFailure) {
                   // Hold release failure or missed hold - show shrinking greyscale animation for 500ms
