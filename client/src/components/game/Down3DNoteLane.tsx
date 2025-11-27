@@ -187,10 +187,10 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
     const rayMapping: Record<number, number> = {
       '-2': 0,     // P - right deck
       '-1': 180,   // Q - left deck
-      '0': 240,    // W - bottom-left pad
-      '1': 120,    // O - bottom-right pad
-      '2': 60,     // I - top-right pad
-      '3': 300,    // E - top-left pad
+      '0': 240,    // W - top-left pad
+      '1': 60,     // O - top-right pad
+      '2': 300,    // I - bottom-right pad
+      '3': 120,    // E - bottom-left pad
     };
     const angle = rayMapping[lane as keyof typeof rayMapping];
     if (!Number.isFinite(angle)) {
@@ -203,10 +203,10 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
   // Judgement dot positions (where soundpad keys are)
   const getJudgementPos = (lane: number): { x: number; y: number } => {
     const positions: Record<number, { x: number; y: number }> = {
-      '0': { x: 150, y: 530 }, // W - bottom-left pad
-      '1': { x: 450, y: 530 }, // O - bottom-right pad
-      '2': { x: 250, y: 290 }, // E - top-left pad
-      '3': { x: 350, y: 290 }, // I - top-right pad
+      '0': { x: 150, y: 290 }, // W - top-left pad
+      '1': { x: 450, y: 290 }, // O - top-right pad
+      '2': { x: 450, y: 530 }, // I - bottom-right pad
+      '3': { x: 150, y: 530 }, // E - bottom-left pad
     };
     return positions[lane as keyof typeof positions] || { x: 300, y: 530 };
   };
@@ -274,10 +274,10 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
           {/* Judgement line indicators - perpendicular to rays */}
           {/* Second-last ring is at radius 187 */}
           {[
-            { angle: 240, color: '#FF007F', key: 'W' },   // W (lane 0) - pink
-            { angle: 120, color: '#0096FF', key: 'O' },   // O (lane 1) - blue
-            { angle: 60, color: '#BE00FF', key: 'I' },    // I (lane 2) - purple
-            { angle: 300, color: '#00FFFF', key: 'E' },   // E (lane 3) - cyan
+            { angle: 240, color: '#FF007F', key: 'W' },   // W (lane 0) - top-left pink
+            { angle: 60, color: '#0096FF', key: 'O' },    // O (lane 1) - top-right blue
+            { angle: 300, color: '#BE00FF', key: 'I' },   // I (lane 2) - bottom-right purple
+            { angle: 120, color: '#00FFFF', key: 'E' },   // E (lane 3) - bottom-left cyan
           ].map((lane, idx) => {
             const rad = (lane.angle * Math.PI) / 180;
             const radius = 187;
