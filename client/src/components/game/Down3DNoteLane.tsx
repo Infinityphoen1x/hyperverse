@@ -264,12 +264,11 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                   holdProgress = 1.0;
                 }
               } else {
-                // Phase 2: Being held - trapezoid shrinks based on variable hold time
-                // Hold ends when deck dot reaches hitline (detected in CamelotWheel)
+                // Phase 2: Being held - trapezoid shrinks based on actual hold duration
+                // When hitline is detected, holdStartTimes[note.lane] is set back to 0
                 const actualHoldDuration = currentTime - holdStartTime;
-                // Variable max hold duration - we use a max to prevent over-extension
-                const maxHoldDuration = 4000; // Safety cap
-                holdProgress = 1.0 + Math.min(actualHoldDuration / maxHoldDuration, 1.0);
+                // When onHoldEnd fires, this will remain at max while other notes progress
+                holdProgress = 1.0 + Math.min(actualHoldDuration / 4000, 1.0);
               }
               
               // Get ray angle

@@ -111,7 +111,6 @@ export default function Game() {
              holdStartTime={holdStartTimes[-1]}
              onHoldStart={() => trackHoldStart(-1)}
              onHoldEnd={() => trackHoldEnd(-1)}
-             rotation={leftDeckRotation}
              onRotationChange={setLeftDeckRotation}
            />
         </div>
@@ -146,7 +145,6 @@ export default function Game() {
              holdStartTime={holdStartTimes[-2]}
              onHoldStart={() => trackHoldStart(-2)}
              onHoldEnd={() => trackHoldEnd(-2)}
-             rotation={rightDeckRotation}
              onRotationChange={setRightDeckRotation}
            />
         </div>

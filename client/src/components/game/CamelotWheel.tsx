@@ -11,7 +11,6 @@ interface CamelotWheelProps {
   holdStartTime?: number;
   onHoldStart?: () => void;
   onHoldEnd?: () => void;
-  rotation?: number;
   onRotationChange?: (rotation: number) => void;
 }
 
@@ -21,7 +20,7 @@ function getPatternAngle(noteIndex: number): number {
   return pattern[noteIndex % pattern.length];
 }
 
-export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime = 0, onHoldStart = () => {}, onHoldEnd = () => {}, rotation = 0, onRotationChange = () => {} }: CamelotWheelProps) {
+export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime = 0, onHoldStart = () => {}, onHoldEnd = () => {}, onRotationChange = () => {} }: CamelotWheelProps) {
   const [internalRotation, setInternalRotation] = useState(0);
   const [indicatorGlow, setIndicatorGlow] = useState(false);
   const [spinDirection, setSpinDirection] = useState(1); // 1 for clockwise, -1 for counter-clockwise
