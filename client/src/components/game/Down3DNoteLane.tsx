@@ -485,9 +485,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 } else if (isHoldReleaseFailure || isHoldMissFailure) {
                   // Hold release failure or missed hold - show shrinking greyscale animation for 1000ms (decoupled from deck)
                   isGreyed = true;
-                  // Animation starts from when the failure was detected (failureTime), not from hold end time
-                  // This ensures immediate visual feedback for early releases
-                  const failureTime = note.failureTime || (isHoldReleaseFailure ? holdStartTime : note.time);
+                  // Animation starts from failureTime when the failure was detected
+                  const failureTime = note.failureTime || currentTime; // Use failureTime set by game engine, fallback to current
                   const timeSinceShrinkStart = Math.max(0, currentTime - failureTime);
                   if (timeSinceShrinkStart > 1100) {
                     return null; // Animation complete
@@ -508,7 +507,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                   holdProgress = 1.0 + missedShrinkProgress; // 1.0 to 2.0
                 } else if (isCurrentlyHeld && isValidActivation && !isTooEarlyFailure && !isHoldReleaseFailure && !isHoldMissFailure) {
                   // Phase 2: Being held - trapezoid shrinks over 1000ms (slowed for easier release timing)
-                  // Visual shrink represents the release accuracy window (±300ms around 1000ms)
+                  // Visual shrink represents the release accuracy window (±100ms around 1000ms)
                   // Only if the note is NOT marked as failed
                   
                   const actualHoldDuration = currentTime - holdStartTime;
