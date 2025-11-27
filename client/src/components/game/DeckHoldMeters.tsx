@@ -85,10 +85,10 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       if (wasActive && !isActive) {
         // Only freeze meter if note wasn't marked as failed
         if (activeNote && !activeNote.tooEarlyFailure && !activeNote.holdMissFailure && !activeNote.holdReleaseFailure) {
-          const HOLD_DURATION = 1000; // ms - fixed hold duration
+          const beatmapHoldDuration = activeNote.duration || 1000; // Use beatmap duration, fallback to 1000ms
           const pressTime = activeNote.pressTime || 0;
           const holdDuration = currentTime - pressTime;
-          const finalProgress = Math.min(holdDuration / HOLD_DURATION, 1.0);
+          const finalProgress = Math.min(holdDuration / beatmapHoldDuration, 1.0);
           
           setHoldEndProgress(prev => ({ ...prev, [lane]: finalProgress }));
           setHoldEndTime(prev => ({ ...prev, [lane]: currentTime })); // Mark when it ended
@@ -171,8 +171,8 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
         return 0;
       }
       
-      // Meter charges over fixed 1000ms hold duration (slowed for easier timing)
-      const HOLD_DURATION = 1000; // ms - fixed hold duration
+      // Meter charges over beatmap-defined hold duration (or 1000ms default)
+      const beatmapHoldDuration = activeNote.duration || 1000;
       const actualHoldDuration = currentTime - pressTime;
       
       if (actualHoldDuration < 0 || !Number.isFinite(actualHoldDuration)) {
@@ -180,13 +180,13 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       }
       
       // Hold note duration has expired - meter is empty regardless of player still holding
-      if (actualHoldDuration >= HOLD_DURATION) {
+      if (actualHoldDuration >= beatmapHoldDuration) {
         return 0;
       }
       
-      // Progress = how much of the 1000ms hold duration has elapsed
-      // 0% at press, 100% at press + 1000ms (matches shrink animation in Down3DNoteLane)
-      const progress = actualHoldDuration / HOLD_DURATION;
+      // Progress = how much of the beatmap hold duration has elapsed
+      // 0% at press, 100% at press + beatmapHoldDuration (matches shrink animation in Down3DNoteLane)
+      const progress = actualHoldDuration / beatmapHoldDuration;
       
       // Clamp to valid range [0, 1]
       return Math.min(Math.max(progress, 0), 1);

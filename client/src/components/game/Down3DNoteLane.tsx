@@ -45,17 +45,16 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
   // Helper: Calculate phase progress (0 to 2)
   // Phase 1 (0 to 1): Note approaching, trapezoid growing
   // Phase 2 (1 to 2): Note at/past judgement, trapezoid shrinking
-  const getPhaseProgress = (timeUntilHit: number, pressTime: number, currentTime: number): number => {
+  const getPhaseProgress = (timeUntilHit: number, pressTime: number, currentTime: number, holdDuration: number = 1000): number => {
     const LEAD_TIME = 4000;
-    const HOLD_DURATION = 1000;
     
     if (timeUntilHit > 0) {
       // Phase 1: Note approaching
       return (LEAD_TIME - timeUntilHit) / LEAD_TIME;
     } else {
-      // Phase 2: Note at/past judgement, shrink based on hold duration
-      const holdDuration = currentTime - pressTime;
-      return Math.min(1.0 + (holdDuration / HOLD_DURATION), 2.0);
+      // Phase 2: Note at/past judgement, shrink based on hold duration from beatmap
+      const elapsedHoldTime = currentTime - pressTime;
+      return Math.min(1.0 + (elapsedHoldTime / holdDuration), 2.0);
     }
   };
 
@@ -360,6 +359,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
                 }
                 
                 const pressTime = note.pressTime || 0;
+                const holdDuration = note.duration || 1000; // Use beatmap duration, fallback to 1000ms
                 const isCurrentlyHeld = pressTime > 0;
                 const isTooEarlyFailure = note.tooEarlyFailure || false;
                 const isHoldReleaseFailure = note.holdReleaseFailure || false;
@@ -416,13 +416,13 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
                     holdProgress = 1.0 + shrinkProgress;
                   }
                 } else if (isCurrentlyHeld && isValidActivation && !isTooEarlyFailure && !isHoldReleaseFailure && !isHoldMissFailure) {
-                  holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime);
+                  holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime, holdDuration);
                 } else if (isCurrentlyHeld && note.hit) {
                   const timeSincePress = currentTime - pressTime;
                   if (timeSincePress > 2000) return null;
-                  holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime);
+                  holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime, holdDuration);
                 } else if (isCurrentlyHeld) {
-                  holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime);
+                  holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime, holdDuration);
                 } else {
                   holdProgress = timeUntilHit > 0 ? (LEAD_TIME - timeUntilHit) / LEAD_TIME : 0.99;
                 }
@@ -465,7 +465,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
                 nearDistance = 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
                 farDistance = 1;
               } else {
-                // Phase 2: Shrinking - trapezoid collapses with fade
+                // Phase 2: Shrinking - trapezoid collapses with fade over holdDuration
                 // Near end STAYS at the position it was when player pressed (shows press timing)
                 // Far end moves from vanishing point toward the near end
                 const shrinkProgress = Math.min(holdProgress - 1.0, 1.0); // 0 to 1.0 during phase 2

@@ -42,10 +42,14 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
   }
 
   // Second pass: convert to game notes, preserving original indices
-  return beatmapNotes.map((note, originalIndex) => {
+  const gameNotes: Note[] = [];
+  
+  for (let i = 0; i < beatmapNotes.length; i++) {
+    const note = beatmapNotes[i];
+    
     // Skip filtered notes but preserve index for ID generation
     if (!validNotes.includes(note)) {
-      return null;
+      continue;
     }
 
     let type: 'TAP' | 'SPIN_LEFT' | 'SPIN_RIGHT';
@@ -60,9 +64,9 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
       type = 'TAP';
     }
 
-    const id = note.holdId || `note-${note.time}-${originalIndex}`;
+    const id = note.holdId || `note-${note.time}-${i}`;
 
-    return {
+    const gameNote: Note = {
       id,
       lane: note.lane,
       time: note.time,
@@ -70,5 +74,14 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
       hit: false,
       missed: false,
     };
-  }).filter((n): n is Note => n !== null);
+    
+    // Add duration only for HOLD notes from beatmap
+    if (note.type === 'HOLD' && note.duration) {
+      gameNote.duration = note.duration;
+    }
+    
+    gameNotes.push(gameNote);
+  }
+  
+  return gameNotes;
 }

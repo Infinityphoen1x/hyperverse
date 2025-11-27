@@ -7,9 +7,10 @@ export interface Note {
   lane: number; // 0-3 for pads, -1 for left deck (Q), -2 for right deck (P)
   time: number; // timestamp in ms when it should be hit
   type: 'TAP' | 'SPIN_LEFT' | 'SPIN_RIGHT';
+  duration?: number; // HOLD note: how long player must hold (from beatmap)
   hit: boolean;
   missed: boolean;
-  tapMissFailure?: boolean; // TAP note failed (>200ms past note time)
+  tapMissFailure?: boolean; // TAP note failed (>300ms past note time)
   tooEarlyFailure?: boolean; // HOLD note pressed outside ±300ms window (too early)
   holdMissFailure?: boolean; // HOLD note expired without activation
   holdReleaseFailure?: boolean; // HOLD note released outside accuracy window
@@ -183,12 +184,15 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
                 failureType = 'holdMissFailure';
               }
               // Case 2: Pressed but NEVER released - fail after release deadline passes
-              // If pressed at pressTime, expected release is at pressTime + 1000ms
-              // Release window is ±100ms, so valid until pressTime + 1100ms
+              // If pressed at pressTime, expected release is at pressTime + holdDuration
+              // Release window is ±100ms, so valid until pressTime + holdDuration + 100ms
               // Add 500ms buffer to ensure trackHoldEnd gets priority
-              else if (n.pressTime && n.pressTime > 0 && !n.hit && time > n.pressTime + 1600) {
-                shouldMarkFailed = true;
-                failureType = 'holdMissFailure';
+              else if (n.pressTime && n.pressTime > 0 && !n.hit) {
+                const noteHoldDuration = n.duration || 1000;
+                if (time > n.pressTime + noteHoldDuration + 600) {
+                  shouldMarkFailed = true;
+                  failureType = 'holdMissFailure';
+                }
               }
             }
             
@@ -361,16 +365,16 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       
       // If there's an active note, check release timing accuracy
       if (activeNote && activeNote.pressTime && activeNote.pressTime > 0) {
-        const HOLD_DURATION = 1000; // ms - must hold for this long (slowed for easier timing)
+        const holdDuration = activeNote.duration || 1000; // Use note duration from beatmap, fallback to 1000ms
         const RELEASE_WINDOW = 100; // ms - release accuracy window (tighter timing)
         
         // Calculate expected release time - use the note's press time (single source of truth)
         const pressTime = activeNote.pressTime;
-        const expectedReleaseTime = pressTime + HOLD_DURATION;
+        const expectedReleaseTime = pressTime + holdDuration;
         const timeSinceExpectedRelease = currentTime - expectedReleaseTime;
         
         // Check if released too early (before hold duration complete)
-        if (currentTime - pressTime < HOLD_DURATION) {
+        if (currentTime - pressTime < holdDuration) {
           setNotes(prev => {
             return prev.map(n => 
               n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true, failureTime: currentTime } : n
