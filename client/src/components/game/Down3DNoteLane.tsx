@@ -494,14 +494,13 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                     const shrinkAmount = actualHoldDuration / HOLD_DURATION; // 0 to 1 during 500ms hold
                     holdProgress = Math.min(1.0 + shrinkAmount, 2.0);
                   }
-                } else if (wasActivated && !isCurrentlyHeld) {
-                  // After hold released (let go), show greyscale shrinking animation for 500ms
-                  isGreyed = true;
+                } else if (wasActivated && !isCurrentlyHeld && note.hit) {
+                  // After successful hold release - show normal shrinking for 500ms, then disappear
                   const timeSinceRelease = currentTime - holdStartTime;
                   if (timeSinceRelease > 500) {
                     return null; // Animation complete, hide trapezoid
                   }
-                  // Shrink animation from 1.0 to 2.0 over 500ms
+                  // Shrink animation from 1.0 to 2.0 over 500ms (no greyscale - successful!)
                   const releaseShrinkProgress = timeSinceRelease / 500;
                   holdProgress = 1.0 + releaseShrinkProgress;
                 } else if (isCurrentlyHeld && isTooEarly) {
