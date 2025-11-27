@@ -144,6 +144,11 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       // Check for missed notes and cleanup old notes
       let shouldGameOver = false;
       setNotes(prev => {
+        if (!Array.isArray(prev)) {
+          GameErrors.log(`Game loop: notes is not an array`);
+          return prev;
+        }
+        
         let newHealth = 200;
         const cleaned: Note[] = [];
         
@@ -152,7 +157,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           if (!n) continue;
           
           // Cleanup: Remove notes that are far past their visibility window
-          // TAP notes: remove if > 3000ms past miss window (2000ms before + 500ms after + 500ms buffer)
+          // TAP notes: remove if > 2500ms past spawn (4000ms lead + 300ms hit window + 200ms buffer)
           // HOLD notes: remove if > 6600ms past spawn (4000ms lead + 1100ms hold+release + 1100ms animation + 400ms buffer)
           // Failure animations can occur late, so we need extra time for them to complete
           const noteDuration = n.type === 'TAP' ? 2500 : 6600; // visibility + hold window + animation + buffer
@@ -173,7 +178,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
             // HOLD notes: miss if never pressed, OR if pressed but never released
             else if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
               // Case 1: Never pressed - fail at fixed time: note.time + 1100ms
-              if ((!n.pressTime || n.pressTime === undefined) && time > n.time + 1100) {
+              if (!n.pressTime && time > n.time + 1100) {
                 shouldMarkFailed = true;
                 failureType = 'holdMissFailure';
               }
@@ -290,7 +295,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           return false;
         }
         // Exclude notes that have already been pressed (pressTime set) - they're being held
-        if (n.pressTime !== undefined && n.pressTime > 0) {
+        if (n.pressTime && n.pressTime > 0) {
           return false;
         }
         return true;
