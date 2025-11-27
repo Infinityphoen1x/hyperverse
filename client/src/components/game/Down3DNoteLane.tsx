@@ -86,8 +86,38 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
             />
           ))}
 
-          {/* Vanishing point */}
-          <circle cx={VANISHING_POINT_X} cy={VANISHING_POINT_Y} r="6" fill="rgba(0,255,255,0.6)" />
+          {/* Vanishing point - nearly invisible */}
+          <circle cx={VANISHING_POINT_X} cy={VANISHING_POINT_Y} r="6" fill="rgba(0,255,255,0.05)" />
+          
+          {/* Judgement line indicators - curved arcs at second-last depth ring */}
+          {/* Second-last ring is at radius 250 */}
+          {[
+            { angle: 240, color: '#FF007F' },   // W - pink
+            { angle: 300, color: '#00FFFF' },   // E - cyan
+            { angle: 60, color: '#BE00FF' },    // I - purple
+            { angle: 120, color: '#0096FF' },   // O - blue
+          ].map((lane, idx) => {
+            const rad1 = ((lane.angle - 8) * Math.PI) / 180;
+            const rad2 = ((lane.angle + 8) * Math.PI) / 180;
+            const radius = 250;
+            
+            const x1 = VANISHING_POINT_X + Math.cos(rad1) * radius;
+            const y1 = VANISHING_POINT_Y + Math.sin(rad1) * radius;
+            const x2 = VANISHING_POINT_X + Math.cos(rad2) * radius;
+            const y2 = VANISHING_POINT_Y + Math.sin(rad2) * radius;
+            
+            return (
+              <path
+                key={`judgement-arc-${idx}`}
+                d={`M ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2}`}
+                stroke={lane.color}
+                strokeWidth="2.5"
+                fill="none"
+                opacity="0.6"
+                strokeLinecap="round"
+              />
+            );
+          })}
           
           {/* Variable-width lines for tunnel rays - 6 equally spaced */}
           {allRayAngles.map((angle) => {
