@@ -41,7 +41,8 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
         setIsKeyPressed(true);
         setHitlineReached(false); // Reset hitline detection on new press
         setSpinDirection((prev) => prev * -1); // Toggle direction
-        onHoldStart(); // Track when key is pressed
+        // Defer callback to next microtask
+        setTimeout(() => onHoldStart(), 0);
       }
     };
 
@@ -54,7 +55,8 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
       if (isLeftDeckKey || isRightDeckKey) {
         setIsKeyPressed(false);
         setHitlineReached(false); // Reset hitline detection
-        onHoldEnd(); // Track when key is released
+        // Defer callback to next microtask
+        setTimeout(() => onHoldEnd(), 0);
       }
     };
 
@@ -64,7 +66,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [side]);
+  }, [side, onHoldStart, onHoldEnd]);
 
   // Continuous rotation loop using RAF
   useEffect(() => {
@@ -79,11 +81,11 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
           const rotationDelta = rotationSpeed * spinDirection;
           const newRotation = prev + rotationDelta;
           rotationRef[1](newRotation);
-          onRotationChange(newRotation); // Export to parent
+          setTimeout(() => onRotationChange(newRotation), 0); // Export to parent
 
           // Trigger onSpin event periodically based on rotation distance
           if (Math.abs(newRotation - lastSpinRotation) >= spinThreshold) {
-            onSpin();
+            setTimeout(() => onSpin(), 0);
             lastSpinRotation = newRotation;
           }
           
@@ -166,7 +168,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
   // Call onHoldEnd when hitline is reached - separate from RAF
   useEffect(() => {
     if (hitlineReached) {
-      onHoldEnd();
+      setTimeout(() => onHoldEnd(), 0);
     }
   }, [hitlineReached, onHoldEnd]);
 
@@ -183,7 +185,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
           return prev;
         }
         const newRot = prev + info.delta.x;
-        onRotationChange(newRot);
+        setTimeout(() => onRotationChange(newRot), 0);
         return newRot;
       });
       
