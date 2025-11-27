@@ -127,14 +127,27 @@ export const useGameEngine = (difficulty: Difficulty) => {
       setNotes(prev => {
         let newHealth = 100; // Will be updated from state inside this callback
         const newNotes = prev.map(n => {
-          if (!n.hit && !n.missed && time > n.time + 200) {
-            setCombo(0);
-            setHealth(h => {
-              newHealth = Math.max(0, h - 5);
-              if (newHealth <= 0) shouldGameOver = true;
-              return newHealth;
-            });
-            return { ...n, missed: true };
+          if (!n.hit && !n.missed) {
+            let isMissed = false;
+            
+            // TAP notes: miss if >200ms past note time
+            if (n.type === 'TAP' && time > n.time + 200) {
+              isMissed = true;
+            }
+            // HOLD notes: miss if past the entire hold window (note.time + 2000ms) without being hit
+            else if ((n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && time > n.time + 2000) {
+              isMissed = true;
+            }
+            
+            if (isMissed) {
+              setCombo(0);
+              setHealth(h => {
+                newHealth = Math.max(0, h - 5);
+                if (newHealth <= 0) shouldGameOver = true;
+                return newHealth;
+              });
+              return { ...n, missed: true };
+            }
           }
           return n;
         });

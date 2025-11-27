@@ -33,14 +33,15 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
         
         // Hold just started
         if (prevTime === 0 && currTime > 0) {
-          // Mark all active hold notes on this lane as activated
+          // Mark ONLY the first active hold note on this lane as activated
           setActiveHolds(prev => {
             const newSet = new Set(prev);
-            notes.forEach(n => {
-              if (n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed && n.id) {
-                newSet.add(n.id);
-              }
-            });
+            const firstActiveNote = notes.find(n => 
+              n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed && n.id
+            );
+            if (firstActiveNote && firstActiveNote.id) {
+              newSet.add(firstActiveNote.id);
+            }
             return newSet;
           });
         }
