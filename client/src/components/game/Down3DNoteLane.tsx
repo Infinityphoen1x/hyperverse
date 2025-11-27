@@ -585,12 +585,15 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
                 const shrinkProgress = Math.min(holdProgress - 1.0, 1.0); // 0 to 1.0 during phase 2
                 
                 // Calculate where the near end was at moment of press
-                // timeUntilHit at press moment = note.time - holdStartTime
+                // Only valid if press was within the activation window (±300ms from note.time)
+                // If press was too late, cap at judgement line
                 const timeUntilHitAtPress = note.time - holdStartTime;
                 const holdProgressAtPress = (LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME;
                 
-                // Lock near end to position at moment of press (capped at judgement line)
-                nearDistance = 1 + (Math.min(holdProgressAtPress, 1.0) * (JUDGEMENT_RADIUS - 1));
+                // Lock near end to position at moment of press
+                // If press was too late (negative timeUntilHitAtPress), this caps at 1.0 (judgement line)
+                // If press was too early, this stays below 1.0 (early position)
+                nearDistance = 1 + (Math.min(Math.max(holdProgressAtPress, 0), 1.0) * (JUDGEMENT_RADIUS - 1));
                 
                 // Far end moves from vanishing point (1) toward the locked near end
                 farDistance = 1 + (shrinkProgress * (nearDistance - 1));
