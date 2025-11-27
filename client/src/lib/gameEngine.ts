@@ -278,6 +278,9 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           !n.hit && 
           !n.missed && 
           !n.tapMissFailure &&
+          !n.tooEarlyFailure &&
+          !n.holdMissFailure &&
+          !n.holdReleaseFailure &&
           n.lane === lane && 
           Number.isFinite(n.time) &&
           Number.isFinite(currentTime) &&
@@ -467,7 +470,16 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           return prev;
         }
 
-        const noteIndex = prev.findIndex(n => n && n.id === noteId && !n.hit && !n.missed);
+        const noteIndex = prev.findIndex(n => 
+          n && 
+          n.id === noteId && 
+          !n.hit && 
+          !n.missed &&
+          !n.tapMissFailure &&
+          !n.tooEarlyFailure &&
+          !n.holdMissFailure &&
+          !n.holdReleaseFailure
+        );
         
         if (noteIndex !== -1) {
           const note = prev[noteIndex];
