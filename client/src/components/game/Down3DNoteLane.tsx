@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
 import { Note } from "@/lib/gameEngine";
 
 interface Down3DNoteLaneProps {
@@ -8,6 +9,47 @@ interface Down3DNoteLaneProps {
 }
 
 export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down3DNoteLaneProps) {
+  // Track which hold notes have been activated (entered Phase 2)
+  const [activeHolds, setActiveHolds] = useState<Set<string>>(new Set());
+  const prevHoldStartTimes = useRef<Record<number, number>>({});
+
+  // Detect when a hold starts (holdStartTime becomes non-zero)
+  useEffect(() => {
+    const lanes = [-1, -2];
+    lanes.forEach((lane) => {
+      const prevTime = prevHoldStartTimes.current[lane] || 0;
+      const currTime = holdStartTimes[lane] || 0;
+      
+      // Hold just started
+      if (prevTime === 0 && currTime > 0) {
+        // Mark all active hold notes on this lane as activated
+        setActiveHolds(prev => {
+          const newSet = new Set(prev);
+          notes.forEach(n => {
+            if (n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed) {
+              newSet.add(n.id);
+            }
+          });
+          return newSet;
+        });
+      }
+      
+      // Hold ended - remove from active
+      if (prevTime > 0 && currTime === 0) {
+        setActiveHolds(prev => {
+          const newSet = new Set(prev);
+          notes.forEach(n => {
+            if (n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT')) {
+              newSet.delete(n.id);
+            }
+          });
+          return newSet;
+        });
+      }
+    });
+    
+    prevHoldStartTimes.current = { ...holdStartTimes };
+  }, [holdStartTimes, notes]);
   // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
   // TAP notes: appear 2000ms before hit, show glitch 500ms after miss, then disappear
   // SPIN (hold) notes: appear 4000ms before, stay visible through hold duration
@@ -256,28 +298,39 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
             .filter(n => n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT')
             .map(note => {
               const timeUntilHit = note.time - currentTime;
-              const HOLD_DURATION = 2000;
               const LEAD_TIME = 4000; // Hold notes appear 4000ms before hit
               const JUDGEMENT_RADIUS = 187;
               
-              // Phase 1: Trapezoid grows from vanishing point to judgement line (before player presses)
-              // Phase 2: Trapezoid shrinks as player holds (variable duration until deck dot hits hitline)
               const holdStartTime = holdStartTimes[note.lane] || 0;
+              const isCurrentlyHeld = holdStartTime > 0;
+              const wasActivated = activeHolds.has(note.id);
+              
+              // Only render if actively holding OR if was activated and not too far past
+              if (!isCurrentlyHeld && !wasActivated) {
+                return null; // Don't render trapezoid for notes not being held
+              }
+              
               let holdProgress;
               
-              if (holdStartTime === 0) {
-                // Phase 1: Not being held - trapezoid grows during approach
+              if (isCurrentlyHeld) {
+                // Phase 2: Being held - trapezoid shrinks based on actual hold duration
+                const actualHoldDuration = currentTime - holdStartTime;
+                holdProgress = Math.min(1.0 + (actualHoldDuration / 4000), 2.0);
+              } else if (wasActivated) {
+                // After hold released, continue shrink animation for 500ms completion
+                const timesSinceHit = currentTime - note.time;
+                if (timesSinceHit > 500) {
+                  return null; // Animation complete, hide trapezoid
+                }
+                // Continue shrinking at max rate
+                holdProgress = 2.0;
+              } else {
+                // Phase 1: Not activated yet - trapezoid grows during approach
                 if (timeUntilHit > 0) {
                   holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
                 } else {
                   holdProgress = 1.0;
                 }
-              } else {
-                // Phase 2: Being held - trapezoid shrinks based on actual hold duration
-                // When hitline is detected, holdStartTimes[note.lane] is set back to 0
-                const actualHoldDuration = currentTime - holdStartTime;
-                // Trapezoid shrinks from 1.0 to 2.0 (full collapse), then stays capped
-                holdProgress = Math.min(1.0 + (actualHoldDuration / 4000), 2.0);
               }
               
               // Get ray angle
@@ -313,21 +366,14 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                 farDistance = 1;
               } else {
                 // Phase 2: Shrinking - trapezoid collapses with fade
-                // During shrink, both ends approach each other toward judgement line
+                // Near end STAYS at judgement line, far end moves toward it
                 const shrinkProgress = Math.min(holdProgress - 1.0, 1.0); // 0 to 1.0 during phase 2
                 
-                // Min visible size is 20 units to prevent invisible geometry
-                const MIN_TRAP_SIZE = 20;
+                // Near end stays locked at judgement line
+                nearDistance = JUDGEMENT_RADIUS;
                 
-                // Near end moves from judgement line back toward vanishing (shrinks from far end)
-                nearDistance = Math.max(
-                  JUDGEMENT_RADIUS - (shrinkProgress * (JUDGEMENT_RADIUS - MIN_TRAP_SIZE)),
-                  MIN_TRAP_SIZE
-                );
-                
-                // Far end moves from vanishing point (1) toward near end, but stays below nearDistance
-                const targetFarDistance = 1 + (shrinkProgress * (nearDistance - 1));
-                farDistance = Math.min(targetFarDistance, nearDistance - 0.1); // Ensure far < near
+                // Far end moves from vanishing point (1) toward near end (judgement line)
+                farDistance = 1 + (shrinkProgress * (JUDGEMENT_RADIUS - 1));
               }
               
               // Glow intensity scales with how close to judgement line (capped at Phase 1)
