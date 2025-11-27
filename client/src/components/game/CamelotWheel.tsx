@@ -275,12 +275,6 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
                    const noteIndex = parseInt(note.id.split('-')[1]) || 0;
                    const targetAngle = getPatternAngle(noteIndex);
                    
-                   // Restrict dots to visible half: only render if angle is between -90 and 90 degrees (visible half)
-                   // The wheel is positioned so the right/left half is visible
-                   const normalizedAngle = ((targetAngle % 360) + 360) % 360;
-                   const isVisible = normalizedAngle > 270 || normalizedAngle < 90; // Visible half
-                   if (!isVisible) return null;
-                   
                    // Progress: 0 = at center (note.time), 1 = at rim (note.time + 2000)
                    const progress = -timeUntilHit / HOLD_DURATION;
                    const visualProgress = Math.max(0, Math.min(1, progress));
@@ -317,6 +311,12 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
           </motion.div>
         </div>
       </div>
+      
+      {/* Top Hitline Indicator (at top of wheel) */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-transparent via-neon-cyan to-transparent opacity-70 rounded-full blur-sm" />
+      
+      {/* Bottom Hitline Indicator (at bottom of wheel) */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-1 bg-gradient-to-r from-transparent via-neon-cyan to-transparent opacity-70 rounded-full blur-sm" />
       
       {/* Label */}
       <div className="text-neon-blue font-orbitron text-sm tracking-widest">
