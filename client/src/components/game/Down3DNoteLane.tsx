@@ -152,7 +152,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
             );
           })}
           
-          {/* Variable-width lines for tunnel rays - 6 equally spaced */}
+          {/* Variable-width lines for tunnel rays - 6 equally spaced cyan rays */}
           {allRayAngles.map((angle) => {
             const rad = (angle * Math.PI) / 180;
             
@@ -194,6 +194,41 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               </g>
             );
           })}
+          
+          {/* Thin white rays for trapezoid calculation - at 30° intervals */}
+          {[30, 90, 150, 210, 270, 330].map((angle) => {
+            const rad = (angle * Math.PI) / 180;
+            const segments = 12;
+            return (
+              <g key={`trapezoid-ray-${angle}`}>
+                {Array.from({ length: segments }).map((_, segIdx) => {
+                  const segProgress = (segIdx + 1) / segments;
+                  
+                  // Start point
+                  const x1 = VANISHING_POINT_X + Math.cos(rad) * (1 + segProgress * MAX_DISTANCE - (MAX_DISTANCE / segments));
+                  const y1 = VANISHING_POINT_Y + Math.sin(rad) * (1 + segProgress * MAX_DISTANCE - (MAX_DISTANCE / segments));
+                  
+                  // End point
+                  const x2 = VANISHING_POINT_X + Math.cos(rad) * (1 + segProgress * MAX_DISTANCE);
+                  const y2 = VANISHING_POINT_Y + Math.sin(rad) * (1 + segProgress * MAX_DISTANCE);
+                  
+                  return (
+                    <line 
+                      key={`trapezoid-segment-${angle}-${segIdx}`}
+                      x1={x1} 
+                      y1={y1} 
+                      x2={x2} 
+                      y2={y2} 
+                      stroke="rgba(255,255,255,0.4)" 
+                      strokeWidth="0.8"
+                      opacity="0.6"
+                      strokeLinecap="round"
+                    />
+                  );
+                })}
+              </g>
+            );
+          })}
         </svg>
 
         {/* Hold note trapezoids rendered as SVG polygons */}
@@ -216,6 +251,12 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               const rayAngle = getLaneAngle(note.lane);
               const rad = (rayAngle * Math.PI) / 180;
               
+              // Get flanking ray angles (±30° from center ray)
+              const leftRayAngle = rayAngle - 30;
+              const rightRayAngle = rayAngle + 30;
+              const leftRad = (leftRayAngle * Math.PI) / 180;
+              const rightRad = (rightRayAngle * Math.PI) / 180;
+              
               // holdProgress goes from 0 to 2 over the full visible window
               // PHASE 1 (0 to 1.0): Note approaches, trapezoid GROWS as near end travels to judgement line
               // PHASE 2 (1.0 to 2.0): Held, trapezoid SHRINKS back toward vanishing point
@@ -236,40 +277,21 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
                 nearDistance = 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
               }
               
-              // Calculate positions
-              const nearX = VANISHING_POINT_X + Math.cos(rad) * nearDistance;
-              const nearY = VANISHING_POINT_Y + Math.sin(rad) * nearDistance;
-              
-              const farX = VANISHING_POINT_X + Math.cos(rad) * farDistance;
-              const farY = VANISHING_POINT_Y + Math.sin(rad) * farDistance;
-              
-              // Width scales based on ray geometry - perpendicular distance between adjacent rays
-              // Rays are 60° apart, so perpendicular width at distance d is: d * 2 * sin(30°) = d
-              // Apply a pixel-scale factor to match SVG coordinates
-              const rayWidthScale = 0.35; // scaling factor for the perpendicular distance between rays
-              
-              // In Phase 2, both ends' widths collapse proportionally as shape shrinks
-              const widthMultiplier = isInPhase2 ? Math.max(0, 1 - (holdProgress - 1.0)) : 1;
-              
-              const farWidth = farDistance * rayWidthScale * widthMultiplier;
-              const nearWidth = nearDistance * rayWidthScale * widthMultiplier;
-              
               // Glow intensity scales with how close to judgement line
               const glowScale = 0.2 + (Math.min(holdProgress, 1.0) * 0.8);
               
-              // Perpendicular direction
-              const perpRad = rad + Math.PI / 2;
+              // Calculate trapezoid corners using flanking rays
+              // Far end corners (at vanishing point on flanking rays)
+              const x1 = VANISHING_POINT_X + Math.cos(leftRad) * farDistance;
+              const y1 = VANISHING_POINT_Y + Math.sin(leftRad) * farDistance;
+              const x2 = VANISHING_POINT_X + Math.cos(rightRad) * farDistance;
+              const y2 = VANISHING_POINT_Y + Math.sin(rightRad) * farDistance;
               
-              // Calculate trapezoid corners
-              const x1 = farX + Math.cos(perpRad) * (farWidth / 2);
-              const y1 = farY + Math.sin(perpRad) * (farWidth / 2);
-              const x2 = farX - Math.cos(perpRad) * (farWidth / 2);
-              const y2 = farY - Math.sin(perpRad) * (farWidth / 2);
-              
-              const x3 = nearX - Math.cos(perpRad) * (nearWidth / 2);
-              const y3 = nearY - Math.sin(perpRad) * (nearWidth / 2);
-              const x4 = nearX + Math.cos(perpRad) * (nearWidth / 2);
-              const y4 = nearY + Math.sin(perpRad) * (nearWidth / 2);
+              // Near end corners (at judgement line on flanking rays)
+              const x3 = VANISHING_POINT_X + Math.cos(rightRad) * nearDistance;
+              const y3 = VANISHING_POINT_Y + Math.sin(rightRad) * nearDistance;
+              const x4 = VANISHING_POINT_X + Math.cos(leftRad) * nearDistance;
+              const y4 = VANISHING_POINT_Y + Math.sin(leftRad) * nearDistance;
               
               const opacity = 0.15 + Math.min(holdProgress, 1.0) * 0.85;
               const color = getColorForLane(note.lane);
