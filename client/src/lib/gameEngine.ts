@@ -98,7 +98,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
   const [gameState, setGameState] = useState<'MENU' | 'PLAYING' | 'GAMEOVER'>('MENU');
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
-  const [health, setHealth] = useState(100);
+  const [health, setHealth] = useState(200);
   const [notes, setNotes] = useState<Note[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
   const [holdStartTimes, setHoldStartTimes] = useState<Record<number, number>>({ '-1': 0, '-2': 0 }); // Track when Q/P were pressed
@@ -109,7 +109,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
   const startGame = useCallback(() => {
     setScore(0);
     setCombo(0);
-    setHealth(100);
+    setHealth(200);
     setNotes(generateNotes(difficulty));
     setGameState('PLAYING');
     
@@ -142,7 +142,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
             if (isMissed) {
               setCombo(0);
               setHealth(h => {
-                newHealth = Math.max(0, h - 5);
+                newHealth = Math.max(0, h - 2);
                 if (newHealth <= 0) shouldGameOver = true;
                 return newHealth;
               });
@@ -299,7 +299,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
           const note = prev[noteIndex];
           setCombo(0);
           setHealth(h => {
-            const newHealth = Math.max(0, h - 5);
+            const newHealth = Math.max(0, h - 2);
             if (newHealth <= 0) setGameState('GAMEOVER');
             return newHealth;
           });

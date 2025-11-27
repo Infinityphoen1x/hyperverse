@@ -248,12 +248,19 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
             // Opacity: translucent at center (0.08), more visible at edge (0.3)
             const opacity = 0.08 + progress * 0.22;
             
+            // Shift main ray color from cyan toward red as health decreases
+            const healthFactor = Math.max(0, 200 - health) / 200;
+            const r = Math.round(0 + (255 - 0) * healthFactor);
+            const g = Math.round(255 * (1 - healthFactor));
+            const b = Math.round(255 * (1 - healthFactor));
+            const rayColor = `rgba(${r},${g},${b},1)`;
+            
             return (
               <polygon
                 key={`tunnel-hexagon-${idx}`}
                 points={points}
                 fill="none"
-                stroke="rgba(0,255,255,1)"
+                stroke={rayColor}
                 strokeWidth={strokeWidth}
                 opacity={opacity}
               />
@@ -301,9 +308,16 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
             );
           })}
           
-          {/* Variable-width lines for tunnel rays - 6 equally spaced cyan rays */}
+          {/* Variable-width lines for tunnel rays - 6 equally spaced rays that shift toward red at low health */}
           {allRayAngles.map((angle) => {
             const rad = (angle * Math.PI) / 180;
+            
+            // Shift main ray color from cyan toward red as health decreases
+            const healthFactor = Math.max(0, 200 - health) / 200;
+            const r = Math.round(0 + (255 - 0) * healthFactor);
+            const g = Math.round(255 * (1 - healthFactor));
+            const b = Math.round(255 * (1 - healthFactor));
+            const rayColor = `rgba(${r},${g},${b},1)`;
             
             // Create line with multiple segments for smooth thickness and opacity gradient
             const segments = 12;
@@ -333,7 +347,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                       y1={y1} 
                       x2={x2} 
                       y2={y2} 
-                      stroke="rgba(0,255,255,1)" 
+                      stroke={rayColor}
                       strokeWidth={strokeWidth}
                       opacity={opacity}
                       strokeLinecap="round"
@@ -497,6 +511,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
               const rad = (rayAngle * Math.PI) / 180;
               
               // Get flanking ray angles (±15° from center ray)
+              // These are only used for trapezoid geometry, not rendered as separate rays
               const leftRayAngle = rayAngle - 15;
               const rightRayAngle = rayAngle + 15;
               const leftRad = (leftRayAngle * Math.PI) / 180;
