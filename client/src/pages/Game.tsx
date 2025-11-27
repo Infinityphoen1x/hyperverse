@@ -3,6 +3,7 @@ import { useGameEngine, Difficulty, GameErrors, Note } from "@/lib/gameEngine";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
 import { DeckHoldMeters } from "@/components/game/DeckHoldMeters";
+import { KeyIndicators } from "@/components/game/KeyIndicators";
 import { VisualEffects } from "@/components/game/VisualEffects";
 import { YouTubeOverlay } from "@/components/game/YouTubeOverlay";
 import { BeatmapLoader } from "@/components/game/BeatmapLoader";
@@ -226,6 +227,8 @@ export default function Game() {
            />
         </div>
 
+        {/* Key Indicators */}
+        <KeyIndicators />
       </main>
       
       {/* Controls Hint */}
