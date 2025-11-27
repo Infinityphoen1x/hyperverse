@@ -44,15 +44,20 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
             let bestNote: Note | null = null;
             let bestDistance = Infinity;
             
-            notes.forEach((n) => {
-              if (n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed && n.id && !(n as any).holdReleaseFailure && !(n as any).tooEarlyFailure && !(n as any).holdMissFailure) {
+            if (Array.isArray(notes)) {
+              for (let i = 0; i < notes.length; i++) {
+                const n = notes[i];
+                if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT')) continue;
+                if (n.hit || n.missed || !n.id) continue;
+                if ((n as any).holdReleaseFailure || (n as any).tooEarlyFailure || (n as any).holdMissFailure) continue;
+                
                 const distance = Math.abs(n.time - currentTime);
                 if (distance < bestDistance) {
                   bestDistance = distance;
                   bestNote = n;
                 }
               }
-            });
+            }
             
             if (bestNote && bestNote.id) {
               newSet.add(bestNote.id);
