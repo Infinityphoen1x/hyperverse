@@ -139,9 +139,10 @@ export const useGameEngine = (difficulty: Difficulty) => {
           
           // Cleanup: Remove notes that are far past their visibility window
           // TAP notes: remove if > 3000ms past miss window (2000ms before + 500ms after + 500ms buffer)
-          // HOLD notes: remove if > 3000ms past disappearance (4000ms before + 500ms after + 500ms buffer)
-          const noteDuration = n.type === 'TAP' ? 2500 : 5000; // visibility + animation time
-          if (time > n.time + noteDuration + 500) {
+          // HOLD notes: remove if > 6600ms past spawn (4000ms lead + 1300ms release window + 1100ms animation + 200ms buffer)
+          // Failure animations can occur late, so we need extra time for them to complete
+          const noteDuration = n.type === 'TAP' ? 2500 : 6600; // visibility + hold window + animation + buffer
+          if (time > n.time + noteDuration) {
             continue; // Skip (remove) this note
           }
           
