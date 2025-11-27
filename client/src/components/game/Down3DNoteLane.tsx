@@ -290,17 +290,16 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
               // Near end: grows toward judgement line during Phase 1, stays fixed during Phase 2
               const nearDistance = 1 + (Math.min(holdProgress, 1.0) * (JUDGEMENT_RADIUS - 1));
               
-              // Far end: stays at vanishing point during Phase 1, shrinks during Phase 2
+              // Far end: stays at vanishing point during Phase 1, moves toward near end during Phase 2
               let farDistance;
               if (!isInPhase2) {
-                // Phase 1: Far end stays at vanishing point
+                // Phase 1: Far end stays at vanishing point (1)
                 farDistance = 1;
               } else {
-                // Phase 2: Far end shrinks BACK toward vanishing point (opposite of Phase 1)
-                // During Phase 1, near end grew 1 → 187
-                // During Phase 2, far end shrinks 187 → 1 (to match the "shrink" visual)
+                // Phase 2: Far end moves from vanishing point (1) toward judgement line (187)
+                // This closes the gap and shrinks the trapezoid width while both ends approach each other
                 const shrinkProgress = holdProgress - 1.0; // 0 to 1.0 during phase 2
-                farDistance = JUDGEMENT_RADIUS - (shrinkProgress * (JUDGEMENT_RADIUS - 1));
+                farDistance = 1 + (shrinkProgress * (JUDGEMENT_RADIUS - 1));
               }
               
               // Glow intensity scales with how close to judgement line
