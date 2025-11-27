@@ -109,6 +109,7 @@ export default function Game() {
              holdStartTime={holdStartTimes[-1]}
              onHoldStart={() => trackHoldStart(-1)}
              onHoldEnd={() => trackHoldEnd(-1)}
+             rotation={0}
            />
         </div>
 
@@ -142,6 +143,7 @@ export default function Game() {
              holdStartTime={holdStartTimes[-2]}
              onHoldStart={() => trackHoldStart(-2)}
              onHoldEnd={() => trackHoldEnd(-2)}
+             rotation={0}
            />
         </div>
 

@@ -251,26 +251,25 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
               const LEAD_TIME = 4000; // Hold notes appear 4000ms before hit
               const JUDGEMENT_RADIUS = 187;
               
-              // Phase 1 (before note hit): Trapezoid grows from vanishing point toward judgement line
-              // Phase 2 (after player presses): Trapezoid shrinks back inward
+              // Phase 1: Trapezoid grows from vanishing point to judgement line (before player presses)
+              // Phase 2: Trapezoid shrinks as player holds (variable duration until deck dot hits hitline)
               const holdStartTime = holdStartTimes[note.lane] || 0;
               let holdProgress;
               
               if (holdStartTime === 0) {
-                // Phase 1: Note hasn't been held yet - trapezoid GROWS as it approaches
-                // Progress from 0 (far away) to 1.0 (at judgement line)
-                // But we want it to START growing from the vanishing point
-                // So if timeUntilHit is positive (note in future), start from 0
+                // Phase 1: Not being held - trapezoid grows during approach
                 if (timeUntilHit > 0) {
                   holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
                 } else {
-                  // Note has passed, go to max of Phase 1
                   holdProgress = 1.0;
                 }
               } else {
-                // Phase 2: Player is holding - trapezoid SHRINKS inward
+                // Phase 2: Being held - trapezoid shrinks based on variable hold time
+                // Hold ends when deck dot reaches hitline (detected in CamelotWheel)
                 const actualHoldDuration = currentTime - holdStartTime;
-                holdProgress = 1.0 + (actualHoldDuration / HOLD_DURATION);
+                // Variable max hold duration - we use a max to prevent over-extension
+                const maxHoldDuration = 4000; // Safety cap
+                holdProgress = 1.0 + Math.min(actualHoldDuration / maxHoldDuration, 1.0);
               }
               
               // Get ray angle

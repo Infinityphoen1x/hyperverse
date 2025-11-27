@@ -11,6 +11,7 @@ interface CamelotWheelProps {
   holdStartTime?: number;
   onHoldStart?: () => void;
   onHoldEnd?: () => void;
+  rotation?: number;
 }
 
 // Session-based pattern: use note index to get consistent pattern across game
@@ -97,30 +98,36 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
   const wheelLane = side === 'left' ? -1 : -2;
   const activeNotes = notes.filter(n => n.lane === wheelLane && !n.hit && !n.missed);
 
-  // Detect when a note hits the hitline
+  // Detect when deck dot reaches hitline (spawn point at top)
   useEffect(() => {
-    const hittingNotes = activeNotes.filter(note => {
-      const timeUntilHit = note.time - currentTime;
-      const progress = 1 - (timeUntilHit / 2000);
-      const visualProgress = Math.max(0, Math.min(1, progress));
-      
-      // Get the target endpoint for this note using pattern
-      const noteIndex = parseInt(note.id.split('-')[1]) || 0;
-      const targetAngle = getPatternAngle(noteIndex);
-      
-      // Convert angle to position on rim
-      const radians = (targetAngle * Math.PI) / 180;
-      const targetY = 50 + 50 * Math.sin(radians);
-      
-      // Check if at the rim (progress ~1.0) and near spawn point (targetY close to 50)
-      return visualProgress >= 0.95 && Math.abs(targetY - 50) < 3;
-    });
-
-    if (hittingNotes.length > 0) {
+    if (holdStartTime === 0 || !isKeyPressed) return; // Not holding
+    
+    const wheelLane = side === 'left' ? -1 : -2;
+    const activeNote = notes.find(n => n.lane === wheelLane && !n.hit && !n.missed);
+    if (!activeNote) return;
+    
+    // Get target angle for this note
+    const noteIndex = parseInt(activeNote.id.split('-')[1]) || 0;
+    const targetAngle = getPatternAngle(noteIndex);
+    
+    // Current deck rotation normalized to 0-360
+    const normalizedRotation = ((rotation % 360) + 360) % 360;
+    
+    // Hitline is at spawn point (targetAngle). Check if dot has rotated to it
+    const dotAngle = (normalizedRotation + targetAngle) % 360;
+    const hitlineAngle = targetAngle;
+    
+    // Within ~5 degrees of hitline
+    const angleDiff = Math.abs(dotAngle - hitlineAngle);
+    const isAtHitline = angleDiff < 10 || angleDiff > 350;
+    
+    if (isAtHitline) {
       setIndicatorGlow(true);
+      // End hold when dot reaches hitline
+      onHoldEnd();
       setTimeout(() => setIndicatorGlow(false), 200);
     }
-  }, [activeNotes, currentTime]);
+  }, [rotation, holdStartTime, isKeyPressed, side, notes, onHoldEnd]);
 
   const handleDrag = (_: any, info: any) => {
     setRotation((prev) => prev + info.delta.x);
