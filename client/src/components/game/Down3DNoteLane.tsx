@@ -339,7 +339,8 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
             const rayAngle = getLaneAngle(note.lane);
             const rad = (rayAngle * Math.PI) / 180;
             
-            const distance = 1 + (progress * (MAX_DISTANCE - 1));
+            const JUDGEMENT_RADIUS = 187;
+            const distance = 1 + (progress * (JUDGEMENT_RADIUS - 1));
             const xOffset = Math.cos(rad) * distance;
             const yOffset = Math.sin(rad) * distance;
             
