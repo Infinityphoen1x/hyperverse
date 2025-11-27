@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import wheelImg from "@assets/generated_images/neon_glowing_cyber_turntable_interface.png";
-import { Note } from "@/lib/gameEngine";
+import { Note, GameErrors } from "@/lib/gameEngine";
 
 interface CamelotWheelProps {
   side: "left" | "right";
@@ -109,44 +109,79 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
   
   useEffect(() => {
     checkHitlineRef.current = (rot: number) => {
-      if (holdStartTime === 0 || !isKeyPressed) return; // Not holding
-      
-      const wheelLane = side === 'left' ? -1 : -2;
-      const activeNote = notes.find(n => n.lane === wheelLane && !n.hit && !n.missed);
-      if (!activeNote) return;
-      
-      // Get target angle for this note
-      const noteIndex = parseInt(activeNote.id.split('-')[1]) || 0;
-      const targetAngle = getPatternAngle(noteIndex);
-      
-      // Hitline is at top (spawn point). Deck dot is at (rotation + targetAngle)
-      const normalizedRotation = ((rot % 360) + 360) % 360;
-      const dotVisualAngle = (normalizedRotation + targetAngle) % 360;
-      
-      // Hitline at top is 0 degrees (or 360)
-      const hitlineAngle = 0;
-      
-      // Check if dot has reached hitline (within tolerance)
-      const angleDiff = Math.abs(dotVisualAngle - hitlineAngle);
-      const normalizedDiff = angleDiff > 180 ? 360 - angleDiff : angleDiff;
-      const isAtHitline = normalizedDiff < 15;
-      
-      if (isAtHitline) {
-        setIndicatorGlow(true);
-        onHoldEnd(); // This is safe - called from RAF, not render
-        setTimeout(() => setIndicatorGlow(false), 200);
+      try {
+        if (holdStartTime === 0 || !isKeyPressed) return; // Not holding
+        
+        if (!Number.isFinite(rot)) {
+          GameErrors.log(`CamelotWheel: Invalid rotation ${rot}`);
+          return;
+        }
+        
+        const wheelLane = side === 'left' ? -1 : -2;
+        const activeNote = notes.find(n => n && n.lane === wheelLane && !n.hit && !n.missed);
+        if (!activeNote) return;
+        
+        // Get target angle for this note
+        const angleMatch = activeNote.id.match(/note-\d+-(\d+)/);
+        const noteIndex = angleMatch ? parseInt(angleMatch[1]) : 0;
+        
+        if (!Number.isFinite(noteIndex)) {
+          GameErrors.log(`CamelotWheel: Invalid noteIndex from ${activeNote.id}`);
+          return;
+        }
+        
+        const targetAngle = getPatternAngle(noteIndex);
+        
+        if (!Number.isFinite(targetAngle)) {
+          GameErrors.log(`CamelotWheel: Invalid targetAngle ${targetAngle}`);
+          return;
+        }
+        
+        // Hitline is at top (spawn point). Deck dot is at (rotation + targetAngle)
+        const normalizedRotation = ((rot % 360) + 360) % 360;
+        const dotVisualAngle = (normalizedRotation + targetAngle) % 360;
+        
+        // Hitline at top is 0 degrees (or 360)
+        const hitlineAngle = 0;
+        
+        // Check if dot has reached hitline (within tolerance)
+        const angleDiff = Math.abs(dotVisualAngle - hitlineAngle);
+        const normalizedDiff = angleDiff > 180 ? 360 - angleDiff : angleDiff;
+        const isAtHitline = normalizedDiff < 15;
+        
+        if (isAtHitline) {
+          setIndicatorGlow(true);
+          onHoldEnd(); // This is safe - called from RAF, not render
+          setTimeout(() => setIndicatorGlow(false), 200);
+        }
+      } catch (error) {
+        GameErrors.log(`CamelotWheel hitline check error: ${error instanceof Error ? error.message : 'Unknown'}`);
       }
     };
   }, [holdStartTime, isKeyPressed, side, notes, onHoldEnd]);
 
   const handleDrag = (_: any, info: any) => {
-    setInternalRotation((prev) => {
-      const newRot = prev + info.delta.x;
-      onRotationChange(newRot);
-      return newRot;
-    });
-    if (Math.abs(info.velocity.x) > 100) {
-      onSpin();
+    try {
+      if (!info || !info.delta || !Number.isFinite(info.delta.x)) {
+        GameErrors.log(`CamelotWheel: Invalid drag info`);
+        return;
+      }
+      
+      setInternalRotation((prev) => {
+        if (!Number.isFinite(prev)) {
+          GameErrors.log(`CamelotWheel: Invalid rotation state ${prev}`);
+          return prev;
+        }
+        const newRot = prev + info.delta.x;
+        onRotationChange(newRot);
+        return newRot;
+      });
+      
+      if (info.velocity && Math.abs(info.velocity.x) > 100) {
+        onSpin();
+      }
+    } catch (error) {
+      GameErrors.log(`CamelotWheel drag error: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
   };
 

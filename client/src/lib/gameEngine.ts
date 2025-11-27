@@ -12,41 +12,80 @@ export interface Note {
   missed: boolean;
 }
 
+// Error tracking for debugging
+const GameErrors = {
+  notes: [] as string[],
+  log: (msg: string) => {
+    const timestamp = Date.now();
+    const error = `[${timestamp}] ${msg}`;
+    GameErrors.notes.push(error);
+    if (GameErrors.notes.length > 100) GameErrors.notes.shift(); // Keep last 100
+    console.warn(`[GAME ERROR] ${error}`);
+  }
+};
+
+export { GameErrors };
+
 // Mock song data generator
 const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[] => {
-  const notes: Note[] = [];
-  const bpm = difficulty === 'EASY' ? 30 : difficulty === 'MEDIUM' ? 60 : 90;
-  const interval = 60000 / bpm;
-  
-  let currentTime = 2000; // Start after 2s
-  
-  while (currentTime < duration) {
-    // Randomize lanes
-    const lane = Math.floor(Math.random() * 4);
-    
-    // Occasional spin notes
-    const isSpin = Math.random() > 0.9;
-    
-    notes.push({
-      id: `note-${currentTime}`,
-      lane: isSpin ? (Math.random() > 0.5 ? -1 : -2) : lane, // -1 left wheel, -2 right wheel
-      time: currentTime,
-      type: isSpin ? (Math.random() > 0.5 ? 'SPIN_LEFT' : 'SPIN_RIGHT') : 'TAP',
-      hit: false,
-      missed: false,
-    });
-    
-    // Difficulty adjustment: more notes for harder levels
-    const skipChance = difficulty === 'EASY' ? 0.5 : difficulty === 'MEDIUM' ? 0.2 : 0;
-    
-    if (Math.random() > skipChance) {
-       currentTime += interval;
-    } else {
-       currentTime += interval * 2;
+  try {
+    if (!difficulty || !['EASY', 'MEDIUM', 'HARD'].includes(difficulty)) {
+      GameErrors.log(`Invalid difficulty: ${difficulty}`);
+      return [];
     }
+    if (duration <= 0 || !Number.isFinite(duration)) {
+      GameErrors.log(`Invalid duration: ${duration}`);
+      return [];
+    }
+
+    const notes: Note[] = [];
+    const bpm = difficulty === 'EASY' ? 30 : difficulty === 'MEDIUM' ? 60 : 90;
+    const interval = 60000 / bpm;
+    
+    if (!Number.isFinite(interval) || interval <= 0) {
+      GameErrors.log(`Invalid interval calculated: ${interval}`);
+      return [];
+    }
+    
+    let currentTime = 2000; // Start after 2s
+    let noteCount = 0;
+    
+    while (currentTime < duration && noteCount < 1000) {
+      // Randomize lanes
+      const lane = Math.floor(Math.random() * 4);
+      
+      // Occasional spin notes
+      const isSpin = Math.random() > 0.9;
+      
+      notes.push({
+        id: `note-${currentTime}-${noteCount}`,
+        lane: isSpin ? (Math.random() > 0.5 ? -1 : -2) : lane,
+        time: currentTime,
+        type: isSpin ? (Math.random() > 0.5 ? 'SPIN_LEFT' : 'SPIN_RIGHT') : 'TAP',
+        hit: false,
+        missed: false,
+      });
+      
+      // Difficulty adjustment
+      const skipChance = difficulty === 'EASY' ? 0.5 : difficulty === 'MEDIUM' ? 0.2 : 0;
+      
+      if (Math.random() > skipChance) {
+         currentTime += interval;
+      } else {
+         currentTime += interval * 2;
+      }
+      noteCount++;
+    }
+    
+    if (noteCount >= 1000) {
+      GameErrors.log(`Note generation capped at 1000 notes (possible infinite loop)`);
+    }
+    
+    return notes;
+  } catch (error) {
+    GameErrors.log(`generateNotes error: ${error instanceof Error ? error.message : 'Unknown'}`);
+    return [];
   }
-  
-  return notes;
 };
 
 export const useGameEngine = (difficulty: Difficulty) => {
@@ -99,34 +138,51 @@ export const useGameEngine = (difficulty: Difficulty) => {
   }, [difficulty, health]);
 
   const hitNote = useCallback((lane: number) => {
-    const hitWindow = 300; // ms
-    
-    setNotes(prev => {
-      const noteIndex = prev.findIndex(n => 
-        !n.hit && 
-        !n.missed && 
-        n.lane === lane && 
-        Math.abs(n.time - currentTime) < hitWindow
-      );
-
-      if (noteIndex !== -1) {
-        const note = prev[noteIndex];
-        const accuracy = Math.abs(note.time - currentTime);
-        let points = 100;
-        if (accuracy < 50) points = 300;
-        else if (accuracy < 100) points = 200;
-
-        setScore(s => s + points);
-        setCombo(c => c + 1);
-        setHealth(h => Math.min(100, h + 1));
-        
-        const newNotes = [...prev];
-        newNotes[noteIndex] = { ...note, hit: true };
-        return newNotes;
+    try {
+      if (!Number.isInteger(lane)) {
+        GameErrors.log(`hitNote: Invalid lane type: ${typeof lane}`);
+        return;
       }
       
-      return prev;
-    });
+      const hitWindow = 300; // ms
+      
+      setNotes(prev => {
+        if (!Array.isArray(prev)) {
+          GameErrors.log(`hitNote: notes is not an array`);
+          return prev;
+        }
+
+        const noteIndex = prev.findIndex(n => 
+          n && 
+          !n.hit && 
+          !n.missed && 
+          n.lane === lane && 
+          Number.isFinite(n.time) &&
+          Number.isFinite(currentTime) &&
+          Math.abs(n.time - currentTime) < hitWindow
+        );
+
+        if (noteIndex !== -1) {
+          const note = prev[noteIndex];
+          const accuracy = Math.abs(note.time - currentTime);
+          let points = 100;
+          if (accuracy < 50) points = 300;
+          else if (accuracy < 100) points = 200;
+
+          setScore(s => s + points);
+          setCombo(c => c + 1);
+          setHealth(h => Math.min(100, h + 1));
+          
+          const newNotes = [...prev];
+          newNotes[noteIndex] = { ...note, hit: true };
+          return newNotes;
+        }
+        
+        return prev;
+      });
+    } catch (error) {
+      GameErrors.log(`hitNote error: ${error instanceof Error ? error.message : 'Unknown'}`);
+    }
   }, [currentTime]);
 
   useEffect(() => {
@@ -136,11 +192,39 @@ export const useGameEngine = (difficulty: Difficulty) => {
   }, []);
 
   const trackHoldStart = useCallback((lane: number) => {
-    setHoldStartTimes(prev => ({ ...prev, [lane]: currentTime }));
+    try {
+      if (!Number.isInteger(lane) || !Number.isFinite(currentTime)) {
+        GameErrors.log(`trackHoldStart: Invalid lane=${lane} or currentTime=${currentTime}`);
+        return;
+      }
+      setHoldStartTimes(prev => {
+        if (!prev || typeof prev !== 'object') {
+          GameErrors.log(`trackHoldStart: holdStartTimes corrupted`);
+          return prev;
+        }
+        return { ...prev, [lane]: currentTime };
+      });
+    } catch (error) {
+      GameErrors.log(`trackHoldStart error: ${error instanceof Error ? error.message : 'Unknown'}`);
+    }
   }, [currentTime]);
 
   const trackHoldEnd = useCallback((lane: number) => {
-    setHoldStartTimes(prev => ({ ...prev, [lane]: 0 }));
+    try {
+      if (!Number.isInteger(lane)) {
+        GameErrors.log(`trackHoldEnd: Invalid lane=${lane}`);
+        return;
+      }
+      setHoldStartTimes(prev => {
+        if (!prev || typeof prev !== 'object') {
+          GameErrors.log(`trackHoldEnd: holdStartTimes corrupted`);
+          return prev;
+        }
+        return { ...prev, [lane]: 0 };
+      });
+    } catch (error) {
+      GameErrors.log(`trackHoldEnd error: ${error instanceof Error ? error.message : 'Unknown'}`);
+    }
   }, []);
 
   return {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { useGameEngine, Difficulty } from "@/lib/gameEngine";
+import { useGameEngine, Difficulty, GameErrors } from "@/lib/gameEngine";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { SoundPad } from "@/components/game/SoundPad";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
@@ -12,6 +12,7 @@ export default function Game() {
   const [location] = useLocation();
   const [leftDeckRotation, setLeftDeckRotation] = useState(0);
   const [rightDeckRotation, setRightDeckRotation] = useState(0);
+  const [gameErrors, setGameErrors] = useState<string[]>([]);
   const searchParams = new URLSearchParams(window.location.search);
   const difficulty = (searchParams.get('difficulty') || 'MEDIUM') as Difficulty;
   
@@ -29,6 +30,16 @@ export default function Game() {
     trackHoldEnd
   } = useGameEngine(difficulty);
 
+  // Monitor errors
+  useEffect(() => {
+    const checkErrors = setInterval(() => {
+      if (GameErrors.notes.length > 0) {
+        setGameErrors([...GameErrors.notes]);
+      }
+    }, 1000);
+    return () => clearInterval(checkErrors);
+  }, []);
+
   useEffect(() => {
     startGame();
   }, [startGame]);
@@ -40,6 +51,11 @@ export default function Game() {
         <div className="text-2xl font-rajdhani">
           <p>FINAL SCORE: {score}</p>
           <p>MAX COMBO: {combo}</p>
+          {gameErrors.length > 0 && (
+            <div className="text-xs text-neon-yellow mt-4 max-h-20 overflow-y-auto">
+              <p>ERRORS DETECTED: {gameErrors.length}</p>
+            </div>
+          )}
         </div>
         <button 
           onClick={() => window.location.reload()}
@@ -64,14 +80,19 @@ export default function Game() {
       <header className="relative z-10 flex justify-between items-center p-6 border-b border-white/10 bg-black/50 backdrop-blur-sm">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full border-2 border-neon-cyan flex items-center justify-center text-neon-cyan font-bold">
-            {Math.floor(health)}%
+            {Math.floor(Math.max(0, Math.min(100, health)))}%
           </div>
           <div className="h-2 w-32 bg-gray-800 rounded-full overflow-hidden">
             <div 
               className="h-full bg-neon-cyan transition-all duration-300"
-              style={{ width: `${health}%` }}
+              style={{ width: `${Math.max(0, Math.min(100, health))}%` }}
             />
           </div>
+          {gameErrors.length > 0 && (
+            <div className="text-xs text-neon-yellow font-rajdhani">
+              {gameErrors.length} error(s)
+            </div>
+          )}
         </div>
 
         <div className="text-center">
