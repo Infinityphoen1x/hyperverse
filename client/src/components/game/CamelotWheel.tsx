@@ -183,13 +183,11 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
                  {activeNotes.map(note => {
                    const timeUntilHit = note.time - currentTime;
                    const HOLD_DURATION = 2000; // Hold lasts 2 seconds
-                   if (timeUntilHit > HOLD_DURATION || timeUntilHit < -200) return null;
+                   // Dots appear at note.time (timeUntilHit = 0) and hit at note.time + 2000 (timeUntilHit = -2000)
+                   if (timeUntilHit > 0 || timeUntilHit < -HOLD_DURATION) return null;
                    
-                   // Progress: 0 = at center, 1 = at rim
-                   // Dots travel from center to rim over the 2-second hold duration
-                   // Hit at timeUntilHit = 0 means hold just started, or at the note time
-                   // Hit at timeUntilHit = -2000 means hold just ended
-                   const progress = 1 - (timeUntilHit / HOLD_DURATION);
+                   // Progress: 0 = at center (note.time), 1 = at rim (note.time + 2000)
+                   const progress = -timeUntilHit / HOLD_DURATION;
                    const visualProgress = Math.max(0, Math.min(1, progress));
                    
                    // Get the target position using pattern

@@ -9,12 +9,17 @@ interface Down3DNoteLaneProps {
 
 export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down3DNoteLaneProps) {
   // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
-  // Hold notes (SPIN) appear 4000ms early to give player time to see trapezoid growing
+  // TAP notes: appear 2000ms before hit
+  // SPIN (hold) notes: appear 4000ms before, stay visible through 2000ms hold duration
   const visibleNotes = notes.filter(n => {
     const timeUntilHit = n.time - currentTime;
-    const leadTime = (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') ? 4000 : 2000;
-    const holdDuration = (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') ? 2000 : 0;
-    return timeUntilHit >= -holdDuration && timeUntilHit <= leadTime;
+    if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
+      // Hold notes: 4000ms lead + 2000ms hold duration
+      return timeUntilHit >= -2000 && timeUntilHit <= 4000;
+    } else {
+      // TAP notes: 2000ms lead time
+      return timeUntilHit >= -200 && timeUntilHit <= 2000;
+    }
   });
 
 
