@@ -106,7 +106,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   const [health, setHealth] = useState(200);
   const [notes, setNotes] = useState<Note[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
-  const [holdStartTimes, setHoldStartTimes] = useState<Record<number, number>>({ [-1]: 0, [-2]: 0 }); // Track when Q/P were pressed
+  const [holdStartTimes, setHoldStartTimes] = useState<Record<number, { time: number; noteId: string }>>({ [-1]: { time: 0, noteId: '' }, [-2]: { time: 0, noteId: '' } }); // Track when Q/P were pressed and which note
   
   const requestRef = useRef<number | undefined>(undefined);
   const startTimeRef = useRef<number>(0);
@@ -328,7 +328,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           GameErrors.log(`trackHoldStart: holdStartTimes corrupted`);
           return prev;
         }
-        return { ...prev, [lane]: currentTime };
+        return { ...prev, [lane]: { time: currentTime, noteId: anyNote.id } };
       });
     } catch (error) {
       GameErrors.log(`trackHoldStart error: ${error instanceof Error ? error.message : 'Unknown'}`);
@@ -342,35 +342,25 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         return;
       }
       
-      const holdStartTime = holdStartTimes[lane];
+      const holdData = holdStartTimes[lane];
       
-      // Only process if hold was actually active (holdStartTime > 0)
-      if (holdStartTime > 0) {
-        // Find the active hold note on this lane
-        const activeNote = notes.find(n => {
-          if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT')) {
-            return false;
-          }
-          if (n.hit || n.missed || !n.id) return false;
-          // Skip already-failed notes
-          if (n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
-            return false;
-          }
-          return true;
-        });
+      // Only process if hold was actually active (holdData.time > 0)
+      if (holdData && holdData.time > 0) {
+        // Find the EXACT note we pressed (by ID) - not just any active note on the lane
+        const activeNote = notes.find(n => n && n.id === holdData.noteId);
         
         // If there's an active note, check release timing accuracy
         if (activeNote) {
           const HOLD_DURATION = 1000; // ms - must hold for this long (slowed for easier timing)
           const RELEASE_WINDOW = 100; // ms - release accuracy window (tighter timing)
           
-          // Calculate expected release time
-          const pressTime = activeNote.pressTime || holdStartTime;
+          // Calculate expected release time - use the stored press time directly (guaranteed accurate)
+          const pressTime = holdData.time;
           const expectedReleaseTime = pressTime + HOLD_DURATION;
           const timeSinceExpectedRelease = currentTime - expectedReleaseTime;
           
           // Check if released too early (before hold duration complete)
-          if (currentTime - holdStartTime < HOLD_DURATION) {
+          if (currentTime - holdData.time < HOLD_DURATION) {
             setNotes(prev => {
               return prev.map(n => 
                 n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true, failureTime: currentTime } : n
@@ -414,7 +404,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           GameErrors.log(`trackHoldEnd: holdStartTimes corrupted`);
           return prev;
         }
-        return { ...prev, [lane]: 0 };
+        return { ...prev, [lane]: { time: 0, noteId: '' } };
       });
     } catch (error) {
       GameErrors.log(`trackHoldEnd error: ${error instanceof Error ? error.message : 'Unknown'}`);

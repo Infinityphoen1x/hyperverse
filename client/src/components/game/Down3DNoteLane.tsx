@@ -5,15 +5,15 @@ import { Note } from "@/lib/gameEngine";
 interface Down3DNoteLaneProps {
   notes: Note[];
   currentTime: number;
-  holdStartTimes?: Record<number, number>;
+  holdStartTimes?: Record<number, { time: number; noteId: string }>;
   onNoteMissed?: (noteId: string) => void;
   health?: number;
 }
 
-export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNoteMissed, health = 200 }: Down3DNoteLaneProps) {
+export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { time: 0, noteId: '' }, [-2]: { time: 0, noteId: '' } }, onNoteMissed, health = 200 }: Down3DNoteLaneProps) {
   // Track which hold notes have been activated (entered Phase 2)
   const [activeHolds, setActiveHolds] = useState<Set<string>>(new Set());
-  const prevHoldStartTimes = useRef<Record<number, number>>({});
+  const prevHoldStartTimes = useRef<Record<number, { time: number; noteId: string }>>({});
 
   // Detect when a hold starts (holdStartTime becomes non-zero)
   useEffect(() => {
@@ -26,8 +26,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
       lanes.forEach((lane) => {
         if (!Number.isFinite(lane)) return; // Skip invalid lanes
         
-        const prevTime = prevHoldStartTimes.current[lane] || 0;
-        const currTime = holdStartTimes[lane] || 0;
+        const prevTime = prevHoldStartTimes.current[lane]?.time || 0;
+        const currTime = holdStartTimes[lane]?.time || 0;
         
         if (!Number.isFinite(prevTime) || !Number.isFinite(currTime)) {
           return; // Skip if times are invalid
@@ -405,7 +405,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                   return null; // Skip if calculations would be invalid
                 }
                 
-                const holdStartTime = holdStartTimes[note.lane] || 0;
+                const holdData = holdStartTimes[note.lane];
+                const holdStartTime = holdData?.time || 0;
                 const isCurrentlyHeld = holdStartTime > 0;
                 const wasActivated = activeHolds.has(note.id);
                 const isTooEarlyFailure = note.tooEarlyFailure || false;
@@ -589,7 +590,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
               }
               
               // Glow only when player is holding the key for this lane
-              const isKeyBeingHeld = holdStartTimes[note.lane] > 0;
+              const isKeyBeingHeld = (holdStartTimes[note.lane]?.time || 0) > 0;
               
               // Glow intensity scales with how close to judgement line (capped at Phase 1)
               const glowScale = isKeyBeingHeld ? 0.2 + (Math.min(holdProgress, 1.0) * 0.8) : 0.05;
