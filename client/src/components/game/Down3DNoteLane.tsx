@@ -61,9 +61,10 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
   // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
   // TAP notes: appear 2000ms before hit, show glitch 500ms after miss, then disappear
   // SPIN (hold) notes: appear 4000ms before, stay visible through hold duration
-  // OPTIMIZED: Early exit for notes that are too old, single pass, minimal allocations
+  // CRITICAL: Only show ONE hold note per lane at a time (prevent double-up when both fail)
   const visibleNotes = Array.isArray(notes) ? (() => {
     const result: typeof notes = [];
+    const holdNotesByLane: Record<number, typeof notes[0] | null> = { [-1]: null, [-2]: null };
     
     for (let i = 0; i < notes.length; i++) {
       const n = notes[i];
@@ -75,8 +76,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
         const timeUntilHit = n.time - currentTime;
         
         if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
-          // Hold notes: keep ALL hold notes visible including missed ones
-          // Filter out only HITS (successful holds)
+          // Hold notes: filter out HITS (successful holds)
           if (n.hit) continue;
           // Missed holds stay visible for 500ms after note.time
           if (n.missed && timeUntilHit < -500) continue;
@@ -85,18 +85,17 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
           let visibilityEnd = -2000; // Default window end (2000ms after note.time)
           if (n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
             // Failure animations run for 1100ms from failureTime
-            // Animation completes at: failureTime + 1100
-            // In terms of timeUntilHit: need to stay visible until currentTime >= failureTime + 1100
-            // Which means: timeUntilHit = note.time - currentTime > note.time - (failureTime + 1100)
-            // So: visibilityEnd = note.time - (failureTime + 1100) = -(failureTime - note.time) - 1100
-            const failureTime = n.failureTime || currentTime; // Fallback to current if missing
+            const failureTime = n.failureTime || currentTime;
             const timeSinceNoteTime = failureTime - n.time;
             visibilityEnd = -(timeSinceNoteTime + 1100);
           }
           
           // Visibility window: 4000ms before (lead time) to end of failure animation
           if (timeUntilHit >= visibilityEnd && timeUntilHit <= 4000) {
-            result.push(n);
+            // Track which hold note to show for this lane (prioritize oldest/earliest)
+            if (!holdNotesByLane[n.lane] || (n.time < (holdNotesByLane[n.lane]?.time || Infinity))) {
+              holdNotesByLane[n.lane] = n;
+            }
           }
         } else {
           // TAP notes: show 2000ms before to 500ms after miss
@@ -112,6 +111,10 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
         console.warn(`Note visibility filter error: ${error}`);
       }
     }
+    
+    // Add only the prioritized hold note per lane
+    if (holdNotesByLane[-1]) result.push(holdNotesByLane[-1]!);
+    if (holdNotesByLane[-2]) result.push(holdNotesByLane[-2]!);
     
     return result;
   })() : [];
