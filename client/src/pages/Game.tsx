@@ -110,9 +110,10 @@ export default function Game() {
       {/* Beatmap Loader */}
       <BeatmapLoader 
         difficulty={difficulty}
-        onBeatmapLoad={(beatmapText) => {
-          // For now, just acknowledge the load. 
-          // Full integration happens when game engine supports custom beatmaps
+        onBeatmapLoad={(beatmapText, youtubeVideoId) => {
+          if (youtubeVideoId) {
+            setYoutubeVideoId(youtubeVideoId);
+          }
         }}
       />
 

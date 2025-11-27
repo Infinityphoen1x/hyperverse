@@ -3,6 +3,7 @@ export interface BeatmapMetadata {
   artist: string;
   bpm: number;
   duration: number;
+  youtube?: string;
 }
 
 export interface BeatmapData {
@@ -68,6 +69,7 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
         if (key.toLowerCase() === 'artist') metadata.artist = value;
         if (key.toLowerCase() === 'bpm') metadata.bpm = parseInt(value);
         if (key.toLowerCase() === 'duration') metadata.duration = parseInt(value);
+        if (key.toLowerCase() === 'youtube') metadata.youtube = value;
       }
     }
     

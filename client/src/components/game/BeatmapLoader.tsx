@@ -5,9 +5,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { parseBeatmap } from "@/lib/beatmapParser";
 import { Music } from "lucide-react";
 
+function extractYouTubeId(url: string): string | null {
+  const patterns = [
+    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
+    /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
+    /([a-zA-Z0-9_-]{11})/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  return null;
+}
+
 interface BeatmapLoaderProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-  onBeatmapLoad: (beatmapText: string) => void;
+  onBeatmapLoad: (beatmapText: string, youtubeVideoId?: string) => void;
 }
 
 export function BeatmapLoader({ difficulty, onBeatmapLoad }: BeatmapLoaderProps) {
@@ -29,7 +45,17 @@ export function BeatmapLoader({ difficulty, onBeatmapLoad }: BeatmapLoaderProps)
       return;
     }
 
-    onBeatmapLoad(beatmapText);
+    let youtubeVideoId: string | undefined;
+    if (parsed.metadata.youtube) {
+      const extractedId = extractYouTubeId(parsed.metadata.youtube);
+      if (!extractedId) {
+        setError("Invalid YouTube URL in beatmap metadata");
+        return;
+      }
+      youtubeVideoId = extractedId;
+    }
+
+    onBeatmapLoad(beatmapText, youtubeVideoId);
     setIsLoaded(true);
     setBeatmapText("");
     setIsOpen(false);
@@ -93,7 +119,7 @@ duration: 180000
 
             <div className="bg-black/50 border border-neon-cyan/20 rounded p-3 text-xs text-white/60 font-rajdhani space-y-1">
               <p className="font-bold text-neon-cyan">FORMAT:</p>
-              <p>[METADATA] section with: title, artist, bpm, duration</p>
+              <p>[METADATA] section with: title, artist, bpm, duration, youtube (optional)</p>
               <p>[EASY/MEDIUM/HARD] sections with notes:</p>
               <p className="font-mono ml-2">time|lane|TAP</p>
               <p className="font-mono ml-2">time|lane|HOLD|duration|holdId</p>

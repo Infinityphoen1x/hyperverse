@@ -8,10 +8,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen w-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Beatmap Loader */}
+      {/* Beatmap Loader - for loading YouTube before starting */}
       <BeatmapLoader 
         difficulty={selectedDifficulty as 'EASY' | 'MEDIUM' | 'HARD'}
-        onBeatmapLoad={() => {}}
+        onBeatmapLoad={() => {
+          // Beatmap loaded - if it contains YouTube, it will load on the game screen
+        }}
       />
       {/* Background FX */}
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" />
