@@ -241,23 +241,11 @@ export const useGameEngine = (difficulty: Difficulty) => {
         return; // Can't hold - no active note on this lane
       }
       
-      // Validate timing: press must occur within valid window relative to when dot spawns
-      // Dot spawns at note.time, note appears 4000ms before, can press from when note appears until 2000ms after spawn
-      const timeUntilNote = activeNote.time - currentTime;
-      const PRESS_WINDOW_EARLY = 4100;   // Can press from when note appears (~4s early) to 100ms after spawn
-      const PRESS_WINDOW_LATE = -2000;   // Can press up to 2000ms after dot spawns (at hitline)
+      // Timing validation is done in Down3DNoteLane component (isValidActivation)
+      // This trackHoldStart just records when the hold started
+      // Phase 2 validation will check if the press was within valid window
       
-      if (timeUntilNote > PRESS_WINDOW_EARLY) {
-        GameErrors.log(`trackHoldStart: EARLY - pressed ${timeUntilNote.toFixed(0)}ms before dot spawns`);
-        return; // Too early - don't activate Phase 2
-      }
-      
-      if (timeUntilNote < PRESS_WINDOW_LATE) {
-        GameErrors.log(`trackHoldStart: LATE - pressed ${timeUntilNote.toFixed(0)}ms after dot spawns`);
-        return; // Too late - don't activate Phase 2
-      }
-      
-      // Valid timing window - Phase 2 starts: dot will spawn and trapezoid shrinks
+      // Valid timing - Phase 2 starts: dot will spawn and trapezoid shrinks
       setHoldStartTimes(prev => {
         if (!prev || typeof prev !== 'object') {
           GameErrors.log(`trackHoldStart: holdStartTimes corrupted`);
