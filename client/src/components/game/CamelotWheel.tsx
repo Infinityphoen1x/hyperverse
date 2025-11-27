@@ -25,7 +25,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
   const [indicatorGlow, setIndicatorGlow] = useState(false);
   const [spinDirection, setSpinDirection] = useState(1); // 1 for clockwise, -1 for counter-clockwise
   const [isKeyPressed, setIsKeyPressed] = useState(false);
-  const rotationRef = useState(0);
+  const rotationRef = useRef(0);
   const wheelLane = side === 'left' ? -1 : -2;
 
   // Single key toggle for spin direction
@@ -79,7 +79,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
         setInternalRotation((prev) => {
           const rotationDelta = rotationSpeed * spinDirection;
           const newRotation = prev + rotationDelta;
-          rotationRef[1](newRotation);
+          rotationRef.current = newRotation;
           setTimeout(() => onRotationChange(newRotation), 0); // Export to parent
 
           // Trigger onSpin event periodically based on rotation distance
@@ -144,10 +144,6 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
         }
         
         // Hitline is at top (spawn point). Deck dot is at (rotation + targetAngle)
-        if (!Number.isFinite(rot)) {
-          GameErrors.log(`CamelotWheel: Invalid rotation in hitline check: ${rot}`);
-          return;
-        }
         const normalizedRotation = ((rot % 360) + 360) % 360;
         const dotVisualAngle = (normalizedRotation + targetAngle) % 360;
         
@@ -258,8 +254,8 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
                    // Show dots based on note timeline, not key press state
                    if (timeUntilHit > 0 || timeUntilHit < -HOLD_DURATION) return null;
                    
-                   // Get the target position using pattern
-                   const noteIndex = parseInt(note.id.split('-')[1]) || 0;
+                   // Get the target position using pattern (note ID format: note-{session}-{index})
+                   const noteIndex = parseInt(note.id.split('-')[2]) || 0;
                    const targetAngle = getPatternAngle(noteIndex);
                    
                    // Progress: 0 = at center (note.time), 1 = at rim (note.time + 2000)
