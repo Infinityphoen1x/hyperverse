@@ -27,17 +27,6 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
     return ['W', 'E', 'I', 'O'][lane];
   };
 
-  // Get angle for each lane in star pattern (4 lanes at 90 degree intervals)
-  const getLaneAngle = (lane: number): number => {
-    const angles: Record<number, number> = {
-      '0': 270,   // W - left
-      '1': 315,   // E - bottom-right
-      '2': 225,   // I - bottom-left
-      '3': 315,   // O - right (adjusted for 4-lane layout)
-    };
-    return angles[lane as keyof typeof angles] || 0;
-  };
-
   // Adjusted angles for 4-lane star (bottom half - where soundpads are)
   const getFourLaneAngle = (lane: number): number => {
     switch (lane) {
@@ -71,47 +60,68 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
           margin: '0 auto',
         }}
       >
-        {/* SVG for star/tunnel guides */}
+        {/* SVG for tunnel with concentric circles and variable-width lines */}
         <svg 
           className="absolute inset-0 w-full h-full"
-          style={{ opacity: 0.3 }}
+          style={{ opacity: 1 }}
         >
-          {/* Vanishing point at true center top */}
-          <circle cx="350" cy="80" r="10" fill="rgba(0,255,255,0.8)" />
-          
-          {/* Star/tunnel edges - 4 main rays for soundpad lanes */}
-          {[225, 270, 315, 0].map((angle) => {
-            const rad = (angle * Math.PI) / 180;
-            const x1 = 350 + Math.cos(rad) * 10;
-            const y1 = 80 + Math.sin(rad) * 10;
-            const x2 = 350 + Math.cos(rad) * 320;
-            const y2 = 80 + Math.sin(rad) * 420;
-            return (
-              <line 
-                key={`spoke-${angle}`}
-                x1={x1} 
-                y1={y1} 
-                x2={x2} 
-                y2={y2} 
-                stroke="rgba(0,255,255,0.5)" 
-                strokeWidth="2" 
-              />
-            );
-          })}
+          <defs>
+            {/* Gradient for line stroke width effect */}
+            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="rgba(0,255,255,0.1)" />
+              <stop offset="100%" stopColor="rgba(0,255,255,0.4)" />
+            </linearGradient>
+          </defs>
 
-          {/* Depth rings */}
-          {[0.2, 0.4, 0.6, 0.8].map((depthFactor) => {
-            const radius = 15 + depthFactor * 310;
+          {/* Concentric circles - faint tunnel walls */}
+          {[30, 70, 120, 180, 250, 330].map((radius, idx) => (
+            <circle 
+              key={`tunnel-ring-${idx}`}
+              cx="350" 
+              cy="300" 
+              r={radius}
+              fill="none"
+              stroke="rgba(0,255,255,0.08)"
+              strokeWidth="1"
+            />
+          ))}
+
+          {/* Vanishing point */}
+          <circle cx="350" cy="80" r="6" fill="rgba(0,255,255,0.6)" />
+          
+          {/* Variable-width lines for tunnel rays - thicker at bottom */}
+          {[225, 270, 315, 0].map((angle, idx) => {
+            const rad = (angle * Math.PI) / 180;
+            const x1 = 350 + Math.cos(rad) * 6;
+            const y1 = 80 + Math.sin(rad) * 6;
+            
+            // Create line with multiple strokes for tapering effect
+            const segments = 10;
             return (
-              <circle 
-                key={`ring-${depthFactor}`}
-                cx="350" 
-                cy="300" 
-                r={radius}
-                fill="none"
-                stroke="rgba(0,255,255,0.12)"
-                strokeWidth="1"
-              />
+              <g key={`spoke-group-${angle}`}>
+                {Array.from({ length: segments }).map((_, segIdx) => {
+                  const progress = (segIdx + 1) / segments;
+                  const x2 = 350 + Math.cos(rad) * (6 + progress * 335);
+                  const y2 = 80 + Math.sin(rad) * (6 + progress * 440);
+                  // Stroke width increases from thin to thick
+                  const strokeWidth = 0.5 + progress * 3.5;
+                  const opacity = 0.15 + progress * 0.35;
+                  
+                  return (
+                    <line 
+                      key={`segment-${angle}-${segIdx}`}
+                      x1={x1} 
+                      y1={y1} 
+                      x2={x2} 
+                      y2={y2} 
+                      stroke="rgba(0,255,255,1)" 
+                      strokeWidth={strokeWidth}
+                      opacity={opacity}
+                      strokeLinecap="round"
+                    />
+                  );
+                })}
+              </g>
             );
           })}
         </svg>
