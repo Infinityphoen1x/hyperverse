@@ -517,9 +517,9 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                   // Shrink animation from 1.0 to 2.0 over 1000ms (no greyscale - successful!)
                   const releaseShrinkProgress = timeSinceRelease / 1000;
                   holdProgress = 1.0 + releaseShrinkProgress;
-                } else if (isCurrentlyHeld && isTooEarly && !wasActivated) {
-                  // Too early press (before any note was activated): stay in Phase 1 and show GREY
-                  // Trapezoid continues growing to show player that note is coming
+                } else if (isCurrentlyHeld && isTooEarly && !wasActivated && note.tooEarlyFailure) {
+                  // Too early press marked as failure (>300ms early): stay in Phase 1 and show GREY
+                  // Only greyscale if this note was actually marked as tooEarlyFailure
                   isGreyed = true;
                   if (timeUntilHit > 0) {
                     holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
