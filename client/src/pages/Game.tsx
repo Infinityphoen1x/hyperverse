@@ -4,6 +4,7 @@ import { useGameEngine, Difficulty } from "@/lib/gameEngine";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { SoundPad } from "@/components/game/SoundPad";
 import { NoteLane } from "@/components/game/NoteLane";
+import { VisualEffects } from "@/components/game/VisualEffects";
 import { motion } from "framer-motion";
 
 export default function Game() {
@@ -46,6 +47,9 @@ export default function Game() {
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col relative">
+      {/* Visual Effects Layer */}
+      <VisualEffects combo={combo} score={score} />
+
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black opacity-80" />
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
@@ -65,14 +69,25 @@ export default function Game() {
         </div>
 
         <div className="text-center">
-          <h2 className="text-4xl font-orbitron text-white tracking-widest tabular-nums">
+          <motion.h2 
+            className="text-4xl font-orbitron text-white tracking-widest tabular-nums neon-glow"
+            animate={score % 500 === 0 && score > 0 ? { scale: [1, 1.2, 1], textShadow: ['0 0 10px white', '0 0 30px hsl(320, 100%, 60%)', '0 0 10px white'] } : {}}
+            transition={{ duration: 0.3 }}
+          >
             {score.toString().padStart(6, '0')}
-          </h2>
+          </motion.h2>
           <p className="text-neon-pink font-rajdhani text-sm tracking-[0.5em] uppercase">score</p>
         </div>
 
         <div className="text-right">
-          <div className="text-3xl font-bold text-neon-purple neon-text-pink">x{combo}</div>
+          <motion.div 
+            className="text-3xl font-bold font-orbitron neon-glow"
+            style={{ color: combo % 20 === 0 && combo > 0 ? 'hsl(120, 100%, 50%)' : 'hsl(280, 100%, 60%)' }}
+            animate={combo > 0 ? { scale: [1, 1.15, 1], rotate: combo % 10 === 0 ? [0, 5, -5, 0] : 0 } : {}}
+            transition={{ duration: 0.3 }}
+          >
+            x{combo}
+          </motion.div>
           <div className="text-xs text-white/50">COMBO</div>
         </div>
       </header>

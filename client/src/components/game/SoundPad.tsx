@@ -82,21 +82,25 @@ function PadButton({ index, onClick, notes, currentTime }: { index: number; onCl
 
   return (
     <motion.button
-      whileTap={{ scale: 0.90 }}
+      whileTap={{ scale: 0.85 }}
       onMouseDown={onClick}
       className="relative w-20 h-20 md:w-24 md:h-24 rounded-xl group focus:outline-none"
       data-testid={`pad-${index}`}
       style={{ isolation: 'isolate' }}
+      animate={isHitSuccess ? { boxShadow: '0 0 40px currentColor' } : {}}
     >
       {/* Pad Background */}
-      <div className={`absolute inset-0 rounded-xl overflow-hidden border-2 
-        ${index === 0 ? 'bg-neon-pink/30 border-neon-pink/50' : ''}
-        ${index === 1 ? 'bg-neon-cyan/30 border-neon-cyan/50' : ''}
-        ${index === 2 ? 'bg-neon-purple/30 border-neon-purple/50' : ''}
-        ${index === 3 ? 'bg-neon-blue/30 border-neon-blue/50' : ''}
-        shadow-[0_0_10px_rgba(255,0,100,0.1)] group-hover:shadow-[0_0_20px_rgba(255,0,100,0.4)] group-hover:border-opacity-100 transition-all duration-200`}>
+      <motion.div 
+        className={`absolute inset-0 rounded-xl overflow-hidden border-2 
+          ${index === 0 ? 'bg-neon-pink/30 border-neon-pink/50 shadow-[0_0_15px_rgb(255,0,127)]' : ''}
+          ${index === 1 ? 'bg-neon-cyan/30 border-neon-cyan/50 shadow-[0_0_15px_rgb(0,255,255)]' : ''}
+          ${index === 2 ? 'bg-neon-purple/30 border-neon-purple/50 shadow-[0_0_15px_rgb(190,0,255)]' : ''}
+          ${index === 3 ? 'bg-neon-blue/30 border-neon-blue/50 shadow-[0_0_15px_rgb(0,150,255)]' : ''}
+          group-hover:border-opacity-100 transition-all duration-200`}
+        animate={isHitSuccess ? { boxShadow: index === 0 ? '0 0 40px rgb(255,0,127)' : index === 1 ? '0 0 40px rgb(0,255,255)' : index === 2 ? '0 0 40px rgb(190,0,255)' : '0 0 40px rgb(0,150,255)' } : {}}
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-20" />
-      </div>
+      </motion.div>
 
 
       {/* Hit Flash - Success */}
