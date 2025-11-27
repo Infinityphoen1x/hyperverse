@@ -2,26 +2,11 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { extractYouTubeId } from "@/lib/youtubeUtils";
 import { X } from "lucide-react";
 
 interface YouTubeOverlayProps {
-  onVideoUrlChange: (url: string, videoId: string) => void;
-}
-
-function extractYouTubeId(url: string): string | null {
-  const patterns = [
-    /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
-    /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
-    /([a-zA-Z0-9_-]{11})/,
-  ];
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match && match[1]) {
-      return match[1];
-    }
-  }
-  return null;
+  onVideoUrlChange: (videoId: string) => void;
 }
 
 export function YouTubeOverlay({ onVideoUrlChange }: YouTubeOverlayProps) {
@@ -44,7 +29,7 @@ export function YouTubeOverlay({ onVideoUrlChange }: YouTubeOverlayProps) {
     }
 
     setVideoId(id);
-    onVideoUrlChange(urlInput, id);
+    onVideoUrlChange(id);
     setUrlInput("");
     setIsOpen(false);
   };
@@ -137,15 +122,17 @@ export function YouTubeOverlay({ onVideoUrlChange }: YouTubeOverlayProps) {
 
       {videoId && (
         <div className="absolute top-full mt-2 right-0 w-64 h-36 opacity-10 hover:opacity-20 transition-opacity rounded overflow-hidden border border-neon-cyan/20">
-          <iframe
-            width="100%"
-            height="100%"
-            src={`https://www.youtube.com/embed/${videoId}?autoplay=0&controls=0&modestbranding=1`}
-            title="YouTube video player"
-            allow="autoplay"
-            className="pointer-events-none"
-            data-testid="iframe-youtube"
-          />
+          {videoId && (
+            <iframe
+              width="100%"
+              height="100%"
+              src={`https://www.youtube.com/embed/${videoId}?autoplay=0&controls=0&modestbranding=1`}
+              title="YouTube video player"
+              allow="autoplay"
+              className="pointer-events-none"
+              data-testid="iframe-youtube"
+            />
+          )}
         </div>
       )}
     </div>

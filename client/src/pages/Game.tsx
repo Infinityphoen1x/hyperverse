@@ -117,7 +117,7 @@ export default function Game() {
       
       {/* YouTube Overlay Control */}
       <YouTubeOverlay 
-        onVideoUrlChange={(_, videoId) => setYoutubeVideoId(videoId)}
+        onVideoUrlChange={(videoId) => setYoutubeVideoId(videoId)}
       />
 
       {/* Beatmap Loader */}
@@ -184,9 +184,6 @@ export default function Game() {
            <CamelotWheel 
              side="left" 
              onSpin={() => hitNote(-1)} 
-             notes={notes} 
-             currentTime={currentTime}
-             holdStartTime={holdStartTimes[-1]?.time}
              onHoldStart={() => memoizedTrackHoldStart(-1)}
              onHoldEnd={() => memoizedTrackHoldEnd(-1)}
              onRotationChange={setLeftDeckRotation}
@@ -208,7 +205,6 @@ export default function Game() {
             notes={notes} 
             currentTime={currentTime}
             holdStartTimes={holdStartTimes}
-            onNoteMissed={markNoteMissed}
             health={health}
           />
         </div>
@@ -218,9 +214,6 @@ export default function Game() {
            <CamelotWheel 
              side="right" 
              onSpin={() => hitNote(-2)} 
-             notes={notes} 
-             currentTime={currentTime}
-             holdStartTime={holdStartTimes[-2]?.time}
              onHoldStart={() => memoizedTrackHoldStart(-2)}
              onHoldEnd={() => memoizedTrackHoldEnd(-2)}
              onRotationChange={setRightDeckRotation}
