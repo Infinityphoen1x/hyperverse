@@ -404,23 +404,21 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 const isHoldReleaseFailure = note.holdReleaseFailure || false;
                 const isHoldMissFailure = note.holdMissFailure || false;
                 
-                // Define timing windows
-                // "Strict beginning": -3000ms (presses before this trigger no Phase 2, show grey)
-                // "Early but valid": -3000 to -100ms (reduced score, but triggers Phase 2)
-                // "Normal window": -100 to +100ms (full score)
-                const STRICT_EARLY_START = -3000;
-                const NORMAL_WINDOW_START = -100;
-                const NORMAL_WINDOW_END = 100;
+                // Define timing windows - synchronized with visual arrival at judgement line
+                // Valid activation: ±150ms from noteTime (when trapezoid reaches judgement line)
+                // Beyond ±150ms = too early/late failure
+                const ACTIVATION_WINDOW_EARLY = -150;
+                const ACTIVATION_WINDOW_LATE = 150;
                 
                 const timeWhenPressed = holdStartTime;
                 const timeSinceNoteSpawn = timeWhenPressed - note.time;
                 
-                // Check if too early (before strict beginning)
-                const isTooEarly = isCurrentlyHeld && timeSinceNoteSpawn < STRICT_EARLY_START;
+                // Check if too early (before -150ms from visual arrival)
+                const isTooEarly = isCurrentlyHeld && timeSinceNoteSpawn < ACTIVATION_WINDOW_EARLY;
                 
-                // Valid activation: within -3000 to +100 (early + normal windows)
+                // Valid activation: within ±150ms of visual arrival
                 const isValidActivation = isCurrentlyHeld && !isTooEarly && (
-                  timeSinceNoteSpawn <= NORMAL_WINDOW_END && timeSinceNoteSpawn >= STRICT_EARLY_START
+                  timeSinceNoteSpawn <= ACTIVATION_WINDOW_LATE && timeSinceNoteSpawn >= ACTIVATION_WINDOW_EARLY
                 );
                 
                 let holdProgress = 0;
@@ -466,27 +464,19 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                   const missedShrinkProgress = timeSinceEstimatedMiss / 500; // 0 to 1 over 500ms
                   holdProgress = 1.0 + missedShrinkProgress; // 1.0 to 2.0
                 } else if (isCurrentlyHeld && isValidActivation) {
-                  // Phase 2: Being held - trapezoid shrinks over 2000ms (dot's journey to hitline)
-                  // CRITICAL: When hold pressed early, "near end" stays LOCKED at press position
-                  // This prevents jumping when pressing before note visually arrives
-                  
-                  const timeUntilHitAtPress = note.time - holdStartTime; // How far away note was when pressed
-                  const phase1ProgressAtPress = (LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME; // Where Phase 1 was
+                  // Phase 2: Being held - trapezoid shrinks over 500ms (hold duration)
+                  // Note arrives at judgement when holdProgress = 1.0 (at noteTime)
+                  // Player must hold for 500ms to complete
                   
                   const actualHoldDuration = currentTime - holdStartTime;
-                  const DOT_TRAVEL_TIME = 2000; // Dot takes 2000ms to reach hitline
-                  
-                  // Near end anchors at where it was when key pressed (prevents jumping)
-                  // Clamp to [0, 1] so it starts from the growing phase
-                  const lockedNearProgress = Math.min(Math.max(phase1ProgressAtPress, 0), 1.0);
+                  const HOLD_REQUIRED_DURATION = 500; // Must hold for 500ms
                   
                   if (!Number.isFinite(actualHoldDuration) || actualHoldDuration < 0) {
-                    // Just started holding - show current Phase 1 position but transition smoothly
-                    holdProgress = lockedNearProgress;
+                    // Just started holding - show trapezoid at judgement line
+                    holdProgress = 1.0;
                   } else {
-                    // Shrink phase: far end moves toward near end over 2000ms
-                    // holdProgress: 1.0 = both at judgement, 2.0 = far end at vanishing
-                    const shrinkAmount = actualHoldDuration / DOT_TRAVEL_TIME; // 0 to 1 during hold
+                    // During hold, trapezoid shrinks from 1.0 to 2.0 over 500ms
+                    const shrinkAmount = actualHoldDuration / HOLD_REQUIRED_DURATION;
                     holdProgress = Math.min(1.0 + shrinkAmount, 2.0);
                   }
                 } else if (wasActivated && !isCurrentlyHeld) {
