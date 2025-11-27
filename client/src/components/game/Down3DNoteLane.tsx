@@ -436,8 +436,12 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                     holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
                   } else {
                     // Phase 2: Note has passed judgement line - show 1000ms shrinking animation
-                    // Animation starts from when the failure was detected (failureTime)
-                    const failureTime = note.failureTime || note.time;
+                    // Animation starts from when the failure was detected (failureTime MUST be set by gameEngine)
+                    const failureTime = note.failureTime;
+                    if (!failureTime) {
+                      console.warn(`tooEarlyFailure missing failureTime: ${note.id}`);
+                      return null; // Safety: skip if malformed
+                    }
                     const timeSinceShrinkStart = Math.max(0, currentTime - failureTime);
                     // Safety check: if more than 1100ms has passed (1000ms animation + 100ms buffer), hide it
                     if (timeSinceShrinkStart > 1100) {
@@ -450,26 +454,18 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 } else if (isHoldReleaseFailure || isHoldMissFailure) {
                   // Hold release failure or missed hold - show shrinking greyscale animation for 1000ms (decoupled from deck)
                   isGreyed = true;
-                  // Animation starts from failureTime when the failure was detected
-                  const failureTime = note.failureTime || currentTime; // Use failureTime set by game engine, fallback to current
+                  // Animation starts from failureTime when the failure was detected (MUST be set by gameEngine)
+                  const failureTime = note.failureTime;
+                  if (!failureTime) {
+                    console.warn(`Failure note missing failureTime: ${note.id}`);
+                    return null; // Safety: skip if malformed
+                  }
                   const timeSinceShrinkStart = Math.max(0, currentTime - failureTime);
                   if (timeSinceShrinkStart > 1100) {
                     return null; // Animation complete
                   }
                   const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
-                  holdProgress = 1.0 + shrinkProgress;
-                } else if (note.missed) {
-                  isGreyed = true;
-                  // Missed hold - note expired without activation (accuracy-based)
-                  // Show 1000ms shrink animation from failure time
-                  const estimatedMissTime = note.time;
-                  const timeSinceEstimatedMiss = Math.max(0, currentTime - estimatedMissTime);
-                  if (timeSinceEstimatedMiss > 1000) {
-                    return null; // Animation complete, hide trapezoid
-                  }
-                  // Shrink animation: go from 1.0 to 2.0 over 1000ms
-                  const missedShrinkProgress = timeSinceEstimatedMiss / 1000; // 0 to 1 over 1000ms
-                  holdProgress = 1.0 + missedShrinkProgress; // 1.0 to 2.0
+                  holdProgress = 1.0 + shrinkProgress
                 } else if (isCurrentlyHeld && isValidActivation && !isTooEarlyFailure && !isHoldReleaseFailure && !isHoldMissFailure) {
                   // Phase 2: Being held - trapezoid shrinks over 1000ms (slowed for easier release timing)
                   // Visual shrink represents the release accuracy window (±100ms around 1000ms)
