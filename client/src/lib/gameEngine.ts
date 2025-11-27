@@ -386,6 +386,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       }
       
       // Find the active hold note on this lane (pressed but not released yet)
+      // Exclude notes that already have any failure type - they can't fail again
       const activeNote = Array.isArray(notes) ? notes.find(n => 
         n && 
         n.lane === lane && 
@@ -393,7 +394,10 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         n.pressTime && 
         n.pressTime > 0 &&
         !n.hit &&
-        !n.missed
+        !n.missed &&
+        !n.tooEarlyFailure &&
+        !n.holdMissFailure &&
+        !n.holdReleaseFailure
       ) : null;
       
       // If there's an active note, check release timing accuracy
