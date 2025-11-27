@@ -103,8 +103,8 @@ export function VisualEffects({ combo, score, health = 100, missCount = 0 }: Vis
         style={{
           filter: `
             grayscale(${greyscaleIntensity})
-            ${glitch > 0 ? `drop-shadow(${(Math.random() - 0.5) * 8}px ${(Math.random() - 0.5) * 8}px 0 rgb(255, 0, 127))` : ''}
-            ${glitch > 0 ? `drop-shadow(${(Math.random() - 0.5) * 8}px ${(Math.random() - 0.5) * 8}px 0 rgb(0, 255, 255))` : ''}
+            ${glitch > 0 ? `drop-shadow(${(Math.random() - 0.5) * 8}px ${(Math.random() - 0.5) * 8}px 0 rgba(255, 0, 127, ${Math.min(glitchOpacityMultiplier, 1)}))` : ''}
+            ${glitch > 0 ? `drop-shadow(${(Math.random() - 0.5) * 8}px ${(Math.random() - 0.5) * 8}px 0 rgba(0, 255, 255, ${Math.min(glitchOpacityMultiplier, 1)}))` : ''}
           `
         }}
       >

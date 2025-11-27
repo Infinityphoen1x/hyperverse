@@ -144,7 +144,7 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
     const filledSegments = Math.ceil(progress * segments);
 
     return (
-      <div className="flex flex-col gap-0.5">
+      <div className="flex flex-col-reverse gap-0.5">
         {Array.from({ length: segments }).map((_, idx) => {
           const fillColor = getRectangleMeterColor(idx);
           return (
