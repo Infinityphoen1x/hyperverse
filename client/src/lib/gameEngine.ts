@@ -154,11 +154,16 @@ export const useGameEngine = (difficulty: Difficulty) => {
               shouldMarkFailed = true;
               failureType = 'tapMissFailure';
             }
-            // HOLD notes: miss ONLY if past activation window AND was NEVER pressed (no holdStartTime recorded)
-            // If a hold was pressed, release timing determines if it succeeded, NOT this check
-            else if ((n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && time > n.time + 300 && (!n.pressTime || n.pressTime === undefined)) {
-              shouldMarkFailed = true;
-              failureType = 'holdMissFailure';
+            // HOLD notes: miss ONLY if past activation window AND was NEVER pressed
+            // If pressTime is set, the hold was activated - let trackHoldEnd determine success via release timing
+            // This prevents race conditions where main loop marks failed before release is evaluated
+            else if ((n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && time > n.time + 1300) {
+              // Only fail if WELL past release window (1000 + 300 = 1300ms after note spawn)
+              // AND was never pressed (pressTime not set)
+              if (!n.pressTime || n.pressTime === undefined) {
+                shouldMarkFailed = true;
+                failureType = 'holdMissFailure';
+              }
             }
             
             if (shouldMarkFailed && failureType) {
