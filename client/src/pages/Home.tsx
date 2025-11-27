@@ -1,12 +1,18 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { BeatmapLoader } from "@/components/game/BeatmapLoader";
 
 export default function Home() {
   const [selectedDifficulty, setSelectedDifficulty] = useState('MEDIUM');
 
   return (
     <div className="min-h-screen w-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black flex flex-col items-center justify-center relative overflow-hidden">
+      {/* Beatmap Loader */}
+      <BeatmapLoader 
+        difficulty={selectedDifficulty as 'EASY' | 'MEDIUM' | 'HARD'}
+        onBeatmapLoad={() => {}}
+      />
       {/* Background FX */}
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" />
       <div className="absolute top-0 left-0 w-full h-full bg-grid-white/[0.02] pointer-events-none" />
