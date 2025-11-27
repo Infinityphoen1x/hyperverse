@@ -250,8 +250,11 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               // Apply a pixel-scale factor to match SVG coordinates
               const rayWidthScale = 0.35; // scaling factor for the perpendicular distance between rays
               
+              // In Phase 2, near end collapses to a point at judgement line
+              const nearWidthMultiplier = isInPhase2 ? 0 : 1;
+              
               const farWidth = farDistance * rayWidthScale;
-              const nearWidth = nearDistance * rayWidthScale;
+              const nearWidth = nearDistance * rayWidthScale * nearWidthMultiplier;
               
               // Glow intensity scales with how close to judgement line
               const glowScale = 0.2 + (Math.min(holdProgress, 1.0) * 0.8);
