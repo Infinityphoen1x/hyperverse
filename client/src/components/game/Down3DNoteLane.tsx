@@ -121,8 +121,11 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
       const timeUntilHit = n.time - currentTime;
       
       if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
-        // Hold notes: 4000ms lead + 2000ms hold duration, filter out hit/missed
-        if (n.hit || n.missed) return false;
+        // Hold notes: keep ALL hold notes visible including missed ones (for greyscale shrink animation)
+        // Filter out only HITS (successful holds)
+        if (n.hit) return false;
+        // Missed holds stay visible for 500ms after note.time to show failure animation
+        if (n.missed && timeUntilHit < -500) return false;
         return timeUntilHit >= -2000 && timeUntilHit <= 4000;
       } else {
         // TAP notes: show 2000ms before hit
@@ -441,7 +444,16 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 let holdProgress;
                 let isGreyed = false;
                 
-                if (isCurrentlyHeld && isValidActivation) {
+                // All failed holds (missed) show shrinking greyscale animation for 500ms
+                if (note.missed) {
+                  isGreyed = true;
+                  const timesSinceMiss = currentTime - note.time;
+                  if (timesSinceMiss > 500) {
+                    return null; // Animation complete, hide trapezoid
+                  }
+                  // All missed holds (too-early, premature release) shrink to completion
+                  holdProgress = 2.0;
+                } else if (isCurrentlyHeld && isValidActivation) {
                   // Phase 2: Being held - trapezoid shrinks over 2000ms (dot's journey to hitline)
                   // CRITICAL: When hold pressed early, "near end" stays LOCKED at press position
                   // This prevents jumping when pressing before note visually arrives
@@ -466,7 +478,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                     holdProgress = Math.min(1.0 + shrinkAmount, 2.0);
                   }
                 } else if (wasActivated && !isCurrentlyHeld) {
-                  // After hold released, continue shrink animation for 500ms completion
+                  // After hold released (valid hold), continue shrink animation for 500ms completion
                   const timesSinceHit = currentTime - note.time;
                   if (timesSinceHit > 500) {
                     return null; // Animation complete, hide trapezoid
@@ -495,11 +507,6 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 // Validate holdProgress
                 if (!Number.isFinite(holdProgress)) {
                   holdProgress = 0;
-                }
-                
-                // Apply greyscale to ALL missed hold notes (too-early, premature release, etc)
-                if (note.missed) {
-                  isGreyed = true;
                 }
               
               // Get ray angle
