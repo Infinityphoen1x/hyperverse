@@ -382,41 +382,6 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
               </g>
             );
           })}
-          
-          {/* Thin white rays for trapezoid calculation - flanking the deck rays */}
-          {[165, 195, 345, 15].map((angle) => {
-            const rad = (angle * Math.PI) / 180;
-            const segments = 12;
-            return (
-              <g key={`trapezoid-ray-${angle}`}>
-                {Array.from({ length: segments }).map((_, segIdx) => {
-                  const segProgress = (segIdx + 1) / segments;
-                  
-                  // Start point
-                  const x1 = VANISHING_POINT_X + Math.cos(rad) * (1 + segProgress * MAX_DISTANCE - (MAX_DISTANCE / segments));
-                  const y1 = VANISHING_POINT_Y + Math.sin(rad) * (1 + segProgress * MAX_DISTANCE - (MAX_DISTANCE / segments));
-                  
-                  // End point
-                  const x2 = VANISHING_POINT_X + Math.cos(rad) * (1 + segProgress * MAX_DISTANCE);
-                  const y2 = VANISHING_POINT_Y + Math.sin(rad) * (1 + segProgress * MAX_DISTANCE);
-                  
-                  return (
-                    <line 
-                      key={`trapezoid-segment-${angle}-${segIdx}`}
-                      x1={x1} 
-                      y1={y1} 
-                      x2={x2} 
-                      y2={y2} 
-                      stroke="rgba(255,255,255,0.4)" 
-                      strokeWidth="0.8"
-                      opacity="0.6"
-                      strokeLinecap="round"
-                    />
-                  );
-                })}
-              </g>
-            );
-          })}
         </svg>
 
         {/* Hold note trapezoids rendered as SVG polygons */}
