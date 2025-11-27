@@ -227,9 +227,9 @@ export const useGameEngine = (difficulty: Difficulty) => {
         return;
       }
       
-      // Find any hold note on this lane that hasn't been played or missed
+      // Find any hold note on this lane that hasn't been played, missed, or marked as too-early
       const anyNote = notes.find(n => {
-        if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT') || n.hit || n.missed) {
+        if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT') || n.hit || n.missed || (n as any).tooEarlyFailure) {
           return false;
         }
         return true;
@@ -244,10 +244,10 @@ export const useGameEngine = (difficulty: Difficulty) => {
       
       // Check if too early (before -3000ms)
       if (timeSinceNoteSpawn < -3000) {
-        // Too early press - mark note as hit (remove from active pool) and dock health
+        // Too early press - mark note as tooEarlyFailure (remove from playable pool) and dock health
         setNotes(prev => {
           const newNotes = prev.map(n => 
-            n && n.id === anyNote.id ? { ...n, hit: true } : n
+            n && n.id === anyNote.id ? { ...n, tooEarlyFailure: true } : n
           );
           return newNotes;
         });

@@ -421,6 +421,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 const holdStartTime = holdStartTimes[note.lane] || 0;
                 const isCurrentlyHeld = holdStartTime > 0;
                 const wasActivated = activeHolds.has(note.id);
+                const isTooEarlyFailure = (note as any).tooEarlyFailure || false;
                 
                 // Define timing windows
                 // "Strict beginning": -3000ms (presses before this trigger no Phase 2, show grey)
@@ -444,8 +445,16 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 let holdProgress;
                 let isGreyed = false;
                 
-                // All failed holds (missed) show shrinking greyscale animation for 500ms
-                if (note.missed) {
+                // Too early failure - show growing greyscale animation until note passes judgement
+                if (isTooEarlyFailure) {
+                  isGreyed = true;
+                  // Stay in Phase 1 (growing), trapezoid continues to expand
+                  if (timeUntilHit > 0) {
+                    holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+                  } else {
+                    holdProgress = 0.99; // Stay near max without jumping to Phase 2
+                  }
+                } else if (note.missed) {
                   isGreyed = true;
                   // Calculate shrink animation: note.time is spawn time, missed happens at note.time + 2000 at latest
                   // Estimate missed time as max(note.time + 2000, currentTime - 500) to start shrink 500ms ago or later
