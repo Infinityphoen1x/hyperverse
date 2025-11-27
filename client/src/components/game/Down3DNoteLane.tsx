@@ -284,20 +284,22 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
               
               const isInPhase2 = holdProgress >= 1.0;
               
-              // PHASE 1 (0 to 1.0): Far end grows from vanishing point (1) to judgement line (187)
-              // PHASE 2 (1.0 to 2.0): Far end shrinks back from judgement line (187) to vanishing point (1)
-              let farDistance;
-              if (!isInPhase2) {
-                // Phase 1: Grow outward
-                farDistance = 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
-              } else {
-                // Phase 2: Shrink inward (reverse)
-                const shrinkProgress = holdProgress - 1.0; // 0 to 1.0 during phase 2
-                farDistance = JUDGEMENT_RADIUS - (shrinkProgress * (JUDGEMENT_RADIUS - 1));
-              }
+              // PHASE 1 (0 to 1.0): Near end grows from vanishing point (1) toward judgement line (187)
+              // PHASE 2 (1.0 to 2.0): Near end shrinks back from judgement line (187) toward vanishing point (1)
               
-              // Near end: always stays at judgement line (187)
-              const nearDistance = JUDGEMENT_RADIUS;
+              // Far end: always stays at vanishing point (1)
+              const farDistance = 1;
+              
+              // Near end: grows toward judgement line as note approaches
+              let nearDistance;
+              if (!isInPhase2) {
+                // Phase 1: Near end grows from vanishing point to judgement line
+                nearDistance = 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
+              } else {
+                // Phase 2: Near end shrinks back from judgement line toward vanishing point
+                const shrinkProgress = holdProgress - 1.0; // 0 to 1.0 during phase 2
+                nearDistance = JUDGEMENT_RADIUS - (shrinkProgress * (JUDGEMENT_RADIUS - 1));
+              }
               
               // Glow intensity scales with how close to judgement line
               const glowScale = 0.2 + (Math.min(holdProgress, 1.0) * 0.8);
