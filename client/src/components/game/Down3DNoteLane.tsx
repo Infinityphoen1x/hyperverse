@@ -15,63 +15,86 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
 
   // Detect when a hold starts (holdStartTime becomes non-zero)
   useEffect(() => {
-    const lanes = [-1, -2];
-    lanes.forEach((lane) => {
-      const prevTime = prevHoldStartTimes.current[lane] || 0;
-      const currTime = holdStartTimes[lane] || 0;
-      
-      // Hold just started
-      if (prevTime === 0 && currTime > 0) {
-        // Mark all active hold notes on this lane as activated
-        setActiveHolds(prev => {
-          const newSet = new Set(prev);
-          notes.forEach(n => {
-            if (n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed) {
-              newSet.add(n.id);
-            }
-          });
-          return newSet;
-        });
+    try {
+      if (!Array.isArray(notes) || !holdStartTimes || typeof holdStartTimes !== 'object') {
+        return; // Invalid data, skip
       }
-      
-      // Hold ended - remove from active
-      if (prevTime > 0 && currTime === 0) {
-        setActiveHolds(prev => {
-          const newSet = new Set(prev);
-          notes.forEach(n => {
-            if (n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT')) {
-              newSet.delete(n.id);
-            }
+
+      const lanes = [-1, -2];
+      lanes.forEach((lane) => {
+        if (!Number.isFinite(lane)) return; // Skip invalid lanes
+        
+        const prevTime = prevHoldStartTimes.current[lane] || 0;
+        const currTime = holdStartTimes[lane] || 0;
+        
+        if (!Number.isFinite(prevTime) || !Number.isFinite(currTime)) {
+          return; // Skip if times are invalid
+        }
+        
+        // Hold just started
+        if (prevTime === 0 && currTime > 0) {
+          // Mark all active hold notes on this lane as activated
+          setActiveHolds(prev => {
+            const newSet = new Set(prev);
+            notes.forEach(n => {
+              if (n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed && n.id) {
+                newSet.add(n.id);
+              }
+            });
+            return newSet;
           });
-          return newSet;
-        });
-      }
-    });
-    
-    prevHoldStartTimes.current = { ...holdStartTimes };
+        }
+        
+        // Hold ended - remove from active
+        if (prevTime > 0 && currTime === 0) {
+          setActiveHolds(prev => {
+            const newSet = new Set(prev);
+            notes.forEach(n => {
+              if (n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && n.id) {
+                newSet.delete(n.id);
+              }
+            });
+            return newSet;
+          });
+        }
+      });
+      
+      prevHoldStartTimes.current = { ...holdStartTimes };
+    } catch (error) {
+      console.warn(`Down3DNoteLane hold tracking error: ${error}`);
+    }
   }, [holdStartTimes, notes]);
   // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
   // TAP notes: appear 2000ms before hit, show glitch 500ms after miss, then disappear
   // SPIN (hold) notes: appear 4000ms before, stay visible through hold duration
-  const visibleNotes = notes.filter(n => {
-    const timeUntilHit = n.time - currentTime;
-    
-    if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
-      // Hold notes: 4000ms lead + 2000ms hold duration, filter out hit/missed
-      if (n.hit || n.missed) return false;
-      return timeUntilHit >= -2000 && timeUntilHit <= 4000;
-    } else {
-      // TAP notes: show 2000ms before hit
-      if (timeUntilHit > 2000) return false; // Too early
+  const visibleNotes = Array.isArray(notes) ? notes.filter(n => {
+    try {
+      if (!n || !Number.isFinite(n.time) || !Number.isFinite(currentTime)) {
+        return false; // Skip invalid notes
+      }
       
-      // If hit or already past glitch window, hide completely
-      if (n.hit) return false;
-      if (n.missed && timeUntilHit < -500) return false; // Past glitch window
+      const timeUntilHit = n.time - currentTime;
       
-      // Show note 2000ms before OR during 500ms glitch window after miss
-      return timeUntilHit <= 2000 && timeUntilHit >= -500;
+      if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
+        // Hold notes: 4000ms lead + 2000ms hold duration, filter out hit/missed
+        if (n.hit || n.missed) return false;
+        return timeUntilHit >= -2000 && timeUntilHit <= 4000;
+      } else {
+        // TAP notes: show 2000ms before hit
+        if (timeUntilHit > 2000) return false; // Too early
+        
+        // If hit or already past glitch window, hide completely
+        if (n.hit) return false;
+        if (n.missed && timeUntilHit < -500) return false; // Past glitch window
+        
+        // Show note 2000ms before OR during 500ms glitch window after miss
+        return timeUntilHit <= 2000 && timeUntilHit >= -500;
+      }
+    } catch (error) {
+      console.warn(`Note visibility filter error: ${error}`);
+      return false;
     }
-  });
+  }) : [];
 
 
   const getNoteKey = (lane: number): string => {
@@ -105,7 +128,12 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
       '2': 60,     // I - top-right-ish pad
       '3': 120,    // O - right pad
     };
-    return rayMapping[lane as keyof typeof rayMapping];
+    const angle = rayMapping[lane as keyof typeof rayMapping];
+    if (!Number.isFinite(angle)) {
+      console.warn(`Invalid lane: ${lane}, using default angle 0`);
+      return 0; // Fallback to 0 degrees
+    }
+    return angle;
   };
 
   // Judgement dot positions (where soundpad keys are)
@@ -295,43 +323,61 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
           style={{ opacity: 1, pointerEvents: 'none' }}
         >
           {visibleNotes
-            .filter(n => n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT')
+            .filter(n => n && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && n.id)
             .map(note => {
-              const timeUntilHit = note.time - currentTime;
-              const LEAD_TIME = 4000; // Hold notes appear 4000ms before hit
-              const JUDGEMENT_RADIUS = 187;
-              
-              const holdStartTime = holdStartTimes[note.lane] || 0;
-              const isCurrentlyHeld = holdStartTime > 0;
-              const wasActivated = activeHolds.has(note.id);
+              try {
+                if (!note || !Number.isFinite(note.time) || !note.id) {
+                  return null; // Skip corrupted notes
+                }
+
+                const timeUntilHit = note.time - currentTime;
+                const LEAD_TIME = 4000; // Hold notes appear 4000ms before hit
+                const JUDGEMENT_RADIUS = 187;
+                
+                if (!Number.isFinite(timeUntilHit) || !Number.isFinite(LEAD_TIME)) {
+                  return null; // Skip if calculations would be invalid
+                }
+                
+                const holdStartTime = holdStartTimes[note.lane] || 0;
+                const isCurrentlyHeld = holdStartTime > 0;
+                const wasActivated = activeHolds.has(note.id);
               
               // Only render if actively holding OR if was activated and not too far past
               if (!isCurrentlyHeld && !wasActivated) {
                 return null; // Don't render trapezoid for notes not being held
               }
-              
-              let holdProgress;
-              
-              if (isCurrentlyHeld) {
-                // Phase 2: Being held - trapezoid shrinks based on actual hold duration
-                const actualHoldDuration = currentTime - holdStartTime;
-                holdProgress = Math.min(1.0 + (actualHoldDuration / 4000), 2.0);
-              } else if (wasActivated) {
-                // After hold released, continue shrink animation for 500ms completion
-                const timesSinceHit = currentTime - note.time;
-                if (timesSinceHit > 500) {
-                  return null; // Animation complete, hide trapezoid
-                }
-                // Continue shrinking at max rate
-                holdProgress = 2.0;
-              } else {
-                // Phase 1: Not activated yet - trapezoid grows during approach
-                if (timeUntilHit > 0) {
-                  holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+                
+                let holdProgress;
+                
+                if (isCurrentlyHeld) {
+                  // Phase 2: Being held - trapezoid shrinks based on actual hold duration
+                  const actualHoldDuration = currentTime - holdStartTime;
+                  if (!Number.isFinite(actualHoldDuration)) {
+                    holdProgress = 1.0; // Fallback
+                  } else {
+                    holdProgress = Math.min(1.0 + (actualHoldDuration / 4000), 2.0);
+                  }
+                } else if (wasActivated) {
+                  // After hold released, continue shrink animation for 500ms completion
+                  const timesSinceHit = currentTime - note.time;
+                  if (timesSinceHit > 500) {
+                    return null; // Animation complete, hide trapezoid
+                  }
+                  // Continue shrinking at max rate
+                  holdProgress = 2.0;
                 } else {
-                  holdProgress = 1.0;
+                  // Phase 1: Not activated yet - trapezoid grows during approach
+                  if (timeUntilHit > 0) {
+                    holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+                  } else {
+                    holdProgress = 1.0;
+                  }
                 }
-              }
+                
+                // Validate holdProgress
+                if (!Number.isFinite(holdProgress)) {
+                  holdProgress = 0;
+                }
               
               // Get ray angle
               const rayAngle = getLaneAngle(note.lane);
