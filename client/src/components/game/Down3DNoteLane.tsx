@@ -78,7 +78,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
             <circle 
               key={`tunnel-ring-${idx}`}
               cx="350" 
-              cy="300" 
+              cy="200" 
               r={radius}
               fill="none"
               stroke="rgba(0,255,255,0.08)"
@@ -87,13 +87,13 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
           ))}
 
           {/* Vanishing point */}
-          <circle cx="350" cy="80" r="6" fill="rgba(0,255,255,0.6)" />
+          <circle cx="350" cy="200" r="6" fill="rgba(0,255,255,0.6)" />
           
           {/* Variable-width lines for tunnel rays - thicker at bottom */}
           {[225, 270, 315, 0].map((angle, idx) => {
             const rad = (angle * Math.PI) / 180;
             const x1 = 350 + Math.cos(rad) * 6;
-            const y1 = 80 + Math.sin(rad) * 6;
+            const y1 = 200 + Math.sin(rad) * 6;
             
             // Create line with multiple strokes for tapering effect
             const segments = 10;
@@ -102,7 +102,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
                 {Array.from({ length: segments }).map((_, segIdx) => {
                   const progress = (segIdx + 1) / segments;
                   const x2 = 350 + Math.cos(rad) * (6 + progress * 335);
-                  const y2 = 80 + Math.sin(rad) * (6 + progress * 440);
+                  const y2 = 200 + Math.sin(rad) * (6 + progress * 320);
                   // Stroke width increases from thin to thick
                   const strokeWidth = 0.5 + progress * 3.5;
                   const opacity = 0.15 + progress * 0.35;
@@ -132,8 +132,8 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
             const timeUntilHit = note.time - currentTime;
             const progress = 1 - (timeUntilHit / 2000); // 0 (far/spawn) to 1 (near/hitline)
             
-            // Y position: starts at vanishing point (80), comes to judgement line (520)
-            const yPosition = 80 + (progress * 440);
+            // Y position: starts at vanishing point (200), comes to judgement line (520)
+            const yPosition = 200 + (progress * 320);
             
             // Scale: starts tiny at vanishing point, grows
             const scale = 0.12 + (progress * 0.88);
@@ -143,7 +143,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
             const rad = (angle * Math.PI) / 180;
             
             // Distance from center based on progress
-            const distanceFromCenter = 15 + (progress * 310);
+            const distanceFromCenter = 10 + (progress * 280);
             
             // Calculate X/Y using polar coordinates centered on vanishing point
             const xOffset = Math.cos(rad) * distanceFromCenter;
