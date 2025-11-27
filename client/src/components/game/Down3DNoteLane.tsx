@@ -146,7 +146,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
   const getNoteKey = (lane: number): string => {
     if (lane === -1) return 'Q';
     if (lane === -2) return 'P';
-    return ['W', 'E', 'I', 'O'][lane];
+    return ['W', 'O', 'E', 'I'][lane];
   };
 
   const getColorForLane = (lane: number): string => {
@@ -154,10 +154,10 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
       switch (lane) {
         case -1: return '#00FF00'; // Q - green
         case -2: return '#FF0000'; // P - red
-        case 0: return '#FF007F'; // W - pink
-        case 1: return '#00FFFF'; // E - cyan
-        case 2: return '#BE00FF'; // I - purple
-        case 3: return '#0096FF'; // O - blue
+        case 0: return '#FF007F'; // W - pink (bottom-left)
+        case 1: return '#0096FF'; // O - blue (bottom-right)
+        case 2: return '#00FFFF'; // E - cyan (top-left)
+        case 3: return '#BE00FF'; // I - purple (top-right)
         default: return '#FFFFFF';
       }
     })();
@@ -188,9 +188,9 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
       '-2': 0,     // P - right deck
       '-1': 180,   // Q - left deck
       '0': 240,    // W - bottom-left pad
-      '1': 300,    // E - left-ish pad
-      '2': 60,     // I - top-right-ish pad
-      '3': 120,    // O - right pad
+      '1': 120,    // O - bottom-right pad
+      '2': 300,    // E - top-left pad
+      '3': 60,     // I - top-right pad
     };
     const angle = rayMapping[lane as keyof typeof rayMapping];
     if (!Number.isFinite(angle)) {
@@ -204,9 +204,9 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
   const getJudgementPos = (lane: number): { x: number; y: number } => {
     const positions: Record<number, { x: number; y: number }> = {
       '0': { x: 150, y: 530 }, // W - bottom-left pad
-      '1': { x: 250, y: 290 }, // E - top-left pad
-      '2': { x: 350, y: 290 }, // I - top-right pad
-      '3': { x: 450, y: 530 }, // O - bottom-right pad
+      '1': { x: 450, y: 530 }, // O - bottom-right pad
+      '2': { x: 250, y: 290 }, // E - top-left pad
+      '3': { x: 350, y: 290 }, // I - top-right pad
     };
     return positions[lane as keyof typeof positions] || { x: 300, y: 530 };
   };
@@ -274,10 +274,10 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
           {/* Judgement line indicators - perpendicular to rays */}
           {/* Second-last ring is at radius 187 */}
           {[
-            { angle: 240, color: '#FF007F' },   // W - pink
-            { angle: 300, color: '#00FFFF' },   // E - cyan
-            { angle: 60, color: '#BE00FF' },    // I - purple
-            { angle: 120, color: '#0096FF' },   // O - blue
+            { angle: 240, color: '#FF007F' },   // W (lane 0) - pink
+            { angle: 120, color: '#0096FF' },   // O (lane 1) - blue
+            { angle: 300, color: '#00FFFF' },   // E (lane 2) - cyan
+            { angle: 60, color: '#BE00FF' },    // I (lane 3) - purple
           ].map((lane, idx) => {
             const rad = (lane.angle * Math.PI) / 180;
             const radius = 187;

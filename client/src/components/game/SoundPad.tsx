@@ -38,9 +38,9 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
       const key = e.key.toLowerCase();
       switch (key) {
         case 'w': checkHitAndFeedback(0); break;
-        case 'e': checkHitAndFeedback(1); break;
-        case 'i': checkHitAndFeedback(2); break;
-        case 'o': checkHitAndFeedback(3); break;
+        case 'o': checkHitAndFeedback(1); break;
+        case 'e': checkHitAndFeedback(2); break;
+        case 'i': checkHitAndFeedback(3); break;
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -64,7 +64,7 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
               currentTime={currentTime}
             />
             <div className="text-xs text-muted-foreground font-rajdhani font-bold tracking-wider">
-              KEY: {['W', 'E', 'I', 'O'][i]}
+              KEY: {['W', 'O', 'E', 'I'][i]}
             </div>
           </div>
         ))}
@@ -92,10 +92,10 @@ function PadButton({ index, onClick, notes, currentTime }: { index: number; onCl
   }, [index]);
 
   const padColor = [
-    'rgb(255,0,127)',    // W - pink
-    'rgb(0,255,255)',    // E - cyan
-    'rgb(190,0,255)',    // I - purple
-    'rgb(0,150,255)'     // O - blue
+    'rgb(255,0,127)',    // W - pink (bottom-left)
+    'rgb(0,150,255)',    // O - blue (bottom-right)
+    'rgb(0,255,255)',    // E - cyan (top-left)
+    'rgb(190,0,255)'     // I - purple (top-right)
   ][index];
 
   const handleMouseDown = () => {
@@ -129,11 +129,11 @@ function PadButton({ index, onClick, notes, currentTime }: { index: number; onCl
       <motion.div 
         className={`absolute inset-0 rounded-xl overflow-hidden border-2 
           ${index === 0 ? 'bg-neon-pink/30 border-neon-pink/50 shadow-[0_0_15px_rgb(255,0,127)]' : ''}
-          ${index === 1 ? 'bg-neon-cyan/30 border-neon-cyan/50 shadow-[0_0_15px_rgb(0,255,255)]' : ''}
-          ${index === 2 ? 'bg-neon-purple/30 border-neon-purple/50 shadow-[0_0_15px_rgb(190,0,255)]' : ''}
-          ${index === 3 ? 'bg-neon-blue/30 border-neon-blue/50 shadow-[0_0_15px_rgb(0,150,255)]' : ''}
+          ${index === 1 ? 'bg-neon-blue/30 border-neon-blue/50 shadow-[0_0_15px_rgb(0,150,255)]' : ''}
+          ${index === 2 ? 'bg-neon-cyan/30 border-neon-cyan/50 shadow-[0_0_15px_rgb(0,255,255)]' : ''}
+          ${index === 3 ? 'bg-neon-purple/30 border-neon-purple/50 shadow-[0_0_15px_rgb(190,0,255)]' : ''}
           group-hover:border-opacity-100 transition-all duration-200`}
-        animate={isHitSuccess ? { boxShadow: index === 0 ? '0 0 40px rgb(255,0,127)' : index === 1 ? '0 0 40px rgb(0,255,255)' : index === 2 ? '0 0 40px rgb(190,0,255)' : '0 0 40px rgb(0,150,255)' } : {}}
+        animate={isHitSuccess ? { boxShadow: index === 0 ? '0 0 40px rgb(255,0,127)' : index === 1 ? '0 0 40px rgb(0,150,255)' : index === 2 ? '0 0 40px rgb(0,255,255)' : '0 0 40px rgb(190,0,255)' } : {}}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-20" />
       </motion.div>
