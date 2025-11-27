@@ -526,6 +526,25 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                   } else {
                     holdProgress = 0.99;
                   }
+                } else if (isCurrentlyHeld) {
+                  // Fallback: Note is currently being held but hasn't been categorized yet
+                  // This catches transitions during early presses
+                  const actualHoldDuration = currentTime - holdStartTime;
+                  const HOLD_DURATION = 1000;
+                  
+                  if (!Number.isFinite(actualHoldDuration) || actualHoldDuration < 0) {
+                    // Just started holding
+                    if (timeUntilHit > 0) {
+                      const phase1Progress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+                      holdProgress = Math.min(1.0, phase1Progress);
+                    } else {
+                      holdProgress = 1.0;
+                    }
+                  } else {
+                    // Already holding - show shrinking
+                    const shrinkAmount = actualHoldDuration / HOLD_DURATION;
+                    holdProgress = Math.min(1.0 + shrinkAmount, 2.0);
+                  }
                 } else {
                   // Phase 1: Not activated yet - trapezoid grows during approach
                   if (timeUntilHit > 0) {
