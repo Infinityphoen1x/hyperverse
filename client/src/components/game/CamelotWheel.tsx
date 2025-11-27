@@ -182,11 +182,14 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
                <AnimatePresence>
                  {activeNotes.map(note => {
                    const timeUntilHit = note.time - currentTime;
-                   const leadTime = 1000; // Deck dots appear only 1 second before hit
-                   if (timeUntilHit > leadTime || timeUntilHit < -200) return null;
+                   const HOLD_DURATION = 2000; // Hold lasts 2 seconds
+                   if (timeUntilHit > HOLD_DURATION || timeUntilHit < -200) return null;
                    
                    // Progress: 0 = at center, 1 = at rim
-                   const progress = 1 - (timeUntilHit / leadTime);
+                   // Dots travel from center to rim over the 2-second hold duration
+                   // Hit at timeUntilHit = 0 means hold just started, or at the note time
+                   // Hit at timeUntilHit = -2000 means hold just ended
+                   const progress = 1 - (timeUntilHit / HOLD_DURATION);
                    const visualProgress = Math.max(0, Math.min(1, progress));
                    
                    // Get the target position using pattern
