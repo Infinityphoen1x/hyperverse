@@ -46,7 +46,7 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
         continue;
       }
       
-      if (line.match(/^\[EASY\]|\[MEDIUM\]|\[HARD\]/)) {
+      if (line.match(/^\[(EASY|MEDIUM|HARD)\]$/)) {
         inMetadata = false;
         const sectionDifficulty = line.replace(/[\[\]]/g, '');
         
@@ -62,7 +62,12 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
       }
       
       if (inMetadata && line.includes(':')) {
-        const [key, value] = line.split(':').map(s => s.trim());
+        const parts = line.split(':');
+        if (parts.length < 2) continue; // Skip malformed lines
+        
+        const key = parts[0].trim();
+        const value = parts.slice(1).join(':').trim(); // Handle values with colons
+        
         if (!metadata) metadata = { title: '', artist: '', bpm: 0, duration: 0 };
         
         if (key.toLowerCase() === 'title') metadata.title = value;
@@ -113,9 +118,9 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
         notes.push({ time, lane, type: 'TAP' });
       } else if (type === 'HOLD' && parts.length >= 5) {
         const duration = parseInt(parts[3]);
-        const holdId = parts[4];
+        const holdId = parts[4].trim();
         
-        if (!isNaN(duration)) {
+        if (!isNaN(duration) && holdId) {
           notes.push({ time, lane, type: 'HOLD', duration, holdId });
         }
       }
