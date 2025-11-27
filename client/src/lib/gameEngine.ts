@@ -260,6 +260,8 @@ export const useGameEngine = (difficulty: Difficulty) => {
           );
           return newNotes;
         });
+        // Clear any hold state for this lane to prevent rendering issues
+        setHoldStartTimes(prev => ({ ...prev, [lane]: 0 }));
         setCombo(0);
         setHealth(h => Math.max(0, h - 2));
         return; // Exit without setting holdStartTime
@@ -267,6 +269,8 @@ export const useGameEngine = (difficulty: Difficulty) => {
       
       // Check if in valid window (-3000 to +100)
       if (timeSinceNoteSpawn < -3000 || timeSinceNoteSpawn > 100) {
+        // Clear any hold state for this lane if note is outside valid window
+        setHoldStartTimes(prev => ({ ...prev, [lane]: 0 }));
         GameErrors.log(`trackHoldStart: Note on lane ${lane} is outside valid window`);
         return;
       }
