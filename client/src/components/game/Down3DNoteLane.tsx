@@ -467,6 +467,10 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                   }}
                 />
               );
+              } catch (error) {
+                console.warn(`Trapezoid rendering error: ${error}`);
+                return null;
+              }
             })}
 
           {/* Judgement lines for hold notes */}
