@@ -11,9 +11,7 @@ export default function Home() {
       {/* Beatmap Loader - for loading YouTube before starting */}
       <BeatmapLoader 
         difficulty={selectedDifficulty as 'EASY' | 'MEDIUM' | 'HARD'}
-        onBeatmapLoad={() => {
-          // Beatmap loaded - if it contains YouTube, it will load on the game screen
-        }}
+        onBeatmapLoad={() => {}}
       />
       {/* Background FX */}
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" />

@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { parseBeatmap } from "@/lib/beatmapParser";
+import { convertBeatmapNotes } from "@/lib/beatmapConverter";
 import { Music } from "lucide-react";
 
 function extractYouTubeId(url: string): string | null {
@@ -23,7 +24,7 @@ function extractYouTubeId(url: string): string | null {
 
 interface BeatmapLoaderProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-  onBeatmapLoad: (beatmapText: string, youtubeVideoId?: string) => void;
+  onBeatmapLoad: (beatmapText: string, youtubeVideoId?: string, notes?: any[]) => void;
 }
 
 export function BeatmapLoader({ difficulty, onBeatmapLoad }: BeatmapLoaderProps) {
@@ -55,7 +56,8 @@ export function BeatmapLoader({ difficulty, onBeatmapLoad }: BeatmapLoaderProps)
       youtubeVideoId = extractedId;
     }
 
-    onBeatmapLoad(beatmapText, youtubeVideoId);
+    const convertedNotes = convertBeatmapNotes(parsed.notes);
+    onBeatmapLoad(beatmapText, youtubeVideoId, convertedNotes);
     setIsLoaded(true);
     setBeatmapText("");
     setIsOpen(false);

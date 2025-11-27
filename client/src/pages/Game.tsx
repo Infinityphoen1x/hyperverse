@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useGameEngine, Difficulty, GameErrors } from "@/lib/gameEngine";
+import { useGameEngine, Difficulty, GameErrors, Note } from "@/lib/gameEngine";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { SoundPad } from "@/components/game/SoundPad";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
@@ -14,6 +14,7 @@ export default function Game() {
   const [rightDeckRotation, setRightDeckRotation] = useState(0);
   const [gameErrors, setGameErrors] = useState<string[]>([]);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
+  const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
   const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
   const searchParams = new URLSearchParams(window.location.search);
   const difficulty = (searchParams.get('difficulty') || 'MEDIUM') as Difficulty;
@@ -41,7 +42,7 @@ export default function Game() {
     trackHoldStart,
     trackHoldEnd,
     markNoteMissed
-  } = useGameEngine(difficulty, youtubeVideoId ? getVideoTime : undefined);
+  } = useGameEngine(difficulty, youtubeVideoId ? getVideoTime : undefined, customNotes);
 
   // Memoize hold callbacks to prevent re-creation on every render
   const memoizedTrackHoldStart = useCallback((lane: number) => {
@@ -122,9 +123,12 @@ export default function Game() {
       {/* Beatmap Loader */}
       <BeatmapLoader 
         difficulty={difficulty}
-        onBeatmapLoad={(beatmapText, youtubeVideoId) => {
+        onBeatmapLoad={(beatmapText, youtubeVideoId, notes) => {
           if (youtubeVideoId) {
             setYoutubeVideoId(youtubeVideoId);
+          }
+          if (notes) {
+            setCustomNotes(notes);
           }
         }}
       />

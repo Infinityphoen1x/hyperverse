@@ -99,7 +99,7 @@ const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[]
   }
 };
 
-export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => number | null) => {
+export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => number | null, customNotes?: Note[]) => {
   const [gameState, setGameState] = useState<'MENU' | 'PLAYING' | 'GAMEOVER'>('MENU');
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
@@ -115,7 +115,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     setScore(0);
     setCombo(0);
     setHealth(200);
-    setNotes(generateNotes(difficulty));
+    setNotes(customNotes || generateNotes(difficulty));
     setGameState('PLAYING');
     
     startTimeRef.current = Date.now();
@@ -210,7 +210,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     };
     
     requestRef.current = requestAnimationFrame(loop);
-  }, [difficulty, getVideoTime]);
+  }, [difficulty, getVideoTime, customNotes]);
 
   const hitNote = useCallback((lane: number) => {
     try {
