@@ -45,12 +45,12 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
             let bestNote: Note | null = null;
             let bestDistance = Infinity;
             
-            notes.forEach((n: Note | undefined) => {
-              if (n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed && n.id) {
+            notes.forEach((n) => {
+              if (n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed && n.id && !(n as any).holdReleaseFailure && !(n as any).tooEarlyFailure && !(n as any).holdMissFailure) {
                 const distance = Math.abs(n.time - currentTime);
                 if (distance < bestDistance) {
                   bestDistance = distance;
-                  bestNote = n as Note;
+                  bestNote = n;
                 }
               }
             });
@@ -62,22 +62,15 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
           });
         }
         
-        // Hold ended - mark note with holdReleaseFailure flag if released before completion
+        // Hold ended - remove from active holds
         if (prevTime > 0 && currTime === 0) {
           setActiveHolds(prev => {
             const newSet = new Set(prev);
+            // Find and remove the active note for this lane
             const firstActiveNote = notes.find(n => 
-              n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed && n.id && !(n as any).holdReleaseFailure && !(n as any).tooEarlyFailure && !(n as any).holdMissFailure
+              n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && n.id && activeHolds.has(n.id)
             );
-            if (firstActiveNote && firstActiveNote.id) {
-              // If released before note.time (premature release), mark as holdReleaseFailure
-              if (currentTime < firstActiveNote.time) {
-                setNotes(prevNotes => prevNotes.map(n => 
-                  n && n.id === firstActiveNote.id ? { ...n, holdReleaseFailure: true } : n
-                ));
-                setCombo(0);
-                setHealth(h => Math.max(0, h - 2));
-              }
+            if (firstActiveNote?.id) {
               newSet.delete(firstActiveNote.id);
             }
             return newSet;

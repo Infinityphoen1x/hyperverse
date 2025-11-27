@@ -128,7 +128,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
       setNotes(prev => {
         let newHealth = 200;
         const newNotes = prev.map(n => {
-          if (!n.hit && !n.missed && !(n as any).tapMissFailure && !(n as any).holdReleaseFailure && !(n as any).tooEarlyFailure) {
+          if (!n.hit && !n.missed && !(n as any).tapMissFailure && !(n as any).holdReleaseFailure && !(n as any).tooEarlyFailure && !(n as any).holdMissFailure) {
             let shouldMarkFailed = false;
             let failureType = '';
             
@@ -157,6 +157,22 @@ export const useGameEngine = (difficulty: Difficulty) => {
         });
         
         return newNotes;
+      });
+      
+      // Check for hold releases before note completion - detect holdReleaseFailure
+      // A hold note in Phase 2 (holdStartTimes[lane] > 0) that gets released before note.time is holdReleaseFailure
+      Object.entries(holdStartTimes).forEach(([lane, holdStartTime]) => {
+        if (holdStartTime > 0) {
+          // Hold is active - find the note that's currently being held
+          const laneNum = parseInt(lane);
+          const activeNote = notes.find(n => 
+            n && n.lane === laneNum && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
+            !n.hit && !n.missed && !(n as any).holdReleaseFailure && !(n as any).tooEarlyFailure && !(n as any).holdMissFailure
+          );
+          
+          // If there's an active note and we've passed its trigger time, mark successful completion (will be marked as hit elsewhere)
+          // Otherwise it will be cleaned up by holdMiss logic
+        }
       });
 
       if (shouldGameOver) {
