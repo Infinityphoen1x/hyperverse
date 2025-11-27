@@ -9,11 +9,12 @@ interface Down3DNoteLaneProps {
 
 export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down3DNoteLaneProps) {
   // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
-  // Hold notes (SPIN) need to stay visible for the full hold duration (2000ms before to 2000ms after hit)
+  // Hold notes (SPIN) appear 4000ms early to give player time to see trapezoid growing
   const visibleNotes = notes.filter(n => {
     const timeUntilHit = n.time - currentTime;
+    const leadTime = (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') ? 4000 : 2000;
     const holdDuration = (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') ? 2000 : 0;
-    return timeUntilHit >= -holdDuration && timeUntilHit <= 2000;
+    return timeUntilHit >= -holdDuration && timeUntilHit <= leadTime;
   });
 
 
@@ -242,6 +243,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
             .map(note => {
               const timeUntilHit = note.time - currentTime;
               const HOLD_DURATION = 2000;
+              const LEAD_TIME = 4000; // Hold notes appear 4000ms before hit
               const JUDGEMENT_RADIUS = 187;
               
               // Phase 1 (before note hit): Use time-based progress
@@ -251,7 +253,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
               
               if (holdStartTime === 0) {
                 // Phase 1: Note hasn't been held yet, use time-based progress
-                holdProgress = (2000 - timeUntilHit) / 2000;
+                // Progress from 0 (at 4000ms) to 1.0 (at hit)
+                holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
               } else {
                 // Phase 2: Player is holding, use actual hold duration
                 const actualHoldDuration = currentTime - holdStartTime;
