@@ -70,7 +70,7 @@ const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[]
       const isSpin = beatIndex % 8 === 0 && beatIndex > 0;
       
       notes.push({
-        id: `note-${currentTime}-${beatIndex}`,
+        id: `note-${Math.round(currentTime)}-${beatIndex}`,
         lane: isSpin ? (beatIndex % 16 === 0 ? -1 : -2) : lane, // Alternate left/right spins
         time: currentTime,
         type: isSpin ? (beatIndex % 16 === 0 ? 'SPIN_LEFT' : 'SPIN_RIGHT') : 'TAP',
