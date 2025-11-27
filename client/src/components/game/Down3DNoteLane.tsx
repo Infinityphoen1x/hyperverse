@@ -112,15 +112,19 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
           if (n.missed && timeUntilHit < -500) continue;
           
           // Determine visibility window: extend for failure animations
-          let visibilityEnd = -2000; // Default window end
+          let visibilityEnd = -2000; // Default window end (2000ms after note.time)
           if (n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
-            // Failure animations need 1100ms from failureTime to complete
-            // failureTime is typically close to when failure occurred, so extend visibility significantly
-            // Use -3500 to ensure 1500ms margin for late-arriving failure animations
-            visibilityEnd = -3500;
+            // Failure animations run for 1100ms from failureTime
+            // Animation completes at: failureTime + 1100
+            // In terms of timeUntilHit: need to stay visible until currentTime >= failureTime + 1100
+            // Which means: timeUntilHit = note.time - currentTime > note.time - (failureTime + 1100)
+            // So: visibilityEnd = note.time - (failureTime + 1100) = -(failureTime - note.time) - 1100
+            const failureTime = n.failureTime || currentTime; // Fallback to current if missing
+            const timeSinceNoteTime = failureTime - n.time;
+            visibilityEnd = -(timeSinceNoteTime + 1100);
           }
           
-          // Visibility window: 4000ms before to extended end after (accounting for animations)
+          // Visibility window: 4000ms before (lead time) to end of failure animation
           if (timeUntilHit >= visibilityEnd && timeUntilHit <= 4000) {
             result.push(n);
           }
