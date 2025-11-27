@@ -9,7 +9,7 @@ interface Down3DNoteLaneProps {
 
 export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down3DNoteLaneProps) {
   // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
-  // TAP notes: appear 2000ms before hit
+  // TAP notes: appear 2000ms before hit, stay 500ms after as "missed" with glitch effect
   // SPIN (hold) notes: appear 4000ms before, stay visible through 2000ms hold duration
   const visibleNotes = notes.filter(n => {
     const timeUntilHit = n.time - currentTime;
@@ -17,8 +17,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
       // Hold notes: 4000ms lead + 2000ms hold duration
       return timeUntilHit >= -2000 && timeUntilHit <= 4000;
     } else {
-      // TAP notes: 2000ms lead time
-      return timeUntilHit >= -200 && timeUntilHit <= 2000;
+      // TAP notes: 2000ms lead time, 500ms after as missed with glitch
+      return timeUntilHit >= -500 && timeUntilHit <= 2000;
     }
   });
 
@@ -395,20 +395,31 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
             const xPosition = VANISHING_POINT_X + xOffset;
             const yPosition = VANISHING_POINT_Y + yOffset;
             const scale = 0.12 + (progress * 0.88);
+            
+            // Missed note glitch effect
+            const isMissed = note.missed;
+            const missProgress = isMissed ? Math.max(0, -timeUntilHit / 500) : 0; // Fade over 500ms
+            const missOpacity = 1 - missProgress;
 
             return (
               <motion.div
                 key={note.id}
                 className="absolute w-14 h-14 rounded-lg flex items-center justify-center text-black font-bold text-sm font-rajdhani pointer-events-none"
+                animate={isMissed ? { x: [0, -2, 3, -2, 2, 0] } : {}}
+                transition={isMissed ? { duration: 0.15, repeat: Infinity } : {}}
                 style={{
-                  backgroundColor: getColorForLane(note.lane),
-                  boxShadow: `0 0 ${30 * scale}px ${getColorForLane(note.lane)}, inset 0 0 ${18 * scale}px rgba(255,255,255,0.4)`,
+                  backgroundColor: isMissed ? 'rgba(100,100,100,0.5)' : getColorForLane(note.lane),
+                  boxShadow: isMissed 
+                    ? `0 0 ${8 * scale}px rgba(100,100,100,0.3)` 
+                    : `0 0 ${30 * scale}px ${getColorForLane(note.lane)}, inset 0 0 ${18 * scale}px rgba(255,255,255,0.4)`,
                   left: `${xPosition}px`,
                   top: `${yPosition}px`,
                   transform: `translate(-50%, -50%) scale(${scale})`,
-                  opacity: 0.15 + progress * 0.85,
+                  opacity: isMissed ? missOpacity * 0.5 : (0.15 + progress * 0.85),
                   zIndex: Math.floor(progress * 1000),
-                  border: `2px solid rgba(255,255,255,${0.4 * progress})`,
+                  border: `2px solid rgba(100,100,100,${isMissed ? 0.5 * missOpacity : 0.4 * progress})`,
+                  filter: isMissed ? `grayscale(1) brightness(0.6) blur(${1 + (1-missOpacity)*2}px)` : 'none',
+                  textShadow: isMissed ? '0 0 8px rgba(255,0,0,0.5)' : 'none',
                 }}
               >
                 {getNoteKey(note.lane)}
