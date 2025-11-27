@@ -206,54 +206,69 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
             .filter(n => n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT')
             .map(note => {
               const timeUntilHit = note.time - currentTime;
+              const HOLD_DURATION = 2000;
+              const JUDGEMENT_RADIUS = 187;
               
-              // Only render trapezoid while actively holding (progress 0 to 1)
-              if (timeUntilHit > 0 || timeUntilHit < -2000) return null;
+              // Only render while note is visible and active
+              if (timeUntilHit > 0 || timeUntilHit < -HOLD_DURATION) return null;
               
-              const progress = 1 - (timeUntilHit / 2000); // 0 = start, 1 = end of hold
+              const holdProgress = 1 - (timeUntilHit / HOLD_DURATION); // 0 = start, 1 = end
               
-              // Get the exact ray angle for this note's lane
+              // Get ray angle
               const rayAngle = getLaneAngle(note.lane);
               const rad = (rayAngle * Math.PI) / 180;
               
-              // Judgement line is at radius 187
-              const JUDGEMENT_RADIUS = 187;
+              // holdProgress goes from 0 to 2 over the full visible window
+              // PHASE 1 (0 to 1.0): Note approaches, trapezoid GROWS as near end travels to judgement line
+              // PHASE 2 (1.0 to 2.0): Held, trapezoid SHRINKS
               
-              // Far end travels from vanishing point toward player
-              const farDistance = 1 + (progress * (MAX_DISTANCE - 1));
+              const isInPhase2 = holdProgress >= 1.0;
               
-              // Near end stays fixed at judgement line (the "target")
-              const nearDistance = JUDGEMENT_RADIUS;
+              // Near end: goes from vanishing point (1) to judgement line (187) in phase 1, stays at 187 in phase 2
+              const nearDistance = isInPhase2 
+                ? JUDGEMENT_RADIUS
+                : 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
+              
+              // Far end distance
+              let farDistance;
+              if (isInPhase2) {
+                // PHASE 2: Trapezoid SHRINKS - far end moves toward near end
+                const shrinkProgress = holdProgress - 1.0; // 0 to 1.0 during phase 2
+                // Far end shrinks from MAX_DISTANCE toward judgement line as shrinkProgress goes 0 to 1
+                farDistance = JUDGEMENT_RADIUS + ((1 - shrinkProgress) * (MAX_DISTANCE - JUDGEMENT_RADIUS));
+              } else {
+                // PHASE 1: Trapezoid GROWS - far end leads as near end approaches
+                // Far end starts ahead and continues traveling
+                farDistance = 1 + (holdProgress * (MAX_DISTANCE - 1));
+              }
               
               // Calculate positions
-              const farX = VANISHING_POINT_X + Math.cos(rad) * farDistance;
-              const farY = VANISHING_POINT_Y + Math.sin(rad) * farDistance;
-              
               const nearX = VANISHING_POINT_X + Math.cos(rad) * nearDistance;
               const nearY = VANISHING_POINT_Y + Math.sin(rad) * nearDistance;
               
-              // Trapezoid perpendicular to ray
-              const scale = 0.12 + (progress * 0.88);
-              const farWidth = 12 + (scale * 18);   // Width at far end (narrow)
-              const nearWidth = 30 + (scale * 50); // Width at near end (wide)
+              const farX = VANISHING_POINT_X + Math.cos(rad) * farDistance;
+              const farY = VANISHING_POINT_Y + Math.sin(rad) * farDistance;
               
-              // Perpendicular direction (90 degrees to ray)
+              // Width scales with distance
+              const scale = 0.12 + (Math.min(holdProgress, 1.0) * 0.88);
+              const farWidth = 12 + (scale * 18);
+              const nearWidth = 30 + (scale * 50);
+              
+              // Perpendicular direction
               const perpRad = rad + Math.PI / 2;
               
-              // Calculate trapezoid corners perpendicular to the ray
-              // Far end (toward vanishing point, narrow)
+              // Calculate trapezoid corners
               const x1 = farX + Math.cos(perpRad) * (farWidth / 2);
               const y1 = farY + Math.sin(perpRad) * (farWidth / 2);
               const x2 = farX - Math.cos(perpRad) * (farWidth / 2);
               const y2 = farY - Math.sin(perpRad) * (farWidth / 2);
               
-              // Near end (at judgement line, wide - where it's being consumed)
               const x3 = nearX - Math.cos(perpRad) * (nearWidth / 2);
               const y3 = nearY - Math.sin(perpRad) * (nearWidth / 2);
               const x4 = nearX + Math.cos(perpRad) * (nearWidth / 2);
               const y4 = nearY + Math.sin(perpRad) * (nearWidth / 2);
               
-              const opacity = 0.15 + progress * 0.85;
+              const opacity = 0.15 + Math.min(holdProgress, 1.0) * 0.85;
               const color = getColorForLane(note.lane);
               
               return (
