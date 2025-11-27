@@ -65,7 +65,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [side, onHoldStart, onHoldEnd]);
+  }, [side]);
 
   // Continuous rotation loop using RAF
   useEffect(() => {

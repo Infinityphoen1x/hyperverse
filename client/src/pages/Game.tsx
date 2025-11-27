@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useGameEngine, Difficulty, GameErrors } from "@/lib/gameEngine";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
@@ -29,6 +29,15 @@ export default function Game() {
     trackHoldStart,
     trackHoldEnd
   } = useGameEngine(difficulty);
+
+  // Memoize hold callbacks to prevent re-creation on every render
+  const memoizedTrackHoldStart = useCallback((lane: number) => {
+    trackHoldStart(lane);
+  }, [trackHoldStart]);
+
+  const memoizedTrackHoldEnd = useCallback((lane: number) => {
+    trackHoldEnd(lane);
+  }, [trackHoldEnd]);
 
   // Monitor errors
   useEffect(() => {
@@ -130,8 +139,8 @@ export default function Game() {
              notes={notes} 
              currentTime={currentTime}
              holdStartTime={holdStartTimes[-1]}
-             onHoldStart={() => trackHoldStart(-1)}
-             onHoldEnd={() => trackHoldEnd(-1)}
+             onHoldStart={() => memoizedTrackHoldStart(-1)}
+             onHoldEnd={() => memoizedTrackHoldEnd(-1)}
              onRotationChange={setLeftDeckRotation}
            />
         </div>
@@ -164,8 +173,8 @@ export default function Game() {
              notes={notes} 
              currentTime={currentTime}
              holdStartTime={holdStartTimes[-2]}
-             onHoldStart={() => trackHoldStart(-2)}
-             onHoldEnd={() => trackHoldEnd(-2)}
+             onHoldStart={() => memoizedTrackHoldStart(-2)}
+             onHoldEnd={() => memoizedTrackHoldEnd(-2)}
              onRotationChange={setRightDeckRotation}
            />
         </div>
