@@ -214,8 +214,8 @@ export const useGameEngine = (difficulty: Difficulty) => {
         return;
       }
       
-      // Only allow hold start if there's an active hold note on this lane
-      const hasActiveNote = notes.some(n => 
+      // Find the active hold note on this lane
+      const activeNote = notes.find(n => 
         n && 
         n.lane === lane && 
         (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
@@ -223,19 +223,28 @@ export const useGameEngine = (difficulty: Difficulty) => {
         !n.missed
       );
       
-      if (!hasActiveNote) {
+      if (!activeNote) {
         GameErrors.log(`trackHoldStart: No active hold note on lane ${lane}`);
         return; // Can't hold - no active note on this lane
       }
       
-      // Validate hit window: dot must be 75-100% progress (close to judgement line)
-      // Early press: dotProgress < 0.75 = MISS (too early)
-      const HIT_WINDOW_MIN = 0.75;
-      if (dotProgress < HIT_WINDOW_MIN) {
-        GameErrors.log(`trackHoldStart: Too early! Dot progress ${(dotProgress * 100).toFixed(1)}% < ${HIT_WINDOW_MIN * 100}%`);
-        return; // EARLY - reject this hold
+      // Validate timing: only allow holds within hit window around the note's time
+      // Hit window: 500ms before to 2000ms after note time (deck dot journey)
+      const timeUntilNote = activeNote.time - currentTime;
+      const HIT_WINDOW_EARLY = 500;    // Can't press more than 500ms early
+      const HIT_WINDOW_LATE = -2000;   // Can't press more than 2000ms late (past the hold)
+      
+      if (timeUntilNote > HIT_WINDOW_EARLY) {
+        GameErrors.log(`trackHoldStart: EARLY! ${timeUntilNote.toFixed(0)}ms until note (max: ${HIT_WINDOW_EARLY}ms)`);
+        return; // Too early - don't activate hold
       }
       
+      if (timeUntilNote < HIT_WINDOW_LATE) {
+        GameErrors.log(`trackHoldStart: LATE! ${timeUntilNote.toFixed(0)}ms until note (min: ${HIT_WINDOW_LATE}ms)`);
+        return; // Too late - note already passed
+      }
+      
+      // Valid timing - allow the hold to start
       setHoldStartTimes(prev => {
         if (!prev || typeof prev !== 'object') {
           GameErrors.log(`trackHoldStart: holdStartTimes corrupted`);
