@@ -156,10 +156,10 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           if (!n) continue;
           
           // Cleanup: Remove notes that are far past their visibility window
-          // TAP notes: remove if > 2500ms past spawn (4000ms lead + 300ms hit window + 200ms buffer)
+          // TAP notes: remove if > 2600ms past spawn (4000ms lead + 300ms hit window + 300ms buffer for animation)
           // HOLD notes: remove if > 6600ms past spawn (4000ms lead + 1100ms hold+release + 1100ms animation + 400ms buffer)
           // Failure animations can occur late, so we need extra time for them to complete
-          const noteDuration = n.type === 'TAP' ? 2500 : 6600; // visibility + hold window + animation + buffer
+          const noteDuration = n.type === 'TAP' ? 2600 : 6600; // visibility + hold window + animation + buffer
           if (time > n.time + noteDuration) {
             continue; // Skip (remove) this note
           }
@@ -169,8 +169,9 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
             let shouldMarkFailed = false;
             let failureType: keyof Note | '' = '';
             
-            // TAP notes: miss if >200ms past note time
-            if (n.type === 'TAP' && time > n.time + 200) {
+            // TAP notes: miss if outside hit window (±300ms from note time)
+            // Must match hitWindow constant (300ms) used in hitNote function
+            if (n.type === 'TAP' && time > n.time + 300) {
               shouldMarkFailed = true;
               failureType = 'tapMissFailure';
             }
