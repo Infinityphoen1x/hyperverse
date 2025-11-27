@@ -50,7 +50,7 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
     });
     
     prevHoldStartTimes.current = { ...holdStartTimes };
-  }, [holdStartTimes, currentTime]);
+  }, [holdStartTimes, currentTime, notes]);
 
   // Get hold progress based on holdStartTimes passed from parent
   // Only charges when actively holding with an active hold note AND dot is present
