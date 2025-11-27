@@ -477,8 +477,17 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                   const HOLD_DURATION = 500; // ms - must hold for this long, accuracy-based
                   
                   if (!Number.isFinite(actualHoldDuration) || actualHoldDuration < 0) {
-                    // Just started holding - trapezoid at judgement line
-                    holdProgress = 1.0;
+                    // Just started holding - calculate Phase 1 progress at moment of press
+                    // This ensures smooth transition when pressing early (before note reaches judgement)
+                    if (timeUntilHit > 0) {
+                      // Still approaching - trapezoid is somewhere between 0 and 1 in Phase 1
+                      // Transition to Phase 2: start shrinking from current Phase 1 position
+                      const phase1Progress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+                      holdProgress = Math.min(1.0, phase1Progress); // Cap at 1.0, then shrink begins
+                    } else {
+                      // Already at or past judgement - start at full shrink range (1.0)
+                      holdProgress = 1.0;
+                    }
                   } else {
                     // Shrink phase: trapezoid shrinks over 500ms, visual cue for release timing
                     // holdProgress: 1.0 = start of shrink (press), 2.0 = shrink complete (release point)
