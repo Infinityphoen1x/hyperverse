@@ -180,7 +180,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
       
       // Auto-clear holdStartTimes when hold note duration expires
       // This prevents the next hold note from seeing the old key press as "too early"
-      const HOLD_DURATION = 500; // ms
+      const HOLD_DURATION = 1000; // ms
       setHoldStartTimes(prev => {
         const updated = { ...prev };
         let hasChanges = false;
@@ -356,7 +356,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
         
         // If there's an active note, check release timing accuracy
         if (activeNote) {
-          const HOLD_DURATION = 500; // ms - must hold for this long
+          const HOLD_DURATION = 1000; // ms - must hold for this long (slowed for easier timing)
           const RELEASE_WINDOW = 300; // ms - release accuracy window
           
           // Calculate expected release time

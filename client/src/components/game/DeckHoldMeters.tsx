@@ -81,9 +81,9 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
         !n.missed
       ) : null;
       
-      // Show frozen meter for 500ms after hold ends (synced with shrinking animation)
+      // Show frozen meter for 1000ms after hold ends (synced with shrinking animation)
       const holdEndTimeVal = holdEndTime[lane] || 0;
-      if (holdEndTimeVal > 0 && currentTime - holdEndTimeVal < 500) {
+      if (holdEndTimeVal > 0 && currentTime - holdEndTimeVal < 1000) {
         const frozenProgress = Math.min(Math.max(holdEndProgress[lane], 0), 1);
         return frozenProgress;
       }
@@ -106,8 +106,8 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
         return 0;
       }
       
-      // Meter charges over fixed 500ms hold duration (accuracy-based)
-      const HOLD_DURATION = 500; // ms - fixed hold duration
+      // Meter charges over fixed 1000ms hold duration (slowed for easier timing)
+      const HOLD_DURATION = 1000; // ms - fixed hold duration
       const actualHoldDuration = currentTime - holdStartTime;
       
       if (actualHoldDuration < 0 || !Number.isFinite(actualHoldDuration)) {
@@ -119,8 +119,8 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
         return 0;
       }
       
-      // Progress = how much of the 500ms hold duration has elapsed
-      // 0% at press, 100% at press + 500ms (matches shrink animation)
+      // Progress = how much of the 1000ms hold duration has elapsed
+      // 0% at press, 100% at press + 1000ms (matches shrink animation)
       const progress = actualHoldDuration / HOLD_DURATION;
       
       // Clamp to valid range [0, 1]
