@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useGameEngine, Difficulty, GameErrors } from "@/lib/gameEngine";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { SoundPad } from "@/components/game/SoundPad";
@@ -14,8 +14,19 @@ export default function Game() {
   const [rightDeckRotation, setRightDeckRotation] = useState(0);
   const [gameErrors, setGameErrors] = useState<string[]>([]);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
+  const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
   const searchParams = new URLSearchParams(window.location.search);
   const difficulty = (searchParams.get('difficulty') || 'MEDIUM') as Difficulty;
+  
+  // Function to get current video time from YouTube iframe
+  const getVideoTime = useCallback((): number | null => {
+    if (!youtubeIframeRef.current) return null;
+    try {
+      return (youtubeIframeRef.current as any).contentWindow.document.querySelector('video')?.currentTime ?? null;
+    } catch {
+      return null;
+    }
+  }, []);
   
   const { 
     gameState, 
@@ -30,7 +41,7 @@ export default function Game() {
     trackHoldStart,
     trackHoldEnd,
     markNoteMissed
-  } = useGameEngine(difficulty);
+  } = useGameEngine(difficulty, youtubeVideoId ? getVideoTime : undefined);
 
   // Memoize hold callbacks to prevent re-creation on every render
   const memoizedTrackHoldStart = useCallback((lane: number) => {
@@ -84,6 +95,7 @@ export default function Game() {
       {youtubeVideoId && (
         <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
           <iframe
+            ref={youtubeIframeRef}
             width="100%"
             height="100%"
             src={`https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&controls=0&modestbranding=1&mute=1`}

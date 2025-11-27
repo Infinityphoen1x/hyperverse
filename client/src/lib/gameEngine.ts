@@ -99,7 +99,7 @@ const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[]
   }
 };
 
-export const useGameEngine = (difficulty: Difficulty) => {
+export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => number | null) => {
   const [gameState, setGameState] = useState<'MENU' | 'PLAYING' | 'GAMEOVER'>('MENU');
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
@@ -118,13 +118,27 @@ export const useGameEngine = (difficulty: Difficulty) => {
     setNotes(generateNotes(difficulty));
     setGameState('PLAYING');
     
-    // Mock audio loop for rhythm
-    // In real implementation, we'd load a file
     startTimeRef.current = Date.now();
     
     const loop = () => {
-      const now = Date.now();
-      const time = now - startTimeRef.current;
+      // Check if YouTube video time is available (when a video is loaded)
+      let time: number;
+      if (getVideoTime) {
+        const videoTime = getVideoTime();
+        if (videoTime !== null && videoTime >= 0) {
+          // Use video time in milliseconds
+          time = videoTime * 1000;
+        } else {
+          // Video not ready yet, pause game
+          requestRef.current = requestAnimationFrame(loop);
+          return;
+        }
+      } else {
+        // No video, use elapsed time from start
+        const now = Date.now();
+        time = now - startTimeRef.current;
+      }
+      
       setCurrentTime(time);
       
       // Check for missed notes and cleanup old notes
@@ -196,7 +210,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
     };
     
     requestRef.current = requestAnimationFrame(loop);
-  }, [difficulty]);
+  }, [difficulty, getVideoTime]);
 
   const hitNote = useCallback((lane: number) => {
     try {
