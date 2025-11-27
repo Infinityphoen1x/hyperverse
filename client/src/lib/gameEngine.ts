@@ -296,6 +296,43 @@ export const useGameEngine = (difficulty: Difficulty) => {
         GameErrors.log(`trackHoldEnd: Invalid lane=${lane}`);
         return;
       }
+      
+      const holdStartTime = holdStartTimes[lane];
+      
+      // Only process if hold was actually active (holdStartTime > 0)
+      if (holdStartTime > 0) {
+        // Find the active hold note on this lane
+        const activeNote = notes.find(n => {
+          if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT')) {
+            return false;
+          }
+          if (n.hit || n.missed || !n.id) return false;
+          // Skip already-failed notes
+          if ((n as any).tooEarlyFailure || (n as any).holdMissFailure || (n as any).holdReleaseFailure) {
+            return false;
+          }
+          return true;
+        });
+        
+        // If there's an active note and we released before it was completed
+        if (activeNote) {
+          const DOT_HITLINE_TIME = activeNote.time + 2000;
+          
+          // If we released BEFORE the dot reaches hitline, mark as holdReleaseFailure
+          if (currentTime < DOT_HITLINE_TIME) {
+            setNotes(prev => {
+              const newNotes = prev.map(n => 
+                n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true } : n
+              );
+              return newNotes;
+            });
+            setCombo(0);
+            setHealth(h => Math.max(0, h - 2));
+          }
+        }
+      }
+      
+      // Always clear the hold state
       setHoldStartTimes(prev => {
         if (!prev || typeof prev !== 'object') {
           GameErrors.log(`trackHoldEnd: holdStartTimes corrupted`);
@@ -306,7 +343,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
     } catch (error) {
       GameErrors.log(`trackHoldEnd error: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
-  }, []);
+  }, [currentTime, notes, holdStartTimes]);
 
   const markNoteMissed = useCallback((noteId: string) => {
     try {
