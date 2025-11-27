@@ -15,30 +15,53 @@ export interface BeatmapNote {
  * HOLD with lanes 0-3 are INVALID (pads don't support holds)
  */
 export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
-  return beatmapNotes
-    .filter(note => {
-      // Reject soundpad HOLD notes (lanes 0-3 can only be TAP)
-      if (note.type === 'HOLD' && note.lane >= 0 && note.lane <= 3) {
-        console.warn(`Invalid beatmap: soundpad lane ${note.lane} cannot use HOLD type. Use TAP instead.`);
-        return false;
-      }
-      return true;
-    })
-    .map((note, index) => {
-      let type: 'TAP' | 'SPIN_LEFT' | 'SPIN_RIGHT';
-      
-      if (note.type === 'TAP') {
-        type = 'TAP';
-      } else if (note.type === 'HOLD') {
-        // HOLD can only be on deck lanes (-1, -2)
-        type = note.lane === -2 ? 'SPIN_RIGHT' : 'SPIN_LEFT';
-      } else {
-        // Should never reach here due to parsing, but type-safe default
-        type = 'TAP';
-      }
+  // Input validation
+  if (!Array.isArray(beatmapNotes) || beatmapNotes.length === 0) {
+    return [];
+  }
 
-    const id = note.holdId || `note-${note.time}-${index}`;
-    
+  const validNotes: BeatmapNote[] = [];
+
+  // First pass: validate and filter
+  for (let i = 0; i < beatmapNotes.length; i++) {
+    const note = beatmapNotes[i];
+
+    // Validate note structure
+    if (!note || !Number.isFinite(note.time) || !Number.isFinite(note.lane) || !note.type) {
+      console.warn(`Invalid beatmap note at index ${i}:`, note);
+      continue;
+    }
+
+    // Reject soundpad HOLD notes (lanes 0-3 can only be TAP)
+    if (note.type === 'HOLD' && note.lane >= 0 && note.lane <= 3) {
+      console.warn(`Invalid beatmap: soundpad lane ${note.lane} cannot use HOLD type. Use TAP instead.`);
+      continue;
+    }
+
+    validNotes.push(note);
+  }
+
+  // Second pass: convert to game notes, preserving original indices
+  return beatmapNotes.map((note, originalIndex) => {
+    // Skip filtered notes but preserve index for ID generation
+    if (!validNotes.includes(note)) {
+      return null;
+    }
+
+    let type: 'TAP' | 'SPIN_LEFT' | 'SPIN_RIGHT';
+
+    if (note.type === 'TAP') {
+      type = 'TAP';
+    } else if (note.type === 'HOLD') {
+      // HOLD can only be on deck lanes (-1, -2)
+      type = note.lane === -2 ? 'SPIN_RIGHT' : 'SPIN_LEFT';
+    } else {
+      // Should never reach here due to parsing, but type-safe default
+      type = 'TAP';
+    }
+
+    const id = note.holdId || `note-${note.time}-${originalIndex}`;
+
     return {
       id,
       lane: note.lane,
@@ -46,13 +69,6 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
       type,
       hit: false,
       missed: false,
-      // Initialize optional properties for hold notes
-      tapMissFailure: undefined,
-      tooEarlyFailure: undefined,
-      holdMissFailure: undefined,
-      holdReleaseFailure: undefined,
-      pressTime: undefined,
-      failureTime: undefined,
     };
-  });
+  }).filter((n): n is Note => n !== null);
 }
