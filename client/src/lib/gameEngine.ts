@@ -14,7 +14,6 @@ export interface Note {
   holdMissFailure?: boolean; // HOLD note expired without activation
   holdReleaseFailure?: boolean; // HOLD note released outside accuracy window
   pressTime?: number; // HOLD note: when player pressed (for release accuracy calculation)
-  releaseTime?: number; // HOLD note: when player released successfully (for post-release animation)
   failureTime?: number; // Timestamp when failure was marked (for animation timing)
 }
 
@@ -379,7 +378,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
             
             setNotes(prev => {
               return prev.map(n => 
-                n && n.id === activeNote.id ? { ...n, hit: true, releaseTime: currentTime } : n
+                n && n.id === activeNote.id ? { ...n, hit: true } : n
               );
             });
             setScore(s => s + points);

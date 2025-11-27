@@ -494,16 +494,15 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
                     holdProgress = Math.min(1.0 + shrinkAmount, 2.0);
                   }
                 } else if (wasActivated && !isCurrentlyHeld && note.hit) {
-                  // After successful hold release - show normal shrinking for 1000ms, then disappear
-                  // Use releaseTime (when we actually released) not holdStartTime (when we pressed)
-                  const releaseTime = note.releaseTime || holdStartTime; // Fallback to press time if not set
-                  const timeSinceRelease = currentTime - releaseTime;
-                  if (timeSinceRelease > 1000) {
-                    return null; // Animation complete, hide trapezoid
+                  // After successful hold release - continue shrinking animation from where it was
+                  // Keep using holdStartTime so the animation shows the full release window arc
+                  const timeSincePress = currentTime - holdStartTime;
+                  if (timeSincePress > 2000) {
+                    return null; // Animation complete (1000ms hold + 1000ms post-release), hide trapezoid
                   }
-                  // Shrink animation from 1.0 to 2.0 over 1000ms (no greyscale - successful!)
-                  const releaseShrinkProgress = timeSinceRelease / 1000;
-                  holdProgress = 1.0 + releaseShrinkProgress;
+                  // Continue shrinking from holdProgress at time of press (shows successful release timing)
+                  const shrinkAmount = timeSincePress / 1000;
+                  holdProgress = Math.min(1.0 + shrinkAmount, 2.0);
                 } else if (isCurrentlyHeld && isTooEarly && !wasActivated && note.tooEarlyFailure) {
                   // Too early press marked as failure (>300ms early): stay in Phase 1 and show GREY
                   // Only greyscale if this note was actually marked as tooEarlyFailure
