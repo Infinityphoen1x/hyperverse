@@ -178,22 +178,6 @@ export const useGameEngine = (difficulty: Difficulty) => {
         return cleaned;
       });
       
-      // Auto-clear holdStartTimes when hold note duration expires
-      // This prevents the next hold note from seeing the old key press as "too early"
-      const HOLD_DURATION = 1000; // ms
-      setHoldStartTimes(prev => {
-        const updated = { ...prev };
-        let hasChanges = false;
-        [-1, -2].forEach(lane => {
-          const holdStart = updated[lane] || 0;
-          if (holdStart > 0 && time - holdStart >= HOLD_DURATION) {
-            // Hold note duration expired - auto-clear for next note
-            updated[lane] = 0;
-            hasChanges = true;
-          }
-        });
-        return hasChanges ? updated : prev;
-      });
 
       if (shouldGameOver) {
         setGameState('GAMEOVER');
