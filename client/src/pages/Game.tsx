@@ -201,7 +201,6 @@ export default function Game() {
           <DeckHoldMeters 
             notes={notes} 
             currentTime={currentTime}
-            holdStartTimes={holdStartTimes}
           />
         </div>
 
@@ -210,7 +209,6 @@ export default function Game() {
           <Down3DNoteLane 
             notes={notes} 
             currentTime={currentTime}
-            holdStartTimes={holdStartTimes}
             health={health}
           />
         </div>

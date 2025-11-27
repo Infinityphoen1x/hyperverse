@@ -7,7 +7,6 @@ const COMPLETION_THRESHOLD = 0.95;
 interface DeckHoldMetersProps {
   notes: Note[];
   currentTime: number;
-  holdStartTimes?: Record<number, { time: number; noteId: string }>;
 }
 
 const getRectangleMeterColor = (lane: number): string => {
@@ -65,32 +64,33 @@ const RectangleMeter = ({ progress, outlineColor, lane, completionGlow }: Rectan
   );
 };
 
-export function DeckHoldMeters({ notes, currentTime, holdStartTimes = { [-1]: { time: 0, noteId: '' }, [-2]: { time: 0, noteId: '' } } }: DeckHoldMetersProps) {
-  // Track when holds end (hitline detection) to briefly freeze meter for visual feedback
+export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
+  // Track when holds end to briefly freeze meter for visual feedback
   const [holdEndProgress, setHoldEndProgress] = useState<Record<number, number>>({ [-1]: 0, [-2]: 0 });
   const [holdEndTime, setHoldEndTime] = useState<Record<number, number>>({ [-1]: 0, [-2]: 0 });
   const [completionGlow, setCompletionGlow] = useState<Record<number, boolean>>({ [-1]: false, [-2]: false });
-  const prevHoldStartTimes = useRef<Record<number, { time: number; noteId: string }>>({ [-1]: { time: 0, noteId: '' }, [-2]: { time: 0, noteId: '' } });
+  const prevNoteStates = useRef<Record<number, boolean>>({ [-1]: false, [-2]: false });
 
-  // Detect when hold ends (holdStartTime goes from non-zero to 0)
-  // Completion is based on fixed 1000ms hold duration (decoupled from dots)
+  // Detect when hold notes transition from active to inactive
+  // Completion is based on fixed 1000ms hold duration
   useEffect(() => {
     [-1, -2].forEach((lane) => {
-      const prevTime = prevHoldStartTimes.current[lane]?.time || 0;
-      const currTime = holdStartTimes[lane]?.time || 0;
+      const activeNote = Array.isArray(notes) ? notes.find(n => 
+        n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed
+      ) : null;
       
-      // Hold just ended (was holding, now not holding)
-      if (prevTime > 0 && currTime === 0) {
-        const activeNote = Array.isArray(notes) ? notes.find(n => 
-          n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed
-        ) : null;
-        
+      const wasActive = prevNoteStates.current[lane];
+      const isActive = activeNote && (activeNote.pressTime || 0) > 0;
+      
+      // Hold just ended (was active, now inactive)
+      if (wasActive && !isActive) {
         let finalProgress = 0;
         let isComplete = false;
         // Only freeze meter if note wasn't marked as failed
         if (activeNote && !activeNote.tooEarlyFailure && !activeNote.holdMissFailure && !activeNote.holdReleaseFailure) {
           const HOLD_DURATION = 1000; // ms - fixed hold duration
-          const holdDuration = currentTime - prevTime;
+          const pressTime = activeNote.pressTime || 0;
+          const holdDuration = currentTime - pressTime;
           finalProgress = Math.min(holdDuration / HOLD_DURATION, 1.0);
           isComplete = finalProgress >= COMPLETION_THRESHOLD; // Consider 95%+ as complete
           
@@ -110,15 +110,15 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes = { [-1]: { 
       }
       
       // New hold started, clear the end progress
-      if (prevTime === 0 && currTime > 0) {
+      if (!wasActive && isActive) {
         setHoldEndProgress(prev => ({ ...prev, [lane]: 0 }));
         setHoldEndTime(prev => ({ ...prev, [lane]: 0 }));
         setCompletionGlow(prev => ({ ...prev, [lane]: false }));
       }
+      
+      prevNoteStates.current[lane] = isActive || false;
     });
-    
-    prevHoldStartTimes.current = { ...holdStartTimes };
-  }, [holdStartTimes, currentTime, notes]);
+  }, [currentTime, notes]);
 
   // Get hold progress based on note.pressTime (single source of truth)
   // Meter charges from 0% at press to 100% at press + 1000ms hold duration

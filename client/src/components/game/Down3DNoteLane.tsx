@@ -1,5 +1,4 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
 import { Note } from "@/lib/gameEngine";
 
 // Extract health-based color calculation for tunnel effects
@@ -39,11 +38,10 @@ const getTrapezoidCorners = (
 interface Down3DNoteLaneProps {
   notes: Note[];
   currentTime: number;
-  holdStartTimes?: Record<number, { time: number; noteId: string }>;
   health?: number;
 }
 
-export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { time: 0, noteId: '' }, [-2]: { time: 0, noteId: '' } }, health = 200 }: Down3DNoteLaneProps) {
+export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteLaneProps) {
   // Helper: Calculate phase progress (0 to 2)
   // Phase 1 (0 to 1): Note approaching, trapezoid growing
   // Phase 2 (1 to 2): Note at/past judgement, trapezoid shrinking
@@ -175,17 +173,6 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
       return 0; // Fallback to 0 degrees
     }
     return angle;
-  };
-
-  // Judgement dot positions (where soundpad keys are)
-  const getJudgementPos = (lane: number): { x: number; y: number } => {
-    const positions: Record<number, { x: number; y: number }> = {
-      [0]: { x: 150, y: 290 }, // W - top-left pad
-      [1]: { x: 450, y: 290 }, // O - top-right pad
-      [2]: { x: 450, y: 530 }, // I - bottom-right pad
-      [3]: { x: 150, y: 530 }, // E - bottom-left pad
-    };
-    return positions[lane] || { x: 300, y: 530 };
   };
 
   const VANISHING_POINT_X = 350;
