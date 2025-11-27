@@ -54,7 +54,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
 
   const VANISHING_POINT_X = 350;
   const VANISHING_POINT_Y = 200;
-  const MAX_DISTANCE = 350;
+  const MAX_DISTANCE = 150;
   const HITLINE_Y = 520;
 
   return (
@@ -74,7 +74,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
           style={{ opacity: 1 }}
         >
           {/* Concentric circles - faint tunnel walls */}
-          {[30, 70, 120, 180, 250, 330].map((radius, idx) => (
+          {[13, 30, 51, 77, 107, 142].map((radius, idx) => (
             <circle 
               key={`tunnel-ring-${idx}`}
               cx={VANISHING_POINT_X}
@@ -90,7 +90,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
           <circle cx={VANISHING_POINT_X} cy={VANISHING_POINT_Y} r="6" fill="rgba(0,255,255,0.05)" />
           
           {/* Judgement line indicators - curved arcs at second-last depth ring */}
-          {/* Second-last ring is at radius 250 */}
+          {/* Second-last ring is at radius 107 */}
           {[
             { angle: 240, color: '#FF007F' },   // W - pink
             { angle: 300, color: '#00FFFF' },   // E - cyan
@@ -99,7 +99,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
           ].map((lane, idx) => {
             const rad1 = ((lane.angle - 8) * Math.PI) / 180;
             const rad2 = ((lane.angle + 8) * Math.PI) / 180;
-            const radius = 250;
+            const radius = 107;
             
             const x1 = VANISHING_POINT_X + Math.cos(rad1) * radius;
             const y1 = VANISHING_POINT_Y + Math.sin(rad1) * radius;
