@@ -221,7 +221,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               
               // holdProgress goes from 0 to 2 over the full visible window
               // PHASE 1 (0 to 1.0): Note approaches, trapezoid GROWS as near end travels to judgement line
-              // PHASE 2 (1.0 to 2.0): Held, trapezoid SHRINKS
+              // PHASE 2 (1.0 to 2.0): Held, trapezoid SHRINKS back toward vanishing point
               
               const isInPhase2 = holdProgress >= 1.0;
               
@@ -233,13 +233,13 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               // Far end distance
               let farDistance;
               if (isInPhase2) {
-                // PHASE 2: Trapezoid SHRINKS - far end moves toward near end
+                // PHASE 2: Trapezoid SHRINKS - far end moves back toward vanishing point
                 const shrinkProgress = holdProgress - 1.0; // 0 to 1.0 during phase 2
-                // Far end shrinks from MAX_DISTANCE toward judgement line as shrinkProgress goes 0 to 1
-                farDistance = JUDGEMENT_RADIUS + ((1 - shrinkProgress) * (MAX_DISTANCE - JUDGEMENT_RADIUS));
+                // Far end shrinks back from MAX_DISTANCE toward the near end position
+                farDistance = MAX_DISTANCE * (1 - shrinkProgress) + JUDGEMENT_RADIUS * shrinkProgress;
               } else {
-                // PHASE 1: Trapezoid GROWS - far end leads as near end approaches
-                // Far end starts ahead and continues traveling
+                // PHASE 1: Trapezoid GROWS - far end leads ahead of near end
+                // Far end starts at 1 and travels toward MAX_DISTANCE
                 farDistance = 1 + (holdProgress * (MAX_DISTANCE - 1));
               }
               
@@ -250,10 +250,14 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               const farX = VANISHING_POINT_X + Math.cos(rad) * farDistance;
               const farY = VANISHING_POINT_Y + Math.sin(rad) * farDistance;
               
-              // Width scales with distance
+              // Width scales based on perspective distance
+              // Near end (at judgement line) is wider, far end is narrower
+              const nearDistanceScale = nearDistance / MAX_DISTANCE;
+              const farDistanceScale = farDistance / MAX_DISTANCE;
+              
               const scale = 0.12 + (Math.min(holdProgress, 1.0) * 0.88);
-              const nearWidth = 12 + (scale * 18);   // Narrow at far end (vanishing point)
-              const farWidth = 30 + (scale * 50);   // Wide at near end (judgement line)
+              const farWidth = 12 + (farDistanceScale * 18);   // Narrow at far end (vanishing point)
+              const nearWidth = 30 + (nearDistanceScale * 50); // Wide at near end (judgement line)
               
               // Perpendicular direction
               const perpRad = rad + Math.PI / 2;
