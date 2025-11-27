@@ -125,11 +125,25 @@ export const useGameEngine = (difficulty: Difficulty) => {
       const time = now - startTimeRef.current;
       setCurrentTime(time);
       
-      // Check for missed notes - track if game should end
+      // Check for missed notes and cleanup old notes
       let shouldGameOver = false;
       setNotes(prev => {
         let newHealth = 200;
-        const newNotes = prev.map(n => {
+        const cleaned: Note[] = [];
+        
+        for (let i = 0; i < prev.length; i++) {
+          const n = prev[i];
+          if (!n) continue;
+          
+          // Cleanup: Remove notes that are far past their visibility window
+          // TAP notes: remove if > 3000ms past miss window (2000ms before + 500ms after + 500ms buffer)
+          // HOLD notes: remove if > 3000ms past disappearance (4000ms before + 500ms after + 500ms buffer)
+          const noteDuration = n.type === 'TAP' ? 2500 : 5000; // visibility + animation time
+          if (time > n.time + noteDuration + 500) {
+            continue; // Skip (remove) this note
+          }
+          
+          // Check for new failures only (skip already-failed notes)
           if (!n.hit && !n.missed && !n.tapMissFailure && !n.holdReleaseFailure && !n.tooEarlyFailure && !n.holdMissFailure) {
             let shouldMarkFailed = false;
             let failureType: keyof Note | '' = '';
@@ -152,13 +166,15 @@ export const useGameEngine = (difficulty: Difficulty) => {
                 if (newHealth <= 0) shouldGameOver = true;
                 return newHealth;
               });
-              return { ...n, [failureType]: true };
+              cleaned.push({ ...n, [failureType]: true });
+              continue;
             }
           }
-          return n;
-        });
+          
+          cleaned.push(n);
+        }
         
-        return newNotes;
+        return cleaned;
       });
       
       // Hold release failures are handled by Down3DNoteLane component tracking when holdStartTime goes from > 0 to 0

@@ -104,8 +104,17 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
     return () => cancelAnimationFrame(animationId);
   }, [isKeyPressed, spinDirection, onSpin]);
 
-  // Filter relevant notes
-  const activeNotes = notes.filter(n => n.lane === wheelLane && !n.hit && !n.missed);
+  // Filter relevant notes - OPTIMIZED: early exit, single pass
+  const activeNotes = Array.isArray(notes) ? (() => {
+    const result: typeof notes = [];
+    for (let i = 0; i < notes.length; i++) {
+      const n = notes[i];
+      if (n && n.lane === wheelLane && !n.hit && !n.missed) {
+        result.push(n);
+      }
+    }
+    return result;
+  })() : [];
 
   // Hitline detection logic stored in ref - called from RAF
   const checkHitlineRef = useRef<((rot: number) => void) | null>(null);
@@ -120,7 +129,15 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
           return;
         }
         
-        const activeNote = notes.find(n => n && n.lane === wheelLane && !n.hit && !n.missed);
+        // Find active note - optimized early exit
+        let activeNote: Note | undefined;
+        for (let i = 0; i < notes.length; i++) {
+          const n = notes[i];
+          if (n && n.lane === wheelLane && !n.hit && !n.missed) {
+            activeNote = n;
+            break; // Early exit after first match
+          }
+        }
         if (!activeNote) return;
         
         // Get target angle for this note

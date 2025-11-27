@@ -91,37 +91,46 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
   // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
   // TAP notes: appear 2000ms before hit, show glitch 500ms after miss, then disappear
   // SPIN (hold) notes: appear 4000ms before, stay visible through hold duration
-  const visibleNotes = Array.isArray(notes) ? notes.filter(n => {
-    try {
-      if (!n || !Number.isFinite(n.time) || !Number.isFinite(currentTime)) {
-        return false; // Skip invalid notes
-      }
-      
-      const timeUntilHit = n.time - currentTime;
-      
-      if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
-        // Hold notes: keep ALL hold notes visible including missed ones (for greyscale shrink animation)
-        // Filter out only HITS (successful holds)
-        if (n.hit) return false;
-        // Missed holds stay visible for 500ms after note.time to show failure animation
-        if (n.missed && timeUntilHit < -500) return false;
-        return timeUntilHit >= -2000 && timeUntilHit <= 4000;
-      } else {
-        // TAP notes: show 2000ms before hit
-        if (timeUntilHit > 2000) return false; // Too early
+  // OPTIMIZED: Early exit for notes that are too old, single pass, minimal allocations
+  const visibleNotes = Array.isArray(notes) ? (() => {
+    const result: typeof notes = [];
+    
+    for (let i = 0; i < notes.length; i++) {
+      const n = notes[i];
+      try {
+        if (!n || !Number.isFinite(n.time) || !Number.isFinite(currentTime)) {
+          continue; // Skip invalid notes
+        }
         
-        // If hit or already past glitch window, hide completely
-        if (n.hit) return false;
-        if (n.missed && timeUntilHit < -500) return false; // Past glitch window
+        const timeUntilHit = n.time - currentTime;
         
-        // Show note 2000ms before OR during 500ms glitch window after miss
-        return timeUntilHit <= 2000 && timeUntilHit >= -500;
+        if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
+          // Hold notes: keep ALL hold notes visible including missed ones
+          // Filter out only HITS (successful holds)
+          if (n.hit) continue;
+          // Missed holds stay visible for 500ms after note.time
+          if (n.missed && timeUntilHit < -500) continue;
+          // Visibility window: 4000ms before to 2000ms after
+          if (timeUntilHit >= -2000 && timeUntilHit <= 4000) {
+            result.push(n);
+          }
+        } else {
+          // TAP notes: show 2000ms before to 500ms after miss
+          if (timeUntilHit > 2000) continue; // Too early, can skip rest
+          if (n.hit) continue;
+          if (n.missed && timeUntilHit < -500) continue;
+          // Show note 2000ms before or during 500ms glitch window after miss
+          if (timeUntilHit <= 2000 && timeUntilHit >= -500) {
+            result.push(n);
+          }
+        }
+      } catch (error) {
+        console.warn(`Note visibility filter error: ${error}`);
       }
-    } catch (error) {
-      console.warn(`Note visibility filter error: ${error}`);
-      return false;
     }
-  }) : [];
+    
+    return result;
+  })() : [];
 
 
   const getNoteKey = (lane: number): string => {
