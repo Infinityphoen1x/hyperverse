@@ -10,9 +10,10 @@ export interface Note {
   hit: boolean;
   missed: boolean;
   tapMissFailure?: boolean; // TAP note failed (>200ms past note time)
-  tooEarlyFailure?: boolean; // HOLD note pressed before -3000ms window
+  tooEarlyFailure?: boolean; // HOLD note pressed outside ±300ms window (too early)
   holdMissFailure?: boolean; // HOLD note expired without activation
-  holdReleaseFailure?: boolean; // HOLD note released before dot reached hitline
+  holdReleaseFailure?: boolean; // HOLD note released outside accuracy window
+  pressTime?: number; // HOLD note: when player pressed (for release accuracy calculation)
 }
 
 // Error tracking for debugging
@@ -153,8 +154,8 @@ export const useGameEngine = (difficulty: Difficulty) => {
               shouldMarkFailed = true;
               failureType = 'tapMissFailure';
             }
-            // HOLD notes: miss if past the entire hold window (note.time + 2000ms) without being held
-            else if ((n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && time > n.time + 2000) {
+            // HOLD notes: miss if past activation window (note.time + 300ms) without being pressed
+            else if ((n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && time > n.time + 300) {
               shouldMarkFailed = true;
               failureType = 'holdMissFailure';
             }
@@ -273,33 +274,36 @@ export const useGameEngine = (difficulty: Difficulty) => {
       
       const timeSinceNoteSpawn = currentTime - anyNote.time;
       
-      // Timing window for 3D vanishing point tunnel
-      // Activation window: -3000ms to +100ms (can press 3s early through moment of arrival)
-      // Beyond this = too early/late failure
+      // Accuracy-based hold activation (same as TAP notes)
+      // Press window: ±300ms from note arrival
+      const holdActivationWindow = 300; // ms
       
-      // Check if too early (before -3000ms)
-      if (timeSinceNoteSpawn < -3000) {
-        // Too early press - mark note as tooEarlyFailure and dock health
-        setNotes(prev => {
-          return prev.map(n => 
-            n && n.id === anyNote.id ? { ...n, tooEarlyFailure: true } : n
-          );
-        });
-        // Clear any hold state for this lane to prevent rendering issues
-        setHoldStartTimes(prev => ({ ...prev, [lane]: 0 }));
-        setCombo(0);
-        setHealth(h => Math.max(0, h - 2));
-        return; // Exit without setting holdStartTime
-      }
-      
-      // Check if too late (after +100ms from spawn time)
-      if (timeSinceNoteSpawn > 100) {
-        // Note has passed the valid activation window - silently skip (normal behavior)
+      // Check if press is within accuracy window
+      if (Math.abs(timeSinceNoteSpawn) > holdActivationWindow) {
+        // Outside window - miss
+        if (timeSinceNoteSpawn < -holdActivationWindow) {
+          // Too early - mark as tooEarlyFailure
+          setNotes(prev => {
+            return prev.map(n => 
+              n && n.id === anyNote.id ? { ...n, tooEarlyFailure: true } : n
+            );
+          });
+          setCombo(0);
+          setHealth(h => Math.max(0, h - 2));
+        }
+        // Too late - silently ignore (note will eventually miss)
         setHoldStartTimes(prev => ({ ...prev, [lane]: 0 }));
         return;
       }
       
-      // Valid timing - Phase 2 starts: dot will spawn and trapezoid shrinks
+      // Valid press - now player must hold for 500ms and release accurately
+      // Store press time for release accuracy calculation
+      setNotes(prev => {
+        return prev.map(n => 
+          n && n.id === anyNote.id ? { ...n, pressTime: currentTime } : n
+        );
+      });
+      
       setHoldStartTimes(prev => {
         if (!prev || typeof prev !== 'object') {
           GameErrors.log(`trackHoldStart: holdStartTimes corrupted`);
@@ -336,13 +340,44 @@ export const useGameEngine = (difficulty: Difficulty) => {
           return true;
         });
         
-        // If there's an active note and we released before it was completed
+        // If there's an active note, check release timing accuracy
         if (activeNote) {
-          // Hold must be maintained until dot reaches hitline (2000ms from note spawn)
-          const DOT_HITLINE_TIME = activeNote.time + 2000;
+          const HOLD_DURATION = 500; // ms - must hold for this long
+          const RELEASE_WINDOW = 300; // ms - release accuracy window
           
-          // If we released BEFORE the dot reaches hitline, mark as holdReleaseFailure
-          if (currentTime < DOT_HITLINE_TIME) {
+          // Calculate expected release time
+          const pressTime = (activeNote as any).pressTime || holdStartTime;
+          const expectedReleaseTime = pressTime + HOLD_DURATION;
+          const timeSinceExpectedRelease = currentTime - expectedReleaseTime;
+          
+          // Check if released too early (before hold duration complete)
+          if (currentTime - holdStartTime < HOLD_DURATION) {
+            setNotes(prev => {
+              return prev.map(n => 
+                n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true } : n
+              );
+            });
+            setCombo(0);
+            setHealth(h => Math.max(0, h - 2));
+          }
+          // Check if release is within accuracy window (±300ms from expected release)
+          else if (Math.abs(timeSinceExpectedRelease) <= RELEASE_WINDOW) {
+            // Successful hold - calculate accuracy tier
+            let points = 100; // Good
+            if (Math.abs(timeSinceExpectedRelease) < 50) points = 300; // Perfect
+            else if (Math.abs(timeSinceExpectedRelease) < 100) points = 200; // Great
+            
+            setNotes(prev => {
+              return prev.map(n => 
+                n && n.id === activeNote.id ? { ...n, hit: true } : n
+              );
+            });
+            setScore(s => s + points);
+            setCombo(c => c + 1);
+            setHealth(h => Math.min(200, h + 1));
+          }
+          // Released too late (outside release window)
+          else {
             setNotes(prev => {
               return prev.map(n => 
                 n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true } : n
