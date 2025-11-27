@@ -31,7 +31,6 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
     const lines = text.split('\n').map(line => line.trim()).filter(line => line);
     
     let metadata: BeatmapMetadata | null = null;
-    let currentSection = '';
     let noteLines: string[] = [];
     
     // Parse metadata and find the requested difficulty section
