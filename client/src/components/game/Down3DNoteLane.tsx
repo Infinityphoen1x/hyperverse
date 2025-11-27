@@ -274,10 +274,10 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
           {/* Judgement line indicators - perpendicular to rays */}
           {/* Second-last ring is at radius 187 */}
           {[
-            { angle: 240, color: '#FF007F' },   // W (lane 0) - pink
-            { angle: 120, color: '#0096FF' },   // O (lane 1) - blue
-            { angle: 300, color: '#00FFFF' },   // E (lane 2) - cyan
-            { angle: 60, color: '#BE00FF' },    // I (lane 3) - purple
+            { angle: 240, color: '#FF007F', key: 'W' },   // W (lane 0) - pink
+            { angle: 120, color: '#0096FF', key: 'O' },   // O (lane 1) - blue
+            { angle: 300, color: '#00FFFF', key: 'E' },   // E (lane 2) - cyan
+            { angle: 60, color: '#BE00FF', key: 'I' },    // I (lane 3) - purple
           ].map((lane, idx) => {
             const rad = (lane.angle * Math.PI) / 180;
             const radius = 187;
@@ -295,17 +295,41 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
             const y2 = cy - Math.sin(perpRad) * (lineLength / 2);
             
             return (
-              <line
-                key={`judgement-line-${idx}`}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
-                stroke={lane.color}
-                strokeWidth="2.5"
-                opacity="1"
-                strokeLinecap="round"
-              />
+              <g key={`judgement-line-${idx}`}>
+                <line
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke={lane.color}
+                  strokeWidth="2.5"
+                  opacity="1"
+                  strokeLinecap="round"
+                />
+                {/* Key indicator circle */}
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r="16"
+                  fill={`${lane.color}33`}
+                  stroke={lane.color}
+                  strokeWidth="2"
+                  opacity="0.8"
+                />
+                <text
+                  x={cx}
+                  y={cy}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill={lane.color}
+                  fontSize="14"
+                  fontWeight="bold"
+                  fontFamily="Orbitron, monospace"
+                  opacity="1"
+                >
+                  {lane.key}
+                </text>
+              </g>
             );
           })}
           
