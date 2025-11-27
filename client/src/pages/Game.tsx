@@ -186,7 +186,7 @@ export default function Game() {
              onSpin={() => hitNote(-1)} 
              notes={notes} 
              currentTime={currentTime}
-             holdStartTime={holdStartTimes[-1]}
+             holdStartTime={holdStartTimes[-1]?.time}
              onHoldStart={() => memoizedTrackHoldStart(-1)}
              onHoldEnd={() => memoizedTrackHoldEnd(-1)}
              onRotationChange={setLeftDeckRotation}
@@ -220,7 +220,7 @@ export default function Game() {
              onSpin={() => hitNote(-2)} 
              notes={notes} 
              currentTime={currentTime}
-             holdStartTime={holdStartTimes[-2]}
+             holdStartTime={holdStartTimes[-2]?.time}
              onHoldStart={() => memoizedTrackHoldStart(-2)}
              onHoldEnd={() => memoizedTrackHoldEnd(-2)}
              onRotationChange={setRightDeckRotation}
