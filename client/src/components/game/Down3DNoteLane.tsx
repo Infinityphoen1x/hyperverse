@@ -580,14 +580,20 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
                 farDistance = 1;
               } else {
                 // Phase 2: Shrinking - trapezoid collapses with fade
-                // Near end STAYS at judgement line, far end moves toward it
+                // Near end STAYS at the position it was when player pressed (shows press timing)
+                // Far end moves from vanishing point toward the near end
                 const shrinkProgress = Math.min(holdProgress - 1.0, 1.0); // 0 to 1.0 during phase 2
                 
-                // Near end stays locked at judgement line
-                nearDistance = JUDGEMENT_RADIUS;
+                // Calculate where the near end was at moment of press
+                // timeUntilHit at press moment = note.time - holdStartTime
+                const timeUntilHitAtPress = note.time - holdStartTime;
+                const holdProgressAtPress = (LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME;
                 
-                // Far end moves from vanishing point (1) toward near end (judgement line)
-                farDistance = 1 + (shrinkProgress * (JUDGEMENT_RADIUS - 1));
+                // Lock near end to position at moment of press (capped at judgement line)
+                nearDistance = 1 + (Math.min(holdProgressAtPress, 1.0) * (JUDGEMENT_RADIUS - 1));
+                
+                // Far end moves from vanishing point (1) toward the locked near end
+                farDistance = 1 + (shrinkProgress * (nearDistance - 1));
               }
               
               // Glow only when player is holding the key for this lane
