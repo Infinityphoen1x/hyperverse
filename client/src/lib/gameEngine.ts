@@ -207,7 +207,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
     };
   }, []);
 
-  const trackHoldStart = useCallback((lane: number) => {
+  const trackHoldStart = useCallback((lane: number, dotProgress: number = 0) => {
     try {
       if (!Number.isInteger(lane) || !Number.isFinite(currentTime)) {
         GameErrors.log(`trackHoldStart: Invalid lane=${lane} or currentTime=${currentTime}`);
@@ -224,7 +224,16 @@ export const useGameEngine = (difficulty: Difficulty) => {
       );
       
       if (!hasActiveNote) {
+        GameErrors.log(`trackHoldStart: No active hold note on lane ${lane}`);
         return; // Can't hold - no active note on this lane
+      }
+      
+      // Validate hit window: dot must be 75-100% progress (close to judgement line)
+      // Early press: dotProgress < 0.75 = MISS (too early)
+      const HIT_WINDOW_MIN = 0.75;
+      if (dotProgress < HIT_WINDOW_MIN) {
+        GameErrors.log(`trackHoldStart: Too early! Dot progress ${(dotProgress * 100).toFixed(1)}% < ${HIT_WINDOW_MIN * 100}%`);
+        return; // EARLY - reject this hold
       }
       
       setHoldStartTimes(prev => {

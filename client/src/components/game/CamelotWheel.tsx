@@ -9,7 +9,7 @@ interface CamelotWheelProps {
   notes: Note[];
   currentTime: number;
   holdStartTime?: number;
-  onHoldStart?: () => void;
+  onHoldStart?: (dotProgress: number) => void;
   onHoldEnd?: () => void;
   onRotationChange?: (rotation: number) => void;
 }
@@ -41,8 +41,23 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
         setIsKeyPressed(true);
         setHitlineReached(false); // Reset hitline detection on new press
         setSpinDirection((prev) => prev * -1); // Toggle direction
-        // Defer callback to next microtask
-        setTimeout(() => onHoldStart(), 0);
+        
+        // Calculate current deck dot progress for hit window validation
+        const activeNote = notes.find(n => {
+          const wheelLane = side === 'left' ? -1 : -2;
+          return n.lane === wheelLane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed;
+        });
+        
+        let dotProgress = 0;
+        if (activeNote) {
+          const timeUntilHit = activeNote.time - currentTime;
+          const HOLD_DURATION = 2000;
+          const progress = -timeUntilHit / HOLD_DURATION;
+          dotProgress = Math.max(0, Math.min(1, progress));
+        }
+        
+        // Defer callback to next microtask with dot progress
+        setTimeout(() => onHoldStart(dotProgress), 0);
       }
     };
 
