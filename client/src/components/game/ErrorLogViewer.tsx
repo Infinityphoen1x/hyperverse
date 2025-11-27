@@ -8,6 +8,7 @@ export function ErrorLogViewer() {
   const [errors, setErrors] = useState<string[]>([]);
   const [animationStats, setAnimationStats] = useState({ total: 0, completed: 0, failed: 0, pending: 0 });
   const [animations, setAnimations] = useState<any[]>([]);
+  const [errorCounts, setErrorCounts] = useState({ beatmapLoader: 0, parser: 0, converter: 0, meter: 0, trapezoid: 0, game: 0 });
 
   // Update logs in real-time
   useEffect(() => {
@@ -15,6 +16,27 @@ export function ErrorLogViewer() {
       setErrors([...GameErrors.notes]);
       setAnimationStats(GameErrors.getAnimationStats());
       setAnimations([...GameErrors.animations]);
+      
+      // Count errors by category
+      const counts = {
+        beatmapLoader: 0,
+        parser: 0,
+        converter: 0,
+        meter: 0,
+        trapezoid: 0,
+        game: 0,
+      };
+      
+      GameErrors.notes.forEach(err => {
+        if (err.includes('BeatmapLoader')) counts.beatmapLoader++;
+        else if (err.includes('BeatmapParser')) counts.parser++;
+        else if (err.includes('BeatmapConverter')) counts.converter++;
+        else if (err.includes('DeckMeter')) counts.meter++;
+        else if (err.includes('Trapezoid')) counts.trapezoid++;
+        else counts.game++;
+      });
+      
+      setErrorCounts(counts);
     }, 500);
 
     return () => clearInterval(updateInterval);
@@ -78,7 +100,7 @@ export function ErrorLogViewer() {
             className="absolute bottom-12 right-0 bg-gray-950 border border-cyan-500 rounded-lg p-4 w-96 max-h-96 flex flex-col gap-3 shadow-2xl"
             data-testid="panel-error-log-viewer"
           >
-            {/* Stats */}
+            {/* Animation Stats */}
             <div className="bg-gray-900 rounded p-2 text-xs text-cyan-300 font-mono grid grid-cols-4 gap-1">
               <div>
                 <div className="text-gray-500">Total</div>
@@ -97,6 +119,30 @@ export function ErrorLogViewer() {
                 <div className="text-lg font-bold text-yellow-400">{animationStats.pending}</div>
               </div>
             </div>
+
+            {/* Error Category Breakdown */}
+            {Object.values(errorCounts).some(v => v > 0) && (
+              <div className="bg-gray-900 rounded p-2 text-xs text-yellow-300 font-mono grid grid-cols-3 gap-1">
+                {errorCounts.beatmapLoader > 0 && (
+                  <div><span className="text-gray-500">Loader</span>: <span className="font-bold">{errorCounts.beatmapLoader}</span></div>
+                )}
+                {errorCounts.parser > 0 && (
+                  <div><span className="text-gray-500">Parser</span>: <span className="font-bold">{errorCounts.parser}</span></div>
+                )}
+                {errorCounts.converter > 0 && (
+                  <div><span className="text-gray-500">Convert</span>: <span className="font-bold">{errorCounts.converter}</span></div>
+                )}
+                {errorCounts.meter > 0 && (
+                  <div><span className="text-gray-500">Meter</span>: <span className="font-bold">{errorCounts.meter}</span></div>
+                )}
+                {errorCounts.trapezoid > 0 && (
+                  <div><span className="text-gray-500">Trap</span>: <span className="font-bold">{errorCounts.trapezoid}</span></div>
+                )}
+                {errorCounts.game > 0 && (
+                  <div><span className="text-gray-500">Game</span>: <span className="font-bold">{errorCounts.game}</span></div>
+                )}
+              </div>
+            )}
 
             {/* Error Messages */}
             <div

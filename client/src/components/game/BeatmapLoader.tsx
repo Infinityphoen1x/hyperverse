@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { parseBeatmap } from "@/lib/beatmapParser";
 import { convertBeatmapNotes } from "@/lib/beatmapConverter";
 import { extractYouTubeId } from "@/lib/youtubeUtils";
+import { GameErrors } from "@/lib/gameEngine";
 import { Music } from "lucide-react";
 
 interface BeatmapLoaderProps {
@@ -21,38 +22,52 @@ export function BeatmapLoader({ difficulty, onBeatmapLoad }: BeatmapLoaderProps)
   const handleLoadBeatmap = () => {
     setError("");
     if (!beatmapText.trim()) {
-      setError("Please paste a beatmap");
+      const msg = "Please paste a beatmap";
+      setError(msg);
+      GameErrors.log(`BeatmapLoader: ${msg}`);
       return;
     }
 
-    const parsed = parseBeatmap(beatmapText, difficulty);
-    if (!parsed) {
-      setError(`Failed to parse beatmap for ${difficulty} difficulty`);
-      return;
-    }
-
-    let youtubeVideoId: string | undefined;
-    if (parsed.metadata.youtube) {
-      const extractedId = extractYouTubeId(parsed.metadata.youtube);
-      if (!extractedId) {
-        setError("Invalid YouTube URL in beatmap metadata");
+    try {
+      const parsed = parseBeatmap(beatmapText, difficulty);
+      if (!parsed) {
+        const msg = `Failed to parse beatmap for ${difficulty} difficulty`;
+        setError(msg);
+        GameErrors.log(`BeatmapLoader: ${msg}`);
         return;
       }
-      youtubeVideoId = extractedId;
-    }
 
-    const convertedNotes = convertBeatmapNotes(parsed.notes);
-    
-    // Validate that beatmap has notes
-    if (convertedNotes.length === 0) {
-      setError("Beatmap has no notes");
-      return;
-    }
+      let youtubeVideoId: string | undefined;
+      if (parsed.metadata.youtube) {
+        const extractedId = extractYouTubeId(parsed.metadata.youtube);
+        if (!extractedId) {
+          const msg = "Invalid YouTube URL in beatmap metadata";
+          setError(msg);
+          GameErrors.log(`BeatmapLoader: ${msg}`);
+          return;
+        }
+        youtubeVideoId = extractedId;
+      }
 
-    onBeatmapLoad(youtubeVideoId, convertedNotes);
-    setIsLoaded(true);
-    setBeatmapText("");
-    setIsOpen(false);
+      const convertedNotes = convertBeatmapNotes(parsed.notes);
+      
+      // Validate that beatmap has notes
+      if (convertedNotes.length === 0) {
+        const msg = "Beatmap has no notes after conversion";
+        setError(msg);
+        GameErrors.log(`BeatmapLoader: ${msg}`);
+        return;
+      }
+
+      onBeatmapLoad(youtubeVideoId, convertedNotes);
+      setIsLoaded(true);
+      setBeatmapText("");
+      setIsOpen(false);
+    } catch (error) {
+      const msg = `Beatmap loading error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      setError(msg);
+      GameErrors.log(`BeatmapLoader: ${msg}`);
+    }
   };
 
   return (

@@ -1,3 +1,5 @@
+import { GameErrors } from '@/lib/gameEngine';
+
 export interface BeatmapMetadata {
   title: string;
   artist: string;
@@ -84,13 +86,13 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
     }
     
     if (!metadata || !foundDifficulty) {
-      console.error('Missing metadata or difficulty section');
+      GameErrors.log(`BeatmapParser: Missing metadata or ${difficulty} difficulty section`);
       return null;
     }
 
     // Validate metadata has required values
     if (!metadata.title || !metadata.artist || metadata.bpm <= 0 || metadata.duration <= 0) {
-      console.error('Invalid metadata: title, artist, bpm, and duration must be set and positive');
+      GameErrors.log(`BeatmapParser: Invalid metadata - title: "${metadata?.title}", artist: "${metadata?.artist}", bpm: ${metadata?.bpm}, duration: ${metadata?.duration}`);
       return null;
     }
     
@@ -103,25 +105,45 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
       holdId?: string;
     }> = [];
     
-    for (const line of noteLines) {
+    for (let lineIdx = 0; lineIdx < noteLines.length; lineIdx++) {
+      const line = noteLines[lineIdx];
       const parts = line.split('|');
-      if (parts.length < 3) continue;
+      if (parts.length < 3) {
+        GameErrors.log(`BeatmapParser: Line ${lineIdx} has insufficient fields: "${line}"`);
+        continue;
+      }
       
       const time = parseInt(parts[0]);
       const lane = parseInt(parts[1]);
       const type = parts[2].toUpperCase();
       
-      if (isNaN(time) || isNaN(lane)) continue;
+      if (isNaN(time) || isNaN(lane)) {
+        GameErrors.log(`BeatmapParser: Line ${lineIdx} invalid time or lane: time=${parts[0]}, lane=${parts[1]}`);
+        continue;
+      }
       
       if (type === 'TAP') {
         notes.push({ time, lane, type: 'TAP' });
-      } else if (type === 'HOLD' && parts.length >= 5) {
+      } else if (type === 'HOLD') {
+        if (parts.length < 5) {
+          GameErrors.log(`BeatmapParser: HOLD note line ${lineIdx} missing duration or holdId: "${line}"`);
+          continue;
+        }
         const duration = parseInt(parts[3]);
         const holdId = parts[4].trim();
         
-        if (!isNaN(duration) && holdId) {
-          notes.push({ time, lane, type: 'HOLD', duration, holdId });
+        if (isNaN(duration)) {
+          GameErrors.log(`BeatmapParser: HOLD note line ${lineIdx} invalid duration: "${parts[3]}"`);
+          continue;
         }
+        if (!holdId) {
+          GameErrors.log(`BeatmapParser: HOLD note line ${lineIdx} missing holdId`);
+          continue;
+        }
+        
+        notes.push({ time, lane, type: 'HOLD', duration, holdId });
+      } else if (type !== 'TAP' && type !== 'HOLD') {
+        GameErrors.log(`BeatmapParser: Line ${lineIdx} unknown note type: "${type}"`);
       }
     }
     

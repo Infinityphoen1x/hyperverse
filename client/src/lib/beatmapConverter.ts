@@ -1,4 +1,4 @@
-import { Note } from '@/lib/gameEngine';
+import { Note, GameErrors } from '@/lib/gameEngine';
 
 export interface BeatmapNote {
   time: number;
@@ -28,13 +28,13 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
 
     // Validate note structure
     if (!note || !Number.isFinite(note.time) || !Number.isFinite(note.lane) || !note.type) {
-      console.warn(`Invalid beatmap note at index ${i}:`, note);
+      GameErrors.log(`BeatmapConverter: Invalid note at index ${i}: time=${note?.time}, lane=${note?.lane}, type=${note?.type}`);
       continue;
     }
 
     // Reject soundpad HOLD notes (lanes 0-3 can only be TAP)
     if (note.type === 'HOLD' && note.lane >= 0 && note.lane <= 3) {
-      console.warn(`Invalid beatmap: soundpad lane ${note.lane} cannot use HOLD type. Use TAP instead.`);
+      GameErrors.log(`BeatmapConverter: Soundpad lane ${note.lane} cannot use HOLD type (note index ${i}). Use TAP instead.`);
       continue;
     }
 
