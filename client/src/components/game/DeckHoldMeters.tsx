@@ -41,7 +41,7 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
   }, [holdStartTimes, currentTime]);
 
   // Get hold progress based on holdStartTimes passed from parent
-  // Only charges when actively holding with an active hold note for that lane
+  // Only charges when actively holding with an active hold note AND dot is present
   const getHoldProgress = (lane: number): number => {
     try {
       if (!Number.isInteger(lane)) return 0;
@@ -53,14 +53,14 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
         return 0;
       }
       
-      // Check if there's an active hold note for this lane
-      const hasActiveHoldNote = Array.isArray(notes) && notes.some(n => 
+      // Find active hold note on this lane
+      const activeNote = Array.isArray(notes) ? notes.find(n => 
         n &&
         n.lane === lane && 
         (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
         !n.hit && 
         !n.missed
-      );
+      ) : null;
       
       // Only show frozen progress briefly (300ms) after hold ends
       const holdEndTimeVal = holdEndTime[lane] || 0;
@@ -69,14 +69,23 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
       }
       
       // If no active hold note, return 0 (no charge without active note)
-      if (!hasActiveHoldNote) {
+      if (!activeNote) {
         return 0;
+      }
+      
+      // Check if dot actually exists: spawns at note.time and hits hitline at note.time + 2000
+      const DOT_SPAWN_TIME = activeNote.time;
+      const DOT_HITLINE_TIME = activeNote.time + 2000;
+      
+      // Dot hasn't spawned yet or already passed hitline = no dot present
+      if (currentTime < DOT_SPAWN_TIME || currentTime > DOT_HITLINE_TIME) {
+        return 0; // No dot to hold
       }
       
       // Not actively holding
       if (holdStartTime === 0) return 0;
       
-      // Currently holding an active note - show real-time progress
+      // Currently holding an active note with dot present - show real-time progress
       const actualHoldDuration = currentTime - holdStartTime;
       if (actualHoldDuration < 0 || !Number.isFinite(actualHoldDuration)) {
         return 0; // Negative duration = clock issue
