@@ -54,7 +54,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
               }
             });
             
-            if (bestNote?.id) {
+            if (bestNote && bestNote.id) {
               newSet.add(bestNote.id);
             }
             return newSet;
@@ -591,23 +591,46 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 opacity = Math.max(0.7 - (shrinkProgress * 0.5), 0.2); // Visible during Phase 2
               }
               // Greyscale notes use fixed grey colors, never affected by health-based color shift
-              const color = isGreyed ? 'rgba(80, 80, 80, 0.6)' : getColorForLane(note.lane);
-              const strokeColor = isGreyed ? 'rgba(120, 120, 120, 0.7)' : 'rgba(255,255,255,0.8)';
+              const baseColor = getColorForLane(note.lane);
+              
+              // For hold notes, use OPAQUE colors with full saturation - not affected by health effects
+              let fillColor: string;
+              let glowColor: string;
+              
+              if (isGreyed) {
+                fillColor = 'rgba(80, 80, 80, 0.8)';
+                glowColor = 'rgba(100, 100, 100, 0.4)';
+              } else {
+                // Use bright, fully opaque colors for each deck lane
+                if (note.lane === -1) {
+                  fillColor = 'rgb(0, 255, 0)'; // Q - green, fully opaque
+                  glowColor = 'rgb(0, 255, 0)';
+                } else if (note.lane === -2) {
+                  fillColor = 'rgb(255, 0, 0)'; // P - red, fully opaque
+                  glowColor = 'rgb(255, 0, 0)';
+                } else {
+                  fillColor = baseColor;
+                  glowColor = baseColor;
+                }
+              }
+              
+              const strokeColor = isGreyed ? 'rgba(120, 120, 120, 1)' : 'rgba(255,255,255,1)';
               const strokeWidth = 2 + (Math.min(holdProgress, 1.0) * 2); // Stroke grows with trapezoid
               
               return (
                 <polygon
                   key={note.id}
                   points={`${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`}
-                  fill={color}
-                  opacity={isGreyed ? 0.4 : opacity}
+                  fill={fillColor}
+                  opacity={isGreyed ? 0.5 : 0.9}
                   stroke={strokeColor}
                   strokeWidth={strokeWidth}
                   style={{
                     filter: isGreyed 
-                      ? 'drop-shadow(0 0 6px rgba(100,100,100,0.3)) grayscale(1)'
-                      : `drop-shadow(0 0 ${25 * finalGlowScale}px ${color}) drop-shadow(0 0 ${15 * finalGlowScale}px ${color})`,
+                      ? 'drop-shadow(0 0 8px rgba(100,100,100,0.6)) grayscale(1)'
+                      : `drop-shadow(0 0 ${Math.max(20, 25 * finalGlowScale)}px ${glowColor}) drop-shadow(0 0 ${Math.max(12, 15 * finalGlowScale)}px ${glowColor})`,
                     transition: 'all 0.05s linear',
+                    mixBlendMode: 'screen',
                   }}
                 />
               );
