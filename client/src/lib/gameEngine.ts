@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Howl } from 'howler';
 
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 
@@ -56,7 +55,6 @@ const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[]
     };
     
     const pattern = patterns[difficulty];
-    const patternDuration = pattern.length * beatDuration;
     
     let currentTime = 2000; // Start after 2s
     let beatIndex = 0;
@@ -159,21 +157,8 @@ export const useGameEngine = (difficulty: Difficulty) => {
         return newNotes;
       });
       
-      // Check for hold releases before note completion - detect holdReleaseFailure
-      // A hold note in Phase 2 (holdStartTimes[lane] > 0) that gets released before note.time is holdReleaseFailure
-      Object.entries(holdStartTimes).forEach(([lane, holdStartTime]) => {
-        if (holdStartTime > 0) {
-          // Hold is active - find the note that's currently being held
-          const laneNum = parseInt(lane);
-          const activeNote = notes.find(n => 
-            n && n.lane === laneNum && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
-            !n.hit && !n.missed && !(n as any).holdReleaseFailure && !(n as any).tooEarlyFailure && !(n as any).holdMissFailure
-          );
-          
-          // If there's an active note and we've passed its trigger time, mark successful completion (will be marked as hit elsewhere)
-          // Otherwise it will be cleaned up by holdMiss logic
-        }
-      });
+      // Hold release failures are handled by Down3DNoteLane component tracking when holdStartTime goes from > 0 to 0
+      // before the note's trigger time is reached
 
       if (shouldGameOver) {
         setGameState('GAMEOVER');
@@ -241,7 +226,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
     };
   }, []);
 
-  const trackHoldStart = useCallback((lane: number, dotProgress: number = 0) => {
+  const trackHoldStart = useCallback((lane: number) => {
     try {
       if (!Number.isInteger(lane) || !Number.isFinite(currentTime)) {
         GameErrors.log(`trackHoldStart: Invalid lane=${lane} or currentTime=${currentTime}`);
