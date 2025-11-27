@@ -26,7 +26,7 @@ const GameErrors = {
 
 export { GameErrors };
 
-// Mock song data generator
+// Beat pattern-based note generator (tied to BPM, not random)
 const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[] => {
   try {
     if (!difficulty || !['EASY', 'MEDIUM', 'HARD'].includes(difficulty)) {
@@ -39,46 +39,52 @@ const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[]
     }
 
     const notes: Note[] = [];
-    const bpm = difficulty === 'EASY' ? 30 : difficulty === 'MEDIUM' ? 60 : 90;
-    const interval = 60000 / bpm;
+    const bpm = difficulty === 'EASY' ? 60 : difficulty === 'MEDIUM' ? 90 : 120;
+    const beatDuration = 60000 / bpm; // ms per beat
     
-    if (!Number.isFinite(interval) || interval <= 0) {
-      GameErrors.log(`Invalid interval calculated: ${interval}`);
+    if (!Number.isFinite(beatDuration) || beatDuration <= 0) {
+      GameErrors.log(`Invalid beatDuration calculated: ${beatDuration}`);
       return [];
     }
     
+    // Define repeating beat patterns (4-beat pattern for each difficulty)
+    // Pattern: lane number or -1/-2 for spins, repeated
+    const patterns = {
+      EASY: [0, 1, 2, 3], // Simple: one note per beat in each lane
+      MEDIUM: [0, 1, 2, 3, 0, 2, 1, 3], // 8-beat pattern alternating
+      HARD: [0, 1, 2, 3, 1, 0, 3, 2, 0, 2, 1, 3, 2, 1, 0, 3], // 16-beat complex
+    };
+    
+    const pattern = patterns[difficulty];
+    const patternDuration = pattern.length * beatDuration;
+    
     let currentTime = 2000; // Start after 2s
+    let beatIndex = 0;
     let noteCount = 0;
     
     while (currentTime < duration && noteCount < 1000) {
-      // Randomize lanes
-      const lane = Math.floor(Math.random() * 4);
+      const patternStep = beatIndex % pattern.length;
+      const lane = pattern[patternStep];
       
-      // Occasional spin notes
-      const isSpin = Math.random() > 0.9;
+      // Every 8 beats, place a spin note instead of tap (predictable for testing)
+      const isSpin = beatIndex % 8 === 0 && beatIndex > 0;
       
       notes.push({
-        id: `note-${currentTime}-${noteCount}`,
-        lane: isSpin ? (Math.random() > 0.5 ? -1 : -2) : lane,
+        id: `note-${currentTime}-${beatIndex}`,
+        lane: isSpin ? (beatIndex % 16 === 0 ? -1 : -2) : lane, // Alternate left/right spins
         time: currentTime,
-        type: isSpin ? (Math.random() > 0.5 ? 'SPIN_LEFT' : 'SPIN_RIGHT') : 'TAP',
+        type: isSpin ? (beatIndex % 16 === 0 ? 'SPIN_LEFT' : 'SPIN_RIGHT') : 'TAP',
         hit: false,
         missed: false,
       });
       
-      // Difficulty adjustment
-      const skipChance = difficulty === 'EASY' ? 0.5 : difficulty === 'MEDIUM' ? 0.2 : 0;
-      
-      if (Math.random() > skipChance) {
-         currentTime += interval;
-      } else {
-         currentTime += interval * 2;
-      }
+      currentTime += beatDuration;
+      beatIndex++;
       noteCount++;
     }
     
     if (noteCount >= 1000) {
-      GameErrors.log(`Note generation capped at 1000 notes (possible infinite loop)`);
+      GameErrors.log(`Note generation capped at 1000 notes`);
     }
     
     return notes;
