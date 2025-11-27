@@ -9,16 +9,25 @@ interface Down3DNoteLaneProps {
 
 export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down3DNoteLaneProps) {
   // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
-  // TAP notes: appear 2000ms before hit, stay 500ms after as "missed" with glitch effect
-  // SPIN (hold) notes: appear 4000ms before, stay visible through 2000ms hold duration
+  // TAP notes: appear 2000ms before hit, show glitch 500ms after miss, then disappear
+  // SPIN (hold) notes: appear 4000ms before, stay visible through hold duration
   const visibleNotes = notes.filter(n => {
     const timeUntilHit = n.time - currentTime;
+    
     if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
-      // Hold notes: 4000ms lead + 2000ms hold duration
+      // Hold notes: 4000ms lead + 2000ms hold duration, filter out hit/missed
+      if (n.hit || n.missed) return false;
       return timeUntilHit >= -2000 && timeUntilHit <= 4000;
     } else {
-      // TAP notes: 2000ms lead time, 500ms after as missed with glitch
-      return timeUntilHit >= -500 && timeUntilHit <= 2000;
+      // TAP notes: show 2000ms before hit
+      if (timeUntilHit > 2000) return false; // Too early
+      
+      // If hit or already past glitch window, hide completely
+      if (n.hit) return false;
+      if (n.missed && timeUntilHit < -500) return false; // Past glitch window
+      
+      // Show note 2000ms before OR during 500ms glitch window after miss
+      return timeUntilHit <= 2000 && timeUntilHit >= -500;
     }
   });
 
@@ -398,28 +407,30 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
             
             // Missed note glitch effect
             const isMissed = note.missed;
-            const missProgress = isMissed ? Math.max(0, -timeUntilHit / 500) : 0; // Fade over 500ms
-            const missOpacity = 1 - missProgress;
+            const missProgress = isMissed ? Math.max(0, -timeUntilHit / 500) : 0; // 0 to 1 as it fades
+            const glitchAmplitude = 4 * (1 - missProgress); // Decrease glitch intensity as it fades
 
             return (
               <motion.div
                 key={note.id}
                 className="absolute w-14 h-14 rounded-lg flex items-center justify-center text-black font-bold text-sm font-rajdhani pointer-events-none"
-                animate={isMissed ? { x: [0, -2, 3, -2, 2, 0] } : {}}
-                transition={isMissed ? { duration: 0.15, repeat: Infinity } : {}}
+                animate={isMissed ? { 
+                  x: [0, -glitchAmplitude, glitchAmplitude, -glitchAmplitude/2, glitchAmplitude/2, 0],
+                  y: [0, glitchAmplitude/2, -glitchAmplitude/2, glitchAmplitude/2, 0, 0]
+                } : {}}
+                transition={isMissed ? { duration: 0.12, repeat: Infinity } : {}}
                 style={{
-                  backgroundColor: isMissed ? 'rgba(100,100,100,0.5)' : getColorForLane(note.lane),
+                  backgroundColor: isMissed ? 'rgba(80,80,80,0.6)' : getColorForLane(note.lane),
                   boxShadow: isMissed 
-                    ? `0 0 ${8 * scale}px rgba(100,100,100,0.3)` 
+                    ? `0 0 ${6 * scale}px rgba(100,0,0,0.4)` 
                     : `0 0 ${30 * scale}px ${getColorForLane(note.lane)}, inset 0 0 ${18 * scale}px rgba(255,255,255,0.4)`,
                   left: `${xPosition}px`,
                   top: `${yPosition}px`,
                   transform: `translate(-50%, -50%) scale(${scale})`,
-                  opacity: isMissed ? missOpacity * 0.5 : (0.15 + progress * 0.85),
+                  opacity: isMissed ? (1 - missProgress) * 0.6 : (0.15 + progress * 0.85),
                   zIndex: Math.floor(progress * 1000),
-                  border: `2px solid rgba(100,100,100,${isMissed ? 0.5 * missOpacity : 0.4 * progress})`,
-                  filter: isMissed ? `grayscale(1) brightness(0.6) blur(${1 + (1-missOpacity)*2}px)` : 'none',
-                  textShadow: isMissed ? '0 0 8px rgba(255,0,0,0.5)' : 'none',
+                  border: `2px solid rgba(100,100,100,${isMissed ? (1-missProgress) * 0.6 : 0.4 * progress})`,
+                  filter: isMissed ? `grayscale(1) brightness(0.5) blur(${1 + missProgress * 1.5}px)` : 'none',
                 }}
               >
                 {getNoteKey(note.lane)}
