@@ -14,6 +14,7 @@ export interface Note {
   holdMissFailure?: boolean; // HOLD note expired without activation
   holdReleaseFailure?: boolean; // HOLD note released outside accuracy window
   pressTime?: number; // HOLD note: when player pressed (for release accuracy calculation)
+  failureTime?: number; // Timestamp when failure was marked (for animation timing)
 }
 
 // Error tracking for debugging
@@ -173,7 +174,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
                 if (newHealth <= 0) shouldGameOver = true;
                 return newHealth;
               });
-              cleaned.push({ ...n, [failureType]: true });
+              cleaned.push({ ...n, [failureType]: true, failureTime: time });
               continue;
             }
           }
@@ -289,7 +290,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
           // Too early - mark as tooEarlyFailure
           setNotes(prev => {
             return prev.map(n => 
-              n && n.id === anyNote.id ? { ...n, tooEarlyFailure: true } : n
+              n && n.id === anyNote.id ? { ...n, tooEarlyFailure: true, failureTime: currentTime } : n
             );
           });
           setCombo(0);
@@ -357,7 +358,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
           if (currentTime - holdStartTime < HOLD_DURATION) {
             setNotes(prev => {
               return prev.map(n => 
-                n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true } : n
+                n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true, failureTime: currentTime } : n
               );
             });
             setCombo(0);
@@ -383,7 +384,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
           else {
             setNotes(prev => {
               return prev.map(n => 
-                n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true } : n
+                n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true, failureTime: currentTime } : n
               );
             });
             setCombo(0);
