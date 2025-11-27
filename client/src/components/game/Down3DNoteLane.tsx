@@ -357,7 +357,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                 const isCurrentlyHeld = holdStartTime > 0;
                 const wasActivated = activeHolds.has(note.id);
                 
-                // Phase 2 validation: hold is valid if activated within 100ms before to 2000ms after note.time
+                // Phase 2 validation: hold is valid if activated within 4100ms before to 100ms after note.time
+                // Activation window: -4100 to +100 (shared with meter and gameEngine)
                 const timeWhenPressed = holdStartTime;
                 const timeSincePressed = currentTime - timeWhenPressed;
                 const isValidActivation = isCurrentlyHeld && (
