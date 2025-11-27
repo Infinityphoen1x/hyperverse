@@ -468,28 +468,20 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
                   const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
                   holdProgress = 1.0 + shrinkProgress;
                 } else if (isCurrentlyHeld && isValidActivation && !isTooEarlyFailure && !isHoldReleaseFailure && !isHoldMissFailure) {
-                  // Phase 2: Being held - trapezoid shrinks over 1000ms (slowed for easier release timing)
-                  // Visual shrink represents the release accuracy window (±100ms around 1000ms)
-                  // Only if the note is NOT marked as failed
+                  // Phase control: determined by NOTE position, not hold duration
+                  // Phase 1 (until judgement): Show growth - trapezoid grows from vanishing point toward judgement
+                  // Phase 2 (after judgement): Show shrinking - trapezoid shrinks over 1000ms with release timing cue
                   
-                  const actualHoldDuration = currentTime - holdStartTime;
-                  const HOLD_DURATION = 1000; // ms - must hold for this long, accuracy-based
-                  
-                  if (!Number.isFinite(actualHoldDuration) || actualHoldDuration < 0) {
-                    // Just started holding - calculate Phase 1 progress at moment of press
-                    // This ensures smooth transition when pressing early (before note reaches judgement)
-                    if (timeUntilHit > 0) {
-                      // Still approaching - trapezoid is somewhere between 0 and 1 in Phase 1
-                      // Transition to Phase 2: start shrinking from current Phase 1 position
-                      const phase1Progress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-                      holdProgress = Math.min(1.0, phase1Progress); // Cap at 1.0, then shrink begins
-                    } else {
-                      // Already at or past judgement - start at full shrink range (1.0)
-                      holdProgress = 1.0;
-                    }
+                  if (timeUntilHit > 0) {
+                    // PHASE 1: Note still approaching judgement line
+                    // Show growth even if held early - smooth transition from growth to shrink
+                    const phase1Progress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+                    holdProgress = Math.min(1.0, phase1Progress); // Grow until it hits 1.0 at judgement
                   } else {
-                    // Shrink phase: trapezoid shrinks over 1000ms, visual cue for release timing
-                    // holdProgress: 1.0 = start of shrink (press), 2.0 = shrink complete (release point)
+                    // PHASE 2: Note has reached/passed judgement line
+                    // Start shrinking animation based on how long player has been holding
+                    const actualHoldDuration = currentTime - holdStartTime;
+                    const HOLD_DURATION = 1000; // ms - must hold for this long, accuracy-based
                     const shrinkAmount = actualHoldDuration / HOLD_DURATION; // 0 to 1 during 1000ms hold
                     holdProgress = Math.min(1.0 + shrinkAmount, 2.0);
                   }
@@ -514,20 +506,15 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
                   }
                 } else if (isCurrentlyHeld) {
                   // Fallback: Note is currently being held but hasn't been categorized yet
-                  // This catches transitions during early presses
-                  const actualHoldDuration = currentTime - holdStartTime;
-                  const HOLD_DURATION = 1000;
-                  
-                  if (!Number.isFinite(actualHoldDuration) || actualHoldDuration < 0) {
-                    // Just started holding
-                    if (timeUntilHit > 0) {
-                      const phase1Progress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-                      holdProgress = Math.min(1.0, phase1Progress);
-                    } else {
-                      holdProgress = 1.0;
-                    }
+                  // Phase control based on NOTE position (not hold duration)
+                  if (timeUntilHit > 0) {
+                    // PHASE 1: Note still approaching - show growth
+                    const phase1Progress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+                    holdProgress = Math.min(1.0, phase1Progress);
                   } else {
-                    // Already holding - show shrinking
+                    // PHASE 2: Note at/past judgement - show shrinking
+                    const actualHoldDuration = currentTime - holdStartTime;
+                    const HOLD_DURATION = 1000;
                     const shrinkAmount = actualHoldDuration / HOLD_DURATION;
                     holdProgress = Math.min(1.0 + shrinkAmount, 2.0);
                   }
