@@ -227,23 +227,27 @@ export const useGameEngine = (difficulty: Difficulty) => {
         return;
       }
       
-      // Find the active hold note on this lane
-      const activeNote = notes.find(n => 
-        n && 
-        n.lane === lane && 
-        (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
-        !n.hit && 
-        !n.missed
-      );
+      // Find the active hold note on this lane that is within valid timing window
+      // Hold notes must be: not played, not missed, and within playable range
+      // Valid window: note appears 4000ms early, disappears 2000ms after note.time (at hitline)
+      const activeNote = notes.find(n => {
+        if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT') || n.hit || n.missed) {
+          return false;
+        }
+        
+        // Check timing: note must be within visible/playable window
+        const timeSinceNoteSpawn = currentTime - n.time;
+        // Note is visible from -4000 (4s before) to +2000 (2s after at hitline)
+        // Current press must be within -4100 to +100 (validation window)
+        const isInValidWindow = timeSinceNoteSpawn >= -4100 && timeSinceNoteSpawn <= 100;
+        
+        return isInValidWindow;
+      });
       
       if (!activeNote) {
-        GameErrors.log(`trackHoldStart: No active hold note on lane ${lane}`);
-        return; // Can't hold - no active note on this lane
+        GameErrors.log(`trackHoldStart: No active hold note in valid window on lane ${lane} at time ${currentTime}`);
+        return; // Can't hold - no active note on this lane in valid window
       }
-      
-      // Timing validation is done in Down3DNoteLane component (isValidActivation)
-      // This trackHoldStart just records when the hold started
-      // Phase 2 validation will check if the press was within valid window
       
       // Valid timing - Phase 2 starts: dot will spawn and trapezoid shrinks
       setHoldStartTimes(prev => {
