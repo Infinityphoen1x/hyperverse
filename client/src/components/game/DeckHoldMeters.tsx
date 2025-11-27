@@ -12,6 +12,7 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
   // Track when holds end (hitline detection) to briefly freeze meter for visual feedback
   const [holdEndProgress, setHoldEndProgress] = useState<Record<number, number>>({ '-1': 0, '-2': 0 });
   const [holdEndTime, setHoldEndTime] = useState<Record<number, number>>({ '-1': 0, '-2': 0 });
+  const [completionGlow, setCompletionGlow] = useState<Record<number, boolean>>({ '-1': false, '-2': false });
   const prevHoldStartTimes = useRef<Record<number, number>>({ '-1': 0, '-2': 0 });
 
   // Detect when hold ends (holdStartTime goes from non-zero to 0)
@@ -27,23 +28,32 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
         ) : null;
         
         let finalProgress = 0;
+        let isComplete = false;
         if (activeNote) {
           const holdDuration = currentTime - prevTime;
           const DOT_HITLINE_TIME = activeNote.time + 2000;
           const remainingHoldTime = DOT_HITLINE_TIME - prevTime;
           if (remainingHoldTime > 0) {
             finalProgress = Math.min(holdDuration / remainingHoldTime, 1.0);
+            isComplete = finalProgress >= 0.95; // Consider 95%+ as complete
           }
         }
         
         setHoldEndProgress(prev => ({ ...prev, [lane]: finalProgress }));
         setHoldEndTime(prev => ({ ...prev, [lane]: currentTime })); // Mark when it ended
+        
+        // Trigger completion glow if meter is full
+        if (isComplete) {
+          setCompletionGlow(prev => ({ ...prev, [lane]: true }));
+          setTimeout(() => setCompletionGlow(prev => ({ ...prev, [lane]: false })), 400);
+        }
       }
       
       // New hold started, clear the end progress
       if (prevTime === 0 && currTime > 0) {
         setHoldEndProgress(prev => ({ ...prev, [lane]: 0 }));
         setHoldEndTime(prev => ({ ...prev, [lane]: 0 }));
+        setCompletionGlow(prev => ({ ...prev, [lane]: false }));
       }
     });
     
@@ -131,20 +141,27 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
   const leftProgress = getHoldProgress(-1);
   const rightProgress = getHoldProgress(-2);
 
-  const getRectangleMeterColor = (index: number): string => {
-    // Soundpad color palette
-    const colors = ['#FF007F', '#00FFFF', '#BE00FF', '#0096FF']; // W, E, I, O colors
-    return colors[index % 4];
+  const getRectangleMeterColor = (index: number, lane: number): string => {
+    // Deck-specific color palette based on lane
+    if (lane === -1) return '#00FF00'; // Q - green
+    if (lane === -2) return '#FF0000'; // P - red
+    return '#FFFFFF'; // Fallback
   };
 
-  const RectangleMeter = ({ progress, outlineColor }: { progress: number; outlineColor: string }) => {
+  const RectangleMeter = ({ progress, outlineColor, lane }: { progress: number; outlineColor: string; lane: number }) => {
     const segments = 16;
     const filledSegments = Math.ceil(progress * segments);
+    const isComplete = progress >= 0.95;
 
     return (
-      <div className="flex flex-col-reverse gap-0.5">
+      <motion.div 
+        className="flex flex-col-reverse gap-0.5"
+        animate={completionGlow[lane] ? { scale: 1.1 } : { scale: 1 }}
+        transition={{ duration: 0.2 }}
+      >
         {Array.from({ length: segments }).map((_, idx) => {
-          const fillColor = getRectangleMeterColor(idx);
+          const fillColor = getRectangleMeterColor(idx, lane);
+          const isFilled = idx < filledSegments;
           return (
             <motion.div
               key={idx}
@@ -152,17 +169,24 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
               style={{
                 width: '60px',
                 borderColor: outlineColor,
-                background: idx < filledSegments ? fillColor : 'transparent',
-                boxShadow: idx < filledSegments ? `0 0 10px ${fillColor}, inset 0 0 6px rgba(255,255,255,0.3)` : 'none',
+                background: isFilled ? fillColor : 'transparent',
+                boxShadow: isFilled 
+                  ? `0 0 10px ${fillColor}, inset 0 0 6px rgba(255,255,255,0.3)` 
+                  : 'none',
               }}
               animate={{
-                opacity: idx < filledSegments ? 1 : 0.15,
+                opacity: isFilled ? 1 : 0.15,
+                boxShadow: completionGlow[lane] && isFilled
+                  ? `0 0 20px ${fillColor}, inset 0 0 10px rgba(255,255,255,0.6)`
+                  : isFilled
+                    ? `0 0 10px ${fillColor}, inset 0 0 6px rgba(255,255,255,0.3)`
+                    : 'none',
               }}
               transition={{ duration: 0.08 }}
             />
           );
         })}
-      </div>
+      </motion.div>
     );
   };
 
@@ -171,13 +195,13 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
       {/* Left Deck Hold Meter */}
       <div className="flex flex-col items-center gap-3">
         <div className="text-sm font-rajdhani text-neon-green font-bold tracking-widest">Q</div>
-        <RectangleMeter progress={leftProgress} outlineColor="#00FF00" />
+        <RectangleMeter progress={leftProgress} outlineColor="#00FF00" lane={-1} />
       </div>
 
       {/* Right Deck Hold Meter */}
       <div className="flex flex-col items-center gap-3">
         <div className="text-sm font-rajdhani text-neon-red font-bold tracking-widest">P</div>
-        <RectangleMeter progress={rightProgress} outlineColor="#FF0000" />
+        <RectangleMeter progress={rightProgress} outlineColor="#FF0000" lane={-2} />
       </div>
     </div>
   );

@@ -79,6 +79,7 @@ function PadButton({ index, onClick, notes, currentTime }: { index: number; onCl
     n && !n.hit && !n.missed && !(n as any).tapMissFailure && Number.isFinite(n.time)
   ) : [];
   const [isHitSuccess, setIsHitSuccess] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
 
   // Listen for the specific event for this pad
   useEffect(() => {
@@ -90,14 +91,39 @@ function PadButton({ index, onClick, notes, currentTime }: { index: number; onCl
     return () => window.removeEventListener(`pad-hit-${index}`, handler);
   }, [index]);
 
+  const padColor = [
+    'rgb(255,0,127)',    // W - pink
+    'rgb(0,255,255)',    // E - cyan
+    'rgb(190,0,255)',    // I - purple
+    'rgb(0,150,255)'     // O - blue
+  ][index];
+
+  const handleMouseDown = () => {
+    setIsPressed(true);
+    onClick();
+  };
+
+  const handleMouseUp = () => {
+    setIsPressed(false);
+  };
+
   return (
     <motion.button
       whileTap={{ scale: 0.85 }}
-      onMouseDown={onClick}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
       className="relative w-20 h-20 md:w-24 md:h-24 rounded-xl group focus:outline-none"
       data-testid={`pad-${index}`}
       style={{ isolation: 'isolate' }}
-      animate={isHitSuccess ? { boxShadow: '0 0 40px currentColor' } : {}}
+      animate={{
+        boxShadow: isHitSuccess 
+          ? `0 0 40px ${padColor}` 
+          : isPressed 
+            ? `0 0 30px ${padColor}, inset 0 0 20px ${padColor}` 
+            : '0 0 0px rgba(0,0,0,0)'
+      }}
+      transition={{ duration: 0.1 }}
     >
       {/* Pad Background */}
       <motion.div 
