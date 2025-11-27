@@ -356,9 +356,16 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                 const isCurrentlyHeld = holdStartTime > 0;
                 const wasActivated = activeHolds.has(note.id);
                 
+                // Phase 2 validation: hold is valid if activated within 100ms before to 2000ms after note.time
+                const timeWhenPressed = holdStartTime;
+                const timeSincePressed = currentTime - timeWhenPressed;
+                const isValidActivation = isCurrentlyHeld && (
+                  (timeWhenPressed - note.time <= 100 && timeWhenPressed - note.time >= -4100) // Within press window
+                );
+                
                 let holdProgress;
                 
-                if (isCurrentlyHeld && wasActivated) {
+                if (isCurrentlyHeld && isValidActivation) {
                   // Phase 2: Being held - trapezoid shrinks over 2000ms (dot's journey to hitline)
                   const actualHoldDuration = currentTime - holdStartTime;
                   const DOT_TRAVEL_TIME = 2000; // Dot takes 2000ms to reach hitline
@@ -376,11 +383,11 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                   // Continue shrinking at max rate
                   holdProgress = 2.0;
                 } else {
-                  // Phase 1: Not activated yet - trapezoid grows during approach (stays < 1.0)
+                  // Phase 1: Not activated yet - trapezoid grows during approach
                   if (timeUntilHit > 0) {
                     holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
                   } else {
-                    // Note time passed but not activated - stay at Phase 1 max
+                    // Note time passed but not activated - stay at Phase 1 max, don't jump
                     holdProgress = 0.99;
                   }
                 }
