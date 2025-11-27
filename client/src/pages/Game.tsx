@@ -79,7 +79,7 @@ export default function Game() {
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col relative">
       {/* Visual Effects Layer */}
-      <VisualEffects combo={combo} score={score} />
+      <VisualEffects combo={combo} score={score} health={health} missCount={notes.filter(n => n.missed).length} />
 
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black opacity-80" />
