@@ -113,7 +113,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
           {/* Vanishing point - nearly invisible */}
           <circle cx={VANISHING_POINT_X} cy={VANISHING_POINT_Y} r="6" fill="rgba(0,255,255,0.05)" />
           
-          {/* Judgement line indicators - straight lines at second-last depth ring */}
+          {/* Judgement line indicators - perpendicular to rays */}
           {/* Second-last ring is at radius 187 */}
           {[
             { angle: 240, color: '#FF007F' },   // W - pink
@@ -123,13 +123,18 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
           ].map((lane, idx) => {
             const rad = (lane.angle * Math.PI) / 180;
             const radius = 187;
-            const lineLength = 30;
+            const lineLength = 35;
             
-            // Start and end points of straight line along the ray
-            const x1 = VANISHING_POINT_X + Math.cos(rad) * (radius - lineLength / 2);
-            const y1 = VANISHING_POINT_Y + Math.sin(rad) * (radius - lineLength / 2);
-            const x2 = VANISHING_POINT_X + Math.cos(rad) * (radius + lineLength / 2);
-            const y2 = VANISHING_POINT_Y + Math.sin(rad) * (radius + lineLength / 2);
+            // Point on the ray at the radius
+            const cx = VANISHING_POINT_X + Math.cos(rad) * radius;
+            const cy = VANISHING_POINT_Y + Math.sin(rad) * radius;
+            
+            // Perpendicular direction (rotate 90 degrees)
+            const perpRad = rad + Math.PI / 2;
+            const x1 = cx + Math.cos(perpRad) * (lineLength / 2);
+            const y1 = cy + Math.sin(perpRad) * (lineLength / 2);
+            const x2 = cx - Math.cos(perpRad) * (lineLength / 2);
+            const y2 = cy - Math.sin(perpRad) * (lineLength / 2);
             
             return (
               <line
@@ -140,7 +145,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
                 y2={y2}
                 stroke={lane.color}
                 strokeWidth="2.5"
-                opacity="0.6"
+                opacity="1"
                 strokeLinecap="round"
               />
             );
@@ -213,6 +218,34 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
             // Scale: starts tiny at vanishing point, grows as approaches
             const scale = 0.12 + (progress * 0.88);
 
+            // For hold notes, show as rectangle with width and height
+            if (note.type === 'SPIN_LEFT' || note.type === 'SPIN_RIGHT') {
+              const holdWidth = 20 + (scale * 40);
+              const holdHeight = 12 + (scale * 25);
+              
+              return (
+                <motion.div
+                  key={note.id}
+                  className="absolute rounded-md flex items-center justify-center text-black font-bold text-sm font-rajdhani pointer-events-none"
+                  style={{
+                    width: `${holdWidth}px`,
+                    height: `${holdHeight}px`,
+                    backgroundColor: getColorForLane(note.lane),
+                    boxShadow: `0 0 ${30 * scale}px ${getColorForLane(note.lane)}, inset 0 0 ${18 * scale}px rgba(255,255,255,0.3)`,
+                    left: `${xPosition}px`,
+                    top: `${yPosition}px`,
+                    transform: `translate(-50%, -50%)`,
+                    opacity: 0.15 + progress * 0.85,
+                    zIndex: Math.floor(progress * 1000),
+                    border: `2px solid rgba(255,255,255,${0.4 * progress})`,
+                  }}
+                >
+                  {getNoteKey(note.lane)}
+                </motion.div>
+              );
+            }
+
+            // For tap notes, show as square
             return (
               <motion.div
                 key={note.id}

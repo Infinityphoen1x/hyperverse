@@ -25,27 +25,37 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
   const leftProgress = getHoldProgress(-1);
   const rightProgress = getHoldProgress(-2);
 
-  const SegmentedMeter = ({ progress, color, side }: { progress: number; color: string; side: 'left' | 'right' }) => {
-    const segments = 8;
+  const getRectangleMeterColor = (index: number): string => {
+    // Soundpad color palette
+    const colors = ['#FF007F', '#00FFFF', '#BE00FF', '#0096FF']; // W, E, I, O colors
+    return colors[index % 4];
+  };
+
+  const RectangleMeter = ({ progress, outlineColor, side }: { progress: number; outlineColor: string; side: 'left' | 'right' }) => {
+    const segments = 10;
     const filledSegments = Math.ceil(progress * segments);
 
     return (
-      <div className="flex flex-col gap-1">
-        {Array.from({ length: segments }).map((_, idx) => (
-          <motion.div
-            key={idx}
-            className="w-6 h-4 rounded border-2"
-            style={{
-              borderColor: color,
-              background: idx < filledSegments ? color : 'transparent',
-              boxShadow: idx < filledSegments ? `0 0 12px ${color}` : 'none',
-            }}
-            animate={{
-              opacity: idx < filledSegments ? 1 : 0.2,
-            }}
-            transition={{ duration: 0.1 }}
-          />
-        ))}
+      <div className="flex flex-col gap-0.5">
+        {Array.from({ length: segments }).map((_, idx) => {
+          const fillColor = getRectangleMeterColor(idx);
+          return (
+            <motion.div
+              key={idx}
+              className="h-4 rounded-sm border-2"
+              style={{
+                width: '60px',
+                borderColor: outlineColor,
+                background: idx < filledSegments ? fillColor : 'transparent',
+                boxShadow: idx < filledSegments ? `0 0 10px ${fillColor}, inset 0 0 6px rgba(255,255,255,0.3)` : 'none',
+              }}
+              animate={{
+                opacity: idx < filledSegments ? 1 : 0.15,
+              }}
+              transition={{ duration: 0.08 }}
+            />
+          );
+        })}
       </div>
     );
   };
@@ -53,15 +63,15 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
   return (
     <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
       {/* Left Deck Hold Meter */}
-      <div className="flex flex-col items-center gap-2">
-        <div className="text-xs font-rajdhani text-neon-green font-bold tracking-widest">Q</div>
-        <SegmentedMeter progress={leftProgress} color="#00FF00" side="left" />
+      <div className="flex flex-col items-center gap-3">
+        <div className="text-sm font-rajdhani text-neon-green font-bold tracking-widest">Q</div>
+        <RectangleMeter progress={leftProgress} outlineColor="#00FF00" side="left" />
       </div>
 
       {/* Right Deck Hold Meter */}
-      <div className="flex flex-col items-center gap-2">
-        <div className="text-xs font-rajdhani text-neon-red font-bold tracking-widest">P</div>
-        <SegmentedMeter progress={rightProgress} color="#FF0000" side="right" />
+      <div className="flex flex-col items-center gap-3">
+        <div className="text-sm font-rajdhani text-neon-red font-bold tracking-widest">P</div>
+        <RectangleMeter progress={rightProgress} outlineColor="#FF0000" side="right" />
       </div>
     </div>
   );
