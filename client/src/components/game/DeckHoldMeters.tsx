@@ -85,12 +85,15 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
       // Not actively holding
       if (holdStartTime === 0) return 0;
       
-      // Meter charges based on DOT'S DISTANCE FROM HITLINE (inverse of distance traveled)
-      // Dot spawns at activeNote.time, reaches hitline at activeNote.time + 2000
-      // Shorter distance to hitline = higher meter (1.0 when dot just spawned, 0.0 when dot hits)
-      const distanceTraveledFromSpawn = currentTime - activeNote.time;
-      const totalDotJourney = 2000; // ms from spawn to hitline
-      const progress = 1.0 - (distanceTraveledFromSpawn / totalDotJourney); // Inverted
+      // Meter is a visual "power" mechanic - rises the longer you hold the note
+      // More hold time = higher meter (feel cool while holding)
+      const actualHoldDuration = currentTime - holdStartTime;
+      if (actualHoldDuration < 0 || !Number.isFinite(actualHoldDuration)) {
+        return 0;
+      }
+      
+      const maxHoldDuration = 4000; // Max meter at 4 seconds
+      const progress = actualHoldDuration / maxHoldDuration;
       
       // Clamp to valid range [0, 1]
       return Math.min(Math.max(progress, 0), 1);
