@@ -206,7 +206,11 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
             .filter(n => n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT')
             .map(note => {
               const timeUntilHit = note.time - currentTime;
-              const progress = 1 - (timeUntilHit / 2000);
+              
+              // Only render trapezoid while actively holding (progress 0 to 1)
+              if (timeUntilHit > 0 || timeUntilHit < -2000) return null;
+              
+              const progress = 1 - (timeUntilHit / 2000); // 0 = start, 1 = end of hold
               
               // Get the exact ray angle for this note's lane
               const rayAngle = getLaneAngle(note.lane);
@@ -215,18 +219,15 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               // Judgement line is at radius 187
               const JUDGEMENT_RADIUS = 187;
               
-              // Distance from vanishing point - far end of trapezoid
-              const distance = 1 + (progress * (MAX_DISTANCE - 1));
+              // Far end travels from vanishing point toward player
+              const farDistance = 1 + (progress * (MAX_DISTANCE - 1));
               
-              // Only render if trapezoid hasn't fully consumed into judgement line
-              if (distance < 1) return null;
-              
-              // Near end capped at judgement line - creates "consumption" effect
-              const nearDistance = Math.min(distance, JUDGEMENT_RADIUS + 10);
+              // Near end stays fixed at judgement line (the "target")
+              const nearDistance = JUDGEMENT_RADIUS;
               
               // Calculate positions
-              const farX = VANISHING_POINT_X + Math.cos(rad) * distance;
-              const farY = VANISHING_POINT_Y + Math.sin(rad) * distance;
+              const farX = VANISHING_POINT_X + Math.cos(rad) * farDistance;
+              const farY = VANISHING_POINT_Y + Math.sin(rad) * farDistance;
               
               const nearX = VANISHING_POINT_X + Math.cos(rad) * nearDistance;
               const nearY = VANISHING_POINT_Y + Math.sin(rad) * nearDistance;
@@ -240,13 +241,13 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               const perpRad = rad + Math.PI / 2;
               
               // Calculate trapezoid corners perpendicular to the ray
-              // Far end (wider)
+              // Far end (toward vanishing point, narrow)
               const x1 = farX + Math.cos(perpRad) * (farWidth / 2);
               const y1 = farY + Math.sin(perpRad) * (farWidth / 2);
               const x2 = farX - Math.cos(perpRad) * (farWidth / 2);
               const y2 = farY - Math.sin(perpRad) * (farWidth / 2);
               
-              // Near end (narrower, converging toward judgement line)
+              // Near end (at judgement line, wide - where it's being consumed)
               const x3 = nearX - Math.cos(perpRad) * (nearWidth / 2);
               const y3 = nearY - Math.sin(perpRad) * (nearWidth / 2);
               const x4 = nearX + Math.cos(perpRad) * (nearWidth / 2);
