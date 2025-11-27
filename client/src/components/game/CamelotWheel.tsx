@@ -71,11 +71,11 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
           const rotationDelta = rotationSpeed * spinDirection;
           const newRotation = prev + rotationDelta;
           rotationRef.current = newRotation;
-          setTimeout(() => onRotationChange(newRotation), 0); // Export to parent
+          onRotationChange(newRotation);
 
           // Trigger onSpin event periodically based on rotation distance
           if (Math.abs(newRotation - lastSpinRotation) >= spinThreshold) {
-            setTimeout(() => onSpin(), 0);
+            onSpin();
             lastSpinRotation = newRotation;
           }
           
@@ -88,7 +88,7 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
 
     animationId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationId);
-  }, [isKeyPressed, spinDirection, onSpin]);
+  }, [isKeyPressed, spinDirection, onSpin, onRotationChange]);
 
 
   const handleDrag = (_: any, info: any) => {
@@ -104,7 +104,7 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
           return prev;
         }
         const newRot = prev + info.delta.x;
-        setTimeout(() => onRotationChange(newRot), 0);
+        onRotationChange(newRot);
         return newRot;
       });
       
