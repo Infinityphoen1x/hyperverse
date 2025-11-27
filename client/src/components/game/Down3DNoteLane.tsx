@@ -465,7 +465,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                     return null; // Animation complete
                   }
                   const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
-                  holdProgress = 1.0 + shrinkProgress
+                  holdProgress = 1.0 + shrinkProgress;
                 } else if (isCurrentlyHeld && isValidActivation && !isTooEarlyFailure && !isHoldReleaseFailure && !isHoldMissFailure) {
                   // Phase 2: Being held - trapezoid shrinks over 1000ms (slowed for easier release timing)
                   // Visual shrink represents the release accuracy window (±100ms around 1000ms)
@@ -727,8 +727,12 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
             
             // Failed tap note - greyscale like failed hold notes
             const isFailed = note.tapMissFailure || false;
-            const failureTime = note.failureTime || note.time;
-            const timeSinceFail = Math.max(0, currentTime - failureTime);
+            const failureTime = note.failureTime;
+            if (isFailed && !failureTime) {
+              console.warn(`TAP failure missing failureTime: ${note.id}`);
+              return null; // Safety: skip if malformed
+            }
+            const timeSinceFail = failureTime ? Math.max(0, currentTime - failureTime) : 0;
             const failProgress = Math.min(timeSinceFail / 500, 1.0); // 0 to 1 over 500ms fade
 
             return (
