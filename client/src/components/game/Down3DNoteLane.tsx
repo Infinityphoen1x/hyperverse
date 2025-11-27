@@ -7,14 +7,23 @@ interface Down3DNoteLaneProps {
 }
 
 export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
-  // Filter visible notes - ONLY soundpad notes (lanes 0, 1, 2, 3), exclude deck notes (-1, -2)
+  // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
   const visibleNotes = notes.filter(n => {
     const timeUntilHit = n.time - currentTime;
-    return timeUntilHit > -200 && timeUntilHit < 2000 && n.lane >= 0;
+    return timeUntilHit > -200 && timeUntilHit < 2000;
   });
 
-  const getColorClass = (lane: number): string => {
+
+  const getNoteKey = (lane: number): string => {
+    if (lane === -1) return 'Q';
+    if (lane === -2) return 'P';
+    return ['W', 'E', 'I', 'O'][lane];
+  };
+
+  const getColorForLane = (lane: number): string => {
     switch (lane) {
+      case -1: return '#00FF00'; // Q - green
+      case -2: return '#FF0000'; // P - red
       case 0: return '#FF007F'; // W - pink
       case 1: return '#00FFFF'; // E - cyan
       case 2: return '#BE00FF'; // I - purple
@@ -23,22 +32,20 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
     }
   };
 
-  const getNoteKey = (lane: number): string => {
-    return ['W', 'E', 'I', 'O'][lane];
-  };
-
   // 6 equally-spaced rays at 60° intervals
   const allRayAngles = [0, 60, 120, 180, 240, 300];
 
-  // Map 4 soundpad lanes to specific rays (evenly distributed)
+  // Map lanes to rays
   const getLaneAngle = (lane: number): number => {
     const rayMapping: Record<number, number> = {
-      0: 240,  // W - bottom-left
-      1: 300,  // E - left-ish  
-      2: 60,   // I - top-right-ish
-      3: 120,  // O - right
+      '-2': 0,     // P - right deck
+      '-1': 180,   // Q - left deck
+      '0': 240,    // W - bottom-left pad
+      '1': 300,    // E - left-ish pad
+      '2': 60,     // I - top-right-ish pad
+      '3': 120,    // O - right pad
     };
-    return rayMapping[lane];
+    return rayMapping[lane as keyof typeof rayMapping];
   };
 
   // Judgement dot positions (where soundpad keys are)
@@ -211,8 +218,8 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
                 key={note.id}
                 className="absolute w-14 h-14 rounded-lg flex items-center justify-center text-black font-bold text-sm font-rajdhani pointer-events-none"
                 style={{
-                  backgroundColor: getColorClass(note.lane),
-                  boxShadow: `0 0 ${30 * scale}px ${getColorClass(note.lane)}, inset 0 0 ${18 * scale}px rgba(255,255,255,0.4)`,
+                  backgroundColor: getColorForLane(note.lane),
+                  boxShadow: `0 0 ${30 * scale}px ${getColorForLane(note.lane)}, inset 0 0 ${18 * scale}px rgba(255,255,255,0.4)`,
                   left: `${xPosition}px`,
                   top: `${yPosition}px`,
                   transform: `translate(-50%, -50%) scale(${scale})`,
@@ -230,7 +237,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
         {/* Judgement dots at soundpad positions */}
         {[0, 1, 2, 3].map((lane) => {
           const pos = getJudgementPos(lane);
-          const color = getColorClass(lane);
+          const color = getColorForLane(lane);
           return (
             <motion.div
               key={`judgement-${lane}`}

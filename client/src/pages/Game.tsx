@@ -4,6 +4,7 @@ import { useGameEngine, Difficulty } from "@/lib/gameEngine";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { SoundPad } from "@/components/game/SoundPad";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
+import { DeckHoldMeters } from "@/components/game/DeckHoldMeters";
 import { VisualEffects } from "@/components/game/VisualEffects";
 import { motion } from "framer-motion";
 
@@ -103,6 +104,14 @@ export default function Game() {
              notes={notes} 
              currentTime={currentTime} 
            />
+        </div>
+
+        {/* Hold Meters Container */}
+        <div className="hidden lg:block absolute left-[200px] right-[200px] top-1/2 -translate-y-1/2 h-48">
+          <DeckHoldMeters 
+            notes={notes} 
+            currentTime={currentTime} 
+          />
         </div>
 
         {/* Center 3D Notelane */}
