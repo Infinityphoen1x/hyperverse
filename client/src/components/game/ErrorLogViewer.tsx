@@ -101,22 +101,29 @@ export function ErrorLogViewer() {
             data-testid="panel-error-log-viewer"
           >
             {/* Animation Stats */}
-            <div className="bg-gray-900 rounded p-2 text-xs text-cyan-300 font-mono grid grid-cols-4 gap-1">
-              <div>
-                <div className="text-gray-500">Total</div>
-                <div className="text-lg font-bold">{animationStats.total}</div>
+            <div className="bg-gray-900 rounded p-2 text-xs text-cyan-300 font-mono space-y-2">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-gray-800 p-1.5 rounded">
+                  <div className="text-gray-400">Total Tracked</div>
+                  <div className="text-lg font-bold">{animationStats.total}</div>
+                </div>
+                <div className="bg-gray-800 p-1.5 rounded">
+                  <div className="text-green-400">✓ Completed</div>
+                  <div className="text-lg font-bold text-green-300">{animationStats.completed}</div>
+                </div>
+                <div className="bg-gray-800 p-1.5 rounded">
+                  <div className="text-yellow-400">⏳ Rendering</div>
+                  <div className="text-lg font-bold text-yellow-300">{animationStats.pending}</div>
+                </div>
               </div>
-              <div>
-                <div className="text-gray-500">✓ Done</div>
-                <div className="text-lg font-bold text-green-400">{animationStats.completed}</div>
-              </div>
-              <div>
-                <div className="text-gray-500">✗ Failed</div>
-                <div className="text-lg font-bold text-red-400">{animationStats.failed}</div>
-              </div>
-              <div>
-                <div className="text-gray-500">⏳ Pending</div>
-                <div className="text-lg font-bold text-yellow-400">{animationStats.pending}</div>
+              {animationStats.failed > 0 && (
+                <div className="bg-red-900/30 border border-red-600 p-1.5 rounded">
+                  <div className="text-red-400">✗ Errors</div>
+                  <div className="text-lg font-bold text-red-300">{animationStats.failed}</div>
+                </div>
+              )}
+              <div className="text-xs text-gray-500 italic pt-1 border-t border-gray-700">
+                Lifecycle: pending → rendering → completed (1100ms per animation)
               </div>
             </div>
 
