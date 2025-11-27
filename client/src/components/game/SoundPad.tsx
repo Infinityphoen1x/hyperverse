@@ -12,14 +12,22 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
   
   // Shared Hit Logic for Feedback
   const checkHitAndFeedback = (index: number) => {
-    onPadHit(index);
-    
-    // Check for visual feedback (simulated "good" hit)
-    const laneNotes = notes.filter(n => n.lane === index);
-    const hasHittableNote = laneNotes.some(n => !n.hit && !n.missed && Math.abs(n.time - currentTime) < 300);
-    
-    if (hasHittableNote) {
-      window.dispatchEvent(new CustomEvent(`pad-hit-${index}`));
+    try {
+      onPadHit(index);
+      
+      // Check for visual feedback (simulated "good" hit)
+      const laneNotes = Array.isArray(notes) ? notes.filter(n => 
+        n && Number.isFinite(n.lane) && n.lane === index
+      ) : [];
+      const hasHittableNote = laneNotes.some(n => 
+        n && !n.hit && !n.missed && Number.isFinite(n.time) && Math.abs(n.time - currentTime) < 300
+      );
+      
+      if (hasHittableNote) {
+        window.dispatchEvent(new CustomEvent(`pad-hit-${index}`));
+      }
+    } catch (error) {
+      console.warn(`SoundPad checkHitAndFeedback error: ${error}`);
     }
   };
 
@@ -67,7 +75,9 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
 
 function PadButton({ index, onClick, notes, currentTime }: { index: number; onClick: () => void; notes: Note[]; currentTime: number }) {
   
-  const activeNotes = notes.filter(n => !n.hit && !n.missed);
+  const activeNotes = Array.isArray(notes) ? notes.filter(n => 
+    n && !n.hit && !n.missed && Number.isFinite(n.time)
+  ) : [];
   const [isHitSuccess, setIsHitSuccess] = useState(false);
 
   // Listen for the specific event for this pad
