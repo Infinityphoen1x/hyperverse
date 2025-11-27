@@ -377,25 +377,20 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
                 // Determine holdProgress based on note state
                 if (isTooEarlyFailure) {
                   isGreyed = true;
-                  if (timeUntilHit > 0) {
-                    // Phase 1: Growing until note reaches judgement line
-                    holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-                  } else {
-                    // Phase 2: Show locked position from when too-early press occurred
-                    const failureTime = note.failureTime;
-                    if (!failureTime) {
-                      console.warn(`tooEarlyFailure missing failureTime: ${note.id}`);
-                      return null;
-                    }
-                    const timeSinceShrinkStart = Math.max(0, currentTime - failureTime);
-                    if (timeSinceShrinkStart > 1100) return null;
-                    // Lock to press time position, then show shrinking
-                    const timeUntilHitAtPress = note.time - pressTime;
-                    const holdProgressAtPress = (LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME;
-                    const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
-                    // Show shrinking animation, locked to where it was pressed
-                    holdProgress = Math.min(holdProgressAtPress, 1.0) + (shrinkProgress * (1.0 - Math.min(holdProgressAtPress, 1.0)));
+                  // Always shrink immediately, locked to press position - regardless of phase
+                  const failureTime = note.failureTime;
+                  if (!failureTime) {
+                    console.warn(`tooEarlyFailure missing failureTime: ${note.id}`);
+                    return null;
                   }
+                  const timeSinceShrinkStart = Math.max(0, currentTime - failureTime);
+                  if (timeSinceShrinkStart > 1100) return null;
+                  // Lock to press time position, then show shrinking
+                  const timeUntilHitAtPress = note.time - pressTime;
+                  const holdProgressAtPress = (LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME;
+                  const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
+                  // Show shrinking animation, locked to where it was pressed
+                  holdProgress = Math.min(holdProgressAtPress, 1.0) + (shrinkProgress * (1.0 - Math.min(holdProgressAtPress, 1.0)));
                 } else if (isHoldReleaseFailure || isHoldMissFailure) {
                   isGreyed = true;
                   const failureTime = note.failureTime;
