@@ -246,7 +246,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
       });
       
       if (!anyNote) {
-        GameErrors.log(`trackHoldStart: No active hold note on lane ${lane} at time ${currentTime}`);
+        // No active hold note available - this is normal when player presses Q/P at random times
         return;
       }
       
