@@ -114,6 +114,11 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
         return 0;
       }
       
+      // Hold note duration has expired - meter is empty regardless of player still holding
+      if (actualHoldDuration >= HOLD_DURATION) {
+        return 0;
+      }
+      
       // Progress = how much of the 500ms hold duration has elapsed
       // 0% at press, 100% at press + 500ms (matches shrink animation)
       const progress = actualHoldDuration / HOLD_DURATION;
