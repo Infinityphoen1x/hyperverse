@@ -84,21 +84,18 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       
       // Hold just ended (was active, now inactive)
       if (wasActive && !isActive) {
-        let finalProgress = 0;
-        let isComplete = false;
         // Only freeze meter if note wasn't marked as failed
         if (activeNote && !activeNote.tooEarlyFailure && !activeNote.holdMissFailure && !activeNote.holdReleaseFailure) {
           const HOLD_DURATION = 1000; // ms - fixed hold duration
           const pressTime = activeNote.pressTime || 0;
           const holdDuration = currentTime - pressTime;
-          finalProgress = Math.min(holdDuration / HOLD_DURATION, 1.0);
-          isComplete = finalProgress >= COMPLETION_THRESHOLD; // Consider 95%+ as complete
+          const finalProgress = Math.min(holdDuration / HOLD_DURATION, 1.0);
           
           setHoldEndProgress(prev => ({ ...prev, [lane]: finalProgress }));
           setHoldEndTime(prev => ({ ...prev, [lane]: currentTime })); // Mark when it ended
           
-          // Trigger completion glow if meter is full
-          if (isComplete) {
+          // Trigger completion glow if meter is full (95%+)
+          if (finalProgress >= COMPLETION_THRESHOLD) {
             setCompletionGlow(prev => ({ ...prev, [lane]: true }));
             setTimeout(() => setCompletionGlow(prev => ({ ...prev, [lane]: false })), 400);
           }
