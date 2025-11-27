@@ -227,7 +227,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
                 ? JUDGEMENT_RADIUS
                 : 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
               
-              // Far end distance - max extent is JUDGEMENT_RADIUS
+              // Far end distance
               let farDistance;
               if (isInPhase2) {
                 const shrinkProgress = holdProgress - 1.0; // 0 to 1.0 during phase 2
@@ -235,6 +235,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
                 farDistance = JUDGEMENT_RADIUS * (1 - shrinkProgress) + 1 * shrinkProgress;
               } else {
                 // Phase 1: grows from vanishing point toward JUDGEMENT_RADIUS
+                // Far end reaches JUDGEMENT_RADIUS by end of Phase 1
                 farDistance = 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
               }
               
@@ -250,11 +251,11 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               // Apply a pixel-scale factor to match SVG coordinates
               const rayWidthScale = 0.35; // scaling factor for the perpendicular distance between rays
               
-              // In Phase 2, near end width gradually collapses to zero as note is held
-              const nearWidthMultiplier = isInPhase2 ? Math.max(0, 1 - (holdProgress - 1.0)) : 1;
+              // In Phase 2, both ends' widths collapse proportionally as shape shrinks
+              const widthMultiplier = isInPhase2 ? Math.max(0, 1 - (holdProgress - 1.0)) : 1;
               
-              const farWidth = farDistance * rayWidthScale;
-              const nearWidth = nearDistance * rayWidthScale * nearWidthMultiplier;
+              const farWidth = farDistance * rayWidthScale * widthMultiplier;
+              const nearWidth = nearDistance * rayWidthScale * widthMultiplier;
               
               // Glow intensity scales with how close to judgement line
               const glowScale = 0.2 + (Math.min(holdProgress, 1.0) * 0.8);
