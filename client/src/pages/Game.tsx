@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useGameEngine, Difficulty, GameErrors, Note } from "@/lib/gameEngine";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { SoundPad } from "@/components/game/SoundPad";
@@ -16,8 +16,17 @@ export default function Game() {
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
   const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
-  const searchParams = new URLSearchParams(window.location.search);
-  const difficulty = (searchParams.get('difficulty') || 'MEDIUM') as Difficulty;
+  
+  // Parse difficulty from URL with browser context check
+  const difficulty = useMemo(() => {
+    if (typeof window === 'undefined') return 'MEDIUM' as Difficulty;
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      return (searchParams.get('difficulty') || 'MEDIUM') as Difficulty;
+    } catch {
+      return 'MEDIUM' as Difficulty;
+    }
+  }, []);
   
   // Function to get current video time from YouTube iframe
   const getVideoTime = useCallback((): number | null => {
@@ -27,7 +36,7 @@ export default function Game() {
     } catch {
       return null;
     }
-  }, []);
+  }, [youtubeIframeRef]);
   
   const { 
     gameState, 
@@ -44,14 +53,11 @@ export default function Game() {
     markNoteMissed
   } = useGameEngine(difficulty, youtubeVideoId ? getVideoTime : undefined, customNotes);
 
-  // Memoize hold callbacks to prevent re-creation on every render
-  const memoizedTrackHoldStart = useCallback((lane: number) => {
-    trackHoldStart(lane);
-  }, [trackHoldStart]);
-
-  const memoizedTrackHoldEnd = useCallback((lane: number) => {
-    trackHoldEnd(lane);
-  }, [trackHoldEnd]);
+  // Memoize miss count to avoid filtering every render
+  const missCount = useMemo(() => notes.filter(n => n.missed).length, [notes]);
+  
+  // Memoize score string formatting
+  const scoreDisplay = useMemo(() => score.toString().padStart(6, '0'), [score]);
 
   // Monitor errors
   useEffect(() => {
@@ -109,7 +115,7 @@ export default function Game() {
       )}
 
       {/* Visual Effects Layer */}
-      <VisualEffects combo={combo} health={health} missCount={notes.filter(n => n.missed).length} />
+      <VisualEffects combo={combo} health={health} missCount={missCount} />
 
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black opacity-80" />
@@ -158,7 +164,7 @@ export default function Game() {
             animate={score % 500 === 0 && score > 0 ? { scale: [1, 1.2, 1], textShadow: ['0 0 10px white', '0 0 30px hsl(320, 100%, 60%)', '0 0 10px white'] } : {}}
             transition={{ duration: 0.3 }}
           >
-            {score.toString().padStart(6, '0')}
+            {scoreDisplay}
           </motion.h2>
           <p className="text-neon-pink font-rajdhani text-sm tracking-[0.5em] uppercase">score</p>
         </div>
@@ -184,8 +190,8 @@ export default function Game() {
            <CamelotWheel 
              side="left" 
              onSpin={() => hitNote(-1)} 
-             onHoldStart={() => memoizedTrackHoldStart(-1)}
-             onHoldEnd={() => memoizedTrackHoldEnd(-1)}
+             onHoldStart={() => trackHoldStart(-1)}
+             onHoldEnd={() => trackHoldEnd(-1)}
              onRotationChange={setLeftDeckRotation}
            />
         </div>
@@ -214,8 +220,8 @@ export default function Game() {
            <CamelotWheel 
              side="right" 
              onSpin={() => hitNote(-2)} 
-             onHoldStart={() => memoizedTrackHoldStart(-2)}
-             onHoldEnd={() => memoizedTrackHoldEnd(-2)}
+             onHoldStart={() => trackHoldStart(-2)}
+             onHoldEnd={() => trackHoldEnd(-2)}
              onRotationChange={setRightDeckRotation}
            />
         </div>
