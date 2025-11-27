@@ -1,6 +1,22 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Note } from "@/lib/gameEngine";
+
+const ACTIVATION_WINDOW = 300; // ms - must hit within this window of note.time
+
+const PAD_COLORS = [
+  'rgb(255,0,127)',   // W - pink (lane 0)
+  'rgb(0,150,255)',   // O - blue (lane 1)
+  'rgb(190,0,255)',   // I - purple (lane 2)
+  'rgb(0,255,255)'    // E - cyan (lane 3)
+];
+
+const PAD_STYLES = [
+  { bg: 'bg-neon-pink/30', border: 'border-neon-pink/50', shadow: 'shadow-[0_0_15px_rgb(255,0,127)]' },
+  { bg: 'bg-neon-blue/30', border: 'border-neon-blue/50', shadow: 'shadow-[0_0_15px_rgb(0,150,255)]' },
+  { bg: 'bg-neon-cyan/30', border: 'border-neon-cyan/50', shadow: 'shadow-[0_0_15px_rgb(0,255,255)]' },
+  { bg: 'bg-neon-purple/30', border: 'border-neon-purple/50', shadow: 'shadow-[0_0_15px_rgb(190,0,255)]' },
+];
 
 interface SoundPadProps {
   onPadHit: (index: number) => void;
@@ -20,7 +36,7 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
         n && Number.isFinite(n.lane) && n.lane === index
       ) : [];
       const hasHittableNote = laneNotes.some(n => 
-        n && !n.hit && !n.missed && !n.tapMissFailure && Number.isFinite(n.time) && Math.abs(n.time - currentTime) < 300
+        n && !n.hit && !n.missed && !n.tapMissFailure && Number.isFinite(n.time) && Math.abs(n.time - currentTime) < ACTIVATION_WINDOW
       );
       
       if (hasHittableNote) {
@@ -39,13 +55,13 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
       switch (key) {
         case 'w': checkHitAndFeedback(0); break;
         case 'o': checkHitAndFeedback(1); break;
-        case 'e': checkHitAndFeedback(2); break;
-        case 'i': checkHitAndFeedback(3); break;
+        case 'i': checkHitAndFeedback(2); break;
+        case 'e': checkHitAndFeedback(3); break;
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onPadHit, notes, currentTime]);
+  }, [onPadHit]);
 
   return (
     <div className="p-6 glass-panel rounded-xl border border-neon-pink/30 relative bg-black/40">
@@ -75,9 +91,6 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
 
 function PadButton({ index, onClick, notes, currentTime }: { index: number; onClick: () => void; notes: Note[]; currentTime: number }) {
   
-  const activeNotes = Array.isArray(notes) ? notes.filter(n => 
-    n && !n.hit && !n.missed && !n.tapMissFailure && Number.isFinite(n.time)
-  ) : [];
   const [isHitSuccess, setIsHitSuccess] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
 
@@ -91,12 +104,8 @@ function PadButton({ index, onClick, notes, currentTime }: { index: number; onCl
     return () => window.removeEventListener(`pad-hit-${index}`, handler);
   }, [index]);
 
-  const padColor = [
-    'rgb(255,0,127)',    // W - pink (bottom-left)
-    'rgb(0,150,255)',    // O - blue (bottom-right)
-    'rgb(190,0,255)',    // I - purple (top-right)
-    'rgb(0,255,255)'     // E - cyan (top-left)
-  ][index];
+  const padColor = PAD_COLORS[index];
+  const padStyle = PAD_STYLES[index];
 
   const handleMouseDown = () => {
     setIsPressed(true);
@@ -127,30 +136,23 @@ function PadButton({ index, onClick, notes, currentTime }: { index: number; onCl
     >
       {/* Pad Background */}
       <motion.div 
-        className={`absolute inset-0 rounded-xl overflow-hidden border-2 
-          ${index === 0 ? 'bg-neon-pink/30 border-neon-pink/50 shadow-[0_0_15px_rgb(255,0,127)]' : ''}
-          ${index === 1 ? 'bg-neon-blue/30 border-neon-blue/50 shadow-[0_0_15px_rgb(0,150,255)]' : ''}
-          ${index === 2 ? 'bg-neon-cyan/30 border-neon-cyan/50 shadow-[0_0_15px_rgb(0,255,255)]' : ''}
-          ${index === 3 ? 'bg-neon-purple/30 border-neon-purple/50 shadow-[0_0_15px_rgb(190,0,255)]' : ''}
-          group-hover:border-opacity-100 transition-all duration-200`}
-        animate={isHitSuccess ? { boxShadow: index === 0 ? '0 0 40px rgb(255,0,127)' : index === 1 ? '0 0 40px rgb(0,150,255)' : index === 2 ? '0 0 40px rgb(0,255,255)' : '0 0 40px rgb(190,0,255)' } : {}}
+        className={`absolute inset-0 rounded-xl overflow-hidden border-2 ${padStyle.bg} ${padStyle.border} ${padStyle.shadow} group-hover:border-opacity-100 transition-all duration-200`}
+        animate={isHitSuccess ? { boxShadow: `0 0 40px ${padColor}` } : {}}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-20" />
       </motion.div>
 
 
       {/* Hit Flash - Success */}
-      <AnimatePresence>
-        {isHitSuccess && (
-          <motion.div 
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 0 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 rounded-xl z-40 bg-white"
-            style={{ boxShadow: "0 0 40px 20px cyan" }}
-          />
-        )}
-      </AnimatePresence>
+      {isHitSuccess && (
+        <motion.div 
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="absolute inset-0 rounded-xl z-40 bg-white"
+          style={{ boxShadow: "0 0 40px 20px cyan" }}
+        />
+      )}
 
       {/* Standard Press Feedback */}
       <motion.div 
