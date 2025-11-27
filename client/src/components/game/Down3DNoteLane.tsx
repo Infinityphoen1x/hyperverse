@@ -2,15 +2,48 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { Note } from "@/lib/gameEngine";
 
+// Extract health-based color calculation for tunnel effects
+const getHealthBasedRayColor = (health: number): string => {
+  const healthFactor = Math.max(0, 200 - health) / 200; // 0 at full health, 1 at 0 health
+  const r = Math.round(0 + (255 - 0) * healthFactor);
+  const g = Math.round(255 * (1 - healthFactor));
+  const b = Math.round(255 * (1 - healthFactor));
+  return `rgba(${r},${g},${b},1)`;
+};
+
+// Extract trapezoid corner calculation for cleaner geometry
+const getTrapezoidCorners = (
+  rayAngle: number,
+  nearDistance: number,
+  farDistance: number,
+  vanishingPointX: number,
+  vanishingPointY: number
+): { x1: number; y1: number; x2: number; y2: number; x3: number; y3: number; x4: number; y4: number } => {
+  const leftRayAngle = rayAngle - 15;
+  const rightRayAngle = rayAngle + 15;
+  const leftRad = (leftRayAngle * Math.PI) / 180;
+  const rightRad = (rightRayAngle * Math.PI) / 180;
+  
+  return {
+    x1: vanishingPointX + Math.cos(leftRad) * farDistance,
+    y1: vanishingPointY + Math.sin(leftRad) * farDistance,
+    x2: vanishingPointX + Math.cos(rightRad) * farDistance,
+    y2: vanishingPointY + Math.sin(rightRad) * farDistance,
+    x3: vanishingPointX + Math.cos(rightRad) * nearDistance,
+    y3: vanishingPointY + Math.sin(rightRad) * nearDistance,
+    x4: vanishingPointX + Math.cos(leftRad) * nearDistance,
+    y4: vanishingPointY + Math.sin(leftRad) * nearDistance,
+  };
+};
+
 interface Down3DNoteLaneProps {
   notes: Note[];
   currentTime: number;
   holdStartTimes?: Record<number, { time: number; noteId: string }>;
-  onNoteMissed?: (noteId: string) => void;
   health?: number;
 }
 
-export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { time: 0, noteId: '' }, [-2]: { time: 0, noteId: '' } }, onNoteMissed, health = 200 }: Down3DNoteLaneProps) {
+export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { time: 0, noteId: '' }, [-2]: { time: 0, noteId: '' } }, health = 200 }: Down3DNoteLaneProps) {
   // Helper: Calculate phase progress (0 to 2)
   // Phase 1 (0 to 1): Note approaching, trapezoid growing
   // Phase 2 (1 to 2): Note at/past judgement, trapezoid shrinking
@@ -129,14 +162,14 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
   // Map lanes to rays
   const getLaneAngle = (lane: number): number => {
     const rayMapping: Record<number, number> = {
-      '-2': 0,     // P - right deck
-      '-1': 180,   // Q - left deck
-      '0': 120,    // W - top-left pad
-      '1': 60,     // O - top-right pad
-      '2': 300,    // I - bottom-right pad
-      '3': 240,    // E - bottom-left pad
+      [-2]: 0,     // P - right deck
+      [-1]: 180,   // Q - left deck
+      [0]: 120,    // W - top-left pad
+      [1]: 60,     // O - top-right pad
+      [2]: 300,    // I - bottom-right pad
+      [3]: 240,    // E - bottom-left pad
     };
-    const angle = rayMapping[lane as keyof typeof rayMapping];
+    const angle = rayMapping[lane];
     if (!Number.isFinite(angle)) {
       console.warn(`Invalid lane: ${lane}, using default angle 0`);
       return 0; // Fallback to 0 degrees
@@ -147,12 +180,12 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
   // Judgement dot positions (where soundpad keys are)
   const getJudgementPos = (lane: number): { x: number; y: number } => {
     const positions: Record<number, { x: number; y: number }> = {
-      '0': { x: 150, y: 290 }, // W - top-left pad
-      '1': { x: 450, y: 290 }, // O - top-right pad
-      '2': { x: 450, y: 530 }, // I - bottom-right pad
-      '3': { x: 150, y: 530 }, // E - bottom-left pad
+      [0]: { x: 150, y: 290 }, // W - top-left pad
+      [1]: { x: 450, y: 290 }, // O - top-right pad
+      [2]: { x: 450, y: 530 }, // I - bottom-right pad
+      [3]: { x: 150, y: 530 }, // E - bottom-left pad
     };
-    return positions[lane as keyof typeof positions] || { x: 300, y: 530 };
+    return positions[lane] || { x: 300, y: 530 };
   };
 
   const VANISHING_POINT_X = 350;
@@ -193,12 +226,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
             // Opacity: translucent at center (0.08), more visible at edge (0.3)
             const opacity = 0.08 + progress * 0.22;
             
-            // Shift main ray color from cyan toward red as health decreases
-            const healthFactor = Math.max(0, 200 - health) / 200;
-            const r = Math.round(0 + (255 - 0) * healthFactor);
-            const g = Math.round(255 * (1 - healthFactor));
-            const b = Math.round(255 * (1 - healthFactor));
-            const rayColor = `rgba(${r},${g},${b},1)`;
+            const rayColor = getHealthBasedRayColor(health);
             
             return (
               <polygon
@@ -281,12 +309,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
           {allRayAngles.map((angle) => {
             const rad = (angle * Math.PI) / 180;
             
-            // Shift main ray color from cyan toward red as health decreases
-            const healthFactor = Math.max(0, 200 - health) / 200;
-            const r = Math.round(0 + (255 - 0) * healthFactor);
-            const g = Math.round(255 * (1 - healthFactor));
-            const b = Math.round(255 * (1 - healthFactor));
-            const rayColor = `rgba(${r},${g},${b},1)`;
+            const rayColor = getHealthBasedRayColor(health);
             
             // Create line with multiple segments for smooth thickness and opacity gradient
             const segments = 12;
@@ -486,18 +509,14 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
               const phase2Glow = phase2Progress > 0 ? (1 - phase2Progress) * 0.8 : 0;
               const finalGlowScale = hasActivePress ? Math.max(glowScale - phase2Glow, 0.1) : 0.05;
               
-              // Calculate trapezoid corners using flanking rays
-              // Far end corners (at vanishing point on flanking rays)
-              const x1 = VANISHING_POINT_X + Math.cos(leftRad) * farDistance;
-              const y1 = VANISHING_POINT_Y + Math.sin(leftRad) * farDistance;
-              const x2 = VANISHING_POINT_X + Math.cos(rightRad) * farDistance;
-              const y2 = VANISHING_POINT_Y + Math.sin(rightRad) * farDistance;
-              
-              // Near end corners (at judgement line on flanking rays)
-              const x3 = VANISHING_POINT_X + Math.cos(rightRad) * nearDistance;
-              const y3 = VANISHING_POINT_Y + Math.sin(rightRad) * nearDistance;
-              const x4 = VANISHING_POINT_X + Math.cos(leftRad) * nearDistance;
-              const y4 = VANISHING_POINT_Y + Math.sin(leftRad) * nearDistance;
+              // Calculate trapezoid corners using helper function
+              const { x1, y1, x2, y2, x3, y3, x4, y4 } = getTrapezoidCorners(
+                rayAngle,
+                nearDistance,
+                farDistance,
+                VANISHING_POINT_X,
+                VANISHING_POINT_Y
+              );
               
               // Phase 1: Opacity increases; Phase 2: Stays visible with gentle fade
               let opacity = 0.4 + Math.min(holdProgress, 1.0) * 0.6;
