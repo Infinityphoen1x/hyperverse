@@ -12,12 +12,13 @@ interface DeckHoldMetersProps {
 
 export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart, onHoldEnd }: DeckHoldMetersProps) {
   // Get hold progress based on holdStartTimes passed from parent
+  // Variable max duration - will be capped when hitline is detected
   const getHoldProgress = (lane: number): number => {
     const holdStartTime = holdStartTimes[lane] || 0;
     if (holdStartTime === 0) return 0; // No active hold
     
     const actualHoldDuration = currentTime - holdStartTime;
-    const maxHoldDuration = 2000;
+    const maxHoldDuration = 4000; // Will be capped by actual hitline detection
     
     return Math.min(Math.max(actualHoldDuration / maxHoldDuration, 0), 1);
   };

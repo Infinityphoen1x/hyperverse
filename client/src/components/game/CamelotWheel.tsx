@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import wheelImg from "@assets/generated_images/neon_glowing_cyber_turntable_interface.png";
 import { Note } from "@/lib/gameEngine";
 
@@ -12,6 +12,7 @@ interface CamelotWheelProps {
   onHoldStart?: () => void;
   onHoldEnd?: () => void;
   rotation?: number;
+  onRotationChange?: (rotation: number) => void;
 }
 
 // Session-based pattern: use note index to get consistent pattern across game
@@ -20,8 +21,8 @@ function getPatternAngle(noteIndex: number): number {
   return pattern[noteIndex % pattern.length];
 }
 
-export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime = 0, onHoldStart = () => {}, onHoldEnd = () => {} }: CamelotWheelProps) {
-  const [rotation, setRotation] = useState(0);
+export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime = 0, onHoldStart = () => {}, onHoldEnd = () => {}, rotation = 0, onRotationChange = () => {} }: CamelotWheelProps) {
+  const [internalRotation, setInternalRotation] = useState(0);
   const [indicatorGlow, setIndicatorGlow] = useState(false);
   const [spinDirection, setSpinDirection] = useState(1); // 1 for clockwise, -1 for counter-clockwise
   const [isKeyPressed, setIsKeyPressed] = useState(false);
@@ -72,15 +73,21 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
 
     const animate = () => {
       if (isKeyPressed) {
-        setRotation((prev) => {
+        setInternalRotation((prev) => {
           const rotationDelta = rotationSpeed * spinDirection;
           const newRotation = prev + rotationDelta;
           rotationRef[1](newRotation);
+          onRotationChange(newRotation); // Export to parent
 
           // Trigger onSpin event periodically based on rotation distance
           if (Math.abs(newRotation - lastSpinRotation) >= spinThreshold) {
             onSpin();
             lastSpinRotation = newRotation;
+          }
+          
+          // Check hitline detection (safe from RAF, not render)
+          if (checkHitlineRef.current) {
+            checkHitlineRef.current(newRotation);
           }
 
           return newRotation;
@@ -98,39 +105,47 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
   const wheelLane = side === 'left' ? -1 : -2;
   const activeNotes = notes.filter(n => n.lane === wheelLane && !n.hit && !n.missed);
 
-  // Detect when deck dot reaches hitline (spawn point at top)
+  // Calculate when deck dot reaches hitline - use ref callback to avoid render error
+  const checkHitlineRef = useRef<((rot: number) => void) | null>(null);
+  
   useEffect(() => {
-    if (holdStartTime === 0 || !isKeyPressed) return; // Not holding
-    
-    const wheelLane = side === 'left' ? -1 : -2;
-    const activeNote = notes.find(n => n.lane === wheelLane && !n.hit && !n.missed);
-    if (!activeNote) return;
-    
-    // Get target angle for this note
-    const noteIndex = parseInt(activeNote.id.split('-')[1]) || 0;
-    const targetAngle = getPatternAngle(noteIndex);
-    
-    // Current deck rotation normalized to 0-360
-    const normalizedRotation = ((rotation % 360) + 360) % 360;
-    
-    // Hitline is at spawn point (targetAngle). Check if dot has rotated to it
-    const dotAngle = (normalizedRotation + targetAngle) % 360;
-    const hitlineAngle = targetAngle;
-    
-    // Within ~5 degrees of hitline
-    const angleDiff = Math.abs(dotAngle - hitlineAngle);
-    const isAtHitline = angleDiff < 10 || angleDiff > 350;
-    
-    if (isAtHitline) {
-      setIndicatorGlow(true);
-      // End hold when dot reaches hitline
-      onHoldEnd();
-      setTimeout(() => setIndicatorGlow(false), 200);
-    }
-  }, [rotation, holdStartTime, isKeyPressed, side, notes, onHoldEnd]);
+    checkHitlineRef.current = (rot: number) => {
+      if (holdStartTime === 0 || !isKeyPressed) return; // Not holding
+      
+      const wheelLane = side === 'left' ? -1 : -2;
+      const activeNote = notes.find(n => n.lane === wheelLane && !n.hit && !n.missed);
+      if (!activeNote) return;
+      
+      // Get target angle for this note
+      const noteIndex = parseInt(activeNote.id.split('-')[1]) || 0;
+      const targetAngle = getPatternAngle(noteIndex);
+      
+      // Hitline is at top (spawn point). Deck dot is at (rotation + targetAngle)
+      const normalizedRotation = ((rot % 360) + 360) % 360;
+      const dotVisualAngle = (normalizedRotation + targetAngle) % 360;
+      
+      // Hitline at top is 0 degrees (or 360)
+      const hitlineAngle = 0;
+      
+      // Check if dot has reached hitline (within tolerance)
+      const angleDiff = Math.abs(dotVisualAngle - hitlineAngle);
+      const normalizedDiff = angleDiff > 180 ? 360 - angleDiff : angleDiff;
+      const isAtHitline = normalizedDiff < 15;
+      
+      if (isAtHitline) {
+        setIndicatorGlow(true);
+        onHoldEnd(); // This is safe - called from RAF, not render
+        setTimeout(() => setIndicatorGlow(false), 200);
+      }
+    };
+  }, [holdStartTime, isKeyPressed, side, notes, onHoldEnd]);
 
   const handleDrag = (_: any, info: any) => {
-    setRotation((prev) => prev + info.delta.x);
+    setInternalRotation((prev) => {
+      const newRot = prev + info.delta.x;
+      onRotationChange(newRot);
+      return newRot;
+    });
     if (Math.abs(info.velocity.x) > 100) {
       onSpin();
     }
@@ -166,7 +181,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
           {/* The Interactive Wheel (Spins) */}
           <motion.div
             className={`w-full h-full rounded-full border-4 overflow-hidden relative bg-black cursor-grab active:cursor-grabbing ${side === 'left' ? 'border-neon-green/50 shadow-[0_0_30px_rgba(0,255,0,0.3)]' : 'border-neon-red/50 shadow-[0_0_30px_rgba(255,0,0,0.3)]'}`}
-            style={{ rotate: rotation }}
+            style={{ rotate: internalRotation }}
             drag="x"
             dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
             dragElastic={0}

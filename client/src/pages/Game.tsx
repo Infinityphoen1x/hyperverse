@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useGameEngine, Difficulty } from "@/lib/gameEngine";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
@@ -10,6 +10,8 @@ import { motion } from "framer-motion";
 
 export default function Game() {
   const [location] = useLocation();
+  const [leftDeckRotation, setLeftDeckRotation] = useState(0);
+  const [rightDeckRotation, setRightDeckRotation] = useState(0);
   const searchParams = new URLSearchParams(window.location.search);
   const difficulty = (searchParams.get('difficulty') || 'MEDIUM') as Difficulty;
   
@@ -29,7 +31,7 @@ export default function Game() {
 
   useEffect(() => {
     startGame();
-  }, []);
+  }, [startGame]);
 
   if (gameState === 'GAMEOVER') {
     return (
@@ -109,7 +111,8 @@ export default function Game() {
              holdStartTime={holdStartTimes[-1]}
              onHoldStart={() => trackHoldStart(-1)}
              onHoldEnd={() => trackHoldEnd(-1)}
-             rotation={0}
+             rotation={leftDeckRotation}
+             onRotationChange={setLeftDeckRotation}
            />
         </div>
 
@@ -143,7 +146,8 @@ export default function Game() {
              holdStartTime={holdStartTimes[-2]}
              onHoldStart={() => trackHoldStart(-2)}
              onHoldEnd={() => trackHoldEnd(-2)}
-             rotation={0}
+             rotation={rightDeckRotation}
+             onRotationChange={setRightDeckRotation}
            />
         </div>
 
