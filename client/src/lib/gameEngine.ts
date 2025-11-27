@@ -320,10 +320,10 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       if (Math.abs(timeSinceNoteSpawn) > holdActivationWindow) {
         // Outside window - mark as failure
         if (timeSinceNoteSpawn < -holdActivationWindow) {
-          // Too early - mark as tooEarlyFailure
+          // Too early - mark as tooEarlyFailure but still record pressTime for geometry locking
           setNotes(prev => {
             return prev.map(n => 
-              n && n.id === anyNote.id ? { ...n, tooEarlyFailure: true, failureTime: currentTime } : n
+              n && n.id === anyNote.id ? { ...n, pressTime: currentTime, tooEarlyFailure: true, failureTime: currentTime } : n
             );
           });
           setCombo(0);

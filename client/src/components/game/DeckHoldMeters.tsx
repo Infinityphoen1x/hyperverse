@@ -128,14 +128,16 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
         return 0;
       }
       
-      // Find active hold note on this lane (not hit, not missed)
+      // Find active hold note on this lane (currently being held with pressTime set)
       // This uses the note's own pressTime, matching Down3DNoteLane's source of truth
       const activeNote = Array.isArray(notes) ? notes.find(n => 
         n &&
         n.lane === lane && 
         (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
         !n.hit && 
-        !n.missed
+        !n.missed &&
+        n.pressTime && 
+        n.pressTime > 0
       ) : null;
       
       // Show frozen meter for 1000ms after hold ends (synced with shrinking animation)
@@ -161,15 +163,9 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       // Not actively holding
       if (!pressTime || pressTime <= 0) return 0;
       
-      // CRITICAL: Validate hold was pressed within accuracy window (±300ms)
-      const timeSinceNoteSpawn = pressTime - activeNote.time;
-      const ACTIVATION_WINDOW = 300;
-      const isValidActivation = Math.abs(timeSinceNoteSpawn) <= ACTIVATION_WINDOW;
-      
-      // If pressed outside valid window, meter returns 0 (no charge)
-      if (!isValidActivation) {
-        return 0;
-      }
+      // Note: Activation already validated by gameEngine.trackHoldStart
+      // If pressTime is set, it was within ±300ms accuracy window
+      // No need to re-validate here
       
       // Meter charges over beatmap-defined hold duration (or 1000ms default)
       const beatmapHoldDuration = activeNote.duration || 1000;
