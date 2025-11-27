@@ -437,25 +437,27 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                     holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
                   } else {
                     // Phase 2: Note has passed judgement line - show 1000ms shrinking animation
-                    // Time since note arrived at judgement (note.time marks arrival)
-                    const timePastJudgement = Math.max(0, currentTime - note.time);
+                    // Animation starts AFTER the 1000ms hold duration would have been complete
+                    const animationStartTime = note.time + 1000;
+                    const timeSinceShrinkStart = Math.max(0, currentTime - animationStartTime);
                     // Safety check: if more than 1100ms has passed (1000ms animation + 100ms buffer), hide it
-                    if (timePastJudgement > 1100) {
+                    if (timeSinceShrinkStart > 1100) {
                       return null; // Animation complete, remove note
                     }
                     // Shrink from 1.0 to 2.0 over 1000ms
-                    const shrinkProgress = Math.min(timePastJudgement / 1000, 1.0);
+                    const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
                     holdProgress = 1.0 + shrinkProgress;
                   }
                 } else if (isHoldReleaseFailure || isHoldMissFailure) {
                   // Hold release failure or missed hold - show shrinking greyscale animation for 1000ms (decoupled from deck)
                   isGreyed = true;
-                  const estimatedFailTime = isHoldReleaseFailure ? holdStartTime : note.time;
-                  const timeSinceEstimatedFail = Math.max(0, currentTime - estimatedFailTime);
-                  if (timeSinceEstimatedFail > 1000) {
+                  // Animation starts AFTER the 1000ms hold duration would have been complete
+                  const animationStartTime = isHoldReleaseFailure ? (holdStartTime + 1000) : (note.time + 1000);
+                  const timeSinceShrinkStart = Math.max(0, currentTime - animationStartTime);
+                  if (timeSinceShrinkStart > 1100) {
                     return null; // Animation complete
                   }
-                  const shrinkProgress = timeSinceEstimatedFail / 1000;
+                  const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
                   holdProgress = 1.0 + shrinkProgress;
                 } else if (note.missed) {
                   isGreyed = true;
