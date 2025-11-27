@@ -33,14 +33,27 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
         
         // Hold just started
         if (prevTime === 0 && currTime > 0) {
-          // Mark ONLY the first active hold note on this lane as activated
+          // Find the hold note that should be active NOW (closest spawn time within valid window)
           setActiveHolds(prev => {
             const newSet = new Set(prev);
-            const firstActiveNote = notes.find(n => 
-              n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed && n.id
-            );
-            if (firstActiveNote && firstActiveNote.id) {
-              newSet.add(firstActiveNote.id);
+            
+            // Find the note with spawn time (note.time) closest to currentTime
+            // This ensures we're holding the note that's actually being triggered NOW
+            let bestNote: Note | null = null;
+            let bestDistance = Infinity;
+            
+            notes.forEach(n => {
+              if (n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed && n.id) {
+                const distance = Math.abs(n.time - currentTime);
+                if (distance < bestDistance) {
+                  bestDistance = distance;
+                  bestNote = n;
+                }
+              }
+            });
+            
+            if (bestNote && bestNote.id) {
+              newSet.add(bestNote.id);
             }
             return newSet;
           });
