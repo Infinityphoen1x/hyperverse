@@ -227,15 +227,15 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
                 ? JUDGEMENT_RADIUS
                 : 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
               
-              // Far end distance - in Phase 2, shrinks back toward judgement line
+              // Far end distance - max extent is JUDGEMENT_RADIUS
               let farDistance;
               if (isInPhase2) {
                 const shrinkProgress = holdProgress - 1.0; // 0 to 1.0 during phase 2
-                // Far end shrinks from MAX_DISTANCE back to JUDGEMENT_RADIUS
-                farDistance = MAX_DISTANCE * (1 - shrinkProgress) + JUDGEMENT_RADIUS * shrinkProgress;
+                // Far end shrinks from JUDGEMENT_RADIUS back toward vanishing point
+                farDistance = JUDGEMENT_RADIUS * (1 - shrinkProgress) + 1 * shrinkProgress;
               } else {
-                // Phase 1: grows from vanishing point toward MAX_DISTANCE
-                farDistance = 1 + (holdProgress * (MAX_DISTANCE - 1));
+                // Phase 1: grows from vanishing point toward JUDGEMENT_RADIUS
+                farDistance = 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
               }
               
               // Calculate positions
