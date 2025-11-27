@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useGameEngine, Difficulty } from "@/lib/gameEngine";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { SoundPad } from "@/components/game/SoundPad";
-import { NoteLane } from "@/components/game/NoteLane";
+import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
 import { VisualEffects } from "@/components/game/VisualEffects";
 import { motion } from "framer-motion";
 
@@ -93,41 +93,38 @@ export default function Game() {
       </header>
 
       {/* Main Game Area */}
-      <main className="flex-1 relative z-10 flex flex-col items-center justify-center gap-8 px-4">
+      <main className="flex-1 relative z-10 flex items-center justify-center px-4">
         
-        {/* Decks Row */}
-        <div className="w-full flex items-center justify-between px-8">
-          {/* Left Deck */}
-          <div className="hidden lg:block">
-             <CamelotWheel 
-               side="left" 
-               onSpin={() => hitNote(-1)} 
-               notes={notes} 
-               currentTime={currentTime} 
-             />
-          </div>
-
-          {/* Right Deck */}
-          <div className="hidden lg:block">
-             <CamelotWheel 
-               side="right" 
-               onSpin={() => hitNote(-2)} 
-               notes={notes} 
-               currentTime={currentTime} 
-             />
-          </div>
+        {/* Left Deck */}
+        <div className="hidden lg:block absolute left-8">
+           <CamelotWheel 
+             side="left" 
+             onSpin={() => hitNote(-1)} 
+             notes={notes} 
+             currentTime={currentTime} 
+           />
         </div>
 
-        {/* Note Lane */}
-        <div className="w-full flex justify-center">
-          <NoteLane 
+        {/* Center 3D Notelane */}
+        <div className="relative flex-1 flex items-center justify-center">
+          <Down3DNoteLane 
             notes={notes} 
             currentTime={currentTime} 
           />
         </div>
 
-        {/* Center Sound Pads - Moved Down */}
-        <div className="relative z-20 scale-110">
+        {/* Right Deck */}
+        <div className="hidden lg:block absolute right-8">
+           <CamelotWheel 
+             side="right" 
+             onSpin={() => hitNote(-2)} 
+             notes={notes} 
+             currentTime={currentTime} 
+           />
+        </div>
+
+        {/* Sound Pads - At Bottom Center */}
+        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 scale-110">
           <SoundPad 
             onPadHit={hitNote} 
             notes={notes} 
