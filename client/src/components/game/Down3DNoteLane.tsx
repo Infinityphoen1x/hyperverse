@@ -8,11 +8,11 @@ interface Down3DNoteLaneProps {
 
 export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
   // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
-  // Hold notes (SPIN) need to stay visible for the full hold duration (2000ms)
+  // Hold notes (SPIN) need to stay visible for the full hold duration (2000ms before to 2000ms after hit)
   const visibleNotes = notes.filter(n => {
     const timeUntilHit = n.time - currentTime;
     const holdDuration = (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') ? 2000 : 0;
-    return timeUntilHit > -holdDuration - 200 && timeUntilHit < 2000;
+    return timeUntilHit >= -holdDuration && timeUntilHit <= 2000;
   });
 
 
