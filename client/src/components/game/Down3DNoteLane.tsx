@@ -536,12 +536,20 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
                 // Update all failure types for this note
                 for (const failureType of failureTypes) {
                   const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
+                  const failureTime = animEntry?.failureTime || note.failureTime || currentTime;
+                  const timeSinceFailure = Math.max(0, currentTime - failureTime);
+                  
                   if (!animEntry) {
                     // Create tracking entry for this failure type
                     GameErrors.trackAnimation(note.id, failureType, note.failureTime || currentTime);
                   } else if (animEntry.status === 'pending') {
-                    // Mark as rendering on first visual frame
-                    GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
+                    // If this animation is old enough to be complete, skip rendering and mark complete
+                    if (timeSinceFailure >= 1100) {
+                      GameErrors.updateAnimation(note.id, { status: 'completed', renderStart: currentTime, renderEnd: currentTime });
+                    } else {
+                      // Otherwise mark as rendering on first visual frame
+                      GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
+                    }
                   }
                 }
               }
@@ -691,10 +699,14 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
                 // First render of this TAP failure - create tracking entry
                 GameErrors.trackAnimation(note.id, 'tapMissFailure', failureTime || currentTime);
               } else if (animEntry.status === 'pending') {
-                // Mark as rendering on first visual frame
-                GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
+                // If animation is old, jump straight to complete; otherwise mark rendering
+                if (timeSinceFail >= 1100) {
+                  GameErrors.updateAnimation(note.id, { status: 'completed', renderStart: currentTime, renderEnd: currentTime });
+                } else {
+                  GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
+                }
               } else if (animEntry.status === 'rendering' && timeSinceFail > 1100) {
-                // Mark as completed when animation finishes (before returning null)
+                // Mark as completed when animation finishes
                 GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
               }
             }
