@@ -98,6 +98,16 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
       // Not actively holding
       if (holdStartTime === 0) return 0;
       
+      // CRITICAL: Validate hold was pressed within activation window
+      // Valid window: 100ms before to 4100ms after note.time (from -4100 to +100 offset)
+      const timeSinceNoteSpawn = holdStartTime - activeNote.time;
+      const isValidActivation = timeSinceNoteSpawn <= 100 && timeSinceNoteSpawn >= -4100;
+      
+      // If pressed outside valid window, meter returns 0 (no charge)
+      if (!isValidActivation) {
+        return 0;
+      }
+      
       // Meter scales inversely to hold note duration (shorter notes fill faster)
       // Calculate how much time remains in this hold note from when you started
       const actualHoldDuration = currentTime - holdStartTime;
