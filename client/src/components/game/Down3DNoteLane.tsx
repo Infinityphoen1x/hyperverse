@@ -296,9 +296,11 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                 // Phase 1: Far end stays at vanishing point
                 farDistance = 1;
               } else {
-                // Phase 2: Far end shrinks from vanishing point toward judgement line
+                // Phase 2: Far end shrinks BACK toward vanishing point (opposite of Phase 1)
+                // During Phase 1, near end grew 1 → 187
+                // During Phase 2, far end shrinks 187 → 1 (to match the "shrink" visual)
                 const shrinkProgress = holdProgress - 1.0; // 0 to 1.0 during phase 2
-                farDistance = 1 + (shrinkProgress * (JUDGEMENT_RADIUS - 1));
+                farDistance = JUDGEMENT_RADIUS - (shrinkProgress * (JUDGEMENT_RADIUS - 1));
               }
               
               // Glow intensity scales with how close to judgement line
