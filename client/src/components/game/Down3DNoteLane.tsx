@@ -796,27 +796,6 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
           })}
         </AnimatePresence>
 
-        {/* Judgement dots at soundpad positions */}
-        {[0, 1, 2, 3].map((lane) => {
-          const pos = getJudgementPos(lane);
-          const color = getColorForLane(lane);
-          return (
-            <motion.div
-              key={`judgement-${lane}`}
-              className="absolute w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-rajdhani font-bold pointer-events-none"
-              style={{
-                backgroundColor: color,
-                boxShadow: `0 0 20px ${color}, inset 0 0 10px rgba(255,255,255,0.5)`,
-                left: `${pos.x}px`,
-                top: `${pos.y}px`,
-                transform: 'translate(-50%, -50%)',
-                border: `2px solid rgba(255,255,255,0.6)`,
-              }}
-            >
-              {getNoteKey(lane)}
-            </motion.div>
-          );
-        })}
       </div>
     </div>
   );
