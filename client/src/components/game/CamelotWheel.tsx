@@ -19,26 +19,34 @@ function getPatternAngle(noteIndex: number): number {
 export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelProps) {
   const [rotation, setRotation] = useState(0);
   const [indicatorGlow, setIndicatorGlow] = useState(false);
-  const keysPressed = useState<Set<string>>(new Set())[0];
+  const [spinDirection, setSpinDirection] = useState(1); // 1 for clockwise, -1 for counter-clockwise
+  const [isKeyPressed, setIsKeyPressed] = useState(false);
   const rotationRef = useState(0);
 
-  // Smooth continuous rotation while holding keys
+  // Single key toggle for spin direction
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.repeat) return;
       const key = e.key.toLowerCase();
       
-      const leftKeys = ['q', 'w'];
-      const rightKeys = ['o', 'p'];
+      const isLeftDeckKey = side === 'left' && key === 'q';
+      const isRightDeckKey = side === 'right' && key === 'p';
       
-      if ((side === 'left' && leftKeys.includes(key)) || (side === 'right' && rightKeys.includes(key))) {
-        keysPressed.add(key);
+      if (isLeftDeckKey || isRightDeckKey) {
+        setIsKeyPressed(true);
+        setSpinDirection((prev) => prev * -1); // Toggle direction
       }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
-      keysPressed.delete(key);
+      
+      const isLeftDeckKey = side === 'left' && key === 'q';
+      const isRightDeckKey = side === 'right' && key === 'p';
+      
+      if (isLeftDeckKey || isRightDeckKey) {
+        setIsKeyPressed(false);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -47,7 +55,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [side, keysPressed]);
+  }, [side]);
 
   // Continuous rotation loop using RAF
   useEffect(() => {
@@ -57,19 +65,9 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
     let lastSpinRotation = 0;
 
     const animate = () => {
-      let rotationDelta = 0;
-
-      // Check which keys are pressed
-      if (side === 'left') {
-        if (keysPressed.has('q')) rotationDelta -= rotationSpeed;
-        if (keysPressed.has('w')) rotationDelta += rotationSpeed;
-      } else {
-        if (keysPressed.has('o')) rotationDelta -= rotationSpeed;
-        if (keysPressed.has('p')) rotationDelta += rotationSpeed;
-      }
-
-      if (rotationDelta !== 0) {
+      if (isKeyPressed) {
         setRotation((prev) => {
+          const rotationDelta = rotationSpeed * spinDirection;
           const newRotation = prev + rotationDelta;
           rotationRef[1](newRotation);
 
@@ -88,7 +86,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
 
     animationId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationId);
-  }, [side, onSpin, keysPressed]);
+  }, [isKeyPressed, spinDirection, onSpin]);
 
   // Filter relevant notes
   const wheelLane = side === 'left' ? -1 : -2;

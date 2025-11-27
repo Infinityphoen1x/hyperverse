@@ -34,7 +34,7 @@ export function NoteLane({ notes, currentTime }: NoteLaneProps) {
   const getNoteKey = (lane: number): string => {
     if (lane === -1) return 'A';
     if (lane === -2) return 'B';
-    return ['3', '4', '8', '9'][lane];
+    return ['W', 'E', 'I', 'O'][lane];
   };
 
   return (
