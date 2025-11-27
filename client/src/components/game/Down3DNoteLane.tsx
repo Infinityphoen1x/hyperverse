@@ -263,16 +263,8 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               
               const isInPhase2 = holdProgress >= 1.0;
               
-              // Far end: grows from vanishing point (1) toward judgement line (187) in phase 1, then continues outward in phase 2
-              let farDistance;
-              if (isInPhase2) {
-                const growProgress = holdProgress - 1.0; // 0 to 1.0 during phase 2
-                // In Phase 2, far end continues growing outward from judgement line toward MAX_DISTANCE
-                farDistance = JUDGEMENT_RADIUS + (growProgress * (MAX_DISTANCE - JUDGEMENT_RADIUS));
-              } else {
-                // Phase 1: far end grows from vanishing point outward, capped at judgement line
-                farDistance = Math.min(1 + (holdProgress * (JUDGEMENT_RADIUS - 1)), JUDGEMENT_RADIUS);
-              }
+              // Far end: grows from vanishing point (1) toward judgement line (187), never exceeds it
+              const farDistance = 1 + (Math.min(holdProgress, 1.0) * (JUDGEMENT_RADIUS - 1));
               
               // Near end: stays at judgement line (187)
               const nearDistance = JUDGEMENT_RADIUS;
