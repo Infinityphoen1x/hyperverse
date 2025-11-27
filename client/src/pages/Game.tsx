@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from "react";
-import { useLocation } from "wouter";
 import { useGameEngine, Difficulty, GameErrors } from "@/lib/gameEngine";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { SoundPad } from "@/components/game/SoundPad";
@@ -9,7 +8,6 @@ import { VisualEffects } from "@/components/game/VisualEffects";
 import { motion } from "framer-motion";
 
 export default function Game() {
-  const [location] = useLocation();
   const [leftDeckRotation, setLeftDeckRotation] = useState(0);
   const [rightDeckRotation, setRightDeckRotation] = useState(0);
   const [gameErrors, setGameErrors] = useState<string[]>([]);
@@ -33,7 +31,7 @@ export default function Game() {
 
   // Memoize hold callbacks to prevent re-creation on every render
   const memoizedTrackHoldStart = useCallback((lane: number) => {
-    trackHoldStart(lane, 0);
+    trackHoldStart(lane);
   }, [trackHoldStart]);
 
   const memoizedTrackHoldEnd = useCallback((lane: number) => {

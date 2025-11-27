@@ -10,7 +10,7 @@ interface Down3DNoteLaneProps {
   health?: number;
 }
 
-export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNoteMissed, health = 100 }: Down3DNoteLaneProps) {
+export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNoteMissed, health = 200 }: Down3DNoteLaneProps) {
   // Track which hold notes have been activated (entered Phase 2)
   const [activeHolds, setActiveHolds] = useState<Set<string>>(new Set());
   const prevHoldStartTimes = useRef<Record<number, number>>({});
