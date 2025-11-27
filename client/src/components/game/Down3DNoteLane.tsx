@@ -447,14 +447,21 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 let holdProgress;
                 let isGreyed = false;
                 
-                // Too early failure - show growing greyscale animation until note passes judgement
+                // Too early failure - show growing greyscale animation until judgement, then shrinking for 500ms
                 if (isTooEarlyFailure) {
                   isGreyed = true;
-                  // Stay in Phase 1 (growing), trapezoid continues to expand
                   if (timeUntilHit > 0) {
+                    // Phase 1: Growing until note reaches judgement line
                     holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
                   } else {
-                    holdProgress = 0.99;
+                    // Note has passed judgement line - show 500ms shrinking animation
+                    const timePastJudgement = currentTime - note.time;
+                    if (timePastJudgement > 500) {
+                      return null; // Animation complete, hide note
+                    }
+                    // Shrink from 1.0 to 2.0 over 500ms
+                    const shrinkProgress = timePastJudgement / 500;
+                    holdProgress = 1.0 + shrinkProgress;
                   }
                 } else if (isHoldReleaseFailure || isHoldMissFailure) {
                   // Hold release failure or missed hold - show shrinking greyscale animation for 500ms
