@@ -175,7 +175,8 @@ export function VisualEffects({ combo, score, health = 100, missCount = 0 }: Vis
           }}
         />
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
