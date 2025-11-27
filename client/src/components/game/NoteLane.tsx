@@ -9,15 +9,17 @@ interface NoteLaneProps {
 
 export function NoteLane({ notes, currentTime }: NoteLaneProps) {
   // Separate soundpad notes (lanes 0-3) and deck notes (lanes -1, -2)
-  const soundpadNotes = notes.filter(n => {
+  const soundpadNotes = Array.isArray(notes) ? notes.filter(n => {
+    if (!n || !Number.isFinite(n.time) || !Number.isFinite(n.lane)) return false;
     const timeUntilHit = n.time - currentTime;
     return (n.lane >= 0 && n.lane <= 3) && timeUntilHit > -200 && timeUntilHit < 2000;
-  });
+  }) : [];
 
-  const deckNotes = notes.filter(n => {
+  const deckNotes = Array.isArray(notes) ? notes.filter(n => {
+    if (!n || !Number.isFinite(n.time) || !Number.isFinite(n.lane)) return false;
     const timeUntilHit = n.time - currentTime;
     return (n.lane === -1 || n.lane === -2) && timeUntilHit > -200 && timeUntilHit < 2000;
-  });
+  }) : [];
 
   const getColorClass = (lane: number): string => {
     switch (lane) {
@@ -50,22 +52,28 @@ export function NoteLane({ notes, currentTime }: NoteLaneProps) {
           {/* Soundpad Notes flowing in from left */}
           <AnimatePresence>
             {soundpadNotes.map(note => {
-              const timeUntilHit = note.time - currentTime;
-              const progress = 1 - (timeUntilHit / 2000);
-              const xPosition = progress * 100;
+              try {
+                if (!note || !Number.isFinite(note.time)) return null;
+                const timeUntilHit = note.time - currentTime;
+                const progress = 1 - (timeUntilHit / 2000);
+                const xPosition = progress * 100;
 
-              return (
-                <motion.div
-                  key={note.id}
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  className={`absolute top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg ${getColorClass(note.lane)} flex items-center justify-center text-black font-bold text-sm font-rajdhani z-10`}
-                  style={{ left: `${xPosition}%`, transform: 'translate(-50%, -50%)' }}
-                >
-                  {getNoteKey(note.lane)}
-                </motion.div>
-              );
+                return (
+                  <motion.div
+                    key={note.id}
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    className={`absolute top-1/2 -translate-y-1/2 w-12 h-12 rounded-lg ${getColorClass(note.lane)} flex items-center justify-center text-black font-bold text-sm font-rajdhani z-10`}
+                    style={{ left: `${xPosition}%`, transform: 'translate(-50%, -50%)' }}
+                  >
+                    {getNoteKey(note.lane)}
+                  </motion.div>
+                );
+              } catch (error) {
+                console.warn(`NoteLane soundpad render error: ${error}`);
+                return null;
+              }
             })}
           </AnimatePresence>
         </div>
@@ -82,28 +90,34 @@ export function NoteLane({ notes, currentTime }: NoteLaneProps) {
           {/* Deck Notes flowing in as hold bars */}
           <AnimatePresence>
             {deckNotes.map(note => {
-              const timeUntilHit = note.time - currentTime;
-              const progress = 1 - (timeUntilHit / 2000);
-              const xPosition = progress * 100;
-              const holdDuration = 0.5; // 500ms hold duration visualization
-              const holdWidth = holdDuration * 50; // width in % of lane
+              try {
+                if (!note || !Number.isFinite(note.time)) return null;
+                const timeUntilHit = note.time - currentTime;
+                const progress = 1 - (timeUntilHit / 2000);
+                const xPosition = progress * 100;
+                const holdDuration = 2.0; // 2000ms hold duration (matches actual deck hold time)
+                const holdWidth = holdDuration * 50; // width in % of lane
 
-              return (
-                <motion.div
-                  key={note.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className={`absolute top-1/2 -translate-y-1/2 h-full rounded-lg ${getColorClass(note.lane)} flex items-center justify-center text-black font-bold text-sm font-rajdhani z-10`}
-                  style={{ 
-                    left: `${xPosition}%`, 
-                    transform: 'translateX(-50%)',
-                    width: `${holdWidth}%`
-                  }}
-                >
-                  <span className="text-xs">{getNoteKey(note.lane)} HOLD</span>
-                </motion.div>
-              );
+                return (
+                  <motion.div
+                    key={note.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className={`absolute top-1/2 -translate-y-1/2 h-full rounded-lg ${getColorClass(note.lane)} flex items-center justify-center text-black font-bold text-sm font-rajdhani z-10`}
+                    style={{ 
+                      left: `${xPosition}%`, 
+                      transform: 'translateX(-50%)',
+                      width: `${holdWidth}%`
+                    }}
+                  >
+                    <span className="text-xs">{getNoteKey(note.lane)} HOLD</span>
+                  </motion.div>
+                );
+              } catch (error) {
+                console.warn(`NoteLane deck render error: ${error}`);
+                return null;
+              }
             })}
           </AnimatePresence>
         </div>
