@@ -195,8 +195,8 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
             );
           })}
           
-          {/* Thin white rays for trapezoid calculation - at 30° intervals */}
-          {[30, 90, 150, 210, 270, 330].map((angle) => {
+          {/* Thin white rays for trapezoid calculation - flanking the deck rays */}
+          {[165, 195, 345, 15].map((angle) => {
             const rad = (angle * Math.PI) / 180;
             const segments = 12;
             return (
@@ -251,31 +251,31 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               const rayAngle = getLaneAngle(note.lane);
               const rad = (rayAngle * Math.PI) / 180;
               
-              // Get flanking ray angles (±30° from center ray)
-              const leftRayAngle = rayAngle - 30;
-              const rightRayAngle = rayAngle + 30;
+              // Get flanking ray angles (±15° from center ray)
+              const leftRayAngle = rayAngle - 15;
+              const rightRayAngle = rayAngle + 15;
               const leftRad = (leftRayAngle * Math.PI) / 180;
               const rightRad = (rightRayAngle * Math.PI) / 180;
               
               // holdProgress goes from 0 to 2 over the full visible window
-              // PHASE 1 (0 to 1.0): Note approaches, trapezoid GROWS as near end travels to judgement line
-              // PHASE 2 (1.0 to 2.0): Held, trapezoid SHRINKS back toward vanishing point
+              // PHASE 1 (0 to 1.0): Note approaches, trapezoid GROWS from vanishing point to judgement line
+              // PHASE 2 (1.0 to 2.0): Held, trapezoid SHRINKS back: near end stays at judgement, far end moves toward it
               
               const isInPhase2 = holdProgress >= 1.0;
               
-              // Far end: stays at vanishing point (1) - this is the far edge of the tunnel
-              const farDistance = 1;
-              
-              // Near end: grows from vanishing point (1) to judgement line (187) in phase 1, then shrinks back in phase 2
-              let nearDistance;
+              // Far end: grows from vanishing point (1) toward judgement line (187) in phase 1, then shrinks back in phase 2
+              let farDistance;
               if (isInPhase2) {
                 const shrinkProgress = holdProgress - 1.0; // 0 to 1.0 during phase 2
-                // In Phase 2, near end shrinks back from judgement line toward vanishing point
-                nearDistance = JUDGEMENT_RADIUS * (1 - shrinkProgress) + 1 * shrinkProgress;
+                // In Phase 2, far end shrinks from judgement line back toward vanishing point
+                farDistance = JUDGEMENT_RADIUS * (1 - shrinkProgress) + 1 * shrinkProgress;
               } else {
-                // Phase 1: near end grows from vanishing point outward toward judgement line
-                nearDistance = 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
+                // Phase 1: far end grows from vanishing point outward toward judgement line
+                farDistance = 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
               }
+              
+              // Near end: stays at judgement line (187)
+              const nearDistance = JUDGEMENT_RADIUS;
               
               // Glow intensity scales with how close to judgement line
               const glowScale = 0.2 + (Math.min(holdProgress, 1.0) * 0.8);
