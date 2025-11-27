@@ -73,23 +73,31 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
           className="absolute inset-0 w-full h-full"
           style={{ opacity: 1 }}
         >
-          {/* Concentric circles - faint tunnel walls */}
-          {[22, 52, 89, 135, 187, 248].map((radius, idx) => (
-            <circle 
-              key={`tunnel-ring-${idx}`}
-              cx={VANISHING_POINT_X}
-              cy={VANISHING_POINT_Y}
-              r={radius}
-              fill="none"
-              stroke="rgba(0,255,255,0.08)"
-              strokeWidth="1"
-            />
-          ))}
+          {/* Concentric hexagons - faint tunnel walls */}
+          {[22, 52, 89, 135, 187, 248].map((radius, idx) => {
+            // Generate hexagon points
+            const points = Array.from({ length: 6 }).map((_, i) => {
+              const angle = (i * 60 * Math.PI) / 180;
+              const x = VANISHING_POINT_X + radius * Math.cos(angle);
+              const y = VANISHING_POINT_Y + radius * Math.sin(angle);
+              return `${x},${y}`;
+            }).join(' ');
+            
+            return (
+              <polygon
+                key={`tunnel-hexagon-${idx}`}
+                points={points}
+                fill="none"
+                stroke="rgba(0,255,255,0.08)"
+                strokeWidth="1"
+              />
+            );
+          })}
 
           {/* Vanishing point - nearly invisible */}
           <circle cx={VANISHING_POINT_X} cy={VANISHING_POINT_Y} r="6" fill="rgba(0,255,255,0.05)" />
           
-          {/* Judgement line indicators - curved arcs at second-last depth ring */}
+          {/* Judgement line indicators - straight lines at second-last depth ring */}
           {/* Second-last ring is at radius 187 */}
           {[
             { angle: 240, color: '#FF007F' },   // W - pink
@@ -97,22 +105,25 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
             { angle: 60, color: '#BE00FF' },    // I - purple
             { angle: 120, color: '#0096FF' },   // O - blue
           ].map((lane, idx) => {
-            const rad1 = ((lane.angle - 8) * Math.PI) / 180;
-            const rad2 = ((lane.angle + 8) * Math.PI) / 180;
+            const rad = (lane.angle * Math.PI) / 180;
             const radius = 187;
+            const lineLength = 30;
             
-            const x1 = VANISHING_POINT_X + Math.cos(rad1) * radius;
-            const y1 = VANISHING_POINT_Y + Math.sin(rad1) * radius;
-            const x2 = VANISHING_POINT_X + Math.cos(rad2) * radius;
-            const y2 = VANISHING_POINT_Y + Math.sin(rad2) * radius;
+            // Start and end points of straight line along the ray
+            const x1 = VANISHING_POINT_X + Math.cos(rad) * (radius - lineLength / 2);
+            const y1 = VANISHING_POINT_Y + Math.sin(rad) * (radius - lineLength / 2);
+            const x2 = VANISHING_POINT_X + Math.cos(rad) * (radius + lineLength / 2);
+            const y2 = VANISHING_POINT_Y + Math.sin(rad) * (radius + lineLength / 2);
             
             return (
-              <path
-                key={`judgement-arc-${idx}`}
-                d={`M ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2}`}
+              <line
+                key={`judgement-line-${idx}`}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
                 stroke={lane.color}
                 strokeWidth="2.5"
-                fill="none"
                 opacity="0.6"
                 strokeLinecap="round"
               />
