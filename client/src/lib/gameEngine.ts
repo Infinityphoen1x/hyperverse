@@ -284,6 +284,10 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         if (n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
           return false;
         }
+        // Exclude notes that have already been pressed (pressTime set) - they're being held
+        if (n.pressTime !== undefined && n.pressTime > 0) {
+          return false;
+        }
         return true;
       });
       
