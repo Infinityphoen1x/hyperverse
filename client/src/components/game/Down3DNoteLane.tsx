@@ -358,15 +358,16 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                 
                 let holdProgress;
                 
-                if (isCurrentlyHeld) {
-                  // Phase 2: Being held - trapezoid shrinks based on actual hold duration
+                if (isCurrentlyHeld && wasActivated) {
+                  // Phase 2: Being held - trapezoid shrinks over 2000ms (dot's journey to hitline)
                   const actualHoldDuration = currentTime - holdStartTime;
+                  const DOT_TRAVEL_TIME = 2000; // Dot takes 2000ms to reach hitline
                   if (!Number.isFinite(actualHoldDuration)) {
                     holdProgress = 1.0; // Fallback
                   } else {
-                    holdProgress = Math.min(1.0 + (actualHoldDuration / 4000), 2.0);
+                    holdProgress = Math.min(1.0 + (actualHoldDuration / DOT_TRAVEL_TIME), 2.0);
                   }
-                } else if (wasActivated) {
+                } else if (wasActivated && !isCurrentlyHeld) {
                   // After hold released, continue shrink animation for 500ms completion
                   const timesSinceHit = currentTime - note.time;
                   if (timesSinceHit > 500) {
@@ -375,11 +376,12 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                   // Continue shrinking at max rate
                   holdProgress = 2.0;
                 } else {
-                  // Phase 1: Not activated yet - trapezoid grows during approach
+                  // Phase 1: Not activated yet - trapezoid grows during approach (stays < 1.0)
                   if (timeUntilHit > 0) {
                     holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
                   } else {
-                    holdProgress = 1.0;
+                    // Note time passed but not activated - stay at Phase 1 max
+                    holdProgress = 0.99;
                   }
                 }
                 
