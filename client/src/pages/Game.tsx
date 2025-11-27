@@ -32,7 +32,7 @@ export default function Game() {
 
   // Memoize hold callbacks to prevent re-creation on every render
   const memoizedTrackHoldStart = useCallback((lane: number) => {
-    trackHoldStart(lane);
+    trackHoldStart(lane, 0);
   }, [trackHoldStart]);
 
   const memoizedTrackHoldEnd = useCallback((lane: number) => {

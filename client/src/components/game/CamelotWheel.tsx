@@ -9,7 +9,7 @@ interface CamelotWheelProps {
   notes: Note[];
   currentTime: number;
   holdStartTime?: number;
-  onHoldStart?: (dotProgress: number) => void;
+  onHoldStart?: (lane: number) => void;
   onHoldEnd?: () => void;
   onRotationChange?: (rotation: number) => void;
 }
@@ -42,8 +42,9 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
         setHitlineReached(false); // Reset hitline detection on new press
         setSpinDirection((prev) => prev * -1); // Toggle direction
         
-        // Defer callback to next microtask
-        setTimeout(() => onHoldStart(0), 0);
+        // Pass correct lane: -1 for left (Q), -2 for right (P)
+        const lane = side === 'left' ? -1 : -2;
+        setTimeout(() => onHoldStart(lane), 0);
       }
     };
 
