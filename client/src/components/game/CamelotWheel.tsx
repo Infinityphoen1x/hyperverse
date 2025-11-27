@@ -25,8 +25,8 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
   const [indicatorGlow, setIndicatorGlow] = useState(false);
   const [spinDirection, setSpinDirection] = useState(1); // 1 for clockwise, -1 for counter-clockwise
   const [isKeyPressed, setIsKeyPressed] = useState(false);
-  const [hitlineReached, setHitlineReached] = useState(false); // Track hitline detection separately
   const rotationRef = useState(0);
+  const wheelLane = side === 'left' ? -1 : -2;
 
   // Single key toggle for spin direction
   useEffect(() => {
@@ -39,12 +39,10 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
       
       if (isLeftDeckKey || isRightDeckKey) {
         setIsKeyPressed(true);
-        setHitlineReached(false); // Reset hitline detection on new press
         setSpinDirection((prev) => prev * -1); // Toggle direction
         
         // Pass correct lane: -1 for left (Q), -2 for right (P)
-        const lane = side === 'left' ? -1 : -2;
-        setTimeout(() => onHoldStart(lane), 0);
+        setTimeout(() => onHoldStart(wheelLane), 0);
       }
     };
 
@@ -56,7 +54,6 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
       
       if (isLeftDeckKey || isRightDeckKey) {
         setIsKeyPressed(false);
-        setHitlineReached(false); // Reset hitline detection
         // Defer callback to next microtask
         setTimeout(() => onHoldEnd(), 0);
       }
@@ -108,7 +105,6 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
   }, [isKeyPressed, spinDirection, onSpin]);
 
   // Filter relevant notes
-  const wheelLane = side === 'left' ? -1 : -2;
   const activeNotes = notes.filter(n => n.lane === wheelLane && !n.hit && !n.missed);
 
   // Hitline detection logic stored in ref - called from RAF
@@ -117,14 +113,13 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
   useEffect(() => {
     checkHitlineRef.current = (rot: number) => {
       try {
-        if (holdStartTime === 0 || !isKeyPressed) return; // Not holding
+        if (holdStartTime === 0) return; // Not holding
         
         if (!Number.isFinite(rot)) {
           GameErrors.log(`CamelotWheel: Invalid rotation ${rot}`);
           return;
         }
         
-        const wheelLane = side === 'left' ? -1 : -2;
         const activeNote = notes.find(n => n && n.lane === wheelLane && !n.hit && !n.missed);
         if (!activeNote) return;
         

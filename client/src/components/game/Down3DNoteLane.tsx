@@ -59,15 +59,16 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
           });
         }
         
-        // Hold ended - remove from active
+        // Hold ended - remove only the first active hold note from this lane
         if (prevTime > 0 && currTime === 0) {
           setActiveHolds(prev => {
             const newSet = new Set(prev);
-            notes.forEach(n => {
-              if (n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && n.id) {
-                newSet.delete(n.id);
-              }
-            });
+            const firstActiveNote = notes.find(n => 
+              n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed && n.id
+            );
+            if (firstActiveNote && firstActiveNote.id) {
+              newSet.delete(firstActiveNote.id);
+            }
             return newSet;
           });
         }
