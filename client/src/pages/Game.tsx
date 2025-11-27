@@ -7,6 +7,7 @@ import { DeckHoldMeters } from "@/components/game/DeckHoldMeters";
 import { VisualEffects } from "@/components/game/VisualEffects";
 import { YouTubeOverlay } from "@/components/game/YouTubeOverlay";
 import { BeatmapLoader } from "@/components/game/BeatmapLoader";
+import { ErrorLogViewer } from "@/components/game/ErrorLogViewer";
 import { motion } from "framer-motion";
 
 export default function Game() {
@@ -237,6 +238,9 @@ export default function Game() {
       <div className="absolute bottom-4 w-full text-center text-white/20 text-xs">
         KEYS: [W] [O] [E] [I] FOR SOUNDPADS // [Q] [P] FOR DECKS
       </div>
+      
+      {/* Error Log Viewer */}
+      <ErrorLogViewer />
     </div>
   );
 }
