@@ -37,6 +37,13 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
       type,
       hit: false,
       missed: false,
+      // Initialize optional properties for hold notes
+      tapMissFailure: undefined,
+      tooEarlyFailure: undefined,
+      holdMissFailure: undefined,
+      holdReleaseFailure: undefined,
+      pressTime: undefined,
+      failureTime: undefined,
     };
   });
 }
