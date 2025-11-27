@@ -212,34 +212,45 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               const rayAngle = getLaneAngle(note.lane);
               const rad = (rayAngle * Math.PI) / 180;
               
-              // Distance from vanishing point
+              // Judgement line is at radius 187
+              const JUDGEMENT_RADIUS = 187;
+              
+              // Distance from vanishing point - far end of trapezoid
               const distance = 1 + (progress * (MAX_DISTANCE - 1));
-              const xPosition = VANISHING_POINT_X + Math.cos(rad) * distance;
-              const yPosition = VANISHING_POINT_Y + Math.sin(rad) * distance;
+              
+              // Only render if trapezoid hasn't fully consumed into judgement line
+              if (distance < 1) return null;
+              
+              // Near end capped at judgement line - creates "consumption" effect
+              const nearDistance = Math.min(distance, JUDGEMENT_RADIUS + 10);
+              
+              // Calculate positions
+              const farX = VANISHING_POINT_X + Math.cos(rad) * distance;
+              const farY = VANISHING_POINT_Y + Math.sin(rad) * distance;
+              
+              const nearX = VANISHING_POINT_X + Math.cos(rad) * nearDistance;
+              const nearY = VANISHING_POINT_Y + Math.sin(rad) * nearDistance;
               
               // Trapezoid perpendicular to ray
               const scale = 0.12 + (progress * 0.88);
-              const topWidth = 12 + (scale * 18);   // Width at far end (narrow)
-              const bottomWidth = 30 + (scale * 50); // Width at near end (wide)
+              const farWidth = 12 + (scale * 18);   // Width at far end (narrow)
+              const nearWidth = 30 + (scale * 50); // Width at near end (wide)
               
               // Perpendicular direction (90 degrees to ray)
               const perpRad = rad + Math.PI / 2;
               
               // Calculate trapezoid corners perpendicular to the ray
-              const x1 = xPosition + Math.cos(perpRad) * (topWidth / 2);
-              const y1 = yPosition + Math.sin(perpRad) * (topWidth / 2);
-              const x2 = xPosition - Math.cos(perpRad) * (topWidth / 2);
-              const y2 = yPosition - Math.sin(perpRad) * (topWidth / 2);
+              // Far end (wider)
+              const x1 = farX + Math.cos(perpRad) * (farWidth / 2);
+              const y1 = farY + Math.sin(perpRad) * (farWidth / 2);
+              const x2 = farX - Math.cos(perpRad) * (farWidth / 2);
+              const y2 = farY - Math.sin(perpRad) * (farWidth / 2);
               
-              // Move back along ray for the far end of trapezoid
-              const backDist = 20 * (1 - scale * 0.5);
-              const backX = xPosition - Math.cos(rad) * backDist;
-              const backY = yPosition - Math.sin(rad) * backDist;
-              
-              const x3 = backX - Math.cos(perpRad) * (bottomWidth / 2);
-              const y3 = backY - Math.sin(perpRad) * (bottomWidth / 2);
-              const x4 = backX + Math.cos(perpRad) * (bottomWidth / 2);
-              const y4 = backY + Math.sin(perpRad) * (bottomWidth / 2);
+              // Near end (narrower, converging toward judgement line)
+              const x3 = nearX - Math.cos(perpRad) * (nearWidth / 2);
+              const y3 = nearY - Math.sin(perpRad) * (nearWidth / 2);
+              const x4 = nearX + Math.cos(perpRad) * (nearWidth / 2);
+              const y4 = nearY + Math.sin(perpRad) * (nearWidth / 2);
               
               const opacity = 0.15 + progress * 0.85;
               const color = getColorForLane(note.lane);
