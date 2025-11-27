@@ -469,9 +469,10 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                   // Shrink animation: go from 1.0 to 2.0 over 500ms
                   const missedShrinkProgress = timeSinceEstimatedMiss / 500; // 0 to 1 over 500ms
                   holdProgress = 1.0 + missedShrinkProgress; // 1.0 to 2.0
-                } else if (isCurrentlyHeld && isValidActivation) {
+                } else if (isCurrentlyHeld && isValidActivation && !isTooEarlyFailure && !isHoldReleaseFailure && !isHoldMissFailure) {
                   // Phase 2: Being held - trapezoid shrinks over 500ms (accuracy-based hold duration)
                   // Visual shrink represents the release accuracy window (±300ms around 500ms)
+                  // Only if the note is NOT marked as failed
                   
                   const actualHoldDuration = currentTime - holdStartTime;
                   const HOLD_DURATION = 500; // ms - must hold for this long, accuracy-based
@@ -503,8 +504,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                   // Shrink animation from 1.0 to 2.0 over 500ms (no greyscale - successful!)
                   const releaseShrinkProgress = timeSinceRelease / 500;
                   holdProgress = 1.0 + releaseShrinkProgress;
-                } else if (isCurrentlyHeld && isTooEarly) {
-                  // Too early press: no Phase 2, stay in Phase 1 and show GREY
+                } else if (isCurrentlyHeld && isTooEarly && !wasActivated) {
+                  // Too early press (before any note was activated): stay in Phase 1 and show GREY
                   // Trapezoid continues growing to show player that note is coming
                   isGreyed = true;
                   if (timeUntilHit > 0) {
