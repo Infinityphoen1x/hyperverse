@@ -38,9 +38,26 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
   }, [holdStartTimes, currentTime]);
 
   // Get hold progress based on holdStartTimes passed from parent
-  // When hold ends, freeze at the final progress reached
+  // Only charges when there's an active hold note for that lane
   const getHoldProgress = (lane: number): number => {
     const holdStartTime = holdStartTimes[lane] || 0;
+    
+    // Check if there's an active hold note for this lane
+    const hasActiveHoldNote = notes.some(n => 
+      n.lane === lane && 
+      (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
+      !n.hit && 
+      !n.missed
+    );
+    
+    // If no active hold note, don't charge
+    if (!hasActiveHoldNote) {
+      // But return frozen progress if hold just ended
+      if (holdEndProgress[lane] > 0) {
+        return holdEndProgress[lane];
+      }
+      return 0;
+    }
     
     // If hold just ended, return the frozen final progress
     if (holdStartTime === 0 && holdEndProgress[lane] > 0) {
@@ -50,7 +67,7 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
     // Not holding
     if (holdStartTime === 0) return 0;
     
-    // Currently holding - show real-time progress
+    // Currently holding an active note - show real-time progress
     const actualHoldDuration = currentTime - holdStartTime;
     const maxHoldDuration = 4000;
     

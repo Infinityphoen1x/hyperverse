@@ -299,19 +299,23 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
               // PHASE 1 (0 to 1.0): Near end grows from vanishing point (1) toward judgement line (187)
               // PHASE 2 (1.0 to 2.0): Far end shrinks back from vanishing point toward judgement line
               
-              // Near end: grows toward judgement line during Phase 1, stays fixed during Phase 2
-              const nearDistance = 1 + (Math.min(holdProgress, 1.0) * (JUDGEMENT_RADIUS - 1));
+              // During Phase 2, trapezoid shrinks: both ends move toward judgement line
+              // But maintain minimum size to stay visible
+              let nearDistance, farDistance;
               
-              // Far end: stays at vanishing point during Phase 1, moves toward near end during Phase 2
-              let farDistance;
               if (!isInPhase2) {
-                // Phase 1: Far end stays at vanishing point (1)
+                // Phase 1: Growing - near end moves toward judgement line, far stays at vanishing
+                nearDistance = 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
                 farDistance = 1;
               } else {
-                // Phase 2: Far end moves from vanishing point (1) toward judgement line (187)
-                // This closes the gap and shrinks the trapezoid width while both ends approach each other
+                // Phase 2: Shrinking - trapezoid collapses with fade
+                // nearDistance stays at judgement line (187)
+                nearDistance = JUDGEMENT_RADIUS;
+                
+                // farDistance moves from vanishing (1) backward toward judgement line but maintains minimum
                 const shrinkProgress = holdProgress - 1.0; // 0 to 1.0 during phase 2
-                farDistance = 1 + (shrinkProgress * (JUDGEMENT_RADIUS - 1));
+                const maxShrink = JUDGEMENT_RADIUS - 20; // Leave min 20 units visible
+                farDistance = 1 + (shrinkProgress * (maxShrink - 1));
               }
               
               // Glow intensity scales with how close to judgement line (capped at Phase 1)
@@ -335,7 +339,12 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
               const x4 = VANISHING_POINT_X + Math.cos(leftRad) * nearDistance;
               const y4 = VANISHING_POINT_Y + Math.sin(leftRad) * nearDistance;
               
-              const opacity = 0.4 + Math.min(holdProgress, 1.0) * 0.6; // Higher minimum opacity for visibility
+              // Phase 1: Opacity increases; Phase 2: Opacity fades as trapezoid shrinks
+              let opacity = 0.4 + Math.min(holdProgress, 1.0) * 0.6;
+              if (isInPhase2) {
+                const shrinkProgress = holdProgress - 1.0;
+                opacity = opacity * (1 - shrinkProgress * 0.7); // Fade during Phase 2
+              }
               const color = getColorForLane(note.lane);
               const strokeWidth = 2 + (Math.min(holdProgress, 1.0) * 2); // Stroke grows with trapezoid
               
