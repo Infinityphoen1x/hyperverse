@@ -463,6 +463,11 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 if (!Number.isFinite(holdProgress)) {
                   holdProgress = 0;
                 }
+                
+                // Apply greyscale to ALL missed hold notes (too-early, premature release, etc)
+                if (note.missed) {
+                  isGreyed = true;
+                }
               
               // Get ray angle
               const rayAngle = getLaneAngle(note.lane);
