@@ -85,15 +85,19 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
       // Not actively holding
       if (holdStartTime === 0) return 0;
       
-      // Meter is a visual "power" mechanic - rises the longer you hold the note
-      // More hold time = higher meter (feel cool while holding)
+      // Meter scales inversely to hold note duration (shorter notes fill faster)
+      // Calculate how much time remains in this hold note from when you started
       const actualHoldDuration = currentTime - holdStartTime;
-      if (actualHoldDuration < 0 || !Number.isFinite(actualHoldDuration)) {
+      const remainingHoldTime = DOT_HITLINE_TIME - holdStartTime; // Total hold window from press to hitline
+      
+      if (actualHoldDuration < 0 || !Number.isFinite(actualHoldDuration) || remainingHoldTime <= 0) {
         return 0;
       }
       
-      const maxHoldDuration = 4000; // Max meter at 4 seconds
-      const progress = actualHoldDuration / maxHoldDuration;
+      // Progress = how much of the available hold time you've used
+      // Shorter holds = meter fills faster (small denominator)
+      // Longer holds = meter fills slower (large denominator)
+      const progress = actualHoldDuration / remainingHoldTime;
       
       // Clamp to valid range [0, 1]
       return Math.min(Math.max(progress, 0), 1);
