@@ -45,7 +45,6 @@ export default function Game() {
     health, 
     notes, 
     currentTime, 
-    holdStartTimes,
     startGame, 
     hitNote,
     trackHoldStart,

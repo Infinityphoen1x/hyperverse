@@ -106,7 +106,6 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   const [health, setHealth] = useState(200);
   const [notes, setNotes] = useState<Note[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
-  const [holdStartTimes, setHoldStartTimes] = useState<Record<number, { time: number; noteId: string }>>({ [-1]: { time: 0, noteId: '' }, [-2]: { time: 0, noteId: '' } }); // Track when Q/P were pressed and which note
   
   const requestRef = useRef<number | undefined>(undefined);
   const startTimeRef = useRef<number>(0);
@@ -330,19 +329,11 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       }
       
       // Valid press - now player must hold for 1000ms and release accurately
-      // Store press time for release accuracy calculation AND set holdStartTimes in same update
+      // Store press time for release accuracy calculation (single source of truth)
       setNotes(prev => {
         return prev.map(n => 
           n && n.id === anyNote.id ? { ...n, pressTime: currentTime } : n
         );
-      });
-      
-      setHoldStartTimes(prev => {
-        if (!prev || typeof prev !== 'object') {
-          GameErrors.log(`trackHoldStart: holdStartTimes corrupted`);
-          return prev;
-        }
-        return { ...prev, [lane]: { time: currentTime, noteId: anyNote.id } };
       });
     } catch (error) {
       GameErrors.log(`trackHoldStart error: ${error instanceof Error ? error.message : 'Unknown'}`);
@@ -356,74 +347,68 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         return;
       }
       
-      const holdData = holdStartTimes[lane];
+      // Find the active hold note on this lane (pressed but not released yet)
+      const activeNote = Array.isArray(notes) ? notes.find(n => 
+        n && 
+        n.lane === lane && 
+        (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
+        n.pressTime && 
+        n.pressTime > 0 &&
+        !n.hit &&
+        !n.missed
+      ) : null;
       
-      // Only process if hold was actually active (holdData.time > 0)
-      if (holdData && holdData.time > 0) {
-        // Find the EXACT note we pressed (by ID) - not just any active note on the lane
-        const activeNote = notes.find(n => n && n.id === holdData.noteId);
+      // If there's an active note, check release timing accuracy
+      if (activeNote && activeNote.pressTime && activeNote.pressTime > 0) {
+        const HOLD_DURATION = 1000; // ms - must hold for this long (slowed for easier timing)
+        const RELEASE_WINDOW = 100; // ms - release accuracy window (tighter timing)
         
-        // If there's an active note, check release timing accuracy
-        if (activeNote) {
-          const HOLD_DURATION = 1000; // ms - must hold for this long (slowed for easier timing)
-          const RELEASE_WINDOW = 100; // ms - release accuracy window (tighter timing)
+        // Calculate expected release time - use the note's press time (single source of truth)
+        const pressTime = activeNote.pressTime;
+        const expectedReleaseTime = pressTime + HOLD_DURATION;
+        const timeSinceExpectedRelease = currentTime - expectedReleaseTime;
+        
+        // Check if released too early (before hold duration complete)
+        if (currentTime - pressTime < HOLD_DURATION) {
+          setNotes(prev => {
+            return prev.map(n => 
+              n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true, failureTime: currentTime } : n
+            );
+          });
+          setCombo(0);
+          setHealth(h => Math.max(0, h - 2));
+        }
+        // Check if release is within accuracy window (±100ms from expected release)
+        else if (Math.abs(timeSinceExpectedRelease) <= RELEASE_WINDOW) {
+          // Successful hold - calculate accuracy tier
+          let points = 100; // Good (50-100ms)
+          if (Math.abs(timeSinceExpectedRelease) < 50) points = 300; // Perfect (0-50ms)
+          else if (Math.abs(timeSinceExpectedRelease) < 100) points = 200; // Great (50-100ms)
           
-          // Calculate expected release time - use the stored press time directly (guaranteed accurate)
-          const pressTime = holdData.time;
-          const expectedReleaseTime = pressTime + HOLD_DURATION;
-          const timeSinceExpectedRelease = currentTime - expectedReleaseTime;
-          
-          // Check if released too early (before hold duration complete)
-          if (currentTime - holdData.time < HOLD_DURATION) {
-            setNotes(prev => {
-              return prev.map(n => 
-                n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true, failureTime: currentTime } : n
-              );
-            });
-            setCombo(0);
-            setHealth(h => Math.max(0, h - 2));
-          }
-          // Check if release is within accuracy window (±100ms from expected release)
-          else if (Math.abs(timeSinceExpectedRelease) <= RELEASE_WINDOW) {
-            // Successful hold - calculate accuracy tier
-            let points = 100; // Good (50-100ms)
-            if (Math.abs(timeSinceExpectedRelease) < 50) points = 300; // Perfect (0-50ms)
-            else if (Math.abs(timeSinceExpectedRelease) < 100) points = 200; // Great (50-100ms)
-            
-            setNotes(prev => {
-              return prev.map(n => 
-                n && n.id === activeNote.id ? { ...n, hit: true } : n
-              );
-            });
-            setScore(s => s + points);
-            setCombo(c => c + 1);
-            setHealth(h => Math.min(200, h + 1));
-          }
-          // Released too late (outside release window)
-          else {
-            setNotes(prev => {
-              return prev.map(n => 
-                n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true, failureTime: currentTime } : n
-              );
-            });
-            setCombo(0);
-            setHealth(h => Math.max(0, h - 2));
-          }
+          setNotes(prev => {
+            return prev.map(n => 
+              n && n.id === activeNote.id ? { ...n, hit: true } : n
+            );
+          });
+          setScore(s => s + points);
+          setCombo(c => c + 1);
+          setHealth(h => Math.min(200, h + 1));
+        }
+        // Released too late (outside release window)
+        else {
+          setNotes(prev => {
+            return prev.map(n => 
+              n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true, failureTime: currentTime } : n
+            );
+          });
+          setCombo(0);
+          setHealth(h => Math.max(0, h - 2));
         }
       }
-      
-      // Always clear the hold state
-      setHoldStartTimes(prev => {
-        if (!prev || typeof prev !== 'object') {
-          GameErrors.log(`trackHoldEnd: holdStartTimes corrupted`);
-          return prev;
-        }
-        return { ...prev, [lane]: { time: 0, noteId: '' } };
-      });
     } catch (error) {
       GameErrors.log(`trackHoldEnd error: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
-  }, [currentTime, notes, holdStartTimes]);
+  }, [currentTime, notes]);
 
   const markNoteMissed = useCallback((noteId: string) => {
     try {
@@ -468,7 +453,6 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     health,
     notes,
     currentTime,
-    holdStartTimes,
     startGame,
     hitNote,
     trackHoldStart,
