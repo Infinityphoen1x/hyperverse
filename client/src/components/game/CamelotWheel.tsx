@@ -271,13 +271,19 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
                    if (!isKeyPressed) return null;
                    if (timeUntilHit > 0 || timeUntilHit < -HOLD_DURATION) return null;
                    
-                   // Progress: 0 = at center (note.time), 1 = at rim (note.time + 2000)
-                   const progress = -timeUntilHit / HOLD_DURATION;
-                   const visualProgress = Math.max(0, Math.min(1, progress));
-                   
                    // Get the target position using pattern
                    const noteIndex = parseInt(note.id.split('-')[1]) || 0;
                    const targetAngle = getPatternAngle(noteIndex);
+                   
+                   // Restrict dots to visible half: only render if angle is between -90 and 90 degrees (visible half)
+                   // The wheel is positioned so the right/left half is visible
+                   const normalizedAngle = ((targetAngle % 360) + 360) % 360;
+                   const isVisible = normalizedAngle > 270 || normalizedAngle < 90; // Visible half
+                   if (!isVisible) return null;
+                   
+                   // Progress: 0 = at center (note.time), 1 = at rim (note.time + 2000)
+                   const progress = -timeUntilHit / HOLD_DURATION;
+                   const visualProgress = Math.max(0, Math.min(1, progress));
                    
                    // Convert angle to x,y position on rim
                    const radians = (targetAngle * Math.PI) / 180;

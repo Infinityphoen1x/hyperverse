@@ -242,9 +242,9 @@ export const useGameEngine = (difficulty: Difficulty) => {
       }
       
       // Validate timing: press must occur within valid window relative to when dot spawns
-      // Dot spawns at note.time, valid press window is from 100ms early to 2000ms after (when dot hits hitline)
+      // Dot spawns at note.time, note appears 4000ms before, can press from when note appears until 2000ms after spawn
       const timeUntilNote = activeNote.time - currentTime;
-      const PRESS_WINDOW_EARLY = 100;    // Can press up to 100ms before dot spawns
+      const PRESS_WINDOW_EARLY = 4100;   // Can press from when note appears (~4s early) to 100ms after spawn
       const PRESS_WINDOW_LATE = -2000;   // Can press up to 2000ms after dot spawns (at hitline)
       
       if (timeUntilNote > PRESS_WINDOW_EARLY) {
