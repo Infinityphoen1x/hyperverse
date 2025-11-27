@@ -40,38 +40,57 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
   // Get hold progress based on holdStartTimes passed from parent
   // Only charges when there's an active hold note for that lane
   const getHoldProgress = (lane: number): number => {
-    const holdStartTime = holdStartTimes[lane] || 0;
-    
-    // Check if there's an active hold note for this lane
-    const hasActiveHoldNote = notes.some(n => 
-      n.lane === lane && 
-      (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
-      !n.hit && 
-      !n.missed
-    );
-    
-    // If no active hold note, don't charge
-    if (!hasActiveHoldNote) {
-      // But return frozen progress if hold just ended
-      if (holdEndProgress[lane] > 0) {
-        return holdEndProgress[lane];
+    try {
+      if (!Number.isInteger(lane)) return 0;
+      
+      const holdStartTime = holdStartTimes[lane] || 0;
+      
+      // Validate time values
+      if (!Number.isFinite(holdStartTime) || !Number.isFinite(currentTime)) {
+        return 0;
       }
+      
+      // Check if there's an active hold note for this lane
+      const hasActiveHoldNote = Array.isArray(notes) && notes.some(n => 
+        n &&
+        n.lane === lane && 
+        (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
+        !n.hit && 
+        !n.missed
+      );
+      
+      // If no active hold note, don't charge
+      if (!hasActiveHoldNote) {
+        // But return frozen progress if hold just ended
+        if (holdEndProgress[lane] > 0) {
+          return Math.min(Math.max(holdEndProgress[lane], 0), 1);
+        }
+        return 0;
+      }
+      
+      // If hold just ended, return the frozen final progress
+      if (holdStartTime === 0 && holdEndProgress[lane] > 0) {
+        return Math.min(Math.max(holdEndProgress[lane], 0), 1);
+      }
+      
+      // Not holding
+      if (holdStartTime === 0) return 0;
+      
+      // Currently holding an active note - show real-time progress
+      const actualHoldDuration = currentTime - holdStartTime;
+      if (actualHoldDuration < 0 || !Number.isFinite(actualHoldDuration)) {
+        return 0; // Negative duration = clock issue
+      }
+      
+      const maxHoldDuration = 4000;
+      const progress = actualHoldDuration / maxHoldDuration;
+      
+      // Clamp to valid range
+      return Math.min(Math.max(progress, 0), 1);
+    } catch (error) {
+      console.warn(`getHoldProgress error: ${error}`);
       return 0;
     }
-    
-    // If hold just ended, return the frozen final progress
-    if (holdStartTime === 0 && holdEndProgress[lane] > 0) {
-      return holdEndProgress[lane];
-    }
-    
-    // Not holding
-    if (holdStartTime === 0) return 0;
-    
-    // Currently holding an active note - show real-time progress
-    const actualHoldDuration = currentTime - holdStartTime;
-    const maxHoldDuration = 4000;
-    
-    return Math.min(Math.max(actualHoldDuration / maxHoldDuration, 0), 1);
   };
 
   const leftProgress = getHoldProgress(-1);

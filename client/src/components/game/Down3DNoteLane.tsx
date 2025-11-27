@@ -282,6 +282,10 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
               
               // Get ray angle
               const rayAngle = getLaneAngle(note.lane);
+              if (!Number.isFinite(rayAngle)) {
+                console.warn(`Invalid ray angle for lane ${note.lane}`);
+                return null;
+              }
               const rad = (rayAngle * Math.PI) / 180;
               
               // Get flanking ray angles (±15° from center ray)
@@ -312,11 +316,18 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                 // During shrink, both ends approach each other toward judgement line
                 const shrinkProgress = Math.min(holdProgress - 1.0, 1.0); // 0 to 1.0 during phase 2
                 
-                // Near end moves from judgement line back toward vanishing (shrinks from far end)
-                nearDistance = JUDGEMENT_RADIUS - (shrinkProgress * (JUDGEMENT_RADIUS - 20));
+                // Min visible size is 20 units to prevent invisible geometry
+                const MIN_TRAP_SIZE = 20;
                 
-                // Far end moves from vanishing point (1) toward near end
-                farDistance = 1 + (shrinkProgress * (nearDistance - 1));
+                // Near end moves from judgement line back toward vanishing (shrinks from far end)
+                nearDistance = Math.max(
+                  JUDGEMENT_RADIUS - (shrinkProgress * (JUDGEMENT_RADIUS - MIN_TRAP_SIZE)),
+                  MIN_TRAP_SIZE
+                );
+                
+                // Far end moves from vanishing point (1) toward near end, but stays below nearDistance
+                const targetFarDistance = 1 + (shrinkProgress * (nearDistance - 1));
+                farDistance = Math.min(targetFarDistance, nearDistance - 0.1); // Ensure far < near
               }
               
               // Glow intensity scales with how close to judgement line (capped at Phase 1)

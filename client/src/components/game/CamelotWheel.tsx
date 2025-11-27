@@ -128,10 +128,14 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
         
         // Get target angle for this note
         const angleMatch = activeNote.id.match(/note-\d+-(\d+)/);
-        const noteIndex = angleMatch ? parseInt(angleMatch[1]) : 0;
+        if (!angleMatch || !angleMatch[1]) {
+          GameErrors.log(`CamelotWheel: Could not parse note ID: ${activeNote.id}`);
+          return;
+        }
+        const noteIndex = parseInt(angleMatch[1]);
         
-        if (!Number.isFinite(noteIndex)) {
-          GameErrors.log(`CamelotWheel: Invalid noteIndex from ${activeNote.id}`);
+        if (!Number.isFinite(noteIndex) || noteIndex < 0) {
+          GameErrors.log(`CamelotWheel: Invalid noteIndex ${noteIndex} from ${activeNote.id}`);
           return;
         }
         
@@ -143,8 +147,17 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
         }
         
         // Hitline is at top (spawn point). Deck dot is at (rotation + targetAngle)
+        if (!Number.isFinite(rot)) {
+          GameErrors.log(`CamelotWheel: Invalid rotation in hitline check: ${rot}`);
+          return;
+        }
         const normalizedRotation = ((rot % 360) + 360) % 360;
         const dotVisualAngle = (normalizedRotation + targetAngle) % 360;
+        
+        if (!Number.isFinite(dotVisualAngle) || !Number.isFinite(normalizedRotation)) {
+          GameErrors.log(`CamelotWheel: Invalid angle calculation: dot=${dotVisualAngle}, norm=${normalizedRotation}`);
+          return;
+        }
         
         // Hitline at top is 0 degrees (or 360)
         const hitlineAngle = 0;
