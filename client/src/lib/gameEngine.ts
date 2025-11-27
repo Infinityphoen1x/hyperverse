@@ -257,13 +257,12 @@ export const useGameEngine = (difficulty: Difficulty) => {
       
       const timeSinceNoteSpawn = currentTime - anyNote.time;
       
-      // Timing window synchronized with visual arrival at judgement line
-      // noteTime is when trapezoid reaches the judgement line
-      // Valid window: ±150ms from visual arrival (typical rhythm game window)
-      // Beyond ±150ms = too early/late
+      // Timing window for 3D vanishing point tunnel
+      // Activation window: -3000ms to +100ms (can press 3s early through moment of arrival)
+      // Beyond this = too early/late failure
       
-      // Check if too early (before -150ms from visual arrival)
-      if (timeSinceNoteSpawn < -150) {
+      // Check if too early (before -3000ms)
+      if (timeSinceNoteSpawn < -3000) {
         // Too early press - mark note as tooEarlyFailure and dock health
         setNotes(prev => {
           return prev.map(n => 
@@ -277,8 +276,8 @@ export const useGameEngine = (difficulty: Difficulty) => {
         return; // Exit without setting holdStartTime
       }
       
-      // Check if too late (after +150ms from visual arrival)
-      if (timeSinceNoteSpawn > 150) {
+      // Check if too late (after +100ms from spawn time)
+      if (timeSinceNoteSpawn > 100) {
         // Note has passed the valid activation window - silently skip (normal behavior)
         setHoldStartTimes(prev => ({ ...prev, [lane]: 0 }));
         return;
@@ -323,11 +322,11 @@ export const useGameEngine = (difficulty: Difficulty) => {
         
         // If there's an active note and we released before it was completed
         if (activeNote) {
-          // Hold must be maintained for 500ms from activation (typical hold note duration)
-          const holdRequiredEndTime = holdStartTime + 500;
+          // Hold must be maintained until dot reaches hitline (2000ms from note spawn)
+          const DOT_HITLINE_TIME = activeNote.time + 2000;
           
-          // If we released BEFORE hold duration is complete, mark as holdReleaseFailure
-          if (currentTime < holdRequiredEndTime) {
+          // If we released BEFORE the dot reaches hitline, mark as holdReleaseFailure
+          if (currentTime < DOT_HITLINE_TIME) {
             setNotes(prev => {
               return prev.map(n => 
                 n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true } : n
@@ -335,16 +334,6 @@ export const useGameEngine = (difficulty: Difficulty) => {
             });
             setCombo(0);
             setHealth(h => Math.max(0, h - 2));
-          } else {
-            // Successful hold completion - mark as hit
-            setNotes(prev => {
-              return prev.map(n => 
-                n && n.id === activeNote.id ? { ...n, hit: true } : n
-              );
-            });
-            setScore(s => s + 100);
-            setCombo(c => c + 1);
-            setHealth(h => Math.min(200, h + 1));
           }
         }
       }
