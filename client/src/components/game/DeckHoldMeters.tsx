@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { Note } from "@/lib/gameEngine";
+import { Note, GameErrors } from "@/lib/gameEngine";
 
 const COMPLETION_THRESHOLD = 0.95;
 
@@ -24,7 +24,20 @@ interface RectangleMeterProps {
 
 const RectangleMeter = ({ progress, outlineColor, lane, completionGlow }: RectangleMeterProps) => {
   const segments = 16;
+  
+  // Validate progress before rendering
+  if (!Number.isFinite(progress) || progress < 0 || progress > 1) {
+    GameErrors.log(`DeckMeter: Invalid progress=${progress} for lane ${lane}`);
+    return null;
+  }
+  
   const filledSegments = Math.ceil(progress * segments);
+  
+  // Validate segment count
+  if (!Number.isFinite(filledSegments) || filledSegments < 0 || filledSegments > segments) {
+    GameErrors.log(`DeckMeter: Invalid filledSegments=${filledSegments} for lane ${lane} (max=${segments})`);
+    return null;
+  }
 
   return (
     <motion.div 
@@ -71,48 +84,71 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
   const prevNoteStates = useRef<Record<number, boolean>>({ [-1]: false, [-2]: false });
 
   // Detect when hold notes transition from active to inactive
-  // Completion is based on fixed 1000ms hold duration
+  // Completion is based on beatmap hold duration
   useEffect(() => {
     [-1, -2].forEach((lane) => {
-      const activeNote = Array.isArray(notes) ? notes.find(n => 
-        n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed
-      ) : null;
-      
-      const wasActive = prevNoteStates.current[lane];
-      const isActive = activeNote && (activeNote.pressTime || 0) > 0;
-      
-      // Hold just ended (was active, now inactive)
-      if (wasActive && !isActive) {
-        // Only freeze meter if note wasn't marked as failed
-        if (activeNote && !activeNote.tooEarlyFailure && !activeNote.holdMissFailure && !activeNote.holdReleaseFailure) {
-          const beatmapHoldDuration = activeNote.duration || 1000; // Use beatmap duration, fallback to 1000ms
-          const pressTime = activeNote.pressTime || 0;
-          const holdDuration = currentTime - pressTime;
-          const finalProgress = Math.min(holdDuration / beatmapHoldDuration, 1.0);
-          
-          setHoldEndProgress(prev => ({ ...prev, [lane]: finalProgress }));
-          setHoldEndTime(prev => ({ ...prev, [lane]: currentTime })); // Mark when it ended
-          
-          // Trigger completion glow if meter is full (95%+)
-          if (finalProgress >= COMPLETION_THRESHOLD) {
-            setCompletionGlow(prev => ({ ...prev, [lane]: true }));
-            setTimeout(() => setCompletionGlow(prev => ({ ...prev, [lane]: false })), 400);
+      try {
+        const activeNote = Array.isArray(notes) ? notes.find(n => 
+          n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed
+        ) : null;
+        
+        const wasActive = prevNoteStates.current[lane];
+        const isActive = activeNote && (activeNote.pressTime || 0) > 0;
+        
+        // Hold just ended (was active, now inactive)
+        if (wasActive && !isActive) {
+          // Only freeze meter if note wasn't marked as failed
+          if (activeNote && !activeNote.tooEarlyFailure && !activeNote.holdMissFailure && !activeNote.holdReleaseFailure) {
+            const beatmapHoldDuration = activeNote.duration || 1000;
+            const pressTime = activeNote.pressTime || 0;
+            const holdDuration = currentTime - pressTime;
+            
+            // Validate calculations
+            if (!Number.isFinite(holdDuration) || holdDuration < 0) {
+              GameErrors.log(`DeckMeter: Invalid holdDuration=${holdDuration} for lane ${lane}, note ${activeNote.id}`);
+              setHoldEndProgress(prev => ({ ...prev, [lane]: 0 }));
+              setHoldEndTime(prev => ({ ...prev, [lane]: 0 }));
+              prevNoteStates.current[lane] = isActive || false;
+              return;
+            }
+            
+            const finalProgress = Math.min(holdDuration / beatmapHoldDuration, 1.0);
+            
+            // Validate final progress
+            if (!Number.isFinite(finalProgress) || finalProgress < 0 || finalProgress > 1) {
+              GameErrors.log(`DeckMeter: Invalid finalProgress=${finalProgress} for lane ${lane}, holdDuration=${holdDuration}, beatmapDuration=${beatmapHoldDuration}`);
+              setHoldEndProgress(prev => ({ ...prev, [lane]: 0 }));
+              setHoldEndTime(prev => ({ ...prev, [lane]: 0 }));
+              prevNoteStates.current[lane] = isActive || false;
+              return;
+            }
+            
+            setHoldEndProgress(prev => ({ ...prev, [lane]: finalProgress }));
+            setHoldEndTime(prev => ({ ...prev, [lane]: currentTime }));
+            
+            // Trigger completion glow if meter is full (95%+)
+            if (finalProgress >= COMPLETION_THRESHOLD) {
+              setCompletionGlow(prev => ({ ...prev, [lane]: true }));
+              setTimeout(() => setCompletionGlow(prev => ({ ...prev, [lane]: false })), 400);
+            }
+          } else {
+            // Failed hold - clear frozen state immediately
+            setHoldEndProgress(prev => ({ ...prev, [lane]: 0 }));
+            setHoldEndTime(prev => ({ ...prev, [lane]: 0 }));
           }
-        } else {
-          // Failed hold - clear frozen state immediately
+        }
+        
+        // New hold started, clear the end progress
+        if (!wasActive && isActive) {
           setHoldEndProgress(prev => ({ ...prev, [lane]: 0 }));
           setHoldEndTime(prev => ({ ...prev, [lane]: 0 }));
+          setCompletionGlow(prev => ({ ...prev, [lane]: false }));
         }
+        
+        prevNoteStates.current[lane] = isActive || false;
+      } catch (error) {
+        GameErrors.log(`DeckMeter effect error for lane ${lane}: ${error instanceof Error ? error.message : 'Unknown'}`);
       }
-      
-      // New hold started, clear the end progress
-      if (!wasActive && isActive) {
-        setHoldEndProgress(prev => ({ ...prev, [lane]: 0 }));
-        setHoldEndTime(prev => ({ ...prev, [lane]: 0 }));
-        setCompletionGlow(prev => ({ ...prev, [lane]: false }));
-      }
-      
-      prevNoteStates.current[lane] = isActive || false;
     });
   }, [currentTime, notes]);
 
@@ -185,9 +221,17 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       const progress = actualHoldDuration / beatmapHoldDuration;
       
       // Clamp to valid range [0, 1]
-      return Math.min(Math.max(progress, 0), 1);
+      const clampedProgress = Math.min(Math.max(progress, 0), 1);
+      
+      // Validate final result
+      if (!Number.isFinite(clampedProgress)) {
+        GameErrors.log(`DeckMeter: Final clamped progress invalid for lane ${lane}: ${clampedProgress}`);
+        return 0;
+      }
+      
+      return clampedProgress;
     } catch (error) {
-      console.warn(`getHoldProgress error: ${error}`);
+      GameErrors.log(`DeckMeter getHoldProgress error for lane ${lane}: ${error instanceof Error ? error.message : 'Unknown'}`);
       return 0;
     }
   };
