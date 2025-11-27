@@ -364,12 +364,14 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
                 let holdProgress = 0;
                 let isGreyed = false;
                 
-                // Too early failure - show growing greyscale animation until judgement, then shrinking for 1000ms
+                // Determine holdProgress based on note state
                 if (isTooEarlyFailure) {
                   isGreyed = true;
                   if (timeUntilHit > 0) {
+                    // Phase 1: Growing until note reaches judgement line
                     holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
                   } else {
+                    // Phase 2: Show locked position from when too-early press occurred
                     const failureTime = note.failureTime;
                     if (!failureTime) {
                       console.warn(`tooEarlyFailure missing failureTime: ${note.id}`);
@@ -377,8 +379,12 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
                     }
                     const timeSinceShrinkStart = Math.max(0, currentTime - failureTime);
                     if (timeSinceShrinkStart > 1100) return null;
+                    // Lock to press time position, then show shrinking
+                    const timeUntilHitAtPress = note.time - pressTime;
+                    const holdProgressAtPress = (LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME;
                     const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
-                    holdProgress = 1.0 + shrinkProgress;
+                    // Show shrinking animation, locked to where it was pressed
+                    holdProgress = Math.min(holdProgressAtPress, 1.0) + (shrinkProgress * (1.0 - Math.min(holdProgressAtPress, 1.0)));
                   }
                 } else if (isHoldReleaseFailure || isHoldMissFailure) {
                   isGreyed = true;
@@ -389,17 +395,22 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
                   }
                   const timeSinceShrinkStart = Math.max(0, currentTime - failureTime);
                   if (timeSinceShrinkStart > 1100) return null;
-                  const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
-                  holdProgress = 1.0 + shrinkProgress;
+                  // Lock to press time position for geometry, show shrinking
+                  if (pressTime > 0) {
+                    const timeUntilHitAtPress = note.time - pressTime;
+                    const holdProgressAtPress = (LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME;
+                    const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
+                    holdProgress = Math.min(holdProgressAtPress, 1.0) + (shrinkProgress * (1.0 - Math.min(holdProgressAtPress, 1.0)));
+                  } else {
+                    const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
+                    holdProgress = 1.0 + shrinkProgress;
+                  }
                 } else if (isCurrentlyHeld && isValidActivation && !isTooEarlyFailure && !isHoldReleaseFailure && !isHoldMissFailure) {
                   holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime);
                 } else if (isCurrentlyHeld && note.hit) {
                   const timeSincePress = currentTime - pressTime;
                   if (timeSincePress > 2000) return null;
                   holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime);
-                } else if (isCurrentlyHeld && isTooEarly && note.tooEarlyFailure) {
-                  isGreyed = true;
-                  holdProgress = timeUntilHit > 0 ? (LEAD_TIME - timeUntilHit) / LEAD_TIME : 0.99;
                 } else if (isCurrentlyHeld) {
                   holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime);
                 } else {
@@ -464,16 +475,16 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
                 farDistance = 1 + (shrinkProgress * (nearDistance - 1));
               }
               
-              // Glow only when player is holding the key for this lane
-              const isKeyBeingHeld = (holdStartTimes[note.lane]?.time || 0) > 0;
+              // Glow when key is held OR after successful release (while animating)
+              const hasActivePress = pressTime > 0 || note.hit;
               
               // Glow intensity scales with how close to judgement line (capped at Phase 1)
-              const glowScale = isKeyBeingHeld ? 0.2 + (Math.min(holdProgress, 1.0) * 0.8) : 0.05;
+              const glowScale = hasActivePress ? 0.2 + (Math.min(holdProgress, 1.0) * 0.8) : 0.05;
               
               // Phase 2 intensity: decrease glow as trapezoid collapses
               const phase2Progress = Math.max(0, holdProgress - 1.0) / 1.0; // 0 to 1 during Phase 2
               const phase2Glow = phase2Progress > 0 ? (1 - phase2Progress) * 0.8 : 0;
-              const finalGlowScale = isKeyBeingHeld ? Math.max(glowScale - phase2Glow, 0.1) : 0.05;
+              const finalGlowScale = hasActivePress ? Math.max(glowScale - phase2Glow, 0.1) : 0.05;
               
               // Calculate trapezoid corners using flanking rays
               // Far end corners (at vanishing point on flanking rays)
@@ -527,7 +538,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = { [-1]: { 
                   key={note.id}
                   points={`${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`}
                   fill={fillColor}
-                  opacity={isGreyed ? 0.5 : 0.9}
+                  opacity={opacity}
                   stroke={strokeColor}
                   strokeWidth={strokeWidth}
                   style={{
