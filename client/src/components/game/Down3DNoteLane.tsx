@@ -413,22 +413,18 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 const isHoldReleaseFailure = note.holdReleaseFailure || false;
                 const isHoldMissFailure = note.holdMissFailure || false;
                 
-                // Define timing windows - 3D tunnel perspective
-                // Valid activation: -3000ms to +100ms (can press early, through arrival moment)
-                // -3000ms: note far in tunnel; +100ms: just past arrival
-                const ACTIVATION_WINDOW_EARLY = -3000;
-                const ACTIVATION_WINDOW_LATE = 100;
+                // Define timing windows - accuracy-based (pure time-based, decoupled from deck dots)
+                // Valid activation: ±300ms from note.time (same as TAP notes)
+                const ACTIVATION_WINDOW = 300;
                 
                 const timeWhenPressed = holdStartTime;
                 const timeSinceNoteSpawn = timeWhenPressed - note.time;
                 
-                // Check if too early (before -3000ms)
-                const isTooEarly = isCurrentlyHeld && timeSinceNoteSpawn < ACTIVATION_WINDOW_EARLY;
+                // Check if press is within accuracy window
+                const isTooEarly = isCurrentlyHeld && Math.abs(timeSinceNoteSpawn) > ACTIVATION_WINDOW;
                 
-                // Valid activation: within -3000 to +100ms
-                const isValidActivation = isCurrentlyHeld && !isTooEarly && (
-                  timeSinceNoteSpawn <= ACTIVATION_WINDOW_LATE && timeSinceNoteSpawn >= ACTIVATION_WINDOW_EARLY
-                );
+                // Valid activation: within ±300ms of note arrival
+                const isValidActivation = isCurrentlyHeld && !isTooEarly;
                 
                 let holdProgress = 0;
                 let isGreyed = false;
@@ -451,9 +447,9 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                     holdProgress = 1.0 + shrinkProgress;
                   }
                 } else if (isHoldReleaseFailure || isHoldMissFailure) {
-                  // Hold release failure or missed hold - show shrinking greyscale animation for 500ms
+                  // Hold release failure or missed hold - show shrinking greyscale animation for 500ms (decoupled from deck)
                   isGreyed = true;
-                  const estimatedFailTime = isHoldReleaseFailure ? holdStartTime : Math.max(note.time + 2000, currentTime - 500);
+                  const estimatedFailTime = isHoldReleaseFailure ? holdStartTime : note.time;
                   const timeSinceEstimatedFail = Math.max(0, currentTime - estimatedFailTime);
                   if (timeSinceEstimatedFail > 500) {
                     return null; // Animation complete
@@ -462,9 +458,9 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                   holdProgress = 1.0 + shrinkProgress;
                 } else if (note.missed) {
                   isGreyed = true;
-                  // Calculate shrink animation: note.time is spawn time, missed happens at note.time + 2000 at latest
-                  // Estimate missed time as max(note.time + 2000, currentTime - 500) to start shrink 500ms ago or later
-                  const estimatedMissTime = Math.max(note.time + 2000, currentTime - 500);
+                  // Missed hold - note expired without activation (accuracy-based)
+                  // Show 500ms shrink animation from failure time
+                  const estimatedMissTime = note.time;
                   const timeSinceEstimatedMiss = Math.max(0, currentTime - estimatedMissTime);
                   if (timeSinceEstimatedMiss > 500) {
                     return null; // Animation complete, hide trapezoid
