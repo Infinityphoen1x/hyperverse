@@ -266,6 +266,8 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
                    const timeUntilHit = note.time - currentTime;
                    const HOLD_DURATION = 2000; // Hold lasts 2 seconds
                    // Dots appear at note.time (timeUntilHit = 0) and hit at note.time + 2000 (timeUntilHit = -2000)
+                   // Only show dots while actively pressing the key - hide when released
+                   if (!isKeyPressed) return null;
                    if (timeUntilHit > 0 || timeUntilHit < -HOLD_DURATION) return null;
                    
                    // Progress: 0 = at center (note.time), 1 = at rim (note.time + 2000)
