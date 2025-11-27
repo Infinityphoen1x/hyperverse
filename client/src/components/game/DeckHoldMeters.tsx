@@ -24,8 +24,20 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
       
       // Hold just ended (was holding, now not holding)
       if (prevTime > 0 && currTime === 0) {
-        const holdDuration = currentTime - prevTime;
-        const finalProgress = Math.min(holdDuration / 4000, 1.0);
+        const activeNote = Array.isArray(notes) ? notes.find(n => 
+          n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed
+        ) : null;
+        
+        let finalProgress = 0;
+        if (activeNote) {
+          const holdDuration = currentTime - prevTime;
+          const DOT_HITLINE_TIME = activeNote.time + 2000;
+          const remainingHoldTime = DOT_HITLINE_TIME - prevTime;
+          if (remainingHoldTime > 0) {
+            finalProgress = Math.min(holdDuration / remainingHoldTime, 1.0);
+          }
+        }
+        
         setHoldEndProgress(prev => ({ ...prev, [lane]: finalProgress }));
         setHoldEndTime(prev => ({ ...prev, [lane]: currentTime })); // Mark when it ended
       }
@@ -65,7 +77,8 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
       // Only show frozen progress briefly (300ms) after hold ends
       const holdEndTimeVal = holdEndTime[lane] || 0;
       if (holdEndTimeVal > 0 && currentTime - holdEndTimeVal < 300) {
-        return Math.min(Math.max(holdEndProgress[lane], 0), 1);
+        const frozenProgress = Math.min(Math.max(holdEndProgress[lane], 0), 1);
+        return frozenProgress;
       }
       
       // If no active hold note, return 0 (no charge without active note)
