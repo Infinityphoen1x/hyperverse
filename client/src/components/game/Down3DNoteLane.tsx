@@ -78,7 +78,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
     } catch (error) {
       console.warn(`Down3DNoteLane hold tracking error: ${error}`);
     }
-  }, [holdStartTimes, notes]);
+  }, [holdStartTimes, notes, currentTime]);
   // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
   // TAP notes: appear 2000ms before hit, show glitch 500ms after miss, then disappear
   // SPIN (hold) notes: appear 4000ms before, stay visible through hold duration
