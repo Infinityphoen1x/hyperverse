@@ -164,6 +164,7 @@ export default function Game() {
             currentTime={currentTime}
             holdStartTimes={holdStartTimes}
             onNoteMissed={markNoteMissed}
+            health={health}
           />
         </div>
 

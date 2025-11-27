@@ -81,25 +81,37 @@ export function VisualEffects({ combo, score, health = 100, missCount = 0 }: Vis
   const greyscaleIntensity = Math.max(0, (100 - health) / 100) * 0.8;
 
   return (
-    <div 
-      className="fixed inset-0 pointer-events-none z-50 overflow-hidden"
-      style={{
-        filter: `
-          grayscale(${greyscaleIntensity})
-          ${glitch > 0 ? `drop-shadow(${(Math.random() - 0.5) * 8}px ${(Math.random() - 0.5) * 8}px 0 rgb(255, 0, 127))` : ''}
-          ${glitch > 0 ? `drop-shadow(${(Math.random() - 0.5) * 8}px ${(Math.random() - 0.5) * 8}px 0 rgb(0, 255, 255))` : ''}
-        `
-      }}
-    >
-      {/* Screen Shake & Chromatic Aberration Effect */}
+    <>
+      {/* Screen Shake Wrapper - applies to entire screen */}
       <motion.div
-        className="absolute inset-0"
+        className="fixed inset-0 z-50"
         style={{
-          transform: shake > 0 ? `translate(${(Math.random() - 0.5) * 20}px, ${(Math.random() - 0.5) * 20}px)` : 'translate(0, 0)',
-          filter: chromatic > 0 ? `drop-shadow(${chromatic * 15}px 0 0 rgb(255, 0, 127)) drop-shadow(${-chromatic * 15}px 0 0 rgb(0, 255, 255))` : 'none',
+          pointerEvents: shake > 0 ? 'auto' : 'none',
         }}
-        transition={{ type: 'spring', stiffness: 300 }}
+        animate={{
+          x: shake > 0 ? (Math.random() - 0.5) * 16 : 0,
+          y: shake > 0 ? (Math.random() - 0.5) * 16 : 0,
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 15 }}
       />
+      
+      <div 
+        className="fixed inset-0 pointer-events-none z-50 overflow-hidden"
+        style={{
+          filter: `
+            grayscale(${greyscaleIntensity})
+            ${glitch > 0 ? `drop-shadow(${(Math.random() - 0.5) * 8}px ${(Math.random() - 0.5) * 8}px 0 rgb(255, 0, 127))` : ''}
+            ${glitch > 0 ? `drop-shadow(${(Math.random() - 0.5) * 8}px ${(Math.random() - 0.5) * 8}px 0 rgb(0, 255, 255))` : ''}
+          `
+        }}
+      >
+        {/* Chromatic Aberration Effect */}
+        <div
+          className="absolute inset-0"
+          style={{
+            filter: chromatic > 0 ? `drop-shadow(${chromatic * 15}px 0 0 rgb(255, 0, 127)) drop-shadow(${-chromatic * 15}px 0 0 rgb(0, 255, 255))` : 'none',
+          }}
+        />
 
       {/* Glitch Effect Overlay - RGB scan lines */}
       {glitch > 0 && (
