@@ -369,19 +369,27 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                 
                 if (isCurrentlyHeld && isValidActivation) {
                   // Phase 2: Being held - trapezoid shrinks over 2000ms (dot's journey to hitline)
-                  // Smooth transition: calculate where Phase 1 was at press time, then continue from there
+                  // CRITICAL: When hold pressed early, "near end" stays LOCKED at press position
+                  // This prevents jumping when pressing before note visually arrives
+                  
                   const timeUntilHitAtPress = note.time - holdStartTime; // How far away note was when pressed
                   const phase1ProgressAtPress = (LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME; // Where Phase 1 was
                   
                   const actualHoldDuration = currentTime - holdStartTime;
                   const DOT_TRAVEL_TIME = 2000; // Dot takes 2000ms to reach hitline
                   
+                  // Near end anchors at where it was when key pressed (prevents jumping)
+                  // It only moves if pressed AFTER note visually reached that point
+                  const lockedNearProgress = Math.max(phase1ProgressAtPress, 1.0);
+                  
                   if (!Number.isFinite(actualHoldDuration) || actualHoldDuration < 0) {
-                    // Use Phase 1 value if hold just started (smooth entry into Phase 2)
-                    holdProgress = Math.max(phase1ProgressAtPress, 1.0);
+                    // Just started holding - show current Phase 1 position but transition smoothly
+                    holdProgress = lockedNearProgress;
                   } else {
-                    // Shrink phase: goes from 1.0 to 2.0 over DOT_TRAVEL_TIME
-                    holdProgress = Math.min(1.0 + (actualHoldDuration / DOT_TRAVEL_TIME), 2.0);
+                    // Shrink phase: far end moves toward near end over 2000ms
+                    // holdProgress: 1.0 = both at judgement, 2.0 = far end at vanishing
+                    const shrinkAmount = actualHoldDuration / DOT_TRAVEL_TIME; // 0 to 1 during hold
+                    holdProgress = Math.min(1.0 + shrinkAmount, 2.0);
                   }
                 } else if (wasActivated && !isCurrentlyHeld) {
                   // After hold released, continue shrink animation for 500ms completion
