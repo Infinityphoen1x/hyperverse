@@ -73,8 +73,11 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
           className="absolute inset-0 w-full h-full"
           style={{ opacity: 1 }}
         >
-          {/* Concentric hexagons - faint tunnel walls */}
+          {/* Concentric hexagons - faint tunnel walls with variable thickness */}
           {[22, 52, 89, 135, 187, 248].map((radius, idx) => {
+            const maxRadius = 248;
+            const progress = radius / maxRadius; // 0 to 1, thinner at center to thicker at edge
+            
             // Generate hexagon points
             const points = Array.from({ length: 6 }).map((_, i) => {
               const angle = (i * 60 * Math.PI) / 180;
@@ -83,13 +86,19 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               return `${x},${y}`;
             }).join(' ');
             
+            // Stroke width: thin at vanishing point (0.3), thick at edge (3.8)
+            const strokeWidth = 0.3 + progress * 3.5;
+            // Opacity: translucent at center (0.08), more visible at edge (0.3)
+            const opacity = 0.08 + progress * 0.22;
+            
             return (
               <polygon
                 key={`tunnel-hexagon-${idx}`}
                 points={points}
                 fill="none"
-                stroke="rgba(0,255,255,0.08)"
-                strokeWidth="1"
+                stroke="rgba(0,255,255,1)"
+                strokeWidth={strokeWidth}
+                opacity={opacity}
               />
             );
           })}
