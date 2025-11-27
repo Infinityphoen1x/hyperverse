@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface Particle {
   id: string;
@@ -22,6 +22,8 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
   const [glitch, setGlitch] = useState(0);
   const [glitchPhase, setGlitchPhase] = useState(0);
   const [prevMissCount, setPrevMissCount] = useState(0);
+  const [shakeOffset, setShakeOffset] = useState({ x: 0, y: 0 });
+  const shakeIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Add particles on combo milestones
   useEffect(() => {
@@ -38,7 +40,20 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
       setShake(1);
       setChromatic(0.8);
       
-      setTimeout(() => setShake(0), 300);
+      // Start shake with random offsets that update every 50ms
+      if (shakeIntervalRef.current) clearInterval(shakeIntervalRef.current);
+      shakeIntervalRef.current = setInterval(() => {
+        setShakeOffset({
+          x: (Math.random() - 0.5) * 16,
+          y: (Math.random() - 0.5) * 16,
+        });
+      }, 50);
+      
+      setTimeout(() => {
+        setShake(0);
+        if (shakeIntervalRef.current) clearInterval(shakeIntervalRef.current);
+        setShakeOffset({ x: 0, y: 0 });
+      }, 300);
       setTimeout(() => setChromatic(0), 400);
     }
   }, [combo]);
@@ -91,10 +106,10 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
           pointerEvents: shake > 0 ? 'auto' : 'none',
         }}
         animate={{
-          x: shake > 0 ? (Math.random() - 0.5) * 16 : 0,
-          y: shake > 0 ? (Math.random() - 0.5) * 16 : 0,
+          x: shakeOffset.x,
+          y: shakeOffset.y,
         }}
-        transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+        transition={{ type: 'tween', duration: 0.05 }}
       />
       
       <div 
