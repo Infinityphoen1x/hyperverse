@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
+import { GameErrors } from "@/lib/gameEngine";
 
 interface Particle {
   id: string;
@@ -27,67 +28,94 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
 
   // Add particles on combo milestones
   useEffect(() => {
-    if (combo > 0 && combo % 5 === 0) {
-      const newParticles = Array.from({ length: 12 }, (_, i) => ({
-        id: `${Date.now()}-${i}`,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        color: ['hsl(120, 100%, 50%)', 'hsl(0, 100%, 50%)', 'hsl(180, 100%, 50%)', 'hsl(280, 100%, 60%)', 'hsl(320, 100%, 60%)'][Math.floor(Math.random() * 5)],
-        size: Math.random() * 8 + 4,
-      }));
+    try {
+      if (!Number.isFinite(combo) || combo < 0) {
+        GameErrors.log(`VisualEffects: Invalid combo value ${combo}`);
+        return;
+      }
       
-      setParticles(prev => [...prev, ...newParticles].slice(-60)); // Keep last 60 particles
-      setShake(1);
-      setChromatic(0.8);
-      
-      // Start shake with random offsets that update every 50ms
-      if (shakeIntervalRef.current) clearInterval(shakeIntervalRef.current);
-      shakeIntervalRef.current = setInterval(() => {
-        setShakeOffset({
-          x: (Math.random() - 0.5) * 16,
-          y: (Math.random() - 0.5) * 16,
-        });
-      }, 50);
-      
-      setTimeout(() => {
-        setShake(0);
+      if (combo > 0 && combo % 5 === 0) {
+        const newParticles = Array.from({ length: 12 }, (_, i) => ({
+          id: `${Date.now()}-${i}`,
+          x: Math.random() * 100,
+          y: Math.random() * 100,
+          color: ['hsl(120, 100%, 50%)', 'hsl(0, 100%, 50%)', 'hsl(180, 100%, 50%)', 'hsl(280, 100%, 60%)', 'hsl(320, 100%, 60%)'][Math.floor(Math.random() * 5)],
+          size: Math.random() * 8 + 4,
+        }));
+        
+        setParticles(prev => [...prev, ...newParticles].slice(-60)); // Keep last 60 particles
+        setShake(1);
+        setChromatic(0.8);
+        
+        // Start shake with random offsets that update every 50ms
         if (shakeIntervalRef.current) clearInterval(shakeIntervalRef.current);
-        setShakeOffset({ x: 0, y: 0 });
-      }, 300);
-      setTimeout(() => setChromatic(0), 400);
+        shakeIntervalRef.current = setInterval(() => {
+          setShakeOffset({
+            x: (Math.random() - 0.5) * 16,
+            y: (Math.random() - 0.5) * 16,
+          });
+        }, 50);
+        
+        setTimeout(() => {
+          setShake(0);
+          if (shakeIntervalRef.current) clearInterval(shakeIntervalRef.current);
+          setShakeOffset({ x: 0, y: 0 });
+        }, 300);
+        setTimeout(() => setChromatic(0), 400);
+      }
+    } catch (error) {
+      GameErrors.log(`VisualEffects: Particle effect error at combo ${combo}: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
   }, [combo]);
 
   // Trigger glitch effect on miss
   useEffect(() => {
-    if (missCount > prevMissCount) {
-      setGlitch(1);
-      setGlitchPhase(0);
-      setPrevMissCount(missCount);
+    try {
+      if (!Number.isFinite(missCount) || !Number.isFinite(prevMissCount)) {
+        GameErrors.log(`VisualEffects: Invalid miss count values - missCount=${missCount}, prevMissCount=${prevMissCount}`);
+        return;
+      }
       
-      // Animate glitch intensity
-      const glitchInterval = setInterval(() => {
-        setGlitchPhase(prev => {
-          if (prev >= 1) {
-            setGlitch(0);
-            clearInterval(glitchInterval);
-            return prev;
-          }
-          return prev + 0.1;
-        });
-      }, 50);
-      
-      return () => clearInterval(glitchInterval);
+      if (missCount > prevMissCount) {
+        setGlitch(1);
+        setGlitchPhase(0);
+        setPrevMissCount(missCount);
+        
+        // Animate glitch intensity
+        const glitchInterval = setInterval(() => {
+          setGlitchPhase(prev => {
+            if (prev >= 1) {
+              setGlitch(0);
+              clearInterval(glitchInterval);
+              return prev;
+            }
+            return prev + 0.1;
+          });
+        }, 50);
+        
+        return () => clearInterval(glitchInterval);
+      }
+    } catch (error) {
+      GameErrors.log(`VisualEffects: Glitch effect error: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
   }, [missCount, prevMissCount]);
 
   // Continuous subtle glitch effect when health is low (below 80%)
   useEffect(() => {
-    if (health < 160) {
-      const glitchLoop = setInterval(() => {
-        setGlitch(prev => prev > 0 ? 0 : 0.3);
-      }, 400 + Math.random() * 200);
-      return () => clearInterval(glitchLoop);
+    try {
+      if (!Number.isFinite(health) || health < 0) {
+        GameErrors.log(`VisualEffects: Invalid health value ${health}`);
+        return;
+      }
+      
+      if (health < 160) {
+        const glitchLoop = setInterval(() => {
+          setGlitch(prev => prev > 0 ? 0 : 0.3);
+        }, 400 + Math.random() * 200);
+        return () => clearInterval(glitchLoop);
+      }
+    } catch (error) {
+      GameErrors.log(`VisualEffects: Health-based glitch loop error: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
   }, [health]);
 

@@ -82,6 +82,9 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
       const n = notes[i];
       try {
         if (!n || !Number.isFinite(n.time) || !Number.isFinite(currentTime)) {
+          if (n && !Number.isFinite(n.time)) {
+            GameErrors.log(`Down3DNoteLane: Note ${i} has invalid time ${n.time}`);
+          }
           continue; // Skip invalid notes
         }
         
@@ -100,6 +103,10 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
             const failureTime = n.failureTime || currentTime;
             const timeSinceNoteTime = failureTime - n.time;
             visibilityEnd = -(timeSinceNoteTime + 1100);
+            
+            if (!Number.isFinite(visibilityEnd)) {
+              GameErrors.log(`Down3DNoteLane: Invalid visibilityEnd calculation for note ${n.id}: failureTime=${failureTime}, noteTime=${n.time}`);
+            }
           }
           
           // Visibility window: 4000ms before (lead time) to end of failure animation
@@ -120,7 +127,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
           }
         }
       } catch (error) {
-        console.warn(`Note visibility filter error: ${error}`);
+        GameErrors.log(`Down3DNoteLane: Visibility filter error for note ${i}: ${error instanceof Error ? error.message : 'Unknown'}`);
       }
     }
     
@@ -183,7 +190,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
     };
     const angle = rayMapping[lane];
     if (!Number.isFinite(angle)) {
-      console.warn(`Invalid lane: ${lane}, using default angle 0`);
+      GameErrors.log(`Down3DNoteLane: Invalid lane ${lane}, using default angle 0`);
       return 0; // Fallback to 0 degrees
     }
     return angle;

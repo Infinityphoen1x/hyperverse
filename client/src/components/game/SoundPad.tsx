@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { Note } from "@/lib/gameEngine";
+import { Note, GameErrors } from "@/lib/gameEngine";
 
 const ACTIVATION_WINDOW = 300; // ms - must hit within this window of note.time
 
@@ -29,12 +29,22 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
   // Shared Hit Logic for Feedback
   const checkHitAndFeedback = (index: number) => {
     try {
+      if (!Number.isFinite(index) || index < 0 || index > 3) {
+        GameErrors.log(`SoundPad: Invalid pad index ${index}`);
+        return;
+      }
+      
       onPadHit(index);
       
       // Check for visual feedback (simulated "good" hit)
-      const laneNotes = Array.isArray(notes) ? notes.filter(n => 
+      if (!Array.isArray(notes)) {
+        GameErrors.log(`SoundPad: Notes is not an array`);
+        return;
+      }
+      
+      const laneNotes = notes.filter(n => 
         n && Number.isFinite(n.lane) && n.lane === index
-      ) : [];
+      );
       const hasHittableNote = laneNotes.some(n => 
         n && !n.hit && !n.missed && !n.tapMissFailure && Number.isFinite(n.time) && Math.abs(n.time - currentTime) < ACTIVATION_WINDOW
       );
@@ -43,7 +53,7 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
         window.dispatchEvent(new CustomEvent(`pad-hit-${index}`));
       }
     } catch (error) {
-      console.warn(`SoundPad checkHitAndFeedback error: ${error}`);
+      GameErrors.log(`SoundPad: checkHitAndFeedback error for pad ${index}: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
   };
 

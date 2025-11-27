@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { extractYouTubeId } from "@/lib/youtubeUtils";
+import { GameErrors } from "@/lib/gameEngine";
 import { X } from "lucide-react";
 
 interface YouTubeOverlayProps {
@@ -18,25 +19,40 @@ export function YouTubeOverlay({ onVideoUrlChange }: YouTubeOverlayProps) {
   const handleLoadVideo = () => {
     setError("");
     if (!urlInput.trim()) {
-      setError("Please enter a YouTube URL or video ID");
+      const msg = "Please enter a YouTube URL or video ID";
+      setError(msg);
+      GameErrors.log(`YouTubeOverlay: ${msg}`);
       return;
     }
 
-    const id = extractYouTubeId(urlInput);
-    if (!id) {
-      setError("Invalid YouTube URL or video ID");
-      return;
-    }
+    try {
+      const id = extractYouTubeId(urlInput);
+      if (!id) {
+        const msg = `Invalid YouTube URL or video ID: "${urlInput}"`;
+        setError(msg);
+        GameErrors.log(`YouTubeOverlay: ${msg}`);
+        return;
+      }
 
-    setVideoId(id);
-    onVideoUrlChange(id);
-    setUrlInput("");
-    setIsOpen(false);
+      setVideoId(id);
+      onVideoUrlChange(id);
+      setUrlInput("");
+      setIsOpen(false);
+    } catch (error) {
+      const msg = `YouTube video loading error: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      setError(msg);
+      GameErrors.log(`YouTubeOverlay: ${msg}`);
+    }
   };
 
   const handleClearVideo = () => {
-    setVideoId(null);
-    setUrlInput("");
+    try {
+      setVideoId(null);
+      setUrlInput("");
+      GameErrors.log(`YouTubeOverlay: Video cleared`);
+    } catch (error) {
+      GameErrors.log(`YouTubeOverlay: Error clearing video: ${error instanceof Error ? error.message : 'Unknown'}`);
+    }
   };
 
   return (
