@@ -45,17 +45,17 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
             let bestNote: Note | null = null;
             let bestDistance = Infinity;
             
-            notes.forEach(n => {
+            notes.forEach((n: Note | undefined) => {
               if (n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed && n.id) {
                 const distance = Math.abs(n.time - currentTime);
                 if (distance < bestDistance) {
                   bestDistance = distance;
-                  bestNote = n;
+                  bestNote = n as Note;
                 }
               }
             });
             
-            if (bestNote && bestNote.id) {
+            if (bestNote?.id) {
               newSet.add(bestNote.id);
             }
             return newSet;
