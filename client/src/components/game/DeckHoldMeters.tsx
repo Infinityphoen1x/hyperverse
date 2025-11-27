@@ -16,6 +16,7 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
   const prevHoldStartTimes = useRef<Record<number, number>>({ '-1': 0, '-2': 0 });
 
   // Detect when hold ends (holdStartTime goes from non-zero to 0)
+  // Completion is based on fixed 500ms hold duration (decoupled from dots)
   useEffect(() => {
     [-1, -2].forEach((lane) => {
       const prevTime = prevHoldStartTimes.current[lane] || 0;
@@ -30,13 +31,10 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
         let finalProgress = 0;
         let isComplete = false;
         if (activeNote) {
+          const HOLD_DURATION = 500; // ms - fixed hold duration
           const holdDuration = currentTime - prevTime;
-          const DOT_HITLINE_TIME = activeNote.time + 2000;
-          const remainingHoldTime = DOT_HITLINE_TIME - prevTime;
-          if (remainingHoldTime > 0) {
-            finalProgress = Math.min(holdDuration / remainingHoldTime, 1.0);
-            isComplete = finalProgress >= 0.95; // Consider 95%+ as complete
-          }
+          finalProgress = Math.min(holdDuration / HOLD_DURATION, 1.0);
+          isComplete = finalProgress >= 0.95; // Consider 95%+ as complete
         }
         
         setHoldEndProgress(prev => ({ ...prev, [lane]: finalProgress }));
@@ -61,7 +59,8 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
   }, [holdStartTimes, currentTime, notes]);
 
   // Get hold progress based on holdStartTimes passed from parent
-  // Only charges when actively holding with an active hold note AND dot is present
+  // Meter charges from 0% at press to 100% at press + 500ms hold duration
+  // Decoupled from deck dots, driven purely by hold note accuracy timing
   const getHoldProgress = (lane: number): number => {
     try {
       if (!Number.isInteger(lane)) return 0;
@@ -94,41 +93,30 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
         return 0;
       }
       
-      // Check if dot actually exists: spawns at note.time and hits hitline at note.time + 2000
-      const DOT_SPAWN_TIME = activeNote.time;
-      const DOT_HITLINE_TIME = activeNote.time + 2000;
-      
-      // Dot hasn't spawned yet or already passed hitline = no dot present
-      if (currentTime < DOT_SPAWN_TIME || currentTime > DOT_HITLINE_TIME) {
-        return 0; // No dot to hold
-      }
-      
       // Not actively holding
       if (holdStartTime === 0) return 0;
       
-      // CRITICAL: Validate hold was pressed within activation window
-      // Valid window: 100ms before to 4100ms after note.time (from -4100 to +100 offset)
+      // CRITICAL: Validate hold was pressed within accuracy window (±300ms)
       const timeSinceNoteSpawn = holdStartTime - activeNote.time;
-      const isValidActivation = timeSinceNoteSpawn <= 100 && timeSinceNoteSpawn >= -4100;
+      const ACTIVATION_WINDOW = 300;
+      const isValidActivation = Math.abs(timeSinceNoteSpawn) <= ACTIVATION_WINDOW;
       
       // If pressed outside valid window, meter returns 0 (no charge)
       if (!isValidActivation) {
         return 0;
       }
       
-      // Meter scales inversely to hold note duration (shorter notes fill faster)
-      // Calculate how much time remains in this hold note from when you started
+      // Meter charges over fixed 500ms hold duration (accuracy-based)
+      const HOLD_DURATION = 500; // ms - fixed hold duration
       const actualHoldDuration = currentTime - holdStartTime;
-      const remainingHoldTime = DOT_HITLINE_TIME - holdStartTime; // Total hold window from press to hitline
       
-      if (actualHoldDuration < 0 || !Number.isFinite(actualHoldDuration) || remainingHoldTime <= 0) {
+      if (actualHoldDuration < 0 || !Number.isFinite(actualHoldDuration)) {
         return 0;
       }
       
-      // Progress = how much of the available hold time you've used
-      // Shorter holds = meter fills faster (small denominator)
-      // Longer holds = meter fills slower (large denominator)
-      const progress = actualHoldDuration / remainingHoldTime;
+      // Progress = how much of the 500ms hold duration has elapsed
+      // 0% at press, 100% at press + 500ms (matches shrink animation)
+      const progress = actualHoldDuration / HOLD_DURATION;
       
       // Clamp to valid range [0, 1]
       return Math.min(Math.max(progress, 0), 1);
