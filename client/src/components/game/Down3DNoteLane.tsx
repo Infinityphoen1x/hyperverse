@@ -212,7 +212,8 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               // Only render while note is visible and active
               if (timeUntilHit > 0 || timeUntilHit < -HOLD_DURATION) return null;
               
-              const holdProgress = 1 - (timeUntilHit / HOLD_DURATION); // 0 = start, 1 = end
+              // holdProgress: 0 = note arriving, 1 = note at judgement, 2 = hold complete
+              const holdProgress = -timeUntilHit / 1000;
               
               // Get ray angle
               const rayAngle = getLaneAngle(note.lane);
