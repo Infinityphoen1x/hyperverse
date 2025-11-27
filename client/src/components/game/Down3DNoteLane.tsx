@@ -49,7 +49,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 const n = notes[i];
                 if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT')) continue;
                 if (n.hit || n.missed || !n.id) continue;
-                if ((n as any).holdReleaseFailure || (n as any).tooEarlyFailure || (n as any).holdMissFailure) continue;
+                if (n.holdReleaseFailure || n.tooEarlyFailure || n.holdMissFailure) continue;
                 
                 const distance = Math.abs(n.time - currentTime);
                 if (distance < bestDistance) {
@@ -400,9 +400,9 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 const holdStartTime = holdStartTimes[note.lane] || 0;
                 const isCurrentlyHeld = holdStartTime > 0;
                 const wasActivated = activeHolds.has(note.id);
-                const isTooEarlyFailure = (note as any).tooEarlyFailure || false;
-                const isHoldReleaseFailure = (note as any).holdReleaseFailure || false;
-                const isHoldMissFailure = (note as any).holdMissFailure || false;
+                const isTooEarlyFailure = note.tooEarlyFailure || false;
+                const isHoldReleaseFailure = note.holdReleaseFailure || false;
+                const isHoldMissFailure = note.holdMissFailure || false;
                 
                 // Define timing windows
                 // "Strict beginning": -3000ms (presses before this trigger no Phase 2, show grey)

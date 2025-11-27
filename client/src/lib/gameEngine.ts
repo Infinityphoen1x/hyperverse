@@ -4,11 +4,15 @@ export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 
 export interface Note {
   id: string;
-  lane: number; // 0-3 for pads
+  lane: number; // 0-3 for pads, -1 for left deck (Q), -2 for right deck (P)
   time: number; // timestamp in ms when it should be hit
   type: 'TAP' | 'SPIN_LEFT' | 'SPIN_RIGHT';
   hit: boolean;
   missed: boolean;
+  tapMissFailure?: boolean; // TAP note failed (>200ms past note time)
+  tooEarlyFailure?: boolean; // HOLD note pressed before -3000ms window
+  holdMissFailure?: boolean; // HOLD note expired without activation
+  holdReleaseFailure?: boolean; // HOLD note released before dot reached hitline
 }
 
 // Error tracking for debugging
@@ -100,7 +104,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
   const [health, setHealth] = useState(200);
   const [notes, setNotes] = useState<Note[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
-  const [holdStartTimes, setHoldStartTimes] = useState<Record<number, number>>({ '-1': 0, '-2': 0 }); // Track when Q/P were pressed
+  const [holdStartTimes, setHoldStartTimes] = useState<Record<number, number>>({ [-1]: 0, [-2]: 0 }); // Track when Q/P were pressed
   
   const requestRef = useRef<number | undefined>(undefined);
   const startTimeRef = useRef<number>(0);
@@ -126,9 +130,9 @@ export const useGameEngine = (difficulty: Difficulty) => {
       setNotes(prev => {
         let newHealth = 200;
         const newNotes = prev.map(n => {
-          if (!n.hit && !n.missed && !(n as any).tapMissFailure && !(n as any).holdReleaseFailure && !(n as any).tooEarlyFailure && !(n as any).holdMissFailure) {
+          if (!n.hit && !n.missed && !n.tapMissFailure && !n.holdReleaseFailure && !n.tooEarlyFailure && !n.holdMissFailure) {
             let shouldMarkFailed = false;
-            let failureType = '';
+            let failureType: keyof Note | '' = '';
             
             // TAP notes: miss if >200ms past note time
             if (n.type === 'TAP' && time > n.time + 200) {
@@ -141,14 +145,14 @@ export const useGameEngine = (difficulty: Difficulty) => {
               failureType = 'holdMissFailure';
             }
             
-            if (shouldMarkFailed) {
+            if (shouldMarkFailed && failureType) {
               setCombo(0);
               setHealth(h => {
                 newHealth = Math.max(0, h - 2);
                 if (newHealth <= 0) shouldGameOver = true;
                 return newHealth;
               });
-              return { ...n, [failureType]: true } as any;
+              return { ...n, [failureType]: true };
             }
           }
           return n;
@@ -190,7 +194,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
           n && 
           !n.hit && 
           !n.missed && 
-          !(n as any).tapMissFailure &&
+          !n.tapMissFailure &&
           n.lane === lane && 
           Number.isFinite(n.time) &&
           Number.isFinite(currentTime) &&
@@ -240,7 +244,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
           return false;
         }
         // Exclude all failure types - once failed, the note is permanently unavailable
-        if ((n as any).tooEarlyFailure || (n as any).holdMissFailure || (n as any).holdReleaseFailure) {
+        if (n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
           return false;
         }
         return true;
@@ -257,10 +261,9 @@ export const useGameEngine = (difficulty: Difficulty) => {
       if (timeSinceNoteSpawn < -3000) {
         // Too early press - mark note as tooEarlyFailure (remove from playable pool) and dock health
         setNotes(prev => {
-          const newNotes = prev.map(n => 
+          return prev.map(n => 
             n && n.id === anyNote.id ? { ...n, tooEarlyFailure: true } : n
           );
-          return newNotes;
         });
         // Clear any hold state for this lane to prevent rendering issues
         setHoldStartTimes(prev => ({ ...prev, [lane]: 0 }));
@@ -308,7 +311,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
           }
           if (n.hit || n.missed || !n.id) return false;
           // Skip already-failed notes
-          if ((n as any).tooEarlyFailure || (n as any).holdMissFailure || (n as any).holdReleaseFailure) {
+          if (n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
             return false;
           }
           return true;
@@ -321,10 +324,9 @@ export const useGameEngine = (difficulty: Difficulty) => {
           // If we released BEFORE the dot reaches hitline, mark as holdReleaseFailure
           if (currentTime < DOT_HITLINE_TIME) {
             setNotes(prev => {
-              const newNotes = prev.map(n => 
+              return prev.map(n => 
                 n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true } : n
               );
-              return newNotes;
             });
             setCombo(0);
             setHealth(h => Math.max(0, h - 2));
