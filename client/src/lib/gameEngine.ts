@@ -278,7 +278,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
       
       // Check if press is within accuracy window
       if (Math.abs(timeSinceNoteSpawn) > holdActivationWindow) {
-        // Outside window - miss
+        // Outside window - mark as failure
         if (timeSinceNoteSpawn < -holdActivationWindow) {
           // Too early - mark as tooEarlyFailure
           setNotes(prev => {
@@ -289,13 +289,12 @@ export const useGameEngine = (difficulty: Difficulty) => {
           setCombo(0);
           setHealth(h => Math.max(0, h - 2));
         }
-        // Too late - silently ignore (note will eventually miss)
-        setHoldStartTimes(prev => ({ ...prev, [lane]: 0 }));
+        // Too late - will be caught by holdMissFailure in main loop
         return;
       }
       
-      // Valid press - now player must hold for 500ms and release accurately
-      // Store press time for release accuracy calculation
+      // Valid press - now player must hold for 1000ms and release accurately
+      // Store press time for release accuracy calculation AND set holdStartTimes in same update
       setNotes(prev => {
         return prev.map(n => 
           n && n.id === anyNote.id ? { ...n, pressTime: currentTime } : n

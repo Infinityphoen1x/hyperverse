@@ -72,7 +72,7 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
         return 0;
       }
       
-      // Find active hold note on this lane
+      // Find active hold note on this lane (including failed notes for frozen meter display)
       const activeNote = Array.isArray(notes) ? notes.find(n => 
         n &&
         n.lane === lane && 
@@ -90,6 +90,11 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
       
       // If no active hold note, return 0 (no charge without active note)
       if (!activeNote) {
+        return 0;
+      }
+      
+      // If note has any failure flags, return 0 (no meter for failed notes)
+      if (activeNote.tooEarlyFailure || activeNote.holdMissFailure || activeNote.holdReleaseFailure) {
         return 0;
       }
       
