@@ -228,20 +228,20 @@ export const useGameEngine = (difficulty: Difficulty) => {
         return; // Can't hold - no active note on this lane
       }
       
-      // Validate timing: press must be in valid window to start Phase 2
-      // Hold note appears 4s early, can press anytime until dot reaches hitline (note.time + 2000)
+      // Validate timing: dot spawns at note.time, only allow Phase 2 when dot is spawning NOW
+      // Dot is in spawn zone: within 100ms before to 2000ms after note.time
       const timeUntilNote = activeNote.time - currentTime;
-      const EARLY_WINDOW = 4500;     // Note appears 4s early, allow full window
-      const LATE_WINDOW = -2000;     // Can't press more than 2000ms after note.time
+      const SPAWN_WINDOW_EARLY = 100;   // Dot hasn't spawned yet if >100ms away
+      const SPAWN_WINDOW_LATE = -2000;  // Dot has passed if >2000ms after note.time
       
-      if (timeUntilNote > EARLY_WINDOW) {
-        GameErrors.log(`trackHoldStart: EARLY - ${timeUntilNote.toFixed(0)}ms until note`);
-        return; // Too early - don't start Phase 2
+      if (timeUntilNote > SPAWN_WINDOW_EARLY) {
+        GameErrors.log(`trackHoldStart: EARLY - dot hasn't spawned (${timeUntilNote.toFixed(0)}ms until)`);
+        return; // Too early - dot not spawning yet
       }
       
-      if (timeUntilNote < LATE_WINDOW) {
-        GameErrors.log(`trackHoldStart: LATE - ${timeUntilNote.toFixed(0)}ms until note`);
-        return; // Too late - don't start Phase 2
+      if (timeUntilNote < SPAWN_WINDOW_LATE) {
+        GameErrors.log(`trackHoldStart: LATE - dot already passed (${timeUntilNote.toFixed(0)}ms)`);
+        return; // Too late - dot already passed hitline
       }
       
       // Valid timing window - Phase 2 starts: dot will spawn and trapezoid shrinks
