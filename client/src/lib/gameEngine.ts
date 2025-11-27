@@ -229,10 +229,10 @@ export const useGameEngine = (difficulty: Difficulty) => {
       }
       
       // Validate timing: press must be in valid window to start Phase 2
-      // Valid window: 500ms before note.time to 2000ms after note.time
+      // Hold note appears 4s early, can press anytime until dot reaches hitline (note.time + 2000)
       const timeUntilNote = activeNote.time - currentTime;
-      const EARLY_WINDOW = 500;      // Can press up to 500ms early
-      const LATE_WINDOW = -2000;     // Can press up to 2000ms late
+      const EARLY_WINDOW = 4500;     // Note appears 4s early, allow full window
+      const LATE_WINDOW = -2000;     // Can't press more than 2000ms after note.time
       
       if (timeUntilNote > EARLY_WINDOW) {
         GameErrors.log(`trackHoldStart: EARLY - ${timeUntilNote.toFixed(0)}ms until note`);
