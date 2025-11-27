@@ -296,8 +296,9 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
               const x4 = VANISHING_POINT_X + Math.cos(leftRad) * nearDistance;
               const y4 = VANISHING_POINT_Y + Math.sin(leftRad) * nearDistance;
               
-              const opacity = 0.15 + Math.min(holdProgress, 1.0) * 0.85;
+              const opacity = 0.4 + Math.min(holdProgress, 1.0) * 0.6; // Higher minimum opacity for visibility
               const color = getColorForLane(note.lane);
+              const strokeWidth = 2 + (Math.min(holdProgress, 1.0) * 2); // Stroke grows with trapezoid
               
               return (
                 <polygon
@@ -305,10 +306,10 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                   points={`${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`}
                   fill={color}
                   opacity={opacity}
-                  stroke="rgba(255,255,255,0.6)"
-                  strokeWidth="2"
+                  stroke="rgba(255,255,255,0.8)"
+                  strokeWidth={strokeWidth}
                   style={{
-                    filter: `drop-shadow(0 0 ${20 * glowScale}px ${color})`,
+                    filter: `drop-shadow(0 0 ${25 * glowScale}px ${color}) drop-shadow(0 0 ${15 * glowScale}px ${color})`,
                   }}
                 />
               );
