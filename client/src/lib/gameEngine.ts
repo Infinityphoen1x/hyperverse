@@ -228,8 +228,23 @@ export const useGameEngine = (difficulty: Difficulty) => {
         return; // Can't hold - no active note on this lane
       }
       
-      // Phase 2 starts: dot will spawn and trapezoid shrinks
-      // The actual HIT is validated when dot reaches hitline, not here
+      // Validate timing: press must be in valid window to start Phase 2
+      // Valid window: 500ms before note.time to 2000ms after note.time
+      const timeUntilNote = activeNote.time - currentTime;
+      const EARLY_WINDOW = 500;      // Can press up to 500ms early
+      const LATE_WINDOW = -2000;     // Can press up to 2000ms late
+      
+      if (timeUntilNote > EARLY_WINDOW) {
+        GameErrors.log(`trackHoldStart: EARLY - ${timeUntilNote.toFixed(0)}ms until note`);
+        return; // Too early - don't start Phase 2
+      }
+      
+      if (timeUntilNote < LATE_WINDOW) {
+        GameErrors.log(`trackHoldStart: LATE - ${timeUntilNote.toFixed(0)}ms until note`);
+        return; // Too late - don't start Phase 2
+      }
+      
+      // Valid timing window - Phase 2 starts: dot will spawn and trapezoid shrinks
       setHoldStartTimes(prev => {
         if (!prev || typeof prev !== 'object') {
           GameErrors.log(`trackHoldStart: holdStartTimes corrupted`);
