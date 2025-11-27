@@ -197,68 +197,123 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
           })}
         </svg>
 
+        {/* Hold note trapezoids rendered as SVG polygons */}
+        <svg 
+          className="absolute inset-0 w-full h-full"
+          style={{ opacity: 1, pointerEvents: 'none' }}
+        >
+          {visibleNotes
+            .filter(n => n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT')
+            .map(note => {
+              const timeUntilHit = note.time - currentTime;
+              const progress = 1 - (timeUntilHit / 2000);
+              
+              // Get the exact ray angle for this note's lane
+              const rayAngle = getLaneAngle(note.lane);
+              const rad = (rayAngle * Math.PI) / 180;
+              
+              // Distance from vanishing point
+              const distance = 1 + (progress * (MAX_DISTANCE - 1));
+              const xPosition = VANISHING_POINT_X + Math.cos(rad) * distance;
+              const yPosition = VANISHING_POINT_Y + Math.sin(rad) * distance;
+              
+              // Trapezoid perpendicular to ray
+              const scale = 0.12 + (progress * 0.88);
+              const topWidth = 12 + (scale * 18);   // Width at far end (narrow)
+              const bottomWidth = 30 + (scale * 50); // Width at near end (wide)
+              
+              // Perpendicular direction (90 degrees to ray)
+              const perpRad = rad + Math.PI / 2;
+              
+              // Calculate trapezoid corners perpendicular to the ray
+              const x1 = xPosition + Math.cos(perpRad) * (topWidth / 2);
+              const y1 = yPosition + Math.sin(perpRad) * (topWidth / 2);
+              const x2 = xPosition - Math.cos(perpRad) * (topWidth / 2);
+              const y2 = yPosition - Math.sin(perpRad) * (topWidth / 2);
+              
+              // Move back along ray for the far end of trapezoid
+              const backDist = 20 * (1 - scale * 0.5);
+              const backX = xPosition - Math.cos(rad) * backDist;
+              const backY = yPosition - Math.sin(rad) * backDist;
+              
+              const x3 = backX - Math.cos(perpRad) * (bottomWidth / 2);
+              const y3 = backY - Math.sin(perpRad) * (bottomWidth / 2);
+              const x4 = backX + Math.cos(perpRad) * (bottomWidth / 2);
+              const y4 = backY + Math.sin(perpRad) * (bottomWidth / 2);
+              
+              const opacity = 0.15 + progress * 0.85;
+              const color = getColorForLane(note.lane);
+              
+              return (
+                <polygon
+                  key={note.id}
+                  points={`${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`}
+                  fill={color}
+                  opacity={opacity}
+                  stroke="rgba(255,255,255,0.6)"
+                  strokeWidth="2"
+                  style={{
+                    filter: `drop-shadow(0 0 ${20 * scale}px ${color})`,
+                  }}
+                />
+              );
+            })}
+
+          {/* Judgement lines for hold notes */}
+          {[
+            { angle: 180, color: '#00FF00' },   // Q - left deck, green
+            { angle: 0, color: '#FF0000' },     // P - right deck, red
+          ].map((lane, idx) => {
+            const rad = (lane.angle * Math.PI) / 180;
+            const radius = 187;
+            const lineLength = 45;
+            
+            // Point on the ray at the radius
+            const cx = VANISHING_POINT_X + Math.cos(rad) * radius;
+            const cy = VANISHING_POINT_Y + Math.sin(rad) * radius;
+            
+            // Perpendicular direction (rotate 90 degrees)
+            const perpRad = rad + Math.PI / 2;
+            const x1 = cx + Math.cos(perpRad) * (lineLength / 2);
+            const y1 = cy + Math.sin(perpRad) * (lineLength / 2);
+            const x2 = cx - Math.cos(perpRad) * (lineLength / 2);
+            const y2 = cy - Math.sin(perpRad) * (lineLength / 2);
+            
+            return (
+              <line
+                key={`hold-judgement-line-${idx}`}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke={lane.color}
+                strokeWidth="3"
+                opacity="1"
+                strokeLinecap="round"
+              />
+            );
+          })}
+        </svg>
+
         {/* Notes falling through tunnel - following ray paths */}
         <AnimatePresence>
-          {visibleNotes.map(note => {
+          {visibleNotes
+            .filter(n => n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT')
+            .map(note => {
             const timeUntilHit = note.time - currentTime;
-            const progress = 1 - (timeUntilHit / 2000); // 0 (far/spawn) to 1 (near/hitline)
+            const progress = 1 - (timeUntilHit / 2000);
             
-            // Get the exact ray angle for this note's lane
             const rayAngle = getLaneAngle(note.lane);
             const rad = (rayAngle * Math.PI) / 180;
             
-            // Distance from vanishing point: 0 at spawn, MAX_DISTANCE at hitline
             const distance = 1 + (progress * (MAX_DISTANCE - 1));
-            
-            // Position along the ray
             const xOffset = Math.cos(rad) * distance;
             const yOffset = Math.sin(rad) * distance;
             
             const xPosition = VANISHING_POINT_X + xOffset;
             const yPosition = VANISHING_POINT_Y + yOffset;
-            
-            // Scale: starts tiny at vanishing point, grows as approaches
             const scale = 0.12 + (progress * 0.88);
 
-            // For hold notes, show as trapezoid with perspective
-            if (note.type === 'SPIN_LEFT' || note.type === 'SPIN_RIGHT') {
-              // Trapezoid dimensions: narrower at vanishing point, wider approaching player
-              const topWidth = 8 + (scale * 12);  // Width at narrow end (near vanishing point in perspective)
-              const bottomWidth = 24 + (scale * 40); // Width at wide end (near player)
-              const holdHeight = 16 + (scale * 30);
-              
-              // Create a trapezoid using clip-path
-              const trapezoidClip = `polygon(
-                ${(100 - (topWidth / bottomWidth * 100)) / 2}% 0%,
-                ${100 - (100 - (topWidth / bottomWidth * 100)) / 2}% 0%,
-                100% 100%,
-                0% 100%
-              )`;
-              
-              return (
-                <motion.div
-                  key={note.id}
-                  className="absolute flex items-center justify-center text-black font-bold text-xs font-rajdhani pointer-events-none"
-                  style={{
-                    width: `${bottomWidth}px`,
-                    height: `${holdHeight}px`,
-                    backgroundColor: getColorForLane(note.lane),
-                    boxShadow: `0 0 ${30 * scale}px ${getColorForLane(note.lane)}, inset 0 0 ${18 * scale}px rgba(255,255,255,0.3)`,
-                    left: `${xPosition}px`,
-                    top: `${yPosition}px`,
-                    transform: `translate(-50%, -50%)`,
-                    opacity: 0.15 + progress * 0.85,
-                    zIndex: Math.floor(progress * 1000),
-                    border: `2px solid rgba(255,255,255,${0.4 * progress})`,
-                    clipPath: trapezoidClip,
-                  }}
-                >
-                  {getNoteKey(note.lane)}
-                </motion.div>
-              );
-            }
-
-            // For tap notes, show as square
             return (
               <motion.div
                 key={note.id}
