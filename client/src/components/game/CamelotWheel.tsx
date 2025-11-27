@@ -38,6 +38,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
       
       if (isLeftDeckKey || isRightDeckKey) {
         setIsKeyPressed(true);
+        hitlineDetectedRef.current = false; // Reset hitline flag on new press
         setSpinDirection((prev) => prev * -1); // Toggle direction
         onHoldStart(); // Track when key is pressed
       }
@@ -51,7 +52,10 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
       
       if (isLeftDeckKey || isRightDeckKey) {
         setIsKeyPressed(false);
-        onHoldEnd(); // Track when key is released
+        hitlineDetectedRef.current = false; // Reset flag
+        queueMicrotask(() => {
+          onHoldEnd(); // Track when key is released
+        });
       }
     };
 
@@ -61,7 +65,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [side]);
+  }, [side, onHoldStart, onHoldEnd]);
 
   // Continuous rotation loop using RAF
   useEffect(() => {
@@ -104,13 +108,18 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
   const wheelLane = side === 'left' ? -1 : -2;
   const activeNotes = notes.filter(n => n.lane === wheelLane && !n.hit && !n.missed);
 
-  // Calculate when deck dot reaches hitline - use ref callback to avoid render error
+  // Track hitline detection to prevent multiple calls
+  const hitlineDetectedRef = useRef(false);
   const checkHitlineRef = useRef<((rot: number) => void) | null>(null);
   
   useEffect(() => {
     checkHitlineRef.current = (rot: number) => {
       try {
-        if (holdStartTime === 0 || !isKeyPressed) return; // Not holding
+        if (holdStartTime === 0 || !isKeyPressed) {
+          // Reset flag when hold ends naturally
+          hitlineDetectedRef.current = false;
+          return;
+        }
         
         if (!Number.isFinite(rot)) {
           GameErrors.log(`CamelotWheel: Invalid rotation ${rot}`);
@@ -149,9 +158,14 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
         const normalizedDiff = angleDiff > 180 ? 360 - angleDiff : angleDiff;
         const isAtHitline = normalizedDiff < 15;
         
-        if (isAtHitline) {
+        // Only fire once per hold session
+        if (isAtHitline && !hitlineDetectedRef.current) {
+          hitlineDetectedRef.current = true;
           setIndicatorGlow(true);
-          onHoldEnd(); // This is safe - called from RAF, not render
+          // Use microtask to defer onHoldEnd call outside of RAF batch
+          queueMicrotask(() => {
+            onHoldEnd();
+          });
           setTimeout(() => setIndicatorGlow(false), 200);
         }
       } catch (error) {
