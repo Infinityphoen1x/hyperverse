@@ -309,13 +309,14 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                 farDistance = 1;
               } else {
                 // Phase 2: Shrinking - trapezoid collapses with fade
-                // nearDistance stays at judgement line (187)
-                nearDistance = JUDGEMENT_RADIUS;
+                // During shrink, both ends approach each other toward judgement line
+                const shrinkProgress = Math.min(holdProgress - 1.0, 1.0); // 0 to 1.0 during phase 2
                 
-                // farDistance moves from vanishing (1) backward toward judgement line but maintains minimum
-                const shrinkProgress = holdProgress - 1.0; // 0 to 1.0 during phase 2
-                const maxShrink = JUDGEMENT_RADIUS - 20; // Leave min 20 units visible
-                farDistance = 1 + (shrinkProgress * (maxShrink - 1));
+                // Near end moves from judgement line back toward vanishing (shrinks from far end)
+                nearDistance = JUDGEMENT_RADIUS - (shrinkProgress * (JUDGEMENT_RADIUS - 20));
+                
+                // Far end moves from vanishing point (1) toward near end
+                farDistance = 1 + (shrinkProgress * (nearDistance - 1));
               }
               
               // Glow intensity scales with how close to judgement line (capped at Phase 1)

@@ -213,6 +213,20 @@ export const useGameEngine = (difficulty: Difficulty) => {
         GameErrors.log(`trackHoldStart: Invalid lane=${lane} or currentTime=${currentTime}`);
         return;
       }
+      
+      // Only allow hold start if there's an active hold note on this lane
+      const hasActiveNote = notes.some(n => 
+        n && 
+        n.lane === lane && 
+        (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
+        !n.hit && 
+        !n.missed
+      );
+      
+      if (!hasActiveNote) {
+        return; // Can't hold - no active note on this lane
+      }
+      
       setHoldStartTimes(prev => {
         if (!prev || typeof prev !== 'object') {
           GameErrors.log(`trackHoldStart: holdStartTimes corrupted`);
@@ -223,7 +237,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
     } catch (error) {
       GameErrors.log(`trackHoldStart error: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
-  }, [currentTime]);
+  }, [currentTime, notes]);
 
   const trackHoldEnd = useCallback((lane: number) => {
     try {
