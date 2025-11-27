@@ -6,11 +6,13 @@ interface Down3DNoteLaneProps {
   notes: Note[];
   currentTime: number;
   holdStartTimes?: Record<number, number>;
+  onNoteMissed?: (noteId: string) => void;
 }
 
-export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down3DNoteLaneProps) {
+export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNoteMissed }: Down3DNoteLaneProps) {
   // Track which hold notes have been activated (entered Phase 2)
   const [activeHolds, setActiveHolds] = useState<Set<string>>(new Set());
+  const [failedHolds, setFailedHolds] = useState<Set<string>>(new Set());
   const prevHoldStartTimes = useRef<Record<number, number>>({});
 
   // Detect when a hold starts (holdStartTime becomes non-zero)
@@ -59,7 +61,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
           });
         }
         
-        // Hold ended - remove only the first active hold note from this lane
+        // Hold ended - mark note as missed if released before completion
         if (prevTime > 0 && currTime === 0) {
           setActiveHolds(prev => {
             const newSet = new Set(prev);
@@ -67,6 +69,10 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
               n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed && n.id
             );
             if (firstActiveNote && firstActiveNote.id) {
+              // Only mark as missed if released before note.time (premature release)
+              if (currentTime < firstActiveNote.time) {
+                onNoteMissed?.(firstActiveNote.id);
+              }
               newSet.delete(firstActiveNote.id);
             }
             return newSet;
@@ -79,6 +85,29 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
       console.warn(`Down3DNoteLane hold tracking error: ${error}`);
     }
   }, [holdStartTimes, notes, currentTime]);
+
+  // Detect too-early presses and mark as missed
+  useEffect(() => {
+    if (!onNoteMissed) return;
+    
+    const STRICT_EARLY_START = -3000;
+    
+    notes.forEach(note => {
+      if (!note || !note.id || note.hit || note.missed || failedHolds.has(note.id)) return;
+      if (note.type !== 'SPIN_LEFT' && note.type !== 'SPIN_RIGHT') return;
+      
+      const holdStartTime = holdStartTimes[note.lane] || 0;
+      if (holdStartTime === 0) return; // Not held
+      
+      const timeSinceNoteSpawn = holdStartTime - note.time;
+      const isTooEarly = timeSinceNoteSpawn < STRICT_EARLY_START;
+      
+      if (isTooEarly) {
+        onNoteMissed(note.id);
+        setFailedHolds(prev => new Set(prev).add(note.id));
+      }
+    });
+  }, [holdStartTimes, notes, onNoteMissed, failedHolds]);
   // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
   // TAP notes: appear 2000ms before hit, show glitch 500ms after miss, then disappear
   // SPIN (hold) notes: appear 4000ms before, stay visible through hold duration

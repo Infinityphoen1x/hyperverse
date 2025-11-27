@@ -280,6 +280,42 @@ export const useGameEngine = (difficulty: Difficulty) => {
     }
   }, []);
 
+  const markNoteMissed = useCallback((noteId: string) => {
+    try {
+      if (!noteId || typeof noteId !== 'string') {
+        GameErrors.log(`markNoteMissed: Invalid noteId=${noteId}`);
+        return;
+      }
+      
+      setNotes(prev => {
+        if (!Array.isArray(prev)) {
+          GameErrors.log(`markNoteMissed: notes is not an array`);
+          return prev;
+        }
+
+        const noteIndex = prev.findIndex(n => n && n.id === noteId && !n.hit && !n.missed);
+        
+        if (noteIndex !== -1) {
+          const note = prev[noteIndex];
+          setCombo(0);
+          setHealth(h => {
+            const newHealth = Math.max(0, h - 5);
+            if (newHealth <= 0) setGameState('GAMEOVER');
+            return newHealth;
+          });
+          
+          const newNotes = [...prev];
+          newNotes[noteIndex] = { ...note, missed: true };
+          return newNotes;
+        }
+        
+        return prev;
+      });
+    } catch (error) {
+      GameErrors.log(`markNoteMissed error: ${error instanceof Error ? error.message : 'Unknown'}`);
+    }
+  }, []);
+
   return {
     gameState,
     score,
@@ -292,6 +328,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
     hitNote,
     trackHoldStart,
     trackHoldEnd,
+    markNoteMissed,
     setGameState
   };
 };

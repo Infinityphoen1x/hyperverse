@@ -27,7 +27,8 @@ export default function Game() {
     startGame, 
     hitNote,
     trackHoldStart,
-    trackHoldEnd
+    trackHoldEnd,
+    markNoteMissed
   } = useGameEngine(difficulty);
 
   // Memoize hold callbacks to prevent re-creation on every render
@@ -162,6 +163,7 @@ export default function Game() {
             notes={notes} 
             currentTime={currentTime}
             holdStartTimes={holdStartTimes}
+            onNoteMissed={markNoteMissed}
           />
         </div>
 
