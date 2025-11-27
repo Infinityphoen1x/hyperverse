@@ -12,12 +12,17 @@ interface Particle {
 interface VisualEffectsProps {
   combo: number;
   score: number;
+  health?: number;
+  missCount?: number;
 }
 
-export function VisualEffects({ combo, score }: VisualEffectsProps) {
+export function VisualEffects({ combo, score, health = 100, missCount = 0 }: VisualEffectsProps) {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [shake, setShake] = useState(0);
   const [chromatic, setChromatic] = useState(0);
+  const [glitch, setGlitch] = useState(0);
+  const [glitchPhase, setGlitchPhase] = useState(0);
+  const [prevMissCount, setPrevMissCount] = useState(0);
 
   // Add particles on combo milestones
   useEffect(() => {
@@ -39,8 +44,53 @@ export function VisualEffects({ combo, score }: VisualEffectsProps) {
     }
   }, [combo]);
 
+  // Trigger glitch effect on miss
+  useEffect(() => {
+    if (missCount > prevMissCount) {
+      setGlitch(1);
+      setGlitchPhase(0);
+      setPrevMissCount(missCount);
+      
+      // Animate glitch intensity
+      const glitchInterval = setInterval(() => {
+        setGlitchPhase(prev => {
+          if (prev >= 1) {
+            setGlitch(0);
+            clearInterval(glitchInterval);
+            return prev;
+          }
+          return prev + 0.1;
+        });
+      }, 50);
+      
+      return () => clearInterval(glitchInterval);
+    }
+  }, [missCount, prevMissCount]);
+
+  // Continuous subtle glitch effect when health is low
+  useEffect(() => {
+    if (health < 30) {
+      const glitchLoop = setInterval(() => {
+        setGlitch(prev => prev > 0 ? 0 : 0.3);
+      }, 400 + Math.random() * 200);
+      return () => clearInterval(glitchLoop);
+    }
+  }, [health]);
+
+  // Calculate greyscale based on health
+  const greyscaleIntensity = Math.max(0, (100 - health) / 100) * 0.8;
+
   return (
-    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+    <div 
+      className="fixed inset-0 pointer-events-none z-50 overflow-hidden"
+      style={{
+        filter: `
+          grayscale(${greyscaleIntensity})
+          ${glitch > 0 ? `drop-shadow(${(Math.random() - 0.5) * 8}px ${(Math.random() - 0.5) * 8}px 0 rgb(255, 0, 127))` : ''}
+          ${glitch > 0 ? `drop-shadow(${(Math.random() - 0.5) * 8}px ${(Math.random() - 0.5) * 8}px 0 rgb(0, 255, 255))` : ''}
+        `
+      }}
+    >
       {/* Screen Shake & Chromatic Aberration Effect */}
       <motion.div
         className="absolute inset-0"
@@ -50,6 +100,26 @@ export function VisualEffects({ combo, score }: VisualEffectsProps) {
         }}
         transition={{ type: 'spring', stiffness: 300 }}
       />
+
+      {/* Glitch Effect Overlay - RGB scan lines */}
+      {glitch > 0 && (
+        <div 
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `linear-gradient(
+              0deg,
+              rgba(255, 0, 127, ${glitch * 0.3}) 0%,
+              transparent 2%,
+              transparent 8%,
+              rgba(0, 255, 255, ${glitch * 0.3}) 10%,
+              transparent 12%
+            )`,
+            backgroundSize: '100% 60px',
+            backgroundPosition: `0 ${glitchPhase * 60}px`,
+            animation: glitch > 0 ? `glitch-scroll ${0.1 + glitchPhase * 0.2}s linear infinite` : 'none',
+          }}
+        />
+      )}
 
       {/* Particle Effects */}
       {particles.map(particle => (
@@ -95,4 +165,17 @@ export function VisualEffects({ combo, score }: VisualEffectsProps) {
       )}
     </div>
   );
+}
+
+// Add CSS for glitch animation
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes glitch-scroll {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 60px; }
+  }
+`;
+if (!document.querySelector('style[data-glitch]')) {
+  style.setAttribute('data-glitch', 'true');
+  document.head.appendChild(style);
 }
