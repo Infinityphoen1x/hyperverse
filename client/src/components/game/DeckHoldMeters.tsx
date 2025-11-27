@@ -4,22 +4,21 @@ import { Note } from "@/lib/gameEngine";
 interface DeckHoldMetersProps {
   notes: Note[];
   currentTime: number;
+  holdStartTimes: Record<number, number>;
+  onHoldStart: (lane: number) => void;
+  onHoldEnd: (lane: number) => void;
 }
 
-export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
-  // Find active hold notes for each deck
+export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart, onHoldEnd }: DeckHoldMetersProps) {
+  // Get hold progress based on actual key press time
   const getHoldProgress = (lane: number): number => {
-    const activeNote = notes.find(n => 
-      !n.missed && 
-      n.lane === lane && 
-      n.time <= currentTime && 
-      currentTime < n.time + 2000 // Assume 2s hold duration
-    );
+    const holdStartTime = holdStartTimes[lane];
+    if (holdStartTime === 0) return 0; // No active hold
     
-    if (!activeNote) return 0;
+    const actualHoldDuration = currentTime - holdStartTime;
+    const maxHoldDuration = 2000;
     
-    const progress = (currentTime - activeNote.time) / 2000;
-    return Math.min(Math.max(progress, 0), 1);
+    return Math.min(Math.max(actualHoldDuration / maxHoldDuration, 0), 1);
   };
 
   const leftProgress = getHoldProgress(-1);

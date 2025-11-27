@@ -8,6 +8,9 @@ interface CamelotWheelProps {
   onSpin: () => void;
   notes: Note[];
   currentTime: number;
+  holdStartTime?: number;
+  onHoldStart?: () => void;
+  onHoldEnd?: () => void;
 }
 
 // Session-based pattern: use note index to get consistent pattern across game
@@ -16,7 +19,7 @@ function getPatternAngle(noteIndex: number): number {
   return pattern[noteIndex % pattern.length];
 }
 
-export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelProps) {
+export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime = 0, onHoldStart = () => {}, onHoldEnd = () => {} }: CamelotWheelProps) {
   const [rotation, setRotation] = useState(0);
   const [indicatorGlow, setIndicatorGlow] = useState(false);
   const [spinDirection, setSpinDirection] = useState(1); // 1 for clockwise, -1 for counter-clockwise
@@ -35,6 +38,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
       if (isLeftDeckKey || isRightDeckKey) {
         setIsKeyPressed(true);
         setSpinDirection((prev) => prev * -1); // Toggle direction
+        onHoldStart(); // Track when key is pressed
       }
     };
 
@@ -46,6 +50,7 @@ export function CamelotWheel({ side, onSpin, notes, currentTime }: CamelotWheelP
       
       if (isLeftDeckKey || isRightDeckKey) {
         setIsKeyPressed(false);
+        onHoldEnd(); // Track when key is released
       }
     };
 

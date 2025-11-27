@@ -20,8 +20,11 @@ export default function Game() {
     health, 
     notes, 
     currentTime, 
+    holdStartTimes,
     startGame, 
-    hitNote 
+    hitNote,
+    trackHoldStart,
+    trackHoldEnd
   } = useGameEngine(difficulty);
 
   useEffect(() => {
@@ -102,7 +105,10 @@ export default function Game() {
              side="left" 
              onSpin={() => hitNote(-1)} 
              notes={notes} 
-             currentTime={currentTime} 
+             currentTime={currentTime}
+             holdStartTime={holdStartTimes[-1]}
+             onHoldStart={() => trackHoldStart(-1)}
+             onHoldEnd={() => trackHoldEnd(-1)}
            />
         </div>
 
@@ -110,7 +116,10 @@ export default function Game() {
         <div className="hidden lg:block absolute left-[200px] right-[200px] top-1/2 -translate-y-1/2 h-48">
           <DeckHoldMeters 
             notes={notes} 
-            currentTime={currentTime} 
+            currentTime={currentTime}
+            holdStartTimes={holdStartTimes}
+            onHoldStart={trackHoldStart}
+            onHoldEnd={trackHoldEnd}
           />
         </div>
 
@@ -118,7 +127,8 @@ export default function Game() {
         <div className="relative flex-1 flex items-center justify-center">
           <Down3DNoteLane 
             notes={notes} 
-            currentTime={currentTime} 
+            currentTime={currentTime}
+            holdStartTimes={holdStartTimes}
           />
         </div>
 
@@ -128,7 +138,10 @@ export default function Game() {
              side="right" 
              onSpin={() => hitNote(-2)} 
              notes={notes} 
-             currentTime={currentTime} 
+             currentTime={currentTime}
+             holdStartTime={holdStartTimes[-2]}
+             onHoldStart={() => trackHoldStart(-2)}
+             onHoldEnd={() => trackHoldEnd(-2)}
            />
         </div>
 

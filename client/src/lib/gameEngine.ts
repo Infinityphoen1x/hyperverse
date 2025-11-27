@@ -56,6 +56,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
   const [health, setHealth] = useState(100);
   const [notes, setNotes] = useState<Note[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
+  const [holdStartTimes, setHoldStartTimes] = useState<Record<number, number>>({ '-1': 0, '-2': 0 }); // Track when Q/P were pressed
   
   const requestRef = useRef<number | undefined>(undefined);
   const startTimeRef = useRef<number>(0);
@@ -134,6 +135,14 @@ export const useGameEngine = (difficulty: Difficulty) => {
     };
   }, []);
 
+  const trackHoldStart = useCallback((lane: number) => {
+    setHoldStartTimes(prev => ({ ...prev, [lane]: currentTime }));
+  }, [currentTime]);
+
+  const trackHoldEnd = useCallback((lane: number) => {
+    setHoldStartTimes(prev => ({ ...prev, [lane]: 0 }));
+  }, []);
+
   return {
     gameState,
     score,
@@ -141,8 +150,11 @@ export const useGameEngine = (difficulty: Difficulty) => {
     health,
     notes,
     currentTime,
+    holdStartTimes,
     startGame,
     hitNote,
+    trackHoldStart,
+    trackHoldEnd,
     setGameState
   };
 };

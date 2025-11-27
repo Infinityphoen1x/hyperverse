@@ -4,9 +4,10 @@ import { Note } from "@/lib/gameEngine";
 interface Down3DNoteLaneProps {
   notes: Note[];
   currentTime: number;
+  holdStartTimes?: Record<number, number>;
 }
 
-export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
+export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down3DNoteLaneProps) {
   // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
   // Hold notes (SPIN) need to stay visible for the full hold duration (2000ms before to 2000ms after hit)
   const visibleNotes = notes.filter(n => {
@@ -243,9 +244,19 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               const HOLD_DURATION = 2000;
               const JUDGEMENT_RADIUS = 187;
               
-              // holdProgress: 0 = note first appears (2000ms before hit), 1 = at judgement line, 2 = hold complete
-              // Map timeUntilHit from 2000 to -2000 onto progress 0 to 2
-              const holdProgress = (2000 - timeUntilHit) / 2000;
+              // Phase 1 (before note hit): Use time-based progress
+              // Phase 2 (after player presses): Use actual hold duration
+              const holdStartTime = holdStartTimes[note.lane] || 0;
+              let holdProgress;
+              
+              if (holdStartTime === 0) {
+                // Phase 1: Note hasn't been held yet, use time-based progress
+                holdProgress = (2000 - timeUntilHit) / 2000;
+              } else {
+                // Phase 2: Player is holding, use actual hold duration
+                const actualHoldDuration = currentTime - holdStartTime;
+                holdProgress = 1.0 + (actualHoldDuration / HOLD_DURATION);
+              }
               
               // Get ray angle
               const rayAngle = getLaneAngle(note.lane);
