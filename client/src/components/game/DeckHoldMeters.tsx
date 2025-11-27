@@ -31,7 +31,7 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
     return colors[index % 4];
   };
 
-  const RectangleMeter = ({ progress, outlineColor, side }: { progress: number; outlineColor: string; side: 'left' | 'right' }) => {
+  const RectangleMeter = ({ progress, outlineColor }: { progress: number; outlineColor: string }) => {
     const segments = 16;
     const filledSegments = Math.ceil(progress * segments);
 
@@ -65,13 +65,13 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       {/* Left Deck Hold Meter */}
       <div className="flex flex-col items-center gap-3">
         <div className="text-sm font-rajdhani text-neon-green font-bold tracking-widest">Q</div>
-        <RectangleMeter progress={leftProgress} outlineColor="#00FF00" side="left" />
+        <RectangleMeter progress={leftProgress} outlineColor="#00FF00" />
       </div>
 
       {/* Right Deck Hold Meter */}
       <div className="flex flex-col items-center gap-3">
         <div className="text-sm font-rajdhani text-neon-red font-bold tracking-widest">P</div>
-        <RectangleMeter progress={rightProgress} outlineColor="#FF0000" side="right" />
+        <RectangleMeter progress={rightProgress} outlineColor="#FF0000" />
       </div>
     </div>
   );

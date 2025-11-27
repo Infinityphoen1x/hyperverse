@@ -64,7 +64,6 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
   const VANISHING_POINT_X = 350;
   const VANISHING_POINT_Y = 200;
   const MAX_DISTANCE = 260;
-  const HITLINE_Y = 520;
 
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
