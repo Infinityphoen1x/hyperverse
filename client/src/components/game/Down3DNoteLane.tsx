@@ -341,11 +341,6 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                 const holdStartTime = holdStartTimes[note.lane] || 0;
                 const isCurrentlyHeld = holdStartTime > 0;
                 const wasActivated = activeHolds.has(note.id);
-              
-              // Only render if actively holding OR if was activated and not too far past
-              if (!isCurrentlyHeld && !wasActivated) {
-                return null; // Don't render trapezoid for notes not being held
-              }
                 
                 let holdProgress;
                 
