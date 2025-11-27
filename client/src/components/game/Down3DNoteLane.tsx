@@ -351,11 +351,12 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
               const x4 = VANISHING_POINT_X + Math.cos(leftRad) * nearDistance;
               const y4 = VANISHING_POINT_Y + Math.sin(leftRad) * nearDistance;
               
-              // Phase 1: Opacity increases; Phase 2: Opacity fades as trapezoid shrinks
+              // Phase 1: Opacity increases; Phase 2: Stays visible with gentle fade
               let opacity = 0.4 + Math.min(holdProgress, 1.0) * 0.6;
               if (isInPhase2) {
-                const shrinkProgress = holdProgress - 1.0;
-                opacity = opacity * (1 - shrinkProgress * 0.7); // Fade during Phase 2
+                const shrinkProgress = Math.min(holdProgress - 1.0, 1.0);
+                // During Phase 2, keep opacity high (fade only at the very end)
+                opacity = Math.max(0.7 - (shrinkProgress * 0.5), 0.2); // Visible during Phase 2
               }
               const color = getColorForLane(note.lane);
               const strokeWidth = 2 + (Math.min(holdProgress, 1.0) * 2); // Stroke grows with trapezoid

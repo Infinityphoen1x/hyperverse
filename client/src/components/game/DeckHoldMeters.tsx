@@ -11,8 +11,9 @@ interface DeckHoldMetersProps {
 }
 
 export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart, onHoldEnd }: DeckHoldMetersProps) {
-  // Track when holds end (hitline detection) to freeze meter at final progress
+  // Track when holds end (hitline detection) to briefly freeze meter for visual feedback
   const [holdEndProgress, setHoldEndProgress] = useState<Record<number, number>>({ '-1': 0, '-2': 0 });
+  const [holdEndTime, setHoldEndTime] = useState<Record<number, number>>({ '-1': 0, '-2': 0 });
   const prevHoldStartTimes = useRef<Record<number, number>>({ '-1': 0, '-2': 0 });
 
   // Detect when hold ends (holdStartTime goes from non-zero to 0)
@@ -26,11 +27,13 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
         const holdDuration = currentTime - prevTime;
         const finalProgress = Math.min(holdDuration / 4000, 1.0);
         setHoldEndProgress(prev => ({ ...prev, [lane]: finalProgress }));
+        setHoldEndTime(prev => ({ ...prev, [lane]: currentTime })); // Mark when it ended
       }
       
       // New hold started, clear the end progress
       if (prevTime === 0 && currTime > 0) {
         setHoldEndProgress(prev => ({ ...prev, [lane]: 0 }));
+        setHoldEndTime(prev => ({ ...prev, [lane]: 0 }));
       }
     });
     
@@ -38,7 +41,7 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
   }, [holdStartTimes, currentTime]);
 
   // Get hold progress based on holdStartTimes passed from parent
-  // Only charges when there's an active hold note for that lane
+  // Only charges when actively holding with an active hold note for that lane
   const getHoldProgress = (lane: number): number => {
     try {
       if (!Number.isInteger(lane)) return 0;
@@ -59,21 +62,18 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart
         !n.missed
       );
       
-      // If no active hold note, don't charge
-      if (!hasActiveHoldNote) {
-        // But return frozen progress if hold just ended
-        if (holdEndProgress[lane] > 0) {
-          return Math.min(Math.max(holdEndProgress[lane], 0), 1);
-        }
-        return 0;
-      }
-      
-      // If hold just ended, return the frozen final progress
-      if (holdStartTime === 0 && holdEndProgress[lane] > 0) {
+      // Only show frozen progress briefly (300ms) after hold ends
+      const holdEndTimeVal = holdEndTime[lane] || 0;
+      if (holdEndTimeVal > 0 && currentTime - holdEndTimeVal < 300) {
         return Math.min(Math.max(holdEndProgress[lane], 0), 1);
       }
       
-      // Not holding
+      // If no active hold note, return 0 (no charge without active note)
+      if (!hasActiveHoldNote) {
+        return 0;
+      }
+      
+      // Not actively holding
       if (holdStartTime === 0) return 0;
       
       // Currently holding an active note - show real-time progress
