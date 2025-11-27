@@ -765,32 +765,28 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
             const yPosition = VANISHING_POINT_Y + yOffset;
             const scale = 0.12 + (progress * 0.88);
             
-            // Missed note glitch effect
-            const isMissed = note.missed;
-            const missProgress = isMissed ? Math.max(0, -timeUntilHit / 500) : 0; // 0 to 1 as it fades
-            const glitchAmplitude = 4 * (1 - missProgress); // Decrease glitch intensity as it fades
+            // Failed tap note - greyscale like failed hold notes
+            const isFailed = note.tapMissFailure || false;
+            const failureTime = note.failureTime || note.time;
+            const timeSinceFail = Math.max(0, currentTime - failureTime);
+            const failProgress = Math.min(timeSinceFail / 500, 1.0); // 0 to 1 over 500ms fade
 
             return (
               <motion.div
                 key={note.id}
                 className="absolute w-14 h-14 rounded-lg flex items-center justify-center text-black font-bold text-sm font-rajdhani pointer-events-none"
-                animate={isMissed ? { 
-                  x: [0, -glitchAmplitude, glitchAmplitude, -glitchAmplitude/2, glitchAmplitude/2, 0],
-                  y: [0, glitchAmplitude/2, -glitchAmplitude/2, glitchAmplitude/2, 0, 0]
-                } : {}}
-                transition={isMissed ? { duration: 0.12, repeat: Infinity } : {}}
                 style={{
-                  backgroundColor: isMissed ? 'rgba(80,80,80,0.6)' : getColorForLane(note.lane),
-                  boxShadow: isMissed 
+                  backgroundColor: isFailed ? 'rgba(80,80,80,0.6)' : getColorForLane(note.lane),
+                  boxShadow: isFailed 
                     ? `0 0 ${6 * scale}px rgba(100,0,0,0.4)` 
                     : `0 0 ${30 * scale}px ${getColorForLane(note.lane)}, inset 0 0 ${18 * scale}px rgba(255,255,255,0.4)`,
                   left: `${xPosition}px`,
                   top: `${yPosition}px`,
                   transform: `translate(-50%, -50%) scale(${scale})`,
-                  opacity: isMissed ? (1 - missProgress) * 0.6 : (0.15 + progress * 0.85),
+                  opacity: isFailed ? (1 - failProgress) * 0.6 : (0.15 + progress * 0.85),
                   zIndex: Math.floor(progress * 1000),
-                  border: `2px solid rgba(100,100,100,${isMissed ? (1-missProgress) * 0.6 : 0.4 * progress})`,
-                  filter: isMissed ? `grayscale(1) brightness(0.5) blur(${1 + missProgress * 1.5}px)` : 'none',
+                  border: `2px solid rgba(100,100,100,${isFailed ? (1-failProgress) * 0.6 : 0.4 * progress})`,
+                  filter: isFailed ? 'grayscale(1) brightness(0.5)' : 'none',
                 }}
               >
                 {getNoteKey(note.lane)}
