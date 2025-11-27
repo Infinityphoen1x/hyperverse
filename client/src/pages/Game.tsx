@@ -6,6 +6,7 @@ import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
 import { DeckHoldMeters } from "@/components/game/DeckHoldMeters";
 import { VisualEffects } from "@/components/game/VisualEffects";
 import { YouTubeOverlay } from "@/components/game/YouTubeOverlay";
+import { BeatmapLoader } from "@/components/game/BeatmapLoader";
 import { motion } from "framer-motion";
 
 export default function Game() {
@@ -104,6 +105,15 @@ export default function Game() {
       {/* YouTube Overlay Control */}
       <YouTubeOverlay 
         onVideoUrlChange={(url, videoId) => setYoutubeVideoId(videoId)}
+      />
+
+      {/* Beatmap Loader */}
+      <BeatmapLoader 
+        difficulty={difficulty}
+        onBeatmapLoad={(beatmapText) => {
+          // For now, just acknowledge the load. 
+          // Full integration happens when game engine supports custom beatmaps
+        }}
       />
 
       {/* HUD */}
