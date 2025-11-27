@@ -62,17 +62,21 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
           });
         }
         
-        // Hold ended - mark note as missed if released before completion
+        // Hold ended - mark note with holdReleaseFailure flag if released before completion
         if (prevTime > 0 && currTime === 0) {
           setActiveHolds(prev => {
             const newSet = new Set(prev);
             const firstActiveNote = notes.find(n => 
-              n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed && n.id
+              n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed && n.id && !(n as any).holdReleaseFailure && !(n as any).tooEarlyFailure && !(n as any).holdMissFailure
             );
             if (firstActiveNote && firstActiveNote.id) {
-              // Only mark as missed if released before note.time (premature release)
+              // If released before note.time (premature release), mark as holdReleaseFailure
               if (currentTime < firstActiveNote.time) {
-                onNoteMissed?.(firstActiveNote.id);
+                setNotes(prevNotes => prevNotes.map(n => 
+                  n && n.id === firstActiveNote.id ? { ...n, holdReleaseFailure: true } : n
+                ));
+                setCombo(0);
+                setHealth(h => Math.max(0, h - 2));
               }
               newSet.delete(firstActiveNote.id);
             }
@@ -87,28 +91,6 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
     }
   }, [holdStartTimes, notes, currentTime]);
 
-  // Detect too-early presses and mark as missed
-  useEffect(() => {
-    if (!onNoteMissed) return;
-    
-    const STRICT_EARLY_START = -3000;
-    
-    notes.forEach(note => {
-      if (!note || !note.id || note.hit || note.missed || failedHolds.has(note.id)) return;
-      if (note.type !== 'SPIN_LEFT' && note.type !== 'SPIN_RIGHT') return;
-      
-      const holdStartTime = holdStartTimes[note.lane] || 0;
-      if (holdStartTime === 0) return; // Not held
-      
-      const timeSinceNoteSpawn = holdStartTime - note.time;
-      const isTooEarly = timeSinceNoteSpawn < STRICT_EARLY_START;
-      
-      if (isTooEarly) {
-        onNoteMissed(note.id);
-        setFailedHolds(prev => new Set(prev).add(note.id));
-      }
-    });
-  }, [holdStartTimes, notes, onNoteMissed, failedHolds]);
   // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
   // TAP notes: appear 2000ms before hit, show glitch 500ms after miss, then disappear
   // SPIN (hold) notes: appear 4000ms before, stay visible through hold duration
@@ -444,7 +426,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                   timeSinceNoteSpawn <= NORMAL_WINDOW_END && timeSinceNoteSpawn >= STRICT_EARLY_START
                 );
                 
-                let holdProgress;
+                let holdProgress = 0;
                 let isGreyed = false;
                 
                 // Too early failure - show growing greyscale animation until judgement, then shrinking for 500ms
@@ -453,22 +435,16 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                   if (timeUntilHit > 0) {
                     // Phase 1: Growing until note reaches judgement line
                     holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-                  } else if (timeUntilHit <= 0) {
+                  } else {
                     // Phase 2: Note has passed judgement line - show 500ms shrinking animation
                     const timePastJudgement = currentTime - note.time;
                     // Safety check: if more than 600ms has passed (500ms animation + 100ms buffer), hide it
                     if (timePastJudgement >= 600) {
                       return null; // Animation complete, remove note
                     }
-                    // Only show shrinking if at least 0ms has passed since judgement
-                    if (timePastJudgement < 0) {
-                      // Edge case: shouldn't happen, but clamp to Phase 1
-                      holdProgress = 1.0;
-                    } else {
-                      // Shrink from 1.0 to 2.0 over 500ms
-                      const shrinkProgress = Math.min(timePastJudgement / 500, 1.0);
-                      holdProgress = 1.0 + shrinkProgress;
-                    }
+                    // Shrink from 1.0 to 2.0 over 500ms
+                    const shrinkProgress = Math.min(Math.max(timePastJudgement, 0) / 500, 1.0);
+                    holdProgress = 1.0 + shrinkProgress;
                   }
                 } else if (isHoldReleaseFailure || isHoldMissFailure) {
                   // Hold release failure or missed hold - show shrinking greyscale animation for 500ms

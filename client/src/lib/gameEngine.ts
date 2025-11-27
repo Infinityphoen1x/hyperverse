@@ -125,7 +125,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
       // Check for missed notes - track if game should end
       let shouldGameOver = false;
       setNotes(prev => {
-        let newHealth = 100;
+        let newHealth = 200;
         const newNotes = prev.map(n => {
           if (!n.hit && !n.missed && !(n as any).tapMissFailure && !(n as any).holdReleaseFailure && !(n as any).tooEarlyFailure) {
             let shouldMarkFailed = false;
@@ -268,7 +268,8 @@ export const useGameEngine = (difficulty: Difficulty) => {
       }
       
       // Check if in valid window (-3000 to +100)
-      if (timeSinceNoteSpawn < -3000 || timeSinceNoteSpawn > 100) {
+      // Note: < -3000 already handled above, so this only checks > 100
+      if (timeSinceNoteSpawn > 100) {
         // Clear any hold state for this lane if note is outside valid window
         setHoldStartTimes(prev => ({ ...prev, [lane]: 0 }));
         GameErrors.log(`trackHoldStart: Note on lane ${lane} is outside valid window`);
