@@ -357,15 +357,27 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                 const isCurrentlyHeld = holdStartTime > 0;
                 const wasActivated = activeHolds.has(note.id);
                 
-                // Phase 2 validation: hold is valid if activated within 4100ms before to 100ms after note.time
-                // Activation window: -4100 to +100 (shared with meter and gameEngine)
+                // Define timing windows
+                // "Strict beginning": -3000ms (presses before this trigger no Phase 2, show grey)
+                // "Early but valid": -3000 to -100ms (reduced score, but triggers Phase 2)
+                // "Normal window": -100 to +100ms (full score)
+                const STRICT_EARLY_START = -3000;
+                const NORMAL_WINDOW_START = -100;
+                const NORMAL_WINDOW_END = 100;
+                
                 const timeWhenPressed = holdStartTime;
-                const timeSincePressed = currentTime - timeWhenPressed;
-                const isValidActivation = isCurrentlyHeld && (
-                  (timeWhenPressed - note.time <= 100 && timeWhenPressed - note.time >= -4100) // Within press window
+                const timeSinceNoteSpawn = timeWhenPressed - note.time;
+                
+                // Check if too early (before strict beginning)
+                const isTooEarly = isCurrentlyHeld && timeSinceNoteSpawn < STRICT_EARLY_START;
+                
+                // Valid activation: within -3000 to +100 (early + normal windows)
+                const isValidActivation = isCurrentlyHeld && !isTooEarly && (
+                  timeSinceNoteSpawn <= NORMAL_WINDOW_END && timeSinceNoteSpawn >= STRICT_EARLY_START
                 );
                 
                 let holdProgress;
+                let isGreyed = false;
                 
                 if (isCurrentlyHeld && isValidActivation) {
                   // Phase 2: Being held - trapezoid shrinks over 2000ms (dot's journey to hitline)
@@ -399,6 +411,15 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                   }
                   // Continue shrinking at max rate
                   holdProgress = 2.0;
+                } else if (isCurrentlyHeld && isTooEarly) {
+                  // Too early press: no Phase 2, stay in Phase 1 and show GREY
+                  // Trapezoid continues growing to show player that note is coming
+                  isGreyed = true;
+                  if (timeUntilHit > 0) {
+                    holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+                  } else {
+                    holdProgress = 0.99;
+                  }
                 } else {
                   // Phase 1: Not activated yet - trapezoid grows during approach
                   if (timeUntilHit > 0) {
@@ -485,7 +506,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                 // During Phase 2, keep opacity high (fade only at the very end)
                 opacity = Math.max(0.7 - (shrinkProgress * 0.5), 0.2); // Visible during Phase 2
               }
-              const color = getColorForLane(note.lane);
+              const color = isGreyed ? 'rgba(100, 100, 100, 0.5)' : getColorForLane(note.lane);
+              const strokeColor = isGreyed ? 'rgba(150, 150, 150, 0.6)' : 'rgba(255,255,255,0.8)';
               const strokeWidth = 2 + (Math.min(holdProgress, 1.0) * 2); // Stroke grows with trapezoid
               
               return (
@@ -493,11 +515,13 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                   key={note.id}
                   points={`${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`}
                   fill={color}
-                  opacity={opacity}
-                  stroke="rgba(255,255,255,0.8)"
+                  opacity={isGreyed ? 0.4 : opacity}
+                  stroke={strokeColor}
                   strokeWidth={strokeWidth}
                   style={{
-                    filter: `drop-shadow(0 0 ${25 * finalGlowScale}px ${color}) drop-shadow(0 0 ${15 * finalGlowScale}px ${color})`,
+                    filter: isGreyed 
+                      ? 'drop-shadow(0 0 8px rgba(100,100,100,0.4)) grayscale(1)'
+                      : `drop-shadow(0 0 ${25 * finalGlowScale}px ${color}) drop-shadow(0 0 ${15 * finalGlowScale}px ${color})`,
                     transition: 'all 0.05s linear',
                   }}
                 />
