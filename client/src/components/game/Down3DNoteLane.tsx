@@ -482,13 +482,15 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                     holdProgress = Math.min(1.0 + shrinkAmount, 2.0);
                   }
                 } else if (wasActivated && !isCurrentlyHeld) {
-                  // After hold released (valid hold), continue shrink animation for 500ms completion
-                  const timesSinceHit = currentTime - note.time;
-                  if (timesSinceHit > 500) {
+                  // After hold released (let go), show greyscale shrinking animation for 500ms
+                  isGreyed = true;
+                  const timeSinceRelease = currentTime - holdStartTime;
+                  if (timeSinceRelease > 500) {
                     return null; // Animation complete, hide trapezoid
                   }
-                  // Continue shrinking at max rate
-                  holdProgress = 2.0;
+                  // Shrink animation from 1.0 to 2.0 over 500ms
+                  const releaseShrinkProgress = timeSinceRelease / 500;
+                  holdProgress = 1.0 + releaseShrinkProgress;
                 } else if (isCurrentlyHeld && isTooEarly) {
                   // Too early press: no Phase 2, stay in Phase 1 and show GREY
                   // Trapezoid continues growing to show player that note is coming
