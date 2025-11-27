@@ -246,17 +246,24 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
               const LEAD_TIME = 4000; // Hold notes appear 4000ms before hit
               const JUDGEMENT_RADIUS = 187;
               
-              // Phase 1 (before note hit): Use time-based progress
-              // Phase 2 (after player presses): Use actual hold duration
+              // Phase 1 (before note hit): Trapezoid grows from vanishing point toward judgement line
+              // Phase 2 (after player presses): Trapezoid shrinks back inward
               const holdStartTime = holdStartTimes[note.lane] || 0;
               let holdProgress;
               
               if (holdStartTime === 0) {
-                // Phase 1: Note hasn't been held yet, use time-based progress
-                // Progress from 0 (at 4000ms) to 1.0 (at hit)
-                holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+                // Phase 1: Note hasn't been held yet - trapezoid GROWS as it approaches
+                // Progress from 0 (far away) to 1.0 (at judgement line)
+                // But we want it to START growing from the vanishing point
+                // So if timeUntilHit is positive (note in future), start from 0
+                if (timeUntilHit > 0) {
+                  holdProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+                } else {
+                  // Note has passed, go to max of Phase 1
+                  holdProgress = 1.0;
+                }
               } else {
-                // Phase 2: Player is holding, use actual hold duration
+                // Phase 2: Player is holding - trapezoid SHRINKS inward
                 const actualHoldDuration = currentTime - holdStartTime;
                 holdProgress = 1.0 + (actualHoldDuration / HOLD_DURATION);
               }
