@@ -5,12 +5,14 @@ import { SoundPad } from "@/components/game/SoundPad";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
 import { DeckHoldMeters } from "@/components/game/DeckHoldMeters";
 import { VisualEffects } from "@/components/game/VisualEffects";
+import { YouTubeOverlay } from "@/components/game/YouTubeOverlay";
 import { motion } from "framer-motion";
 
 export default function Game() {
   const [leftDeckRotation, setLeftDeckRotation] = useState(0);
   const [rightDeckRotation, setRightDeckRotation] = useState(0);
   const [gameErrors, setGameErrors] = useState<string[]>([]);
+  const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const searchParams = new URLSearchParams(window.location.search);
   const difficulty = (searchParams.get('difficulty') || 'MEDIUM') as Difficulty;
   
@@ -77,6 +79,21 @@ export default function Game() {
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col relative">
+      {/* YouTube Background Layer */}
+      {youtubeVideoId && (
+        <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
+          <iframe
+            width="100%"
+            height="100%"
+            src={`https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&controls=0&modestbranding=1&mute=1`}
+            title="YouTube background"
+            allow="autoplay"
+            className="w-full h-full"
+            data-testid="iframe-youtube-background"
+          />
+        </div>
+      )}
+
       {/* Visual Effects Layer */}
       <VisualEffects combo={combo} health={health} missCount={notes.filter(n => n.missed).length} />
 
@@ -84,6 +101,11 @@ export default function Game() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black opacity-80" />
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
       
+      {/* YouTube Overlay Control */}
+      <YouTubeOverlay 
+        onVideoUrlChange={(url, videoId) => setYoutubeVideoId(videoId)}
+      />
+
       {/* HUD */}
       <header className="relative z-10 flex justify-between items-center p-6 border-b border-white/10 bg-black/50 backdrop-blur-sm">
         <div className="flex items-center gap-4">
