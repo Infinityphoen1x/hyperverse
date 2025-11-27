@@ -80,8 +80,8 @@ export function VisualEffects({ combo, score, health = 100, missCount = 0 }: Vis
   // Calculate greyscale based on health
   const greyscaleIntensity = Math.max(0, (100 - health) / 100) * 0.8;
   
-  // Calculate glitch opacity multiplier based on health (increases as health decreases)
-  const glitchOpacityMultiplier = 1 + (Math.max(0, 200 - health) / 200) * 2; // 1x at full health, 3x at 0 health
+  // Calculate glitch opacity multiplier based on health (increases as health decreases below 80%)
+  const glitchOpacityMultiplier = 1 + (Math.max(0, 160 - health) / 160) * 2; // 1x at 80% health (160), 3x at 0 health
 
   return (
     <>
