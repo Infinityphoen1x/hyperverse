@@ -25,7 +25,6 @@ interface RectangleMeterProps {
 const RectangleMeter = ({ progress, outlineColor, lane, completionGlow }: RectangleMeterProps) => {
   const segments = 16;
   const filledSegments = Math.ceil(progress * segments);
-  const isComplete = progress >= COMPLETION_THRESHOLD;
 
   return (
     <motion.div 
