@@ -227,8 +227,16 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
                 ? JUDGEMENT_RADIUS
                 : 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
               
-              // Far end distance - stays in place at MAX_DISTANCE after reaching it
-              const farDistance = 1 + (Math.min(holdProgress, 1.0) * (MAX_DISTANCE - 1));
+              // Far end distance - in Phase 2, shrinks back toward judgement line
+              let farDistance;
+              if (isInPhase2) {
+                const shrinkProgress = holdProgress - 1.0; // 0 to 1.0 during phase 2
+                // Far end shrinks from MAX_DISTANCE back to JUDGEMENT_RADIUS
+                farDistance = MAX_DISTANCE * (1 - shrinkProgress) + JUDGEMENT_RADIUS * shrinkProgress;
+              } else {
+                // Phase 1: grows from vanishing point toward MAX_DISTANCE
+                farDistance = 1 + (holdProgress * (MAX_DISTANCE - 1));
+              }
               
               // Calculate positions
               const nearX = VANISHING_POINT_X + Math.cos(rad) * nearDistance;
@@ -242,11 +250,8 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               // Apply a pixel-scale factor to match SVG coordinates
               const rayWidthScale = 0.35; // scaling factor for the perpendicular distance between rays
               
-              // In Phase 2, widths shrink toward zero as note is held
-              const widthMultiplier = isInPhase2 ? Math.max(0, 1 - (holdProgress - 1.0)) : 1;
-              
-              const farWidth = farDistance * rayWidthScale * widthMultiplier;
-              const nearWidth = nearDistance * rayWidthScale * widthMultiplier;
+              const farWidth = farDistance * rayWidthScale;
+              const nearWidth = nearDistance * rayWidthScale;
               
               // Glow intensity scales with how close to judgement line
               const glowScale = 0.2 + (Math.min(holdProgress, 1.0) * 0.8);
