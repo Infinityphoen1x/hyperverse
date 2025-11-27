@@ -8,9 +8,11 @@ interface Down3DNoteLaneProps {
 
 export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
   // Filter visible notes - soundpad notes (0-3) AND deck notes (-1, -2)
+  // Hold notes (SPIN) need to stay visible for the full hold duration (2000ms)
   const visibleNotes = notes.filter(n => {
     const timeUntilHit = n.time - currentTime;
-    return timeUntilHit > -200 && timeUntilHit < 2000;
+    const holdDuration = (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') ? 2000 : 0;
+    return timeUntilHit > -holdDuration - 200 && timeUntilHit < 2000;
   });
 
 
@@ -218,17 +220,27 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
             // Scale: starts tiny at vanishing point, grows as approaches
             const scale = 0.12 + (progress * 0.88);
 
-            // For hold notes, show as rectangle with width and height
+            // For hold notes, show as trapezoid with perspective
             if (note.type === 'SPIN_LEFT' || note.type === 'SPIN_RIGHT') {
-              const holdWidth = 20 + (scale * 40);
-              const holdHeight = 12 + (scale * 25);
+              // Trapezoid dimensions: narrower at vanishing point, wider approaching player
+              const topWidth = 8 + (scale * 12);  // Width at narrow end (near vanishing point in perspective)
+              const bottomWidth = 24 + (scale * 40); // Width at wide end (near player)
+              const holdHeight = 16 + (scale * 30);
+              
+              // Create a trapezoid using clip-path
+              const trapezoidClip = `polygon(
+                ${(100 - (topWidth / bottomWidth * 100)) / 2}% 0%,
+                ${100 - (100 - (topWidth / bottomWidth * 100)) / 2}% 0%,
+                100% 100%,
+                0% 100%
+              )`;
               
               return (
                 <motion.div
                   key={note.id}
-                  className="absolute rounded-md flex items-center justify-center text-black font-bold text-sm font-rajdhani pointer-events-none"
+                  className="absolute flex items-center justify-center text-black font-bold text-xs font-rajdhani pointer-events-none"
                   style={{
-                    width: `${holdWidth}px`,
+                    width: `${bottomWidth}px`,
                     height: `${holdHeight}px`,
                     backgroundColor: getColorForLane(note.lane),
                     boxShadow: `0 0 ${30 * scale}px ${getColorForLane(note.lane)}, inset 0 0 ${18 * scale}px rgba(255,255,255,0.3)`,
@@ -238,6 +250,7 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
                     opacity: 0.15 + progress * 0.85,
                     zIndex: Math.floor(progress * 1000),
                     border: `2px solid rgba(255,255,255,${0.4 * progress})`,
+                    clipPath: trapezoidClip,
                   }}
                 >
                   {getNoteKey(note.lane)}

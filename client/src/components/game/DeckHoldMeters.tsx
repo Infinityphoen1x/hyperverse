@@ -32,7 +32,7 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
   };
 
   const RectangleMeter = ({ progress, outlineColor, side }: { progress: number; outlineColor: string; side: 'left' | 'right' }) => {
-    const segments = 10;
+    const segments = 16;
     const filledSegments = Math.ceil(progress * segments);
 
     return (
