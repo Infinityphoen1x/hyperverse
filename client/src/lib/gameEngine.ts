@@ -227,25 +227,39 @@ export const useGameEngine = (difficulty: Difficulty) => {
         return;
       }
       
-      // Find the active hold note on this lane that is within valid timing window
-      // Hold notes must be: not played, not missed, and within playable range
-      // Valid window: note appears 4000ms early, disappears 2000ms after note.time (at hitline)
-      const activeNote = notes.find(n => {
+      // Find any hold note on this lane that hasn't been played or missed
+      const anyNote = notes.find(n => {
         if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT') || n.hit || n.missed) {
           return false;
         }
-        
-        // Check timing: note must be within valid activation window
-        const timeSinceNoteSpawn = currentTime - n.time;
-        // Valid activation window: -3000 to +100 (too-early = before -3000, early-valid = -3000 to -100, normal = -100 to +100)
-        const isInValidWindow = timeSinceNoteSpawn >= -3000 && timeSinceNoteSpawn <= 100;
-        
-        return isInValidWindow;
+        return true;
       });
       
-      if (!activeNote) {
-        GameErrors.log(`trackHoldStart: No active hold note in valid window on lane ${lane} at time ${currentTime}`);
-        return; // Can't hold - no active note on this lane in valid window
+      if (!anyNote) {
+        GameErrors.log(`trackHoldStart: No active hold note on lane ${lane} at time ${currentTime}`);
+        return;
+      }
+      
+      const timeSinceNoteSpawn = currentTime - anyNote.time;
+      
+      // Check if too early (before -3000ms)
+      if (timeSinceNoteSpawn < -3000) {
+        // Too early press - mark note as hit (remove from active pool) and dock health
+        setNotes(prev => {
+          const newNotes = prev.map(n => 
+            n && n.id === anyNote.id ? { ...n, hit: true } : n
+          );
+          return newNotes;
+        });
+        setCombo(0);
+        setHealth(h => Math.max(0, h - 2));
+        return; // Exit without setting holdStartTime
+      }
+      
+      // Check if in valid window (-3000 to +100)
+      if (timeSinceNoteSpawn < -3000 || timeSinceNoteSpawn > 100) {
+        GameErrors.log(`trackHoldStart: Note on lane ${lane} is outside valid window`);
+        return;
       }
       
       // Valid timing - Phase 2 starts: dot will spawn and trapezoid shrinks
