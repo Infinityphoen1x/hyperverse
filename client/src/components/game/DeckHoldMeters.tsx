@@ -120,21 +120,20 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes = { [-1]: { 
     prevHoldStartTimes.current = { ...holdStartTimes };
   }, [holdStartTimes, currentTime, notes]);
 
-  // Get hold progress based on holdStartTimes passed from parent
+  // Get hold progress based on note.pressTime (single source of truth)
   // Meter charges from 0% at press to 100% at press + 1000ms hold duration
-  // Decoupled from deck dots, driven purely by hold note accuracy timing
+  // Synced with Down3DNoteLane which uses the same note.pressTime source
   const getHoldProgress = (lane: number): number => {
     try {
       if (!Number.isInteger(lane)) return 0;
       
-      const holdStartTime = holdStartTimes[lane]?.time || 0;
-      
       // Validate time values
-      if (!Number.isFinite(holdStartTime) || !Number.isFinite(currentTime)) {
+      if (!Number.isFinite(currentTime)) {
         return 0;
       }
       
-      // Find active hold note on this lane (including failed notes for frozen meter display)
+      // Find active hold note on this lane (not hit, not missed)
+      // This uses the note's own pressTime, matching Down3DNoteLane's source of truth
       const activeNote = Array.isArray(notes) ? notes.find(n => 
         n &&
         n.lane === lane && 
@@ -160,11 +159,14 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes = { [-1]: { 
         return 0;
       }
       
+      // Get press time from note object (single source of truth, matches Down3DNoteLane)
+      const pressTime = activeNote.pressTime || 0;
+      
       // Not actively holding
-      if (holdStartTime === 0) return 0;
+      if (!pressTime || pressTime <= 0) return 0;
       
       // CRITICAL: Validate hold was pressed within accuracy window (±300ms)
-      const timeSinceNoteSpawn = holdStartTime - activeNote.time;
+      const timeSinceNoteSpawn = pressTime - activeNote.time;
       const ACTIVATION_WINDOW = 300;
       const isValidActivation = Math.abs(timeSinceNoteSpawn) <= ACTIVATION_WINDOW;
       
@@ -175,7 +177,7 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes = { [-1]: { 
       
       // Meter charges over fixed 1000ms hold duration (slowed for easier timing)
       const HOLD_DURATION = 1000; // ms - fixed hold duration
-      const actualHoldDuration = currentTime - holdStartTime;
+      const actualHoldDuration = currentTime - pressTime;
       
       if (actualHoldDuration < 0 || !Number.isFinite(actualHoldDuration)) {
         return 0;
@@ -187,7 +189,7 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes = { [-1]: { 
       }
       
       // Progress = how much of the 1000ms hold duration has elapsed
-      // 0% at press, 100% at press + 1000ms (matches shrink animation)
+      // 0% at press, 100% at press + 1000ms (matches shrink animation in Down3DNoteLane)
       const progress = actualHoldDuration / HOLD_DURATION;
       
       // Clamp to valid range [0, 1]
