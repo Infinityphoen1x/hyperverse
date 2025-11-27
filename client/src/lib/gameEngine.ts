@@ -66,14 +66,15 @@ const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[]
       const patternStep = beatIndex % pattern.length;
       const lane = pattern[patternStep];
       
-      // Every 8 beats, place a spin note instead of tap (predictable for testing)
-      const isSpin = beatIndex % 8 === 0 && beatIndex > 0;
+      // Every 4 beats, place a spin note instead of tap (more frequent for playability)
+      // This ensures hold notes are available more often for the deck lanes
+      const isSpin = beatIndex % 4 === 0 && beatIndex > 0;
       
       notes.push({
         id: `note-${Math.round(currentTime)}-${beatIndex}`,
-        lane: isSpin ? (beatIndex % 16 === 0 ? -1 : -2) : lane, // Alternate left/right spins
+        lane: isSpin ? (beatIndex % 8 === 0 ? -1 : -2) : lane, // Alternate left/right spins every 4 beats
         time: currentTime,
-        type: isSpin ? (beatIndex % 16 === 0 ? 'SPIN_LEFT' : 'SPIN_RIGHT') : 'TAP',
+        type: isSpin ? (beatIndex % 8 === 0 ? 'SPIN_LEFT' : 'SPIN_RIGHT') : 'TAP',
         hit: false,
         missed: false,
       });
