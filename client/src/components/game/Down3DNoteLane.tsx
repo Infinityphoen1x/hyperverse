@@ -27,15 +27,18 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
     return ['W', 'E', 'I', 'O'][lane];
   };
 
-  // Adjusted angles for 4-lane star (bottom half - where soundpads are)
-  const getFourLaneAngle = (lane: number): number => {
-    switch (lane) {
-      case 0: return 225;  // W - bottom-left
-      case 1: return 270;  // E - left-ish
-      case 2: return 315;  // I - bottom-right area
-      case 3: return 0;    // O - right
-      default: return 0;
-    }
+  // 6 equally-spaced rays at 60° intervals
+  const allRayAngles = [0, 60, 120, 180, 240, 300];
+
+  // Map 4 soundpad lanes to specific rays (evenly distributed)
+  const getLaneAngle = (lane: number): number => {
+    const rayMapping: Record<number, number> = {
+      0: 240,  // W - bottom-left
+      1: 300,  // E - left-ish  
+      2: 60,   // I - top-right-ish
+      3: 120,  // O - right
+    };
+    return rayMapping[lane];
   };
 
   // Judgement dot positions (where soundpad keys are)
@@ -48,6 +51,11 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
     };
     return positions[lane as keyof typeof positions] || { x: 300, y: 520 };
   };
+
+  const VANISHING_POINT_X = 350;
+  const VANISHING_POINT_Y = 200;
+  const MAX_DISTANCE = 350;
+  const HITLINE_Y = 520;
 
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
@@ -65,20 +73,12 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
           className="absolute inset-0 w-full h-full"
           style={{ opacity: 1 }}
         >
-          <defs>
-            {/* Gradient for line stroke width effect */}
-            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="rgba(0,255,255,0.1)" />
-              <stop offset="100%" stopColor="rgba(0,255,255,0.4)" />
-            </linearGradient>
-          </defs>
-
           {/* Concentric circles - faint tunnel walls */}
           {[30, 70, 120, 180, 250, 330].map((radius, idx) => (
             <circle 
               key={`tunnel-ring-${idx}`}
-              cx="350" 
-              cy="200" 
+              cx={VANISHING_POINT_X}
+              cy={VANISHING_POINT_Y}
               r={radius}
               fill="none"
               stroke="rgba(0,255,255,0.08)"
@@ -87,25 +87,32 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
           ))}
 
           {/* Vanishing point */}
-          <circle cx="350" cy="200" r="6" fill="rgba(0,255,255,0.6)" />
+          <circle cx={VANISHING_POINT_X} cy={VANISHING_POINT_Y} r="6" fill="rgba(0,255,255,0.6)" />
           
-          {/* Variable-width lines for tunnel rays - thicker at bottom */}
-          {[225, 270, 315, 0].map((angle, idx) => {
+          {/* Variable-width lines for tunnel rays - 6 equally spaced */}
+          {allRayAngles.map((angle) => {
             const rad = (angle * Math.PI) / 180;
-            const x1 = 350 + Math.cos(rad) * 6;
-            const y1 = 200 + Math.sin(rad) * 6;
             
-            // Create line with multiple strokes for tapering effect
-            const segments = 10;
+            // Create line with multiple segments for smooth thickness and opacity gradient
+            const segments = 12;
             return (
               <g key={`spoke-group-${angle}`}>
                 {Array.from({ length: segments }).map((_, segIdx) => {
-                  const progress = (segIdx + 1) / segments;
-                  const x2 = 350 + Math.cos(rad) * (6 + progress * 335);
-                  const y2 = 200 + Math.sin(rad) * (6 + progress * 320);
-                  // Stroke width increases from thin to thick
-                  const strokeWidth = 0.5 + progress * 3.5;
-                  const opacity = 0.15 + progress * 0.35;
+                  const segProgress = (segIdx + 1) / segments;
+                  
+                  // Start point
+                  const x1 = VANISHING_POINT_X + Math.cos(rad) * (1 + segProgress * MAX_DISTANCE - (MAX_DISTANCE / segments));
+                  const y1 = VANISHING_POINT_Y + Math.sin(rad) * (1 + segProgress * MAX_DISTANCE - (MAX_DISTANCE / segments));
+                  
+                  // End point
+                  const x2 = VANISHING_POINT_X + Math.cos(rad) * (1 + segProgress * MAX_DISTANCE);
+                  const y2 = VANISHING_POINT_Y + Math.sin(rad) * (1 + segProgress * MAX_DISTANCE);
+                  
+                  // Stroke width: thin at vanishing point, thick at edge
+                  const strokeWidth = 0.3 + segProgress * 3.5;
+                  
+                  // Opacity: translucent at vanishing point, more visible at edge
+                  const opacity = 0.1 + segProgress * 0.4;
                   
                   return (
                     <line 
@@ -126,30 +133,28 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
           })}
         </svg>
 
-        {/* Notes falling through tunnel */}
+        {/* Notes falling through tunnel - following ray paths */}
         <AnimatePresence>
           {visibleNotes.map(note => {
             const timeUntilHit = note.time - currentTime;
             const progress = 1 - (timeUntilHit / 2000); // 0 (far/spawn) to 1 (near/hitline)
             
-            // Y position: starts at vanishing point (200), comes to judgement line (520)
-            const yPosition = 200 + (progress * 320);
+            // Get the exact ray angle for this note's lane
+            const rayAngle = getLaneAngle(note.lane);
+            const rad = (rayAngle * Math.PI) / 180;
             
-            // Scale: starts tiny at vanishing point, grows
+            // Distance from vanishing point: 0 at spawn, MAX_DISTANCE at hitline
+            const distance = 1 + (progress * (MAX_DISTANCE - 1));
+            
+            // Position along the ray
+            const xOffset = Math.cos(rad) * distance;
+            const yOffset = Math.sin(rad) * distance;
+            
+            const xPosition = VANISHING_POINT_X + xOffset;
+            const yPosition = VANISHING_POINT_Y + yOffset;
+            
+            // Scale: starts tiny at vanishing point, grows as approaches
             const scale = 0.12 + (progress * 0.88);
-            
-            // Get angle for this lane (4-lane configuration)
-            const angle = getFourLaneAngle(note.lane);
-            const rad = (angle * Math.PI) / 180;
-            
-            // Distance from center based on progress
-            const distanceFromCenter = 10 + (progress * 280);
-            
-            // Calculate X/Y using polar coordinates centered on vanishing point
-            const xOffset = Math.cos(rad) * distanceFromCenter;
-            const yOffset = Math.sin(rad) * distanceFromCenter;
-            
-            const xPosition = 350 + xOffset;
 
             return (
               <motion.div
