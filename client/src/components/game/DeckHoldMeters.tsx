@@ -81,9 +81,9 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
         !n.missed
       ) : null;
       
-      // Only show frozen progress briefly (300ms) after hold ends
+      // Show frozen meter for 500ms after hold ends (synced with shrinking animation)
       const holdEndTimeVal = holdEndTime[lane] || 0;
-      if (holdEndTimeVal > 0 && currentTime - holdEndTimeVal < 300) {
+      if (holdEndTimeVal > 0 && currentTime - holdEndTimeVal < 500) {
         const frozenProgress = Math.min(Math.max(holdEndProgress[lane], 0), 1);
         return frozenProgress;
       }
