@@ -385,12 +385,10 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
                   }
                   const timeSinceShrinkStart = Math.max(0, currentTime - failureTime);
                   if (timeSinceShrinkStart > 1100) return null;
-                  // Lock to press time position, then show shrinking
-                  const timeUntilHitAtPress = note.time - pressTime;
-                  const holdProgressAtPress = (LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME;
+                  // Shrink animation: Phase 2 space (1.0 to 2.0)
+                  // Phase 2 geometry section will lock to press position and collapse
                   const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
-                  // Show shrinking animation, locked to where it was pressed
-                  holdProgress = Math.min(holdProgressAtPress, 1.0) + (shrinkProgress * (1.0 - Math.min(holdProgressAtPress, 1.0)));
+                  holdProgress = 1.0 + shrinkProgress;
                 } else if (isHoldReleaseFailure || isHoldMissFailure) {
                   isGreyed = true;
                   const failureTime = note.failureTime;
@@ -400,16 +398,12 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
                   }
                   const timeSinceShrinkStart = Math.max(0, currentTime - failureTime);
                   if (timeSinceShrinkStart > 1100) return null;
-                  // Lock to press time position for geometry, show shrinking
-                  if (pressTime > 0) {
-                    const timeUntilHitAtPress = note.time - pressTime;
-                    const holdProgressAtPress = (LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME;
-                    const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
-                    holdProgress = Math.min(holdProgressAtPress, 1.0) + (shrinkProgress * (1.0 - Math.min(holdProgressAtPress, 1.0)));
-                  } else {
-                    const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
-                    holdProgress = 1.0 + shrinkProgress;
-                  }
+                  // Shrink animation: Phase 2 space (1.0 to 2.0)
+                  // Phase 2 geometry section will handle positioning:
+                  // - If pressed: lock to press position and collapse
+                  // - If never pressed: shrink from judgement line
+                  const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
+                  holdProgress = 1.0 + shrinkProgress;
                 } else if (isCurrentlyHeld && isValidActivation && !isTooEarlyFailure && !isHoldReleaseFailure && !isHoldMissFailure) {
                   holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime, holdDuration);
                 } else if (isCurrentlyHeld && note.hit) {
