@@ -276,8 +276,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                 // Phase 2: Being held - trapezoid shrinks based on actual hold duration
                 // When hitline is detected, holdStartTimes[note.lane] is set back to 0
                 const actualHoldDuration = currentTime - holdStartTime;
-                // When onHoldEnd fires, this will remain at max while other notes progress
-                holdProgress = 1.0 + Math.min(actualHoldDuration / 4000, 1.0);
+                // Trapezoid shrinks from 1.0 to 2.0 (full collapse), then stays capped
+                holdProgress = Math.min(1.0 + (actualHoldDuration / 4000), 2.0);
               }
               
               // Get ray angle
@@ -314,8 +314,13 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                 farDistance = 1 + (shrinkProgress * (JUDGEMENT_RADIUS - 1));
               }
               
-              // Glow intensity scales with how close to judgement line
+              // Glow intensity scales with how close to judgement line (capped at Phase 1)
               const glowScale = 0.2 + (Math.min(holdProgress, 1.0) * 0.8);
+              
+              // Phase 2 intensity: decrease glow as trapezoid collapses
+              const phase2Progress = Math.max(0, holdProgress - 1.0) / 1.0; // 0 to 1 during Phase 2
+              const phase2Glow = phase2Progress > 0 ? (1 - phase2Progress) * 0.8 : 0;
+              const finalGlowScale = Math.max(glowScale - phase2Glow, 0.1);
               
               // Calculate trapezoid corners using flanking rays
               // Far end corners (at vanishing point on flanking rays)
@@ -343,7 +348,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {} }: Down
                   stroke="rgba(255,255,255,0.8)"
                   strokeWidth={strokeWidth}
                   style={{
-                    filter: `drop-shadow(0 0 ${25 * glowScale}px ${color}) drop-shadow(0 0 ${15 * glowScale}px ${color})`,
+                    filter: `drop-shadow(0 0 ${25 * finalGlowScale}px ${color}) drop-shadow(0 0 ${15 * finalGlowScale}px ${color})`,
+                    transition: 'all 0.05s linear',
                   }}
                 />
               );

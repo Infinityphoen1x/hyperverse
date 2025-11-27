@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Note } from "@/lib/gameEngine";
 
 interface DeckHoldMetersProps {
@@ -11,14 +11,48 @@ interface DeckHoldMetersProps {
 }
 
 export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart, onHoldEnd }: DeckHoldMetersProps) {
+  // Track when holds end (hitline detection) to freeze meter at final progress
+  const [holdEndProgress, setHoldEndProgress] = useState<Record<number, number>>({ '-1': 0, '-2': 0 });
+  const prevHoldStartTimes = useRef<Record<number, number>>({ '-1': 0, '-2': 0 });
+
+  // Detect when hold ends (holdStartTime goes from non-zero to 0)
+  useEffect(() => {
+    [-1, -2].forEach((lane) => {
+      const prevTime = prevHoldStartTimes.current[lane] || 0;
+      const currTime = holdStartTimes[lane] || 0;
+      
+      // Hold just ended (was holding, now not holding)
+      if (prevTime > 0 && currTime === 0) {
+        const holdDuration = currentTime - prevTime;
+        const finalProgress = Math.min(holdDuration / 4000, 1.0);
+        setHoldEndProgress(prev => ({ ...prev, [lane]: finalProgress }));
+      }
+      
+      // New hold started, clear the end progress
+      if (prevTime === 0 && currTime > 0) {
+        setHoldEndProgress(prev => ({ ...prev, [lane]: 0 }));
+      }
+    });
+    
+    prevHoldStartTimes.current = { ...holdStartTimes };
+  }, [holdStartTimes, currentTime]);
+
   // Get hold progress based on holdStartTimes passed from parent
-  // Variable max duration - will be capped when hitline is detected
+  // When hold ends, freeze at the final progress reached
   const getHoldProgress = (lane: number): number => {
     const holdStartTime = holdStartTimes[lane] || 0;
-    if (holdStartTime === 0) return 0; // No active hold
     
+    // If hold just ended, return the frozen final progress
+    if (holdStartTime === 0 && holdEndProgress[lane] > 0) {
+      return holdEndProgress[lane];
+    }
+    
+    // Not holding
+    if (holdStartTime === 0) return 0;
+    
+    // Currently holding - show real-time progress
     const actualHoldDuration = currentTime - holdStartTime;
-    const maxHoldDuration = 4000; // Will be capped by actual hitline detection
+    const maxHoldDuration = 4000;
     
     return Math.min(Math.max(actualHoldDuration / maxHoldDuration, 0), 1);
   };

@@ -150,9 +150,10 @@ export function CamelotWheel({ side, onSpin, notes, currentTime, holdStartTime =
         const hitlineAngle = 0;
         
         // Check if dot has reached hitline (within tolerance)
+        // Reduced from 15° to 10° for more precise hitline detection
         const angleDiff = Math.abs(dotVisualAngle - hitlineAngle);
         const normalizedDiff = angleDiff > 180 ? 360 - angleDiff : angleDiff;
-        const isAtHitline = normalizedDiff < 15;
+        const isAtHitline = normalizedDiff < 10;
         
         if (isAtHitline && !hitlineReached) {
           setHitlineReached(true); // Update state - triggers separate effect
