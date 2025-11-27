@@ -526,19 +526,23 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
               
               const { x1, y1, x2, y2, x3, y3, x4, y4 } = corners;
               
-              // Track hold note animation lifecycle
+              // Track hold note animation lifecycle - handle all failure types
               if (note.tooEarlyFailure || note.holdReleaseFailure || note.holdMissFailure) {
-                let failureType: 'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure' = 'holdMissFailure';
-                if (note.tooEarlyFailure) failureType = 'tooEarlyFailure';
-                else if (note.holdReleaseFailure) failureType = 'holdReleaseFailure';
+                const failureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
+                if (note.tooEarlyFailure) failureTypes.push('tooEarlyFailure');
+                if (note.holdReleaseFailure) failureTypes.push('holdReleaseFailure');
+                if (note.holdMissFailure) failureTypes.push('holdMissFailure');
                 
-                const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
-                if (!animEntry) {
-                  // First render - create tracking entry
-                  GameErrors.trackAnimation(note.id, failureType, note.failureTime || currentTime);
-                } else if (animEntry.status === 'pending') {
-                  // Mark as rendering on first visual frame
-                  GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
+                // Update all failure types for this note
+                for (const failureType of failureTypes) {
+                  const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
+                  if (!animEntry) {
+                    // Create tracking entry for this failure type
+                    GameErrors.trackAnimation(note.id, failureType, note.failureTime || currentTime);
+                  } else if (animEntry.status === 'pending') {
+                    // Mark as rendering on first visual frame
+                    GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
+                  }
                 }
               }
               
@@ -549,15 +553,19 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
                 // During Phase 2, keep opacity high (fade only at the very end)
                 opacity = Math.max(0.7 - (shrinkProgress * 0.5), 0.2); // Visible during Phase 2
                 
-                // Mark animation as completed when shrink finishes (1100ms total)
+                // Mark animations as completed when shrink finishes (1100ms total)
                 if (shrinkProgress >= 0.99 && (note.tooEarlyFailure || note.holdReleaseFailure || note.holdMissFailure)) {
-                  let failureType: 'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure' = 'holdMissFailure';
-                  if (note.tooEarlyFailure) failureType = 'tooEarlyFailure';
-                  else if (note.holdReleaseFailure) failureType = 'holdReleaseFailure';
+                  const failureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
+                  if (note.tooEarlyFailure) failureTypes.push('tooEarlyFailure');
+                  if (note.holdReleaseFailure) failureTypes.push('holdReleaseFailure');
+                  if (note.holdMissFailure) failureTypes.push('holdMissFailure');
                   
-                  const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
-                  if (animEntry && animEntry.status !== 'completed') {
-                    GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
+                  // Mark all failure types as completed
+                  for (const failureType of failureTypes) {
+                    const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
+                    if (animEntry && animEntry.status !== 'completed') {
+                      GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
+                    }
                   }
                 }
               }
@@ -685,6 +693,9 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
               } else if (animEntry.status === 'pending') {
                 // Mark as rendering on first visual frame
                 GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
+              } else if (animEntry.status === 'rendering' && timeSinceFail > 1100) {
+                // Mark as completed when animation finishes (before returning null)
+                GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
               }
             }
             
@@ -692,13 +703,6 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
             const failProgress = Math.min(timeSinceFail / 1000, 1.0); // 0 to 1 over 1000ms fade
             // Hide after 1100ms (animation + buffer) to match HOLD failures
             if (timeSinceFail > 1100) {
-              // Mark TAP animation as completed when it finishes
-              if (isFailed) {
-                const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === 'tapMissFailure');
-                if (animEntry && animEntry.status !== 'completed') {
-                  GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
-                }
-              }
               return null;
             }
 
