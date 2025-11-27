@@ -204,7 +204,7 @@ export const useGameEngine = (difficulty: Difficulty) => {
 
           setScore(s => s + points);
           setCombo(c => c + 1);
-          setHealth(h => Math.min(100, h + 1));
+          setHealth(h => Math.min(200, h + 1));
           
           const newNotes = [...prev];
           newNotes[noteIndex] = { ...note, hit: true };
@@ -232,8 +232,13 @@ export const useGameEngine = (difficulty: Difficulty) => {
       }
       
       // Find any hold note on this lane that hasn't been played, missed, or marked as failed
+      // Once a hold note is marked as any failure type, it can never be activated again
       const anyNote = notes.find(n => {
-        if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT') || n.hit || n.missed || (n as any).tooEarlyFailure || (n as any).holdMissFailure || (n as any).holdReleaseFailure) {
+        if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT') || n.hit || n.missed) {
+          return false;
+        }
+        // Exclude all failure types - once failed, the note is permanently unavailable
+        if ((n as any).tooEarlyFailure || (n as any).holdMissFailure || (n as any).holdReleaseFailure) {
           return false;
         }
         return true;

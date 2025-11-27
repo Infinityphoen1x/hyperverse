@@ -608,8 +608,9 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                 // During Phase 2, keep opacity high (fade only at the very end)
                 opacity = Math.max(0.7 - (shrinkProgress * 0.5), 0.2); // Visible during Phase 2
               }
-              const color = isGreyed ? 'rgba(100, 100, 100, 0.5)' : getColorForLane(note.lane);
-              const strokeColor = isGreyed ? 'rgba(150, 150, 150, 0.6)' : 'rgba(255,255,255,0.8)';
+              // Greyscale notes use fixed grey colors, never affected by health-based color shift
+              const color = isGreyed ? 'rgba(80, 80, 80, 0.6)' : getColorForLane(note.lane);
+              const strokeColor = isGreyed ? 'rgba(120, 120, 120, 0.7)' : 'rgba(255,255,255,0.8)';
               const strokeWidth = 2 + (Math.min(holdProgress, 1.0) * 2); // Stroke grows with trapezoid
               
               return (
@@ -622,7 +623,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
                   strokeWidth={strokeWidth}
                   style={{
                     filter: isGreyed 
-                      ? 'drop-shadow(0 0 8px rgba(100,100,100,0.4)) grayscale(1)'
+                      ? 'drop-shadow(0 0 6px rgba(100,100,100,0.3)) grayscale(1)'
                       : `drop-shadow(0 0 ${25 * finalGlowScale}px ${color}) drop-shadow(0 0 ${15 * finalGlowScale}px ${color})`,
                     transition: 'all 0.05s linear',
                   }}
