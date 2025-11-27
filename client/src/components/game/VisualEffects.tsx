@@ -11,12 +11,11 @@ interface Particle {
 
 interface VisualEffectsProps {
   combo: number;
-  score: number;
   health?: number;
   missCount?: number;
 }
 
-export function VisualEffects({ combo, score, health = 100, missCount = 0 }: VisualEffectsProps) {
+export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffectsProps) {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [shake, setShake] = useState(0);
   const [chromatic, setChromatic] = useState(0);
