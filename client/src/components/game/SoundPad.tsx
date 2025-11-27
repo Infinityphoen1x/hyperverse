@@ -64,7 +64,7 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
               currentTime={currentTime}
             />
             <div className="text-xs text-muted-foreground font-rajdhani font-bold tracking-wider">
-              KEY: {['W', 'O', 'E', 'I'][i]}
+              KEY: {['W', 'O', 'I', 'E'][i]}
             </div>
           </div>
         ))}
@@ -94,8 +94,8 @@ function PadButton({ index, onClick, notes, currentTime }: { index: number; onCl
   const padColor = [
     'rgb(255,0,127)',    // W - pink (bottom-left)
     'rgb(0,150,255)',    // O - blue (bottom-right)
-    'rgb(0,255,255)',    // E - cyan (top-left)
-    'rgb(190,0,255)'     // I - purple (top-right)
+    'rgb(190,0,255)',    // I - purple (top-right)
+    'rgb(0,255,255)'     // E - cyan (top-left)
   ][index];
 
   const handleMouseDown = () => {

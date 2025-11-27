@@ -146,7 +146,7 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
   const getNoteKey = (lane: number): string => {
     if (lane === -1) return 'Q';
     if (lane === -2) return 'P';
-    return ['W', 'O', 'E', 'I'][lane];
+    return ['W', 'O', 'I', 'E'][lane];
   };
 
   const getColorForLane = (lane: number): string => {
@@ -156,8 +156,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
         case -2: return '#FF0000'; // P - red
         case 0: return '#FF007F'; // W - pink (bottom-left)
         case 1: return '#0096FF'; // O - blue (bottom-right)
-        case 2: return '#00FFFF'; // E - cyan (top-left)
-        case 3: return '#BE00FF'; // I - purple (top-right)
+        case 2: return '#BE00FF'; // I - purple (top-right)
+        case 3: return '#00FFFF'; // E - cyan (top-left)
         default: return '#FFFFFF';
       }
     })();
@@ -189,8 +189,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
       '-1': 180,   // Q - left deck
       '0': 240,    // W - bottom-left pad
       '1': 120,    // O - bottom-right pad
-      '2': 300,    // E - top-left pad
-      '3': 60,     // I - top-right pad
+      '2': 60,     // I - top-right pad
+      '3': 300,    // E - top-left pad
     };
     const angle = rayMapping[lane as keyof typeof rayMapping];
     if (!Number.isFinite(angle)) {
@@ -276,8 +276,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
           {[
             { angle: 240, color: '#FF007F', key: 'W' },   // W (lane 0) - pink
             { angle: 120, color: '#0096FF', key: 'O' },   // O (lane 1) - blue
-            { angle: 300, color: '#00FFFF', key: 'E' },   // E (lane 2) - cyan
-            { angle: 60, color: '#BE00FF', key: 'I' },    // I (lane 3) - purple
+            { angle: 60, color: '#BE00FF', key: 'I' },    // I (lane 2) - purple
+            { angle: 300, color: '#00FFFF', key: 'E' },   // E (lane 3) - cyan
           ].map((lane, idx) => {
             const rad = (lane.angle * Math.PI) / 180;
             const radius = 187;
