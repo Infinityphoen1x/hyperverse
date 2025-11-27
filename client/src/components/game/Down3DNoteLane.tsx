@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Note } from "@/lib/gameEngine";
+import { Note, GameErrors } from "@/lib/gameEngine";
 
 // Extract health-based color calculation for tunnel effects
 const getHealthBasedRayColor = (health: number): string => {
@@ -16,14 +16,15 @@ const getTrapezoidCorners = (
   nearDistance: number,
   farDistance: number,
   vanishingPointX: number,
-  vanishingPointY: number
-): { x1: number; y1: number; x2: number; y2: number; x3: number; y3: number; x4: number; y4: number } => {
+  vanishingPointY: number,
+  noteId?: string
+): { x1: number; y1: number; x2: number; y2: number; x3: number; y3: number; x4: number; y4: number } | null => {
   const leftRayAngle = rayAngle - 15;
   const rightRayAngle = rayAngle + 15;
   const leftRad = (leftRayAngle * Math.PI) / 180;
   const rightRad = (rightRayAngle * Math.PI) / 180;
   
-  return {
+  const corners = {
     x1: vanishingPointX + Math.cos(leftRad) * farDistance,
     y1: vanishingPointY + Math.sin(leftRad) * farDistance,
     x2: vanishingPointX + Math.cos(rightRad) * farDistance,
@@ -33,6 +34,17 @@ const getTrapezoidCorners = (
     x4: vanishingPointX + Math.cos(leftRad) * nearDistance,
     y4: vanishingPointY + Math.sin(leftRad) * nearDistance,
   };
+  
+  // Validate all coordinates are finite
+  const allFinite = Object.values(corners).every(v => Number.isFinite(v));
+  if (!allFinite) {
+    if (noteId) {
+      GameErrors.log(`getTrapezoidCorners: Invalid coordinates for note ${noteId}: ${JSON.stringify(corners)}`);
+    }
+    return null;
+  }
+  
+  return corners;
 };
 
 interface Down3DNoteLaneProps {
@@ -489,13 +501,31 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
               const finalGlowScale = hasActivePress ? Math.max(glowScale - phase2Glow, 0.1) : 0.05;
               
               // Calculate trapezoid corners using helper function
-              const { x1, y1, x2, y2, x3, y3, x4, y4 } = getTrapezoidCorners(
+              const corners = getTrapezoidCorners(
                 rayAngle,
                 nearDistance,
                 farDistance,
                 VANISHING_POINT_X,
-                VANISHING_POINT_Y
+                VANISHING_POINT_Y,
+                note.id
               );
+              
+              if (!corners) {
+                if (note.tooEarlyFailure || note.holdReleaseFailure || note.holdMissFailure) {
+                  GameErrors.updateAnimation(note.id, { status: 'failed', errorMsg: 'Invalid trapezoid geometry' });
+                }
+                return null;
+              }
+              
+              const { x1, y1, x2, y2, x3, y3, x4, y4 } = corners;
+              
+              // Mark animation as rendering if it's a failure
+              if (note.tooEarlyFailure || note.holdReleaseFailure || note.holdMissFailure) {
+                const animEntry = GameErrors.animations.find(a => a.noteId === note.id);
+                if (animEntry && animEntry.status === 'pending') {
+                  GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
+                }
+              }
               
               // Phase 1: Opacity increases; Phase 2: Stays visible with gentle fade
               let opacity = 0.4 + Math.min(holdProgress, 1.0) * 0.6;
@@ -503,6 +533,11 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
                 const shrinkProgress = Math.min(holdProgress - 1.0, 1.0);
                 // During Phase 2, keep opacity high (fade only at the very end)
                 opacity = Math.max(0.7 - (shrinkProgress * 0.5), 0.2); // Visible during Phase 2
+                
+                // Mark animation as completed when shrink finishes
+                if (shrinkProgress >= 0.99 && (note.tooEarlyFailure || note.holdReleaseFailure || note.holdMissFailure)) {
+                  GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
+                }
               }
               // Greyscale notes use fixed grey colors, never affected by health-based color shift
               const baseColor = getColorForLane(note.lane);

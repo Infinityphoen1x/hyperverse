@@ -19,14 +19,45 @@ export interface Note {
 }
 
 // Error tracking for debugging
+interface AnimationErrorEntry {
+  noteId: string;
+  type: 'tapMissFailure' | 'tooEarlyFailure' | 'holdMissFailure' | 'holdReleaseFailure';
+  failureTime: number;
+  renderStart?: number;
+  renderEnd?: number;
+  status: 'pending' | 'rendering' | 'completed' | 'failed';
+  errorMsg?: string;
+}
+
 const GameErrors = {
   notes: [] as string[],
+  animations: [] as AnimationErrorEntry[],
   log: (msg: string) => {
     const timestamp = Date.now();
     const error = `[${timestamp}] ${msg}`;
     GameErrors.notes.push(error);
-    if (GameErrors.notes.length > 100) GameErrors.notes.shift(); // Keep last 100
+    if (GameErrors.notes.length > 100) GameErrors.notes.shift();
     console.warn(`[GAME ERROR] ${error}`);
+  },
+  trackAnimation: (noteId: string, type: AnimationErrorEntry['type'], failureTime: number) => {
+    GameErrors.animations.push({
+      noteId,
+      type,
+      failureTime,
+      status: 'pending',
+    });
+    if (GameErrors.animations.length > 200) GameErrors.animations.shift();
+  },
+  updateAnimation: (noteId: string, updates: Partial<AnimationErrorEntry>) => {
+    const entry = GameErrors.animations.find(a => a.noteId === noteId);
+    if (entry) Object.assign(entry, updates);
+  },
+  getAnimationStats: () => {
+    const total = GameErrors.animations.length;
+    const completed = GameErrors.animations.filter(a => a.status === 'completed').length;
+    const failed = GameErrors.animations.filter(a => a.status === 'failed').length;
+    const pending = GameErrors.animations.filter(a => a.status === 'pending').length;
+    return { total, completed, failed, pending };
   }
 };
 
@@ -197,6 +228,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
             }
             
             if (shouldMarkFailed && failureType) {
+              GameErrors.trackAnimation(n.id, failureType as any, time);
               setCombo(0);
               setHealth(h => {
                 newHealth = Math.max(0, h - 2);
@@ -321,6 +353,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         // Outside window - mark as failure
         if (timeSinceNoteSpawn < -holdActivationWindow) {
           // Too early - mark as tooEarlyFailure but still record pressTime for geometry locking
+          GameErrors.trackAnimation(anyNote.id, 'tooEarlyFailure', currentTime);
           setNotes(prev => {
             return prev.map(n => 
               n && n.id === anyNote.id ? { ...n, pressTime: currentTime, tooEarlyFailure: true, failureTime: currentTime } : n
@@ -375,6 +408,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         
         // Check if released too early (before hold duration complete)
         if (currentTime - pressTime < holdDuration) {
+          GameErrors.trackAnimation(activeNote.id, 'holdReleaseFailure', currentTime);
           setNotes(prev => {
             return prev.map(n => 
               n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true, failureTime: currentTime } : n
@@ -401,6 +435,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         }
         // Released too late (outside release window)
         else {
+          GameErrors.trackAnimation(activeNote.id, 'holdReleaseFailure', currentTime);
           setNotes(prev => {
             return prev.map(n => 
               n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true, failureTime: currentTime } : n
