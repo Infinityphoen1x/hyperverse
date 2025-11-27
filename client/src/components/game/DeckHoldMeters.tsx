@@ -5,22 +5,22 @@ import { Note } from "@/lib/gameEngine";
 interface DeckHoldMetersProps {
   notes: Note[];
   currentTime: number;
-  holdStartTimes: Record<number, number>;
+  holdStartTimes?: Record<number, { time: number; noteId: string }>;
 }
 
-export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldMetersProps) {
+export function DeckHoldMeters({ notes, currentTime, holdStartTimes = { [-1]: { time: 0, noteId: '' }, [-2]: { time: 0, noteId: '' } } }: DeckHoldMetersProps) {
   // Track when holds end (hitline detection) to briefly freeze meter for visual feedback
   const [holdEndProgress, setHoldEndProgress] = useState<Record<number, number>>({ '-1': 0, '-2': 0 });
   const [holdEndTime, setHoldEndTime] = useState<Record<number, number>>({ '-1': 0, '-2': 0 });
   const [completionGlow, setCompletionGlow] = useState<Record<number, boolean>>({ '-1': false, '-2': false });
-  const prevHoldStartTimes = useRef<Record<number, number>>({ '-1': 0, '-2': 0 });
+  const prevHoldStartTimes = useRef<Record<number, { time: number; noteId: string }>>({ [-1]: { time: 0, noteId: '' }, [-2]: { time: 0, noteId: '' } });
 
   // Detect when hold ends (holdStartTime goes from non-zero to 0)
   // Completion is based on fixed 1000ms hold duration (decoupled from dots)
   useEffect(() => {
     [-1, -2].forEach((lane) => {
-      const prevTime = prevHoldStartTimes.current[lane] || 0;
-      const currTime = holdStartTimes[lane] || 0;
+      const prevTime = prevHoldStartTimes.current[lane]?.time || 0;
+      const currTime = holdStartTimes[lane]?.time || 0;
       
       // Hold just ended (was holding, now not holding)
       if (prevTime > 0 && currTime === 0) {
@@ -70,7 +70,7 @@ export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldM
     try {
       if (!Number.isInteger(lane)) return 0;
       
-      const holdStartTime = holdStartTimes[lane] || 0;
+      const holdStartTime = holdStartTimes[lane]?.time || 0;
       
       // Validate time values
       if (!Number.isFinite(holdStartTime) || !Number.isFinite(currentTime)) {
