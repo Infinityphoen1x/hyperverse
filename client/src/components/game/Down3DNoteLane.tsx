@@ -164,8 +164,8 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
       }
     })();
     
-    // Shift towards red (#FF0000) as health decreases
-    const healthFactor = Math.max(0, 100 - health) / 100; // 0 at 100 health, 1 at 0 health
+    // Shift towards red (#FF0000) as health decreases (0-200 range)
+    const healthFactor = Math.max(0, 200 - health) / 200; // 0 at 200 health, 1 at 0 health
     if (healthFactor === 0) return baseColor;
     
     // Parse base color to RGB
