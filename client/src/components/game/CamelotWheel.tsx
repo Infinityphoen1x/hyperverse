@@ -6,15 +6,13 @@ import { GameErrors } from "@/lib/gameEngine";
 interface CamelotWheelProps {
   side: "left" | "right";
   onSpin: () => void;
-  currentTime: number;
-  holdStartTime?: number;
   onHoldStart?: (lane: number) => void;
   onHoldEnd?: () => void;
   onRotationChange?: (rotation: number) => void;
 }
 
 
-export function CamelotWheel({ side, onSpin, currentTime, holdStartTime = 0, onHoldStart = () => {}, onHoldEnd = () => {}, onRotationChange = () => {} }: CamelotWheelProps) {
+export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd = () => {}, onRotationChange = () => {} }: CamelotWheelProps) {
   const [internalRotation, setInternalRotation] = useState(0);
   const [spinDirection, setSpinDirection] = useState(1); // 1 for clockwise, -1 for counter-clockwise
   const [isKeyPressed, setIsKeyPressed] = useState(false);
