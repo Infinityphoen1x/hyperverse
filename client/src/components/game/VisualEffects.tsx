@@ -67,9 +67,9 @@ export function VisualEffects({ combo, score, health = 100, missCount = 0 }: Vis
     }
   }, [missCount, prevMissCount]);
 
-  // Continuous subtle glitch effect when health is low
+  // Continuous subtle glitch effect when health is low (below 80%)
   useEffect(() => {
-    if (health < 30) {
+    if (health < 160) {
       const glitchLoop = setInterval(() => {
         setGlitch(prev => prev > 0 ? 0 : 0.3);
       }, 400 + Math.random() * 200);
@@ -101,11 +101,7 @@ export function VisualEffects({ combo, score, health = 100, missCount = 0 }: Vis
       <div 
         className="fixed inset-0 pointer-events-none z-50 overflow-hidden"
         style={{
-          filter: `
-            grayscale(${greyscaleIntensity})
-            ${glitch > 0 ? `drop-shadow(${(Math.random() - 0.5) * 8}px ${(Math.random() - 0.5) * 8}px 0 rgba(255, 0, 127, ${Math.min(glitchOpacityMultiplier, 1)}))` : ''}
-            ${glitch > 0 ? `drop-shadow(${(Math.random() - 0.5) * 8}px ${(Math.random() - 0.5) * 8}px 0 rgba(0, 255, 255, ${Math.min(glitchOpacityMultiplier, 1)}))` : ''}
-          `
+          filter: `grayscale(${greyscaleIntensity})`,
         }}
       >
         {/* Chromatic Aberration Effect */}
