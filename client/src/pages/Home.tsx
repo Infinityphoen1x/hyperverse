@@ -8,7 +8,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen w-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Beatmap Loader - for loading YouTube before starting */}
+      {/* Beatmap Loader */}
       <BeatmapLoader 
         difficulty={selectedDifficulty as 'EASY' | 'MEDIUM' | 'HARD'}
         onBeatmapLoad={() => {}}

@@ -117,13 +117,13 @@ export default function Game() {
       
       {/* YouTube Overlay Control */}
       <YouTubeOverlay 
-        onVideoUrlChange={(url, videoId) => setYoutubeVideoId(videoId)}
+        onVideoUrlChange={(_, videoId) => setYoutubeVideoId(videoId)}
       />
 
       {/* Beatmap Loader */}
       <BeatmapLoader 
         difficulty={difficulty}
-        onBeatmapLoad={(beatmapText, youtubeVideoId, notes) => {
+        onBeatmapLoad={(_, youtubeVideoId, notes) => {
           if (youtubeVideoId) {
             setYoutubeVideoId(youtubeVideoId);
           }
