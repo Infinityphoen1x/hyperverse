@@ -252,8 +252,8 @@ export function Down3DNoteLane({ notes, currentTime }: Down3DNoteLaneProps) {
               
               // Width scales with distance
               const scale = 0.12 + (Math.min(holdProgress, 1.0) * 0.88);
-              const farWidth = 12 + (scale * 18);
-              const nearWidth = 30 + (scale * 50);
+              const nearWidth = 12 + (scale * 18);   // Narrow at far end (vanishing point)
+              const farWidth = 30 + (scale * 50);   // Wide at near end (judgement line)
               
               // Perpendicular direction
               const perpRad = rad + Math.PI / 2;
