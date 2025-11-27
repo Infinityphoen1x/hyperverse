@@ -733,7 +733,10 @@ export function Down3DNoteLane({ notes, currentTime, holdStartTimes = {}, onNote
               return null; // Safety: skip if malformed
             }
             const timeSinceFail = failureTime ? Math.max(0, currentTime - failureTime) : 0;
-            const failProgress = Math.min(timeSinceFail / 500, 1.0); // 0 to 1 over 500ms fade
+            // Fade over 1000ms to match HOLD failure animations (consistent visual language)
+            const failProgress = Math.min(timeSinceFail / 1000, 1.0); // 0 to 1 over 1000ms fade
+            // Hide after 1100ms (animation + buffer) to match HOLD failures
+            if (timeSinceFail > 1100) return null;
 
             return (
               <motion.div
