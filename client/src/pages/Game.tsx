@@ -152,8 +152,6 @@ export default function Game() {
             notes={notes} 
             currentTime={currentTime}
             holdStartTimes={holdStartTimes}
-            onHoldStart={trackHoldStart}
-            onHoldEnd={trackHoldEnd}
           />
         </div>
 

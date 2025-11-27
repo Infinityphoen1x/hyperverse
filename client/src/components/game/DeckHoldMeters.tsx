@@ -6,11 +6,9 @@ interface DeckHoldMetersProps {
   notes: Note[];
   currentTime: number;
   holdStartTimes: Record<number, number>;
-  onHoldStart: (lane: number) => void;
-  onHoldEnd: (lane: number) => void;
 }
 
-export function DeckHoldMeters({ notes, currentTime, holdStartTimes, onHoldStart, onHoldEnd }: DeckHoldMetersProps) {
+export function DeckHoldMeters({ notes, currentTime, holdStartTimes }: DeckHoldMetersProps) {
   // Track when holds end (hitline detection) to briefly freeze meter for visual feedback
   const [holdEndProgress, setHoldEndProgress] = useState<Record<number, number>>({ '-1': 0, '-2': 0 });
   const [holdEndTime, setHoldEndTime] = useState<Record<number, number>>({ '-1': 0, '-2': 0 });
