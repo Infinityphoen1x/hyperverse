@@ -40,6 +40,7 @@ export default function Game() {
   const [youtubeStartTime, setYoutubeStartTime] = useState(0);
   const [countdownActive, setCountdownActive] = useState(false);
   const [countdown, setCountdown] = useState(3);
+  const [showYoutubeIframe, setShowYoutubeIframe] = useState(true);
   
   const { 
     gameState, 
@@ -127,18 +128,21 @@ export default function Game() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && gameState === 'PLAYING') {
         if (isPaused) {
+          setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
           setCountdownActive(true);
           setCountdown(3);
+          setShowYoutubeIframe(false);
           setIsPauseMenuOpen(false);
         } else {
           pauseGame();
+          setShowYoutubeIframe(false);
           setIsPauseMenuOpen(true);
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, isPaused, pauseGame]);
+  }, [gameState, isPaused, pauseGame, currentTime]);
 
   // Countdown timer effect
   useEffect(() => {
@@ -148,6 +152,7 @@ export default function Game() {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
     } else {
+      setShowYoutubeIframe(true);
       resumeGame();
       setCountdownActive(false);
     }
@@ -186,7 +191,7 @@ export default function Game() {
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col relative">
       {/* YouTube Background Layer - Auto-plays with audio for time sync */}
-      {youtubeVideoId && (
+      {youtubeVideoId && showYoutubeIframe && (
         <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
           <iframe
             ref={youtubeIframeRef}
@@ -197,7 +202,7 @@ export default function Game() {
             allow="autoplay"
             className="w-full h-full"
             data-testid="iframe-youtube-background"
-            key={`youtube-${youtubeStartTime}-${countdownActive ? 'counting' : 'ready'}`}
+            key={`youtube-${youtubeStartTime}`}
           />
         </div>
       )}
@@ -237,6 +242,7 @@ export default function Game() {
                   setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
                   setCountdownActive(true);
                   setCountdown(3);
+                  setShowYoutubeIframe(false);
                   setIsPauseMenuOpen(false);
                 }}
                 className="px-12 py-4 bg-neon-cyan text-black font-bold font-orbitron text-lg hover:bg-white transition-colors"
@@ -248,6 +254,7 @@ export default function Game() {
                 onClick={() => {
                   restartGame();
                   setYoutubeStartTime(0);
+                  setShowYoutubeIframe(true);
                   setIsPauseMenuOpen(false);
                 }}
                 className="px-12 py-4 bg-neon-yellow text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-neon-yellow"
@@ -306,9 +313,11 @@ export default function Game() {
                 setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
                 setCountdownActive(true);
                 setCountdown(3);
+                setShowYoutubeIframe(false);
                 setIsPauseMenuOpen(false);
               } else if (!isPaused) {
                 pauseGame();
+                setShowYoutubeIframe(false);
                 setIsPauseMenuOpen(true);
               }
             }}
