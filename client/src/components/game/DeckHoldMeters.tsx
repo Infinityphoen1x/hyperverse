@@ -23,13 +23,14 @@ const getRectangleMeterColor = (lane: number): string => {
 };
 
 // Helper: Check if a note is an active (pressed, not failed) hold note on a specific lane
+// CRITICAL: Allow tooEarlyFailure if actively held - player still deserves meter credit for holding
+// Only exclude holdMissFailure and holdReleaseFailure which mean the hold was truly abandoned
 const isActiveHoldNote = (note: Note, lane: number): boolean => {
   return !!(
     note &&
     note.lane === lane && 
     (note.type === 'SPIN_LEFT' || note.type === 'SPIN_RIGHT') && 
     !note.hit &&
-    !note.tooEarlyFailure &&
     !note.holdMissFailure &&
     !note.holdReleaseFailure &&
     note.pressHoldTime && 
