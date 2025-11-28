@@ -32,6 +32,7 @@ const RectangleMeter = ({ progress, outlineColor, lane, completionGlow }: Rectan
   }
   
   const filledSegments = Math.ceil(progress * segments);
+  const isFull = progress >= COMPLETION_THRESHOLD;
   
   // Validate segment count
   if (!Number.isFinite(filledSegments) || filledSegments < 0 || filledSegments > segments) {
@@ -42,12 +43,16 @@ const RectangleMeter = ({ progress, outlineColor, lane, completionGlow }: Rectan
   return (
     <motion.div 
       className="flex flex-col-reverse gap-0.5"
-      animate={completionGlow[lane] ? { scale: 1.1 } : { scale: 1 }}
-      transition={{ duration: 0.2 }}
+      animate={completionGlow[lane] ? { scale: 1.15 } : { scale: 1 }}
+      transition={{ duration: 0.15 }}
     >
       {Array.from({ length: segments }).map((_, idx) => {
         const fillColor = getRectangleMeterColor(lane);
         const isFilled = idx < filledSegments;
+        
+        // Full meter gets special glow treatment
+        const fullMeterGlow = isFull && isFilled;
+        
         return (
           <motion.div
             key={idx}
@@ -56,19 +61,25 @@ const RectangleMeter = ({ progress, outlineColor, lane, completionGlow }: Rectan
               width: '60px',
               borderColor: outlineColor,
               background: isFilled ? fillColor : 'transparent',
-              boxShadow: isFilled 
-                ? `0 0 10px ${fillColor}, inset 0 0 6px rgba(255,255,255,0.3)` 
-                : 'none',
+              boxShadow: fullMeterGlow
+                ? `0 0 15px ${fillColor}, 0 0 30px ${fillColor}, inset 0 0 8px rgba(255,255,255,0.6)`
+                : isFilled 
+                  ? `0 0 10px ${fillColor}, inset 0 0 6px rgba(255,255,255,0.3)` 
+                  : 'none',
             }}
             animate={{
               opacity: isFilled ? 1 : 0.15,
-              boxShadow: completionGlow[lane] && isFilled
-                ? `0 0 20px ${fillColor}, inset 0 0 10px rgba(255,255,255,0.6)`
+              boxShadow: fullMeterGlow
+                ? [
+                    `0 0 15px ${fillColor}, 0 0 30px ${fillColor}, inset 0 0 8px rgba(255,255,255,0.6)`,
+                    `0 0 20px ${fillColor}, 0 0 40px ${fillColor}, inset 0 0 10px rgba(255,255,255,0.8)`,
+                    `0 0 15px ${fillColor}, 0 0 30px ${fillColor}, inset 0 0 8px rgba(255,255,255,0.6)`,
+                  ]
                 : isFilled
                   ? `0 0 10px ${fillColor}, inset 0 0 6px rgba(255,255,255,0.3)`
                   : 'none',
             }}
-            transition={{ duration: 0.08 }}
+            transition={fullMeterGlow ? { duration: 0.6, repeat: Infinity } : { duration: 0.08 }}
           />
         );
       })}
@@ -79,9 +90,38 @@ const RectangleMeter = ({ progress, outlineColor, lane, completionGlow }: Rectan
 export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
   const [completionGlow, setCompletionGlow] = useState<Record<number, boolean>>({ [-1]: false, [-2]: false });
   const prevCompletionRef = useRef<Record<number, boolean>>({ [-1]: false, [-2]: false });
+  const prevActiveNoteIdRef = useRef<Record<number, string>>({ [-1]: '', [-2]: '' });
+
+  // Detect when a hold note ends and reset meter
+  useEffect(() => {
+    [-1, -2].forEach((lane) => {
+      // Find currently active note on this lane
+      const activeNote = Array.isArray(notes) ? notes.find(n => 
+        n &&
+        n.lane === lane && 
+        (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
+        !n.tooEarlyFailure &&
+        !n.holdMissFailure &&
+        !n.holdReleaseFailure &&
+        n.pressTime && 
+        n.pressTime > 0
+      ) : null;
+      
+      const currentNoteId = activeNote?.id || '';
+      const prevNoteId = prevActiveNoteIdRef.current[lane];
+      
+      // Hold note changed or ended - reset glow
+      if (prevNoteId && prevNoteId !== currentNoteId) {
+        prevCompletionRef.current[lane] = false;
+        setCompletionGlow(prev => ({ ...prev, [lane]: false }));
+      }
+      
+      // Update tracking
+      prevActiveNoteIdRef.current[lane] = currentNoteId;
+    });
+  }, [notes, currentTime]);
 
   // Simple meter logic: just calculate progress based on active hold note's beatmap duration
-  // No complex state tracking - meter directly reflects current hold progress
   const getHoldProgress = (lane: number): number => {
     try {
       if (!Number.isInteger(lane) || !Array.isArray(notes)) return 0;
