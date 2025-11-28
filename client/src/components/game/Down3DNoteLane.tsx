@@ -572,12 +572,13 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
                 }
               }
               
-              // Phase 1: Opacity increases; Phase 2: Stays visible with gentle fade
+              // Phase 1: Opacity increases from 0.4 to 1.0
+              // Phase 2: Maintain high opacity, fade smoothly at end
               let opacity = 0.4 + Math.min(holdProgress, 1.0) * 0.6;
               if (isInPhase2) {
                 const shrinkProgress = Math.min(holdProgress - 1.0, 1.0);
-                // During Phase 2, keep opacity high (fade only at the very end)
-                opacity = Math.max(0.7 - (shrinkProgress * 0.5), 0.2); // Visible during Phase 2
+                // During Phase 2: Start from 1.0 (end of Phase 1), fade to 0.2 over 1000ms
+                opacity = Math.max(1.0 - (shrinkProgress * 0.8), 0.2); // Smooth fade from 1.0 to 0.2
                 
                 // Mark animations as completed when shrink finishes (1100ms total)
                 if (shrinkProgress >= 0.99 && (note.tooEarlyFailure || note.holdReleaseFailure || note.holdMissFailure)) {
