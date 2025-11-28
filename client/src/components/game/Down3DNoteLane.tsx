@@ -431,24 +431,23 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 let failureTime = note.failureTime || currentTime;
                 
                 if (isTooEarlyFailure || isHoldReleaseFailure || isHoldMissFailure) {
-                  // Update animation status before early return
-                  const timeSinceFail = Math.max(0, currentTime - failureTime);
-                  
-                  // Mark animations as completed when they finish
-                  const failureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
-                  if (isTooEarlyFailure) failureTypes.push('tooEarlyFailure');
-                  if (isHoldReleaseFailure) failureTypes.push('holdReleaseFailure');
-                  if (isHoldMissFailure) failureTypes.push('holdMissFailure');
-                  
-                  for (const failureType of failureTypes) {
-                    const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
-                    if (animEntry && animEntry.status !== 'completed') {
-                      GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
-                    }
-                  }
-                  
                   // Skip rendering if failure animation is complete
-                  if (timeSinceFail > HOLD_ANIMATION_DURATION) return null;
+                  const timeSinceFail = Math.max(0, currentTime - failureTime);
+                  if (timeSinceFail > HOLD_ANIMATION_DURATION) {
+                    // Mark animations as completed only when animation duration is finished
+                    const failureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
+                    if (isTooEarlyFailure) failureTypes.push('tooEarlyFailure');
+                    if (isHoldReleaseFailure) failureTypes.push('holdReleaseFailure');
+                    if (isHoldMissFailure) failureTypes.push('holdMissFailure');
+                    
+                    for (const failureType of failureTypes) {
+                      const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
+                      if (animEntry && animEntry.status !== 'completed') {
+                        GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
+                      }
+                    }
+                    return null;
+                  }
                 }
               
               // Get ray angle
