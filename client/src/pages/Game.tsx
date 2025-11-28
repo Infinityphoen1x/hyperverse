@@ -70,14 +70,11 @@ export default function Game() {
     currentTimeRef.current = currentTime;
   }, [currentTime]);
 
-  // Initialize YouTube player and seek to 0 when iframe is ready
+  // Initialize YouTube player when iframe is ready
   useEffect(() => {
     if (youtubeVideoId && youtubeIframeRef.current && !playerInitializedRef.current && window.YT) {
       initYouTubePlayer(youtubeIframeRef.current, () => {
-        // This callback fires when player is truly ready
-        seekYouTubeVideo(0);
-        pauseYouTubeVideo();
-        console.log('[INIT] YouTube synchronized to 0ms and paused on ready');
+        console.log('[INIT] YouTube player ready and initialized');
       });
       playerInitializedRef.current = true;
     }
