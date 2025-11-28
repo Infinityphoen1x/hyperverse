@@ -506,6 +506,33 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
   const targetOffsetRef = useRef({ x: 0, y: 0 });
   const currentOffsetRef = useRef({ x: 0, y: 0 });
   const [, setRenderTrigger] = useState(0);
+  const vanishingPointShiftsRef = useRef<Array<{ milestone: number; fromOffset: { x: number; y: number }; toOffset: { x: number; y: number }; distance: number }>>([]);
+  
+  // Error tracking for vanishing point shifts
+  const validateVanishingPointShift = (milestone: number, prevOffset: { x: number; y: number }, newOffset: { x: number; y: number }) => {
+    const distance = Math.sqrt(Math.pow(newOffset.x - prevOffset.x, 2) + Math.pow(newOffset.y - prevOffset.y, 2));
+    const expectedDistance = ANGLE_SHIFT_DISTANCE;
+    const tolerance = 0.5; // Allow ±0.5px tolerance
+    
+    const shiftRecord = {
+      milestone,
+      fromOffset: { ...prevOffset },
+      toOffset: { ...newOffset },
+      distance
+    };
+    
+    // Add to tracking
+    vanishingPointShiftsRef.current.push(shiftRecord);
+    
+    // Validate shift distance
+    if (Math.abs(distance - expectedDistance) > tolerance) {
+      console.warn(`[VP-ERROR] Milestone ${milestone}x: Shift distance ${distance.toFixed(2)}px exceeds expected ${expectedDistance}px`, shiftRecord);
+    } else {
+      console.log(`[VP-OK] Milestone ${milestone}x: Offset shifted by ${distance.toFixed(2)}px from [${prevOffset.x.toFixed(1)}, ${prevOffset.y.toFixed(1)}] to [${newOffset.x.toFixed(1)}, ${newOffset.y.toFixed(1)}]`);
+    }
+    
+    return shiftRecord;
+  };
   
   // Smooth animation loop for vanishing point travel
   useEffect(() => {
@@ -543,6 +570,9 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
       const newOffsetX = Math.cos(angle) * ANGLE_SHIFT_DISTANCE;
       const newOffsetY = Math.sin(angle) * ANGLE_SHIFT_DISTANCE;
       
+      // Validate the shift before applying
+      validateVanishingPointShift(currentMilestone, joltOffset, { x: newOffsetX, y: newOffsetY });
+      
       // Start smooth transition from current offset to new angle
       animationStartRef.current = Date.now();
       currentOffsetRef.current = { ...joltOffset };
@@ -550,6 +580,14 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
       // NO RETURN TO CENTER - stays at new offset for immersive "tunnel angle" effect
     } else if (combo === 0) {
       prevComboMilestoneRef.current = 0;
+      
+      // Validate return to center on combo break
+      if (vanishingPointShiftsRef.current.length > 0) {
+        const lastShift = vanishingPointShiftsRef.current[vanishingPointShiftsRef.current.length - 1];
+        const returnDistance = Math.sqrt(Math.pow(joltOffset.x, 2) + Math.pow(joltOffset.y, 2));
+        console.log(`[VP-RESET] Combo break: Returning to center from [${joltOffset.x.toFixed(1)}, ${joltOffset.y.toFixed(1)}] (distance: ${returnDistance.toFixed(2)}px)`);
+      }
+      
       // Smooth return to center on combo break
       animationStartRef.current = Date.now();
       currentOffsetRef.current = { ...joltOffset };
