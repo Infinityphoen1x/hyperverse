@@ -127,20 +127,18 @@ export default function Game() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && gameState === 'PLAYING') {
         if (isPaused) {
-          setYoutubeStartTime(Math.floor(currentTime / 1000));
           setCountdownActive(true);
           setCountdown(3);
           setIsPauseMenuOpen(false);
         } else {
           pauseGame();
-          setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
           setIsPauseMenuOpen(true);
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, isPaused, pauseGame, currentTime]);
+  }, [gameState, isPaused, pauseGame]);
 
   // Countdown timer effect
   useEffect(() => {
@@ -236,7 +234,7 @@ export default function Game() {
             <div className="flex flex-col gap-4 mt-8">
               <button 
                 onClick={() => {
-                  setYoutubeStartTime(Math.floor(currentTime / 1000));
+                  setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
                   setCountdownActive(true);
                   setCountdown(3);
                   setIsPauseMenuOpen(false);
@@ -305,13 +303,12 @@ export default function Game() {
           <button
             onClick={() => {
               if (isPaused && !countdownActive) {
-                setYoutubeStartTime(Math.floor(currentTime / 1000));
+                setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
                 setCountdownActive(true);
                 setCountdown(3);
                 setIsPauseMenuOpen(false);
               } else if (!isPaused) {
                 pauseGame();
-                setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
                 setIsPauseMenuOpen(true);
               }
             }}
