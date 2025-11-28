@@ -1,0 +1,261 @@
+{
+  "timestamp": "2025-11-28T12:39:31.515Z",
+  "errorLog": [
+    "[1764333451311] BeatmapConverter: HOLD note hold_0 lane=-1 → type=SPIN_LEFT",
+    "[1764333451311] BeatmapConverter: HOLD note hold_1 lane=-2 → type=SPIN_RIGHT",
+    "[1764333451311] BeatmapConverter: HOLD note hold_2 lane=-1 → type=SPIN_LEFT",
+    "[1764333451311] BeatmapConverter: HOLD note hold_3 lane=-2 → type=SPIN_RIGHT",
+    "[1764333451311] BeatmapConverter: HOLD note hold_4 lane=-1 → type=SPIN_LEFT",
+    "[1764333451311] BeatmapConverter: HOLD note hold_5 lane=-1 → type=SPIN_LEFT",
+    "[1764333451311] BeatmapConverter: HOLD note hold_6 lane=-2 → type=SPIN_RIGHT",
+    "[1764333451311] BeatmapConverter: HOLD note hold_7 lane=-1 → type=SPIN_LEFT",
+    "[1764333451311] BeatmapConverter: HOLD note hold_8 lane=-2 → type=SPIN_RIGHT",
+    "[1764333451311] BeatmapConverter: HOLD note hold_9 lane=-1 → type=SPIN_LEFT",
+    "[1764333451311] BeatmapConverter: HOLD note hold_10 lane=-1 → type=SPIN_LEFT",
+    "[1764333451311] BeatmapConverter: HOLD note hold_11 lane=-2 → type=SPIN_RIGHT",
+    "[1764333464394] trackHoldStart: Lane Q (-1) at currentTime=11170",
+    "[1764333464394] trackHoldStart: Lane Q - FOUND HOLD NOTE hold_0, time=11000ms, spawn offset=170ms",
+    "[1764333464395] trackHoldStart: Lane Q - SET pressHoldTime on note hold_0",
+    "[1764333466402] trackHoldEnd: Lane Q (-1), Found 7 HOLD notes on this lane",
+    "[1764333466402] trackHoldEnd: Lane Q - Found active note hold_0 at currentTime=13167, pressHoldTime=11170, duration=2000",
+    "[1764333466402] trackHoldEnd: Lane Q note hold_0 - HOLD_RELEASE_FAILURE (released too late: 167ms > window 100ms)",
+    "[1764333472302] trackHoldStart: Lane P (-2) at currentTime=19078",
+    "[1764333472302] trackHoldStart: Lane P - FOUND HOLD NOTE hold_1, time=19000ms, spawn offset=78ms",
+    "[1764333472302] trackHoldStart: Lane P - SET pressHoldTime on note hold_1",
+    "[1764333473647] trackHoldEnd: Lane P (-2), Found 5 HOLD notes on this lane",
+    "[1764333473647] trackHoldEnd: Lane P - Found active note hold_1 at currentTime=20420, pressHoldTime=19078, duration=2000",
+    "[1764333473647] trackHoldEnd: Lane P note hold_1 - HOLD_RELEASE_FAILURE (released too early: 1420ms < 2000ms)",
+    "[1764333479285] trackHoldStart: Lane Q (-1) at currentTime=26061",
+    "[1764333479285] trackHoldStart: Lane Q - FOUND HOLD NOTE hold_2, time=26000ms, spawn offset=61ms",
+    "[1764333479285] trackHoldStart: Lane Q - SET pressHoldTime on note hold_2",
+    "[1764333480733] trackHoldEnd: Lane Q (-1), Found 7 HOLD notes on this lane",
+    "[1764333480733] trackHoldEnd: Lane Q - Found active note hold_2 at currentTime=27504, pressHoldTime=26061, duration=1500",
+    "[1764333480733] trackHoldEnd: Lane Q note hold_2 - SUCCESSFUL HIT (accuracy: 4ms, window: 100ms)",
+    "[1764333488348] trackHoldStart: Lane P (-2) at currentTime=35119",
+    "[1764333488348] trackHoldStart: Lane P - FOUND HOLD NOTE hold_3, time=35000ms, spawn offset=119ms",
+    "[1764333488348] trackHoldStart: Lane P - SET pressHoldTime on note hold_3",
+    "[1764333490186] trackHoldEnd: Lane P (-2), Found 5 HOLD notes on this lane",
+    "[1764333490186] trackHoldEnd: Lane P - Found active note hold_3 at currentTime=36959, pressHoldTime=35119, duration=2000",
+    "[1764333490186] trackHoldEnd: Lane P note hold_3 - HOLD_RELEASE_FAILURE (released too early: 1959ms < 2000ms)",
+    "[1764333490215] trackHoldStart: Lane P (-2) at currentTime=36978",
+    "[1764333490215] trackHoldStart: Lane P - NO HOLD NOTE FOUND at currentTime=36978",
+    "[1764333490284] trackHoldEnd: Lane P (-2), Found 5 HOLD notes on this lane",
+    "[1764333490284] trackHoldEnd: Lane P - NO ACTIVE NOTE FOUND (currentTime=37054)",
+    "[1764333495247] trackHoldStart: Lane Q (-1) at currentTime=42019",
+    "[1764333495247] trackHoldStart: Lane Q - FOUND HOLD NOTE hold_4, time=42000ms, spawn offset=19ms",
+    "[1764333495247] trackHoldStart: Lane Q - SET pressHoldTime on note hold_4",
+    "[1764333496655] trackHoldEnd: Lane Q (-1), Found 7 HOLD notes on this lane",
+    "[1764333496655] trackHoldEnd: Lane Q - Found active note hold_4 at currentTime=43377, pressHoldTime=42019, duration=1500",
+    "[1764333496655] trackHoldEnd: Lane Q note hold_4 - HOLD_RELEASE_FAILURE (released too early: 1377ms < 1500ms)",
+    "[1764333506334] trackHoldStart: Lane Q (-1) at currentTime=53103",
+    "[1764333506334] trackHoldStart: Lane Q - FOUND HOLD NOTE hold_5, time=53000ms, spawn offset=103ms",
+    "[1764333506334] trackHoldStart: Lane Q - SET pressHoldTime on note hold_5",
+    "[1764333508465] trackHoldEnd: Lane Q (-1), Found 7 HOLD notes on this lane",
+    "[1764333508465] trackHoldEnd: Lane Q - Found active note hold_5 at currentTime=55229, pressHoldTime=53103, duration=2000",
+    "[1764333508465] trackHoldEnd: Lane Q note hold_5 - HOLD_RELEASE_FAILURE (released too late: 229ms > window 100ms)",
+    "[1764333513300] trackHoldStart: Lane P (-2) at currentTime=60071",
+    "[1764333513300] trackHoldStart: Lane P - FOUND HOLD NOTE hold_6, time=60000ms, spawn offset=71ms",
+    "[1764333513300] trackHoldStart: Lane P - SET pressHoldTime on note hold_6",
+    "[1764333515377] trackHoldEnd: Lane P (-2), Found 5 HOLD notes on this lane",
+    "[1764333515377] trackHoldEnd: Lane P - Found active note hold_6 at currentTime=62145, pressHoldTime=60071, duration=2000",
+    "[1764333515377] trackHoldEnd: Lane P note hold_6 - HOLD_RELEASE_FAILURE (released too late: 145ms > window 100ms)",
+    "[1764333520362] trackHoldStart: Lane Q (-1) at currentTime=67136",
+    "[1764333520362] trackHoldStart: Lane Q - FOUND HOLD NOTE hold_7, time=67000ms, spawn offset=136ms",
+    "[1764333520362] trackHoldStart: Lane Q - SET pressHoldTime on note hold_7",
+    "[1764333522651] trackHoldEnd: Lane Q (-1), Found 7 HOLD notes on this lane",
+    "[1764333522652] trackHoldEnd: Lane Q - NO ACTIVE NOTE FOUND (currentTime=69417)",
+    "[1764333530355] trackHoldStart: Lane P (-2) at currentTime=77129",
+    "[1764333530356] trackHoldStart: Lane P - FOUND HOLD NOTE hold_8, time=77000ms, spawn offset=129ms",
+    "[1764333530356] trackHoldStart: Lane P - SET pressHoldTime on note hold_8",
+    "[1764333531869] trackHoldEnd: Lane P (-2), Found 5 HOLD notes on this lane",
+    "[1764333531869] trackHoldEnd: Lane P - Found active note hold_8 at currentTime=78644, pressHoldTime=77129, duration=2000",
+    "[1764333531869] trackHoldEnd: Lane P note hold_8 - HOLD_RELEASE_FAILURE (released too early: 1644ms < 2000ms)",
+    "[1764333531945] trackHoldStart: Lane P (-2) at currentTime=78720",
+    "[1764333531945] trackHoldStart: Lane P - NO HOLD NOTE FOUND at currentTime=78720",
+    "[1764333532006] trackHoldEnd: Lane P (-2), Found 5 HOLD notes on this lane",
+    "[1764333532006] trackHoldEnd: Lane P - NO ACTIVE NOTE FOUND (currentTime=78778)",
+    "[1764333537335] trackHoldStart: Lane Q (-1) at currentTime=84103",
+    "[1764333537335] trackHoldStart: Lane Q - FOUND HOLD NOTE hold_9, time=84000ms, spawn offset=103ms",
+    "[1764333537335] trackHoldStart: Lane Q - SET pressHoldTime on note hold_9",
+    "[1764333539003] trackHoldEnd: Lane Q (-1), Found 7 HOLD notes on this lane",
+    "[1764333539003] trackHoldEnd: Lane Q - Found active note hold_9 at currentTime=85597, pressHoldTime=84103, duration=1500",
+    "[1764333539003] trackHoldEnd: Lane Q note hold_9 - SUCCESSFUL HIT (accuracy: 97ms, window: 100ms)",
+    "[1764333539016] trackHoldStart: Lane Q (-1) at currentTime=85597",
+    "[1764333539016] trackHoldStart: Lane Q - NO HOLD NOTE FOUND at currentTime=85597",
+    "[1764333539021] trackHoldEnd: Lane Q (-1), Found 7 HOLD notes on this lane",
+    "[1764333539021] trackHoldEnd: Lane Q - NO ACTIVE NOTE FOUND (currentTime=85597)",
+    "[1764333548300] trackHoldStart: Lane Q (-1) at currentTime=95070",
+    "[1764333548300] trackHoldStart: Lane Q - FOUND HOLD NOTE hold_10, time=95000ms, spawn offset=70ms",
+    "[1764333548300] trackHoldStart: Lane Q - SET pressHoldTime on note hold_10",
+    "[1764333550341] trackHoldEnd: Lane Q (-1), Found 7 HOLD notes on this lane",
+    "[1764333550341] trackHoldEnd: Lane Q - Found active note hold_10 at currentTime=97103, pressHoldTime=95070, duration=2000",
+    "[1764333550341] trackHoldEnd: Lane Q note hold_10 - HOLD_RELEASE_FAILURE (released too late: 103ms > window 100ms)",
+    "[1764333555271] trackHoldStart: Lane P (-2) at currentTime=102037",
+    "[1764333555271] trackHoldStart: Lane P - FOUND HOLD NOTE hold_11, time=102000ms, spawn offset=37ms",
+    "[1764333555271] trackHoldStart: Lane P - SET pressHoldTime on note hold_11",
+    "[1764333557243] trackHoldEnd: Lane P (-2), Found 5 HOLD notes on this lane",
+    "[1764333557244] trackHoldEnd: Lane P - Found active note hold_11 at currentTime=104013, pressHoldTime=102037, duration=2000",
+    "[1764333557244] trackHoldEnd: Lane P note hold_11 - SUCCESSFUL HIT (accuracy: 13ms, window: 100ms)"
+  ],
+  "animationStats": {
+    "total": 23,
+    "completed": 0,
+    "failed": 0,
+    "pending": 9,
+    "rendering": 14
+  },
+  "animationDetails": [
+    {
+      "noteId": "hold_0",
+      "type": "holdReleaseFailure",
+      "failureTime": 13167,
+      "status": "pending"
+    },
+    {
+      "noteId": "note-17500-14",
+      "type": "tapMissFailure",
+      "failureTime": 17803,
+      "status": "rendering",
+      "renderStart": 17803
+    },
+    {
+      "noteId": "note-18500-15",
+      "type": "tapMissFailure",
+      "failureTime": 18803,
+      "status": "rendering",
+      "renderStart": 18803
+    },
+    {
+      "noteId": "hold_1",
+      "type": "holdReleaseFailure",
+      "failureTime": 20420,
+      "status": "pending"
+    },
+    {
+      "noteId": "note-20500-17",
+      "type": "tapMissFailure",
+      "failureTime": 20803,
+      "status": "rendering",
+      "renderStart": 20803
+    },
+    {
+      "noteId": "note-21500-18",
+      "type": "tapMissFailure",
+      "failureTime": 21806,
+      "status": "rendering",
+      "renderStart": 21816
+    },
+    {
+      "noteId": "note-22000-19",
+      "type": "tapMissFailure",
+      "failureTime": 22303,
+      "status": "rendering",
+      "renderStart": 22311
+    },
+    {
+      "noteId": "note-31500-29",
+      "type": "tapMissFailure",
+      "failureTime": 31803,
+      "status": "rendering",
+      "renderStart": 31803
+    },
+    {
+      "noteId": "hold_3",
+      "type": "holdReleaseFailure",
+      "failureTime": 36959,
+      "status": "pending"
+    },
+    {
+      "noteId": "note-37000-35",
+      "type": "tapMissFailure",
+      "failureTime": 37303,
+      "status": "rendering",
+      "renderStart": 37303
+    },
+    {
+      "noteId": "note-43000-41",
+      "type": "tapMissFailure",
+      "failureTime": 43313,
+      "status": "rendering",
+      "renderStart": 43313
+    },
+    {
+      "noteId": "hold_4",
+      "type": "holdReleaseFailure",
+      "failureTime": 43377,
+      "status": "pending"
+    },
+    {
+      "noteId": "note-54000-52",
+      "type": "tapMissFailure",
+      "failureTime": 54306,
+      "status": "rendering",
+      "renderStart": 54306
+    },
+    {
+      "noteId": "hold_5",
+      "type": "holdReleaseFailure",
+      "failureTime": 55229,
+      "status": "pending"
+    },
+    {
+      "noteId": "note-61000-59",
+      "type": "tapMissFailure",
+      "failureTime": 61307,
+      "status": "rendering",
+      "renderStart": 61307
+    },
+    {
+      "noteId": "hold_6",
+      "type": "holdReleaseFailure",
+      "failureTime": 62145,
+      "status": "pending"
+    },
+    {
+      "noteId": "note-62000-60",
+      "type": "tapMissFailure",
+      "failureTime": 62315,
+      "status": "rendering",
+      "renderStart": 62325
+    },
+    {
+      "noteId": "note-68000-66",
+      "type": "tapMissFailure",
+      "failureTime": 68303,
+      "status": "rendering",
+      "renderStart": 68303
+    },
+    {
+      "noteId": "hold_7",
+      "type": "holdReleaseFailure",
+      "failureTime": 69250,
+      "status": "pending"
+    },
+    {
+      "noteId": "note-78000-76",
+      "type": "tapMissFailure",
+      "failureTime": 78312,
+      "status": "rendering",
+      "renderStart": 78312
+    },
+    {
+      "noteId": "hold_8",
+      "type": "holdReleaseFailure",
+      "failureTime": 78644,
+      "status": "pending"
+    },
+    {
+      "noteId": "note-79000-77",
+      "type": "tapMissFailure",
+      "failureTime": 79312,
+      "status": "rendering",
+      "renderStart": 79323
+    },
+    {
+      "noteId": "hold_10",
+      "type": "holdReleaseFailure",
+      "failureTime": 97103,
+      "status": "pending"
+    }
+  ]
+}

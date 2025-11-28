@@ -485,25 +485,28 @@ const trackHoldNoteAnimationLifecycle = (
   if (failures.isHoldMissFailure) failureTypes.push('holdMissFailure');
   
   for (const failureType of failureTypes) {
-    const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
+    let animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
     const failureTime = animEntry?.failureTime || note.failureTime || currentTime;
     const timeSinceFailure = Math.max(0, currentTime - failureTime);
     
     if (!animEntry) {
       // Create tracking entry for this failure type
       GameErrors.trackAnimation(note.id, failureType, note.failureTime || currentTime);
-    } else if (animEntry.status === 'pending') {
-      // Skip if animation already finished, otherwise mark rendering
-      if (timeSinceFailure >= HOLD_ANIMATION_DURATION) {
-        GameErrors.updateAnimation(note.id, { status: 'completed', renderStart: currentTime, renderEnd: currentTime });
-      } else {
-        GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
-      }
+      animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
     }
     
-    // Mark complete when collapse finishes
-    if (collapseProgress >= 0.99 && animEntry && animEntry.status !== 'completed') {
-      GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
+    if (animEntry) {
+      if (animEntry.status === 'pending') {
+        // Transition to rendering or completed based on time elapsed
+        if (timeSinceFailure >= HOLD_ANIMATION_DURATION) {
+          GameErrors.updateAnimation(note.id, { status: 'completed', renderStart: currentTime, renderEnd: currentTime });
+        } else {
+          GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
+        }
+      } else if (animEntry.status === 'rendering' && timeSinceFailure >= HOLD_ANIMATION_DURATION) {
+        // Complete when animation duration expires
+        GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
+      }
     }
   }
 };
