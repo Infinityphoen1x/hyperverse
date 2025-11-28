@@ -83,5 +83,19 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
     gameNotes.push(gameNote);
   }
   
+  // Validate chronological order and sort if needed
+  let isChronological = true;
+  for (let i = 1; i < gameNotes.length; i++) {
+    if (gameNotes[i].time < gameNotes[i - 1].time) {
+      isChronological = false;
+      break;
+    }
+  }
+  
+  if (!isChronological) {
+    GameErrors.log(`BeatmapConverter: Notes were out of chronological order, sorting by time`);
+    gameNotes.sort((a, b) => a.time - b.time);
+  }
+  
   return gameNotes;
 }
