@@ -571,42 +571,40 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
     return () => cancelAnimationFrame(animationFrameId);
   }, []);
   
-  // Detect combo milestones (10, 20, 30, etc.) - shift vanishing point to new angle, stays offset
+  // Detect combo milestones (10, 20, 30, etc.) - shift vanishing point to new angle, reset on x50
   useEffect(() => {
     const currentMilestone = Math.floor(combo / 10) * 10;
     if (combo > 0 && currentMilestone !== prevComboMilestoneRef.current) {
       prevComboMilestoneRef.current = currentMilestone;
       
-      // Each milestone: smoothly shift to NEW random angle - STAYS OFFSET (viewing angle shift)
-      const angle = Math.random() * Math.PI * 2;
-      const newOffsetX = Math.cos(angle) * ANGLE_SHIFT_DISTANCE;
-      const newOffsetY = Math.sin(angle) * ANGLE_SHIFT_DISTANCE;
-      
-      // Use current animated offset, not state (state lags behind animation)
-      const currentAnimOffset = currentOffsetRef.current;
-      
-      // Validate the shift before applying
-      validateVanishingPointShift(currentMilestone, currentAnimOffset, { x: newOffsetX, y: newOffsetY });
-      
-      // Start smooth transition from current animation frame to new angle
-      animationStartRef.current = Date.now();
-      currentOffsetRef.current = { ...currentAnimOffset };
-      targetOffsetRef.current = { x: newOffsetX, y: newOffsetY };
-      // NO RETURN TO CENTER - stays at new offset for immersive "tunnel angle" effect
-    } else if (combo === 0) {
-      prevComboMilestoneRef.current = 0;
-      
-      // Validate return to center on combo break
-      const currentAnimOffset = currentOffsetRef.current;
-      if (vanishingPointShiftsRef.current.length > 0) {
+      // Check if this is a x50 milestone - reset to center
+      if (currentMilestone % 50 === 0) {
+        const currentAnimOffset = currentOffsetRef.current;
         const returnDistance = Math.sqrt(Math.pow(currentAnimOffset.x, 2) + Math.pow(currentAnimOffset.y, 2));
-        console.log(`[VP-RESET] Combo break: Returning to center from [${currentAnimOffset.x.toFixed(1)}, ${currentAnimOffset.y.toFixed(1)}] (distance: ${returnDistance.toFixed(2)}px)`);
+        console.log(`[VP-RESET] x50 milestone: Returning to center from [${currentAnimOffset.x.toFixed(1)}, ${currentAnimOffset.y.toFixed(1)}] (distance: ${returnDistance.toFixed(2)}px)`);
+        
+        // Smooth return to center on x50
+        animationStartRef.current = Date.now();
+        currentOffsetRef.current = { ...currentAnimOffset };
+        targetOffsetRef.current = { x: 0, y: 0 };
+      } else {
+        // Non-x50 milestones: smoothly shift to NEW random angle - STAYS OFFSET (viewing angle shift)
+        const angle = Math.random() * Math.PI * 2;
+        const newOffsetX = Math.cos(angle) * ANGLE_SHIFT_DISTANCE;
+        const newOffsetY = Math.sin(angle) * ANGLE_SHIFT_DISTANCE;
+        
+        // Use current animated offset, not state (state lags behind animation)
+        const currentAnimOffset = currentOffsetRef.current;
+        
+        // Validate the shift before applying
+        validateVanishingPointShift(currentMilestone, currentAnimOffset, { x: newOffsetX, y: newOffsetY });
+        
+        // Start smooth transition from current animation frame to new angle
+        animationStartRef.current = Date.now();
+        currentOffsetRef.current = { ...currentAnimOffset };
+        targetOffsetRef.current = { x: newOffsetX, y: newOffsetY };
+        // NO RETURN TO CENTER - stays at new offset for immersive "tunnel angle" effect
       }
-      
-      // Smooth return to center on combo break
-      animationStartRef.current = Date.now();
-      currentOffsetRef.current = { ...currentAnimOffset };
-      targetOffsetRef.current = { x: 0, y: 0 };
     }
   }, [combo]);
 
