@@ -308,6 +308,165 @@ const calculateTapNoteStyle = (
   return { opacity: Math.max(opacity, 0), fill, stroke, filter, hitFlashIntensity };
 };
 
+// ============================================================================
+// HELPER FUNCTIONS FOR HOLD NOTE RENDERING
+// ============================================================================
+
+/** Calculate collapse phase geometry (after press) */
+interface CollapseGeometry {
+  nearDistance: number;
+  farDistance: number;
+  collapseProgress: number;
+}
+
+const calculateCollapseGeometry = (
+  pressTime: number,
+  collapseDuration: number,
+  currentTime: number,
+  lockedNearDistance: number,
+  farDistanceAtPress: number,
+  approachNearDistance: number,
+  approachFarDistance: number
+): CollapseGeometry => {
+  if (!pressTime || pressTime === 0) {
+    // No press: use approach geometry
+    return { nearDistance: approachNearDistance, farDistance: approachFarDistance, collapseProgress: 0 };
+  }
+  
+  const timeSincePress = currentTime - pressTime;
+  const collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
+  
+  // During collapse: near end locked, far end contracts toward it
+  const nearDistance = lockedNearDistance;
+  const farDistance = farDistanceAtPress * (1 - collapseProgress) + lockedNearDistance * collapseProgress;
+  
+  return { nearDistance, farDistance, collapseProgress };
+};
+
+/** Calculate locked near distance (where note "grabs" on press) */
+const calculateLockedNearDistance = (
+  note: Note,
+  pressTime: number,
+  isTooEarlyFailure: boolean
+): number | null => {
+  if (!pressTime || pressTime === 0) return null; // No press
+  if (isTooEarlyFailure) return null; // Too early - don't lock
+  
+  if (note.hit) {
+    // Successful hit: lock at judgement line
+    return JUDGEMENT_RADIUS;
+  } else {
+    // Early-but-valid: lock at press position, clamped at judgement line
+    const timeUntilHitAtPress = note.time - pressTime;
+    const pressApproachProgress = Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0);
+    return Math.min(JUDGEMENT_RADIUS, 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1)));
+  }
+};
+
+/** Calculate glow intensity based on press state and collapse */
+interface GlowCalculation {
+  glowScale: number;
+  collapseGlow: number;
+  finalGlowScale: number;
+}
+
+const calculateHoldNoteGlow = (
+  pressTime: number,
+  currentTime: number,
+  collapseDuration: number,
+  approachProgress: number,
+  note: Note
+): GlowCalculation => {
+  const hasActivePress = pressTime > 0 || note.hit;
+  
+  // Base glow intensity scales with approach
+  const glowScale = hasActivePress ? 0.2 + (Math.min(approachProgress, 1.0) * 0.8) : 0.05;
+  
+  // During collapse: decrease glow as trapezoid collapses
+  let collapseGlow = 0;
+  if (pressTime && pressTime > 0) {
+    const timeSincePress = currentTime - pressTime;
+    const collapseGlowProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
+    collapseGlow = collapseGlowProgress > 0 ? (1 - collapseGlowProgress) * 0.8 : 0;
+  }
+  
+  const finalGlowScale = hasActivePress ? Math.max(glowScale - collapseGlow, 0.1) : 0.05;
+  
+  return { glowScale, collapseGlow, finalGlowScale };
+};
+
+/** Calculate colors and styling for HOLD note */
+interface HoldNoteColors {
+  fillColor: string;
+  glowColor: string;
+  strokeColor: string;
+}
+
+const calculateHoldNoteColors = (
+  isGreyed: boolean,
+  lane: number,
+  baseColor: string
+): HoldNoteColors => {
+  if (isGreyed) {
+    return {
+      fillColor: GREYSCALE_FILL_COLOR,
+      glowColor: GREYSCALE_GLOW_COLOR,
+      strokeColor: 'rgba(120, 120, 120, 1)',
+    };
+  }
+  
+  // Use deck colors (fully opaque) or pad colors
+  const fillColor = lane === -1 
+    ? COLOR_DECK_LEFT 
+    : lane === -2 
+    ? COLOR_DECK_RIGHT 
+    : baseColor;
+  
+  return {
+    fillColor,
+    glowColor: fillColor,
+    strokeColor: 'rgba(255,255,255,1)',
+  };
+};
+
+/** Track HOLD note animation lifecycle for all failure types */
+const trackHoldNoteAnimationLifecycle = (
+  note: Note,
+  failures: HoldNoteFailureStates,
+  currentTime: number,
+  collapseProgress: number
+): void => {
+  if (!failures.hasAnyFailure) return; // Only track failures
+  
+  const failureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
+  if (failures.isTooEarlyFailure) failureTypes.push('tooEarlyFailure');
+  if (failures.isHoldReleaseFailure) failureTypes.push('holdReleaseFailure');
+  if (failures.isHoldMissFailure) failureTypes.push('holdMissFailure');
+  
+  for (const failureType of failureTypes) {
+    const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
+    const failureTime = animEntry?.failureTime || note.failureTime || currentTime;
+    const timeSinceFailure = Math.max(0, currentTime - failureTime);
+    
+    if (!animEntry) {
+      // Create tracking entry for this failure type
+      GameErrors.trackAnimation(note.id, failureType, note.failureTime || currentTime);
+    } else if (animEntry.status === 'pending') {
+      // Skip if animation already finished, otherwise mark rendering
+      if (timeSinceFailure >= HOLD_ANIMATION_DURATION) {
+        GameErrors.updateAnimation(note.id, { status: 'completed', renderStart: currentTime, renderEnd: currentTime });
+      } else {
+        GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
+      }
+    }
+    
+    // Mark complete when collapse finishes
+    if (collapseProgress >= 0.99 && animEntry && animEntry.status !== 'completed') {
+      GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
+    }
+  }
+};
+
 interface Down3DNoteLaneProps {
   notes: Note[];
   currentTime: number;
@@ -657,31 +816,17 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 }
                 
                 const pressTime = note.pressTime || 0;
-                const holdDuration = note.duration || 1000; // Use beatmap duration, fallback to 1000ms
-                const isTooEarlyFailure = note.tooEarlyFailure || false;
-                const isHoldReleaseFailure = note.holdReleaseFailure || false;
-                const isHoldMissFailure = note.holdMissFailure || false;
+                const holdDuration = note.duration || 1000;
                 
-                // Determine if note is greyed out (failed) - will be calculated after approachProgress
-                let isGreyed = false;
-                let failureTime = note.failureTime || currentTime;
+                // Get failure states using helper
+                const failures = getHoldNoteFailureStates(note);
+                const failureTime = note.failureTime || currentTime;
                 
-                if (isTooEarlyFailure || isHoldReleaseFailure || isHoldMissFailure) {
-                  // Skip rendering if failure animation is complete
+                // Early exit if failure animation is complete
+                if (failures.hasAnyFailure) {
                   const timeSinceFail = Math.max(0, currentTime - failureTime);
                   if (timeSinceFail > HOLD_ANIMATION_DURATION) {
-                    // Mark animations as completed only when animation duration is finished
-                    const failureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
-                    if (isTooEarlyFailure) failureTypes.push('tooEarlyFailure');
-                    if (isHoldReleaseFailure) failureTypes.push('holdReleaseFailure');
-                    if (isHoldMissFailure) failureTypes.push('holdMissFailure');
-                    
-                    for (const failureType of failureTypes) {
-                      const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
-                      if (animEntry && animEntry.status !== 'completed') {
-                        GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
-                      }
-                    }
+                    markAnimationCompletedIfDone(note, failures, timeSinceFail, currentTime);
                     return null;
                   }
                 }
