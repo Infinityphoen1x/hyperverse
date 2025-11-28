@@ -783,24 +783,28 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             const noteColor = getColorForLane(note.lane);
             const JUDGEMENT_RADIUS = 187;
             
-            // TAP notes: trapezoids with both near and far ends traveling together
-            // Use same flanking ray geometry as HOLD notes (±15° from center ray)
-            const TRAPEZOID_DEPTH = 50; // Depth along ray (constant as it travels)
+            // TAP notes: minimal trapezoid (constant-width appearance)
+            // Use very small flanking angles (±3° instead of ±15°) to minimize widening
+            const TRAPEZOID_DEPTH = 45; // Depth along ray
             const nearDist = 1 + (progress * (JUDGEMENT_RADIUS - 1)); // Both travel together
-            const farDist = nearDist - TRAPEZOID_DEPTH; // Maintains constant depth
+            const farDist = Math.max(0.1, nearDist - TRAPEZOID_DEPTH); // Cap at 0.1 to avoid vanishing point artifacts
             
-            const trapezoid = getTrapezoidCorners(
-              tapRayAngle,
-              nearDist,
-              farDist,
-              VANISHING_POINT_X,
-              VANISHING_POINT_Y,
-              note.id
-            );
+            // Small flanking angle for minimal width variation
+            const tapLeftRayAngle = tapRayAngle - 3;
+            const tapRightRayAngle = tapRayAngle + 3;
+            const tapLeftRad = (tapLeftRayAngle * Math.PI) / 180;
+            const tapRightRad = (tapRightRayAngle * Math.PI) / 180;
             
-            if (!trapezoid) return null;
+            // Calculate trapezoid corners with minimal flanking
+            const x1 = VANISHING_POINT_X + Math.cos(tapLeftRad) * farDist;
+            const y1 = VANISHING_POINT_Y + Math.sin(tapLeftRad) * farDist;
+            const x2 = VANISHING_POINT_X + Math.cos(tapRightRad) * farDist;
+            const y2 = VANISHING_POINT_Y + Math.sin(tapRightRad) * farDist;
+            const x3 = VANISHING_POINT_X + Math.cos(tapRightRad) * nearDist;
+            const y3 = VANISHING_POINT_Y + Math.sin(tapRightRad) * nearDist;
+            const x4 = VANISHING_POINT_X + Math.cos(tapLeftRad) * nearDist;
+            const y4 = VANISHING_POINT_Y + Math.sin(tapLeftRad) * nearDist;
             
-            const { x1, y1, x2, y2, x3, y3, x4, y4 } = trapezoid;
             const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`;
             
             // Opacity: fade in as approaching (0.4 → 1.0)
