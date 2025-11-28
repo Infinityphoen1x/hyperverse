@@ -784,8 +784,11 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             const JUDGEMENT_RADIUS = 187;
             
             // TAP notes: trapezoid with narrower flanking rays for compact appearance
-            // Narrower angles keep near-end width more constant like HOLD notes
-            const TRAPEZOID_DEPTH = 30; // More depth, smoother visual progression 
+            // Depth scales with progress: smaller at vanishing point, larger at judgement line
+            // This creates the illusion of notes growing as they approach
+            const MIN_DEPTH = 5;
+            const MAX_DEPTH = 45;
+            const TRAPEZOID_DEPTH = MIN_DEPTH + (progress * (MAX_DEPTH - MIN_DEPTH));
             const nearDist = 1 + (progress * (JUDGEMENT_RADIUS - 1)); // Both travel together
             const farDist = Math.max(0.1, nearDist - TRAPEZOID_DEPTH);
             
