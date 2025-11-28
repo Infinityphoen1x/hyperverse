@@ -489,6 +489,11 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               const stripWidth = (note.duration || 1000) * 0.15;
               const approachFarDistance = Math.max(1, approachNearDistance - stripWidth);
               
+              // tooEarlyFailure turns greyscale instantly when pressed
+              if (isTooEarlyFailure && pressTime > 0) {
+                isGreyed = true;
+              }
+              
               // holdMissFailure turns greyscale when it passes judgement line (approachNearDistance >= JUDGEMENT_RADIUS)
               if (isHoldMissFailure && approachNearDistance >= JUDGEMENT_RADIUS) {
                 isGreyed = true;
