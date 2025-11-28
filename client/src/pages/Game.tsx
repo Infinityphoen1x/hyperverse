@@ -41,6 +41,7 @@ export default function Game() {
   const [countdownActive, setCountdownActive] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const [showYoutubeIframe, setShowYoutubeIframe] = useState(true);
+  const pausedTimeRef = useRef(0);
   
   const { 
     gameState, 
@@ -128,6 +129,7 @@ export default function Game() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && gameState === 'PLAYING') {
         if (isPaused) {
+          pausedTimeRef.current = currentTime;
           setCountdownActive(true);
           setCountdown(3);
           setIsPauseMenuOpen(false);
@@ -151,12 +153,12 @@ export default function Game() {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
     } else {
-      setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
+      setYoutubeStartTime(Math.floor((pausedTimeRef.current + 500) / 1000));
       setShowYoutubeIframe(true);
       resumeGame();
       setCountdownActive(false);
     }
-  }, [countdownActive, countdown, resumeGame, currentTime]);
+  }, [countdownActive, countdown, resumeGame]);
 
   // Restart game when beatmap is loaded (customNotes changes)
   useEffect(() => {
@@ -239,6 +241,7 @@ export default function Game() {
             <div className="flex flex-col gap-4 mt-8">
               <button 
                 onClick={() => {
+                  pausedTimeRef.current = currentTime;
                   setCountdownActive(true);
                   setCountdown(3);
                   setIsPauseMenuOpen(false);
@@ -308,6 +311,7 @@ export default function Game() {
           <button
             onClick={() => {
               if (isPaused && !countdownActive) {
+                pausedTimeRef.current = currentTime;
                 setCountdownActive(true);
                 setCountdown(3);
                 setIsPauseMenuOpen(false);
