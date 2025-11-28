@@ -784,14 +784,14 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             const JUDGEMENT_RADIUS = 187;
             
             // TAP notes: minimal trapezoid (constant-width appearance)
-            // Use very small flanking angles (±3° instead of ±15°) to minimize widening
-            const TRAPEZOID_DEPTH = 45; // Depth along ray
+            // Wider flanking angles for more width, shorter depth
+            const TRAPEZOID_DEPTH = 32; // Shorter length along ray
             const nearDist = 1 + (progress * (JUDGEMENT_RADIUS - 1)); // Both travel together
             const farDist = Math.max(0.1, nearDist - TRAPEZOID_DEPTH); // Cap at 0.1 to avoid vanishing point artifacts
             
-            // Small flanking angle for minimal width variation
-            const tapLeftRayAngle = tapRayAngle - 3;
-            const tapRightRayAngle = tapRayAngle + 3;
+            // Wider flanking angle for more width
+            const tapLeftRayAngle = tapRayAngle - 5.5;
+            const tapRightRayAngle = tapRayAngle + 5.5;
             const tapLeftRad = (tapLeftRayAngle * Math.PI) / 180;
             const tapRightRad = (tapRightRayAngle * Math.PI) / 180;
             
