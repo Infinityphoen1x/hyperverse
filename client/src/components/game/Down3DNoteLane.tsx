@@ -507,7 +507,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               } else if (pressTime && pressTime > 0) {
                 // Successful hold OR holdReleaseFailure: Lock near end, collapse far end toward it
                 const timeUntilHitAtPress = note.time - pressTime;
-                const pressApproachProgress = Math.min(Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0), 1.0);
+                const pressApproachProgress = Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0);
                 lockedNearDistance = 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1));
                 
                 // Far end at press time: maintains strip width before press
