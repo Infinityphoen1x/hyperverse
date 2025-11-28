@@ -477,14 +477,14 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               let lockedNearDistance: number | null = null;
               
               // APPROACH PHASE: Hold note is a flat rectangular strip moving toward camera
-              // Near end (press time) and far end (release time) approach independently
+              // Before press: both near and far move together, maintaining constant Z-length (strip width)
               const approachProgress = Math.min(timeUntilHit > 0 ? (LEAD_TIME - timeUntilHit) / LEAD_TIME : 1.0, 1.0);
               const approachNearDistance = 1 + (approachProgress * (JUDGEMENT_RADIUS - 1));
               
-              // Far end based on release time (note.time + duration)
-              const timeUntilRelease = (note.time + (note.duration || 1000)) - currentTime;
-              const releaseApproachProgress = Math.min(timeUntilRelease > 0 ? (LEAD_TIME - timeUntilRelease) / LEAD_TIME : 1.0, 1.0);
-              const approachFarDistance = 1 + (releaseApproachProgress * (JUDGEMENT_RADIUS - 1));
+              // Strip width = fixed depth length based on duration and approach speed
+              // Approach speed: 186 units / 4000ms = 0.0465 units/ms
+              const stripWidth = (note.duration || 1000) * 0.0465;
+              const approachFarDistance = Math.max(1, approachNearDistance - stripWidth);
               
               // COLLAPSE PHASE: After player presses, lock near end and calculate collapse
               if (note.tooEarlyFailure && pressTime && pressTime > 0) {
@@ -493,10 +493,8 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 const pressApproachProgress = Math.min(Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0), 1.0);
                 lockedNearDistance = 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1));
                 
-                // Far end at press time: based on release time
-                const timeUntilReleaseAtPress = (note.time + (note.duration || 1000)) - pressTime;
-                const releaseApproachProgressAtPress = Math.min(Math.max((LEAD_TIME - timeUntilReleaseAtPress) / LEAD_TIME, 0), 1.0);
-                const farDistanceAtPress = 1 + (releaseApproachProgressAtPress * (JUDGEMENT_RADIUS - 1));
+                // Far end at press time: maintains strip width before press
+                const farDistanceAtPress = Math.max(1, lockedNearDistance - stripWidth);
                 
                 const collapseDuration = 1100;
                 const timeSincePress = currentTime - pressTime;
@@ -510,10 +508,8 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 const pressApproachProgress = Math.min(Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0), 1.0);
                 lockedNearDistance = 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1));
                 
-                // Far end at press time: based on release time
-                const timeUntilReleaseAtPress = (note.time + (note.duration || 1000)) - pressTime;
-                const releaseApproachProgressAtPress = Math.min(Math.max((LEAD_TIME - timeUntilReleaseAtPress) / LEAD_TIME, 0), 1.0);
-                const farDistanceAtPress = 1 + (releaseApproachProgressAtPress * (JUDGEMENT_RADIUS - 1));
+                // Far end at press time: maintains strip width before press
+                const farDistanceAtPress = Math.max(1, lockedNearDistance - stripWidth);
                 
                 // Determine collapse duration based on fail state (MUST MATCH OPACITY TIMING)
                 let actualReleaseTime = getReleaseTime(note.id);
