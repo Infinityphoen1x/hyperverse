@@ -760,6 +760,13 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
             const failProgress = Math.min(timeSinceFail / 1000, 1.0); // 0 to 1 over 1000ms fade
             // Hide after 1100ms (animation + buffer) to match HOLD failures
             if (timeSinceFail > 1100) {
+              // Mark animations as completed before returning (safety check for stuck animations)
+              if (isFailed) {
+                const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === 'tapMissFailure');
+                if (animEntry && animEntry.status !== 'completed') {
+                  GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
+                }
+              }
               return null;
             }
             
