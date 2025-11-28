@@ -57,15 +57,17 @@ export default function Game() {
   // Memoize score string formatting
   const scoreDisplay = useMemo(() => score.toString().padStart(6, '0'), [score]);
 
-  // Monitor errors
+  // Monitor errors and note stats
   useEffect(() => {
     const checkErrors = setInterval(() => {
       if (GameErrors.notes.length > 0) {
         setGameErrors([...GameErrors.notes]);
       }
-    }, 1000);
+      // Update note statistics for ErrorLogViewer
+      GameErrors.updateNoteStats(notes);
+    }, 500);
     return () => clearInterval(checkErrors);
-  }, []);
+  }, [notes]);
 
   useEffect(() => {
     startGame();

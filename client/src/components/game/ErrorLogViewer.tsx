@@ -9,6 +9,7 @@ export function ErrorLogViewer() {
   const [animationStats, setAnimationStats] = useState({ total: 0, completed: 0, failed: 0, pending: 0 });
   const [animations, setAnimations] = useState<any[]>([]);
   const [errorCounts, setErrorCounts] = useState({ beatmapLoader: 0, parser: 0, converter: 0, meter: 0, trapezoid: 0, game: 0 });
+  const [noteStats, setNoteStats] = useState({ total: 0, tap: 0, hold: 0, hit: 0, missed: 0, failed: 0, byLane: {} as Record<number, number> });
 
   // Update logs in real-time
   useEffect(() => {
@@ -16,6 +17,7 @@ export function ErrorLogViewer() {
       setErrors([...GameErrors.notes]);
       setAnimationStats(GameErrors.getAnimationStats());
       setAnimations([...GameErrors.animations]);
+      setNoteStats({ ...GameErrors.noteStats });
       
       // Count errors by category
       const counts = {
@@ -100,8 +102,52 @@ export function ErrorLogViewer() {
             className="absolute bottom-12 right-0 bg-gray-950 border border-cyan-500 rounded-lg p-4 w-96 max-h-96 flex flex-col gap-3 shadow-2xl"
             data-testid="panel-error-log-viewer"
           >
+            {/* Loaded Notes Stats */}
+            {noteStats.total > 0 && (
+              <div className="bg-gray-900 rounded p-2 text-xs text-purple-300 font-mono space-y-2">
+                <div className="font-bold text-purple-400 mb-1">BEATMAP LOADED</div>
+                <div className="grid grid-cols-3 gap-1">
+                  <div className="bg-gray-800 p-1 rounded">
+                    <div className="text-gray-500 text-xs">Total</div>
+                    <div className="text-lg font-bold">{noteStats.total}</div>
+                  </div>
+                  <div className="bg-gray-800 p-1 rounded">
+                    <div className="text-gray-500 text-xs">TAP</div>
+                    <div className="text-lg font-bold text-blue-300">{noteStats.tap}</div>
+                  </div>
+                  <div className="bg-gray-800 p-1 rounded">
+                    <div className="text-gray-500 text-xs">HOLD</div>
+                    <div className="text-lg font-bold text-pink-300">{noteStats.hold}</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-1 pt-1 border-t border-gray-700">
+                  <div className="bg-gray-800 p-1 rounded">
+                    <div className="text-gray-500 text-xs">✓ Hit</div>
+                    <div className="text-lg font-bold text-green-300">{noteStats.hit}</div>
+                  </div>
+                  <div className="bg-gray-800 p-1 rounded">
+                    <div className="text-gray-500 text-xs">✗ Failed</div>
+                    <div className="text-lg font-bold text-red-300">{noteStats.failed}</div>
+                  </div>
+                  <div className="bg-gray-800 p-1 rounded">
+                    <div className="text-gray-500 text-xs">Pending</div>
+                    <div className="text-lg font-bold text-yellow-300">{noteStats.total - noteStats.hit - noteStats.failed - noteStats.missed}</div>
+                  </div>
+                </div>
+                {Object.keys(noteStats.byLane).length > 0 && (
+                  <div className="text-xs text-gray-400 pt-1 border-t border-gray-700">
+                    <div className="font-mono">Lanes: {Object.entries(noteStats.byLane).map(([lane, count]) => {
+                      const laneNames: Record<string, string> = { '0': 'W', '1': 'O', '2': 'I', '3': 'E', '-1': 'Q', '-2': 'P' };
+                      return `${laneNames[lane] || lane}=${count}`;
+                    }).join(' ')}</div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Animation Stats */}
             <div className="bg-gray-900 rounded p-2 text-xs text-cyan-300 font-mono space-y-2">
+              <div className="font-bold text-cyan-400 mb-1">ANIMATION TRACKING</div>
               <div className="grid grid-cols-3 gap-2">
                 <div className="bg-gray-800 p-1.5 rounded">
                   <div className="text-gray-400">Total Tracked</div>

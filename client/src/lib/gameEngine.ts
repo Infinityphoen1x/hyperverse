@@ -33,6 +33,15 @@ interface AnimationErrorEntry {
 const GameErrors = {
   notes: [] as string[],
   animations: [] as AnimationErrorEntry[],
+  noteStats: {
+    total: 0,
+    tap: 0,
+    hold: 0,
+    hit: 0,
+    missed: 0,
+    failed: 0,
+    byLane: {} as Record<number, number>,
+  },
   log: (msg: string) => {
     const timestamp = Date.now();
     const error = `[${timestamp}] ${msg}`;
@@ -52,6 +61,32 @@ const GameErrors = {
   updateAnimation: (noteId: string, updates: Partial<AnimationErrorEntry>) => {
     const entry = GameErrors.animations.find(a => a.noteId === noteId);
     if (entry) Object.assign(entry, updates);
+  },
+  updateNoteStats: (allNotes: Note[]) => {
+    const stats = {
+      total: allNotes.length,
+      tap: 0,
+      hold: 0,
+      hit: 0,
+      missed: 0,
+      failed: 0,
+      byLane: {} as Record<number, number>,
+    };
+    
+    allNotes.forEach(n => {
+      if (n.type === 'TAP') stats.tap++;
+      else stats.hold++;
+      
+      if (n.hit) stats.hit++;
+      if (n.missed) stats.missed++;
+      if (n.tapMissFailure || n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
+        stats.failed++;
+      }
+      
+      stats.byLane[n.lane] = (stats.byLane[n.lane] || 0) + 1;
+    });
+    
+    GameErrors.noteStats = stats;
   },
   getAnimationStats: () => {
     const total = GameErrors.animations.length;
