@@ -103,11 +103,14 @@ title: Song Name
 artist: Artist
 bpm: 120
 duration: 180000
+youtube: https://youtube.com/watch?v=...
 
 [${difficulty}]
 1000|0|TAP
 2000|1|TAP
-3000|2|HOLD|1000|hold_1`}
+3000|-1|HOLD_START|hold_1
+4000|-1|HOLD_END|hold_1
+5000|2|TAP`}
                 value={beatmapText}
                 onChange={(e) => {
                   setBeatmapText(e.target.value);
@@ -123,13 +126,17 @@ duration: 180000
               <p className="text-xs text-neon-pink font-rajdhani">{error}</p>
             )}
 
-            <div className="bg-black/50 border border-neon-cyan/20 rounded p-3 text-xs text-white/60 font-rajdhani space-y-1">
+            <div className="bg-black/50 border border-neon-cyan/20 rounded p-3 text-xs text-white/60 font-rajdhani space-y-2">
               <p className="font-bold text-neon-cyan">FORMAT:</p>
               <p>[METADATA] section with: title, artist, bpm, duration, youtube (optional)</p>
               <p>[EASY/MEDIUM/HARD] sections with notes:</p>
-              <p className="font-mono ml-2">time|lane|TAP</p>
-              <p className="font-mono ml-2">time|lane|HOLD|duration|holdId</p>
-              <p className="text-white/40">Lanes: 0-3 (pads), -1 (left deck), -2 (right deck)</p>
+              <p className="font-mono ml-2 text-neon-cyan">TAP:</p>
+              <p className="font-mono ml-4">time|lane|TAP</p>
+              <p className="font-mono ml-2 text-neon-cyan mt-1">HOLD (start/end format):</p>
+              <p className="font-mono ml-4">startTime|lane|HOLD_START|holdId</p>
+              <p className="font-mono ml-4">endTime|lane|HOLD_END|holdId</p>
+              <p className="font-mono ml-2 text-neon-cyan mt-1 text-white/40">Lanes: 0-3 (pads), -1 (left deck Q), -2 (right deck P)</p>
+              <p className="text-white/30 text-xs mt-2">Duration calculated as: endTime - startTime</p>
             </div>
 
             <div className="flex gap-2">
