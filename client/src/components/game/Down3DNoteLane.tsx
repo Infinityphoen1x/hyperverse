@@ -702,12 +702,14 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
                 // If animation is old, jump straight to complete; otherwise mark rendering
                 if (timeSinceFail >= 1100) {
                   GameErrors.updateAnimation(note.id, { status: 'completed', renderStart: currentTime, renderEnd: currentTime });
+                  return null; // Animation already finished, don't render
                 } else {
                   GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
                 }
-              } else if (animEntry.status === 'rendering' && timeSinceFail > 1100) {
-                // Mark as completed when animation finishes
+              } else if (animEntry.status === 'rendering' && timeSinceFail >= 1100) {
+                // Mark as completed when animation finishes (BEFORE returning null)
                 GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
+                return null; // Animation finished, don't render
               }
             }
             
