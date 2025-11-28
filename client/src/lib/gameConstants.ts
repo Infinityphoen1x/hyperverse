@@ -44,11 +44,10 @@ export const SPIN_THRESHOLD = 30; // degrees - trigger onSpin after this rotatio
 export const STATE_UPDATE_INTERVAL = 50; // ms - batch state updates
 export const DRAG_VELOCITY_THRESHOLD = 100; // px/s - minimum velocity for drag spin
 
-// Vanishing point jolt animation (combo-triggered)
-export const JOLT_COMBO_INTERVAL = 10; // Jolt every 10x combo
-export const JOLT_RADIUS = 10; // Max pixel distance from center
-export const JOLT_UP_DURATION = 100; // ms - upward phase
-export const JOLT_SIDE_DURATION = 150; // ms - sideways phase
+// Vanishing point angle shift (combo-triggered)
+export const ANGLE_SHIFT_INTERVAL = 10; // Shift every 10x combo
+export const ANGLE_SHIFT_DISTANCE = 20; // Max pixel distance from center - dramatic shift
+export const ANGLE_SHIFT_DURATION = 400; // ms - smooth but noticeable transition
 
 // Visual effects - particle and animation constants
 export const MAX_HEALTH = 200; // Game health system max

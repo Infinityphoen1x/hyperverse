@@ -5,9 +5,8 @@ import {
   BUTTON_CONFIG, 
   VANISHING_POINT_X, 
   VANISHING_POINT_Y,
-  JOLT_UP_DURATION,
-  JOLT_SIDE_DURATION,
-  JOLT_RADIUS,
+  ANGLE_SHIFT_DISTANCE,
+  ANGLE_SHIFT_DURATION,
   HOLD_NOTE_STRIP_WIDTH_MULTIPLIER,
   FAILURE_ANIMATION_DURATION,
   LEAD_TIME,
@@ -515,10 +514,9 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
     const animate = () => {
       const now = Date.now();
       const elapsed = now - animationStartRef.current;
-      const TRANSITION_DURATION = 150; // ms - smooth but quick travel
       
-      if (elapsed < TRANSITION_DURATION) {
-        const progress = Math.min(elapsed / TRANSITION_DURATION, 1);
+      if (elapsed < ANGLE_SHIFT_DURATION) {
+        const progress = Math.min(elapsed / ANGLE_SHIFT_DURATION, 1);
         // Smooth easing: ease-out (deceleration)
         const easeProgress = 1 - Math.pow(1 - progress, 3);
         
@@ -540,22 +538,15 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
     if (combo > 0 && currentMilestone !== prevComboMilestoneRef.current) {
       prevComboMilestoneRef.current = currentMilestone;
       
-      // Each milestone: jump up then shift to NEW random angle - STAYS OFFSET (viewing angle shift)
+      // Each milestone: smoothly shift to NEW random angle - STAYS OFFSET (viewing angle shift)
       const angle = Math.random() * Math.PI * 2;
-      const distance = 8;
-      const newOffsetX = Math.cos(angle) * distance;
-      const newOffsetY = -JOLT_RADIUS * 0.3;
+      const newOffsetX = Math.cos(angle) * ANGLE_SHIFT_DISTANCE;
+      const newOffsetY = Math.sin(angle) * ANGLE_SHIFT_DISTANCE;
       
-      // Jump up immediately
-      currentOffsetRef.current = { x: 0, y: -JOLT_RADIUS };
-      setJoltOffset({ x: 0, y: -JOLT_RADIUS });
-      
-      // After up phase, smoothly shift to new angle
-      setTimeout(() => {
-        animationStartRef.current = Date.now();
-        currentOffsetRef.current = { x: 0, y: -JOLT_RADIUS };
-        targetOffsetRef.current = { x: newOffsetX, y: newOffsetY };
-      }, JOLT_UP_DURATION);
+      // Start smooth transition from current offset to new angle
+      animationStartRef.current = Date.now();
+      currentOffsetRef.current = { ...joltOffset };
+      targetOffsetRef.current = { x: newOffsetX, y: newOffsetY };
       // NO RETURN TO CENTER - stays at new offset for immersive "tunnel angle" effect
     } else if (combo === 0) {
       prevComboMilestoneRef.current = 0;
@@ -565,6 +556,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
       targetOffsetRef.current = { x: 0, y: 0 };
     }
   }, [combo, joltOffset]);
+
   
   // Calculate dynamic vanishing point with jolt offset
   const vpX = VANISHING_POINT_X + joltOffset.x;
