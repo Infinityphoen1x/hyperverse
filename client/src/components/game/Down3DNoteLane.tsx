@@ -444,54 +444,14 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 const isTooEarly = isCurrentlyHeld && Math.abs(timeSinceNoteSpawn) > ACTIVATION_WINDOW;
                 const isValidActivation = isCurrentlyHeld && !isTooEarly;
                 
-                let holdProgress = 0;
+                // Determine if note is greyed out (failed)
                 let isGreyed = false;
-                
-                // Determine holdProgress based on note state
-                if (isTooEarlyFailure) {
+                if (isTooEarlyFailure || isHoldReleaseFailure || isHoldMissFailure) {
                   isGreyed = true;
-                  // Always shrink immediately, locked to press position - regardless of phase
-                  const failureTime = note.failureTime;
-                  if (!failureTime) {
-                    console.warn(`tooEarlyFailure missing failureTime: ${note.id}`);
-                    return null;
-                  }
+                  // Skip rendering if failure animation is complete (>1100ms)
+                  const failureTime = note.failureTime || currentTime;
                   const timeSinceShrinkStart = Math.max(0, currentTime - failureTime);
                   if (timeSinceShrinkStart > 1100) return null;
-                  // Shrink animation: Phase 2 space (1.0 to 2.0)
-                  // Phase 2 geometry section will lock to press position and collapse
-                  const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
-                  holdProgress = 1.0 + shrinkProgress;
-                } else if (isHoldReleaseFailure || isHoldMissFailure) {
-                  isGreyed = true;
-                  const failureTime = note.failureTime;
-                  if (!failureTime) {
-                    console.warn(`Failure note missing failureTime: ${note.id}`);
-                    return null;
-                  }
-                  const timeSinceShrinkStart = Math.max(0, currentTime - failureTime);
-                  if (timeSinceShrinkStart > 1100) return null;
-                  // Shrink animation: Phase 2 space (1.0 to 2.0)
-                  // Phase 2 geometry section will handle positioning:
-                  // - If pressed: lock to press position and collapse
-                  // - If never pressed: shrink from judgement line
-                  const shrinkProgress = Math.min(timeSinceShrinkStart / 1000, 1.0);
-                  holdProgress = 1.0 + shrinkProgress;
-                } else if (isCurrentlyHeld && isValidActivation && !isTooEarlyFailure && !isHoldReleaseFailure && !isHoldMissFailure) {
-                  holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime, holdDuration);
-                } else if (isCurrentlyHeld && note.hit) {
-                  const timeSincePress = currentTime - pressTime;
-                  if (timeSincePress > 2000) return null;
-                  holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime, holdDuration);
-                } else if (isCurrentlyHeld) {
-                  holdProgress = getPhaseProgress(timeUntilHit, pressTime, currentTime, holdDuration);
-                } else {
-                  holdProgress = timeUntilHit > 0 ? (LEAD_TIME - timeUntilHit) / LEAD_TIME : 0.99;
-                }
-                
-                // Validate holdProgress
-                if (!Number.isFinite(holdProgress)) {
-                  holdProgress = 0;
                 }
               
               // Get ray angle
@@ -631,13 +591,25 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               
               // Opacity: increases during approach, fades during collapse
               let opacity = 0.4 + Math.min(approachProgress, 1.0) * 0.6;
+              let collapseProgress = 0;
               
               // During collapse: fade from 1.0 to 0.2
               if (pressTime && pressTime > 0) {
-                const holdEndTime = note.time + holdDuration;
-                const collapseDuration = holdEndTime - pressTime;
+                // Use same collapse timing as geometry
+                let actualReleaseTime = getReleaseTime(note.id);
+                let collapseEndTime = note.time + holdDuration;
+                
+                if (note.holdReleaseFailure && actualReleaseTime) {
+                  collapseEndTime = actualReleaseTime;
+                } else if (note.tooEarlyFailure) {
+                  collapseEndTime = note.time + holdDuration;
+                } else if (note.holdMissFailure) {
+                  collapseEndTime = note.time + holdDuration;
+                }
+                
+                const collapseDuration = Math.max(1, collapseEndTime - pressTime);
                 const timeSincePress = currentTime - pressTime;
-                const collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
+                collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
                 
                 opacity = Math.max(1.0 - (collapseProgress * 0.8), 0.2); // Smooth fade from 1.0 to 0.2
                 
@@ -656,7 +628,18 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                     }
                   }
                 }
+              } else if (isTooEarlyFailure || isHoldReleaseFailure || isHoldMissFailure) {
+                // Unpressed failure: collapse from judgement line
+                const failureTime = note.failureTime || currentTime;
+                const collapseEndTime = note.time + holdDuration;
+                const collapseDuration = Math.max(1, collapseEndTime - failureTime);
+                const timeSinceFailure = Math.max(0, currentTime - failureTime);
+                collapseProgress = Math.min(Math.max(timeSinceFailure / collapseDuration, 0), 1.0);
+                
+                opacity = Math.max(1.0 - (collapseProgress * 0.8), 0.2);
               }
+              
+              const strokeWidth = 2 + (collapseProgress > 0 ? (1 - collapseProgress) * 2 : approachProgress * 2);
               // Greyscale notes use fixed grey colors, never affected by health-based color shift
               const baseColor = getColorForLane(note.lane);
               
@@ -682,7 +665,6 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               }
               
               const strokeColor = isGreyed ? 'rgba(120, 120, 120, 1)' : 'rgba(255,255,255,1)';
-              const strokeWidth = 2 + (Math.min(holdProgress, 1.0) * 2); // Stroke grows with trapezoid
               
               return (
                 <polygon
