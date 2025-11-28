@@ -326,11 +326,17 @@ const calculateCollapseGeometry = (
   lockedNearDistance: number,
   farDistanceAtPress: number,
   approachNearDistance: number,
-  approachFarDistance: number
+  approachFarDistance: number,
+  isSuccessfulHit: boolean = false
 ): CollapseGeometry => {
+  // For unpressed notes (holdMissFailure): use approach geometry, no collapse
   if (!pressTime || pressTime === 0) {
-    // No press: use approach geometry
-    return { nearDistance: approachNearDistance, farDistance: approachFarDistance, collapseProgress: 0 };
+    // Exception: successful hits should collapse from locked position even with pressTime=0
+    if (!isSuccessfulHit) {
+      return { nearDistance: approachNearDistance, farDistance: approachFarDistance, collapseProgress: 0 };
+    }
+    // For successful hits: start collapse immediately from locked position
+    pressTime = currentTime;
   }
   
   const timeSincePress = currentTime - pressTime;
@@ -870,7 +876,8 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 lockedNearDistance || approachNearDistance,
                 farDistanceAtPress,
                 approachNearDistance,
-                approachFarDistance
+                approachFarDistance,
+                note.hit  // Pass successful hit flag so they collapse immediately
               );
               
               const { nearDistance, farDistance, collapseProgress } = collapseGeo;
