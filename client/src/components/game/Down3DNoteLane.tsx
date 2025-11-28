@@ -482,8 +482,10 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               
               // COLLAPSE PHASE: After player presses, lock near end and calculate collapse
               if (note.tooEarlyFailure && pressTime && pressTime > 0) {
-                // tooEarlyFailure: Lock near end at its CURRENT position, collapse far end toward it
-                lockedNearDistance = approachNearDistance;
+                // tooEarlyFailure: Lock near end at where it was at press time, collapse far end toward it
+                const timeUntilHitAtPress = note.time - pressTime;
+                const pressApproachProgress = Math.min(Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0), 1.0);
+                lockedNearDistance = 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1));
                 
                 const collapseDuration = 1100;
                 const timeSincePress = currentTime - pressTime;
