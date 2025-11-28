@@ -38,6 +38,8 @@ export default function Game() {
   
   const [isPauseMenuOpen, setIsPauseMenuOpen] = useState(false);
   const [youtubeStartTime, setYoutubeStartTime] = useState(0);
+  const [countdownActive, setCountdownActive] = useState(false);
+  const [countdown, setCountdown] = useState(3);
   
   const { 
     gameState, 
@@ -125,8 +127,9 @@ export default function Game() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && gameState === 'PLAYING') {
         if (isPaused) {
-          resumeGame();
           setYoutubeStartTime(Math.floor(currentTime / 1000));
+          setCountdownActive(true);
+          setCountdown(3);
           setIsPauseMenuOpen(false);
         } else {
           pauseGame();
@@ -137,7 +140,20 @@ export default function Game() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, isPaused, pauseGame, resumeGame, currentTime]);
+  }, [gameState, isPaused, pauseGame, currentTime]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (!countdownActive) return;
+    
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      resumeGame();
+      setCountdownActive(false);
+    }
+  }, [countdownActive, countdown, resumeGame]);
 
   // Restart game when beatmap is loaded (customNotes changes)
   useEffect(() => {
@@ -195,8 +211,24 @@ export default function Game() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black opacity-80" />
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
 
+      {/* Countdown Overlay */}
+      {countdownActive && countdown > 0 && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center">
+          <motion.div 
+            className="text-center"
+            animate={{ scale: [1, 1.3, 1] }}
+            transition={{ duration: 0.8, repeat: Infinity }}
+          >
+            <div className="text-9xl font-orbitron text-neon-cyan neon-glow mb-4">
+              {countdown}
+            </div>
+            <p className="text-2xl font-rajdhani text-neon-pink">BUFFERING SYNC...</p>
+          </motion.div>
+        </div>
+      )}
+
       {/* Pause Screen Overlay */}
-      {isPauseMenuOpen && isPaused && (
+      {isPauseMenuOpen && isPaused && !countdownActive && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="text-center space-y-8">
             <h1 className="text-6xl font-orbitron text-neon-cyan neon-glow">PAUSED</h1>
@@ -204,7 +236,9 @@ export default function Game() {
             <div className="flex flex-col gap-4 mt-8">
               <button 
                 onClick={() => {
-                  resumeGame();
+                  setYoutubeStartTime(Math.floor(currentTime / 1000));
+                  setCountdownActive(true);
+                  setCountdown(3);
                   setIsPauseMenuOpen(false);
                 }}
                 className="px-12 py-4 bg-neon-cyan text-black font-bold font-orbitron text-lg hover:bg-white transition-colors"
@@ -270,11 +304,12 @@ export default function Game() {
         <div className="text-right flex items-center gap-4">
           <button
             onClick={() => {
-              if (isPaused) {
-                resumeGame();
+              if (isPaused && !countdownActive) {
                 setYoutubeStartTime(Math.floor(currentTime / 1000));
+                setCountdownActive(true);
+                setCountdown(3);
                 setIsPauseMenuOpen(false);
-              } else {
+              } else if (!isPaused) {
                 pauseGame();
                 setYoutubeStartTime(Math.floor(currentTime / 1000) + 2);
                 setIsPauseMenuOpen(true);
@@ -283,7 +318,7 @@ export default function Game() {
             className="px-6 py-2 bg-neon-yellow/20 text-neon-yellow font-rajdhani text-sm hover:bg-neon-yellow/40 transition-colors rounded border border-neon-yellow"
             data-testid="button-pause"
           >
-            {isPaused ? '▶' : '⏸'}
+            {isPaused && !countdownActive ? '▶' : countdownActive ? '⏳' : '⏸'}
           </button>
           <motion.div 
             className="text-3xl font-bold font-orbitron neon-glow"
