@@ -126,6 +126,12 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
         continue;
       }
       
+      // Validate lane is in valid range: -2, -1 (deck), or 0-3 (soundpads)
+      if (lane !== -2 && lane !== -1 && (lane < 0 || lane > 3)) {
+        GameErrors.log(`BeatmapParser: Line ${lineIdx} invalid lane ${lane}. Valid lanes: -2 (P deck), -1 (Q deck), 0-3 (soundpads)`);
+        continue;
+      }
+      
       // Handle new start/end format
       if (type === 'HOLD_START') {
         if (parts.length < 4) {
@@ -176,6 +182,8 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
     }
     
     // Second pass: convert HOLD_START/HOLD_END pairs to HOLD notes
+    const processedHoldIds = new Set<string>();
+    
     for (const holdId in holdStarts) {
       if (!holdEnds[holdId]) {
         GameErrors.log(`BeatmapParser: HOLD_START "${holdId}" has no matching HOLD_END`);
@@ -199,6 +207,14 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
       
       const duration = end.time - start.time;
       notes.push({ time: start.time, lane: start.lane, type: 'HOLD', duration, holdId });
+      processedHoldIds.add(holdId);
+    }
+    
+    // Check for orphaned HOLD_END entries (HOLD_END without HOLD_START)
+    for (const holdId in holdEnds) {
+      if (!holdStarts[holdId]) {
+        GameErrors.log(`BeatmapParser: HOLD_END "${holdId}" has no matching HOLD_START`);
+      }
     }
     
     return {

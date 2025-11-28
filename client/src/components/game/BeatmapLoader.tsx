@@ -5,12 +5,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { parseBeatmap } from "@/lib/beatmapParser";
 import { convertBeatmapNotes } from "@/lib/beatmapConverter";
 import { extractYouTubeId } from "@/lib/youtubeUtils";
-import { GameErrors } from "@/lib/gameEngine";
+import { GameErrors, Note } from "@/lib/gameEngine";
 import { Music } from "lucide-react";
 
 interface BeatmapLoaderProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-  onBeatmapLoad: (youtubeVideoId?: string, notes?: any[]) => void; // youtubeVideoId optional, notes from beatmap conversion
+  onBeatmapLoad: (youtubeVideoId?: string, notes?: Note[]) => void; // youtubeVideoId optional, notes from beatmap conversion
 }
 
 export function BeatmapLoader({ difficulty, onBeatmapLoad }: BeatmapLoaderProps) {

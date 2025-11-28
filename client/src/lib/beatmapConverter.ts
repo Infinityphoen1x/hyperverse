@@ -21,6 +21,7 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
   }
 
   const validNoteIndices = new Set<number>();
+  const seenHoldIds = new Set<string>();
 
   // First pass: validate and filter - collect indices of valid notes
   for (let i = 0; i < beatmapNotes.length; i++) {
@@ -32,10 +33,33 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
       continue;
     }
 
+    // Validate lane is in valid range
+    if (note.lane !== -2 && note.lane !== -1 && (note.lane < 0 || note.lane > 3)) {
+      GameErrors.log(`BeatmapConverter: Invalid lane ${note.lane} at note index ${i}. Valid lanes: -2 (P deck), -1 (Q deck), 0-3 (soundpads)`);
+      continue;
+    }
+
     // Reject soundpad HOLD notes (lanes 0-3 can only be TAP)
     if (note.type === 'HOLD' && note.lane >= 0 && note.lane <= 3) {
       GameErrors.log(`BeatmapConverter: Soundpad lane ${note.lane} cannot use HOLD type (note index ${i}). Use TAP instead.`);
       continue;
+    }
+
+    // Validate HOLD notes have valid duration
+    if (note.type === 'HOLD') {
+      if (note.duration === undefined || !Number.isFinite(note.duration) || note.duration <= 0) {
+        GameErrors.log(`BeatmapConverter: HOLD note at index ${i} has invalid duration: ${note.duration}. Duration must be > 0.`);
+        continue;
+      }
+      
+      // Deduplicate: skip if we've already processed this holdId
+      if (note.holdId && seenHoldIds.has(note.holdId)) {
+        GameErrors.log(`BeatmapConverter: Duplicate holdId "${note.holdId}" at note index ${i}. Skipping duplicate.`);
+        continue;
+      }
+      if (note.holdId) {
+        seenHoldIds.add(note.holdId);
+      }
     }
 
     validNoteIndices.add(i);
