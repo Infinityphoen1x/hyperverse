@@ -493,6 +493,13 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 isGreyed = true;
               }
               
+              // Determine collapse timing for ALL cases (needed before geometry calculations)
+              let collapseDuration = holdDuration;
+              if (isTooEarlyFailure || isHoldReleaseFailure || isHoldMissFailure) {
+                // All failures use full animation duration for consistent visual timing
+                collapseDuration = FAILURE_ANIMATION_DURATION;
+              }
+              
               // COLLAPSE PHASE: After player presses, lock near end and calculate collapse
               if (note.tooEarlyFailure && pressTime && pressTime > 0) {
                 // tooEarlyFailure: Just use approach geometry and fade, don't collapse
@@ -506,14 +513,6 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 
                 // Far end at press time: maintains strip width before press
                 const farDistanceAtPress = Math.max(1, lockedNearDistance - stripWidth);
-                
-                // Determine collapse duration based on fail state (MUST MATCH OPACITY TIMING)
-                let actualReleaseTime = getReleaseTime(note.id);
-                let collapseDuration = holdDuration;
-                
-                if (note.holdReleaseFailure && actualReleaseTime) {
-                  collapseDuration = Math.max(1, actualReleaseTime - pressTime);
-                }
                 
                 const timeSincePress = currentTime - pressTime;
                 collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
@@ -536,8 +535,6 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
               // During collapse: decrease glow as trapezoid collapses
               let collapseGlowProgress = 0;
               if (pressTime && pressTime > 0) {
-                const holdEndTime = note.time + holdDuration;
-                const collapseDuration = holdEndTime - pressTime;
                 const timeSincePress = currentTime - pressTime;
                 collapseGlowProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
               }
@@ -600,26 +597,14 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 }
               }
               
-              // Determine collapse timing based on note state
-              if (pressTime && pressTime > 0) {
-                // Pressed note: collapse timing depends on state
-                let collapseDuration = holdDuration;
-                
-                if (note.holdReleaseFailure) {
-                  // holdReleaseFailure: always use full failure animation duration so greyscale is visible
-                  collapseDuration = FAILURE_ANIMATION_DURATION;
-                } else if (note.tooEarlyFailure || isHoldMissFailure) {
-                  // tooEarlyFailure and pressed holdMissFailure use full failure animation duration
-                  collapseDuration = FAILURE_ANIMATION_DURATION;
+              // Handle unpressed failures (no second calculation needed for pressed notes - already done above)
+              if (!pressTime || pressTime === 0) {
+                if (activeFailureTypes.length > 0) {
+                  // Unpressed failure: fade over standard failure duration
+                  const failureTime = note.failureTime || currentTime;
+                  const timeSinceFailure = Math.max(0, currentTime - failureTime);
+                  collapseProgress = Math.min(Math.max(timeSinceFailure / FAILURE_ANIMATION_DURATION, 0), 1.0);
                 }
-                
-                const timeSincePress = currentTime - pressTime;
-                collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
-              } else if (activeFailureTypes.length > 0) {
-                // Unpressed failure: fade over standard failure duration
-                const failureTime = note.failureTime || currentTime;
-                const timeSinceFailure = Math.max(0, currentTime - failureTime);
-                collapseProgress = Math.min(Math.max(timeSinceFailure / FAILURE_ANIMATION_DURATION, 0), 1.0);
               }
               
               // Apply fade during collapse (pressed or unpressed failure)
