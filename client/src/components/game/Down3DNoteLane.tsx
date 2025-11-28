@@ -611,9 +611,13 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
   }, [combo]);
 
   
-  // Calculate dynamic vanishing point with offset
+  // Dynamic vanishing point for perspective calculation (affects ray angles)
   const vpX = VANISHING_POINT_X + vpOffset.x;
   const vpY = VANISHING_POINT_Y + vpOffset.y;
+  
+  // Fixed hexagon center (doesn't move, stays at default vanishing point)
+  const hexCenterX = VANISHING_POINT_X;
+  const hexCenterY = VANISHING_POINT_Y;
   
   // Debug logging
   useEffect(() => {
@@ -827,16 +831,16 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
           className="absolute inset-0 w-full h-full"
           style={{ opacity: 1 }}
         >
-          {/* Concentric hexagons - faint tunnel walls with variable thickness */}
+          {/* Concentric hexagons - faint tunnel walls with variable thickness (FIXED at center) */}
           {HEXAGON_RADII.map((radius, idx) => {
             const maxRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1];
             const progress = radius / maxRadius; // 0 to 1, thinner at center to thicker at edge
             
-            // Generate hexagon points
+            // Generate hexagon points - fixed at hexCenterX/hexCenterY, NOT using dynamic VP
             const points = Array.from({ length: 6 }).map((_, i) => {
               const angle = (i * 60 * Math.PI) / 180;
-              const x = vpX + radius * Math.cos(angle);
-              const y = vpY + radius * Math.sin(angle);
+              const x = hexCenterX + radius * Math.cos(angle);
+              const y = hexCenterY + radius * Math.sin(angle);
               return `${x},${y}`;
             }).join(' ');
             
