@@ -41,7 +41,7 @@ export function extractYouTubeId(url: string): string | null {
 
 /**
  * Build YouTube embed URL with full audio/video sync support
- * For background playback: muted with autoplay enabled
+ * For background playback: game engine controls playback via API
  * For gameplay sync: must use currentTime property via iframe access
  */
 export function buildYouTubeEmbedUrl(videoId: string, options: {
@@ -54,11 +54,14 @@ export function buildYouTubeEmbedUrl(videoId: string, options: {
 } = {}): string {
   const params = new URLSearchParams();
   
-  if (options.autoplay) params.append('autoplay', '1');
+  // Never autoplay - game engine controls playback timing
+  params.append('autoplay', '0');
+  
   if (options.muted) params.append('mute', '1');
   if (options.controls === false) params.append('controls', '0');
   if (options.modestBranding) params.append('modestbranding', '1');
-  if (options.enableJsApi) params.append('enablejsapi', '1');
+  // Always enable JS API for game control
+  params.append('enablejsapi', '1');
   if (typeof options.start === 'number' && options.start > 0) {
     params.append('start', Math.floor(options.start).toString());
   }

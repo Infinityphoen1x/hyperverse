@@ -217,11 +217,13 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       let time: number;
       if (getVideoTime) {
         const videoTime = getVideoTime();
+        // videoTime is already in milliseconds from youtubeUtils
         if (videoTime !== null && videoTime >= 0) {
-          time = videoTime * 1000;
+          time = videoTime;
         } else {
-          requestRef.current = requestAnimationFrame(loop);
-          return;
+          // YouTube player not ready yet - use game timer as fallback
+          const now = Date.now();
+          time = now - startTimeRef.current - pausedTimeRef.current;
         }
       } else {
         const now = Date.now();
