@@ -257,12 +257,13 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         }
       }
       
-      // Sync currentTime to state every frame for meter updates
+      // Sync currentTime and notes to state every frame for smooth animations
+      // Notes need to update frequently so Down3DNoteLane can recalculate trapezoid positions smoothly
       setCurrentTime(time);
+      setNotes([...notesRef.current]);
       
       // Sync other state less frequently (every 50ms) to reduce re-renders
       if (time - lastStateUpdateRef.current >= 50) {
-        setNotes([...notesRef.current]);
         setCombo(comboRef.current);
         setHealth(healthRef.current);
         setScore(scoreRef.current);
