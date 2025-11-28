@@ -4,6 +4,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { extractYouTubeId, buildYouTubeEmbedUrl } from "@/lib/youtubeUtils";
 import { GameErrors } from "@/lib/gameEngine";
+import {
+  YOUTUBE_LABEL_BUTTON,
+  YOUTUBE_DIALOG_TITLE,
+  YOUTUBE_INPUT_LABEL,
+  YOUTUBE_INPUT_PLACEHOLDER,
+  YOUTUBE_ERROR_EMPTY,
+  YOUTUBE_ERROR_INVALID,
+  YOUTUBE_BUTTON_LOAD,
+  YOUTUBE_BUTTON_CANCEL,
+  YOUTUBE_PREVIEW_LABEL,
+  YOUTUBE_PREVIEW_TITLE,
+  YOUTUBE_HELP_TEXT,
+  YOUTUBE_PREVIEW_WIDTH,
+  YOUTUBE_PREVIEW_HEIGHT,
+  YOUTUBE_PREVIEW_OPACITY_DEFAULT,
+  YOUTUBE_PREVIEW_OPACITY_HOVER,
+  YOUTUBE_CLOSE_ICON_SIZE,
+} from "@/lib/gameConstants";
 import { X } from "lucide-react";
 
 interface YouTubeOverlayProps {
@@ -19,16 +37,15 @@ export function YouTubeOverlay({ onVideoUrlChange }: YouTubeOverlayProps) {
   const handleLoadVideo = () => {
     setError("");
     if (!urlInput.trim()) {
-      const msg = "Please enter a YouTube URL or video ID";
-      setError(msg);
-      GameErrors.log(`YouTubeOverlay: ${msg}`);
+      setError(YOUTUBE_ERROR_EMPTY);
+      GameErrors.log(`YouTubeOverlay: ${YOUTUBE_ERROR_EMPTY}`);
       return;
     }
 
     try {
       const id = extractYouTubeId(urlInput);
       if (!id) {
-        const msg = `Invalid YouTube URL or video ID: "${urlInput}"`;
+        const msg = `${YOUTUBE_ERROR_INVALID}: "${urlInput}"`;
         setError(msg);
         GameErrors.log(`YouTubeOverlay: ${msg}`);
         return;
@@ -60,13 +77,13 @@ export function YouTubeOverlay({ onVideoUrlChange }: YouTubeOverlayProps) {
       {videoId && (
         <div className="relative bg-black/80 backdrop-blur-sm border border-neon-cyan/30 rounded px-3 py-1 text-xs text-neon-cyan font-rajdhani">
           <div className="flex items-center gap-2">
-            <span className="line-clamp-1">▶ YouTube</span>
+            <span className="line-clamp-1">{YOUTUBE_PREVIEW_LABEL}</span>
             <button
               onClick={handleClearVideo}
               className="hover:text-neon-pink transition-colors"
               data-testid="button-clear-video"
             >
-              <X size={14} />
+              <X size={YOUTUBE_CLOSE_ICON_SIZE} />
             </button>
           </div>
         </div>
@@ -80,22 +97,22 @@ export function YouTubeOverlay({ onVideoUrlChange }: YouTubeOverlayProps) {
             className="border-neon-pink text-neon-pink hover:bg-neon-pink/10 font-rajdhani text-xs"
             data-testid="button-load-youtube"
           >
-            LOAD YOUTUBE
+            {YOUTUBE_LABEL_BUTTON}
           </Button>
         </DialogTrigger>
         <DialogContent className="bg-black/95 border-neon-cyan/50 backdrop-blur-sm">
           <DialogHeader>
             <DialogTitle className="text-neon-cyan font-orbitron tracking-wider">
-              LOAD YOUTUBE VIDEO
+              {YOUTUBE_DIALOG_TITLE}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm text-neon-pink font-rajdhani">
-                YouTube URL or Video ID
+                {YOUTUBE_INPUT_LABEL}
               </label>
               <Input
-                placeholder="https://youtube.com/watch?v=... or just the video ID"
+                placeholder={YOUTUBE_INPUT_PLACEHOLDER}
                 value={urlInput}
                 onChange={(e) => {
                   setUrlInput(e.target.value);
@@ -117,7 +134,7 @@ export function YouTubeOverlay({ onVideoUrlChange }: YouTubeOverlayProps) {
                 className="flex-1 bg-neon-cyan text-black hover:bg-neon-cyan/80 font-rajdhani font-bold"
                 data-testid="button-confirm-youtube"
               >
-                LOAD
+                {YOUTUBE_BUTTON_LOAD}
               </Button>
               <Button
                 variant="outline"
@@ -125,19 +142,28 @@ export function YouTubeOverlay({ onVideoUrlChange }: YouTubeOverlayProps) {
                 className="border-neon-pink text-neon-pink hover:bg-neon-pink/10 font-rajdhani"
                 data-testid="button-cancel-youtube"
               >
-                CANCEL
+                {YOUTUBE_BUTTON_CANCEL}
               </Button>
             </div>
 
             <p className="text-xs text-white/40 font-rajdhani">
-              The video will play silently in the background. Use its timing for gameplay sync.
+              {YOUTUBE_HELP_TEXT}
             </p>
           </div>
         </DialogContent>
       </Dialog>
 
       {videoId && (
-        <div className="absolute top-full mt-2 right-0 w-64 h-36 opacity-10 hover:opacity-20 transition-opacity rounded overflow-hidden border border-neon-cyan/20">
+        <div 
+          className="absolute top-full mt-2 right-0 rounded overflow-hidden border border-neon-cyan/20 transition-opacity"
+          style={{
+            width: `${YOUTUBE_PREVIEW_WIDTH}px`,
+            height: `${YOUTUBE_PREVIEW_HEIGHT}px`,
+            opacity: YOUTUBE_PREVIEW_OPACITY_DEFAULT
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = String(YOUTUBE_PREVIEW_OPACITY_HOVER))}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = String(YOUTUBE_PREVIEW_OPACITY_DEFAULT))}
+        >
           {videoId && (
             <iframe
               width="100%"
@@ -148,7 +174,7 @@ export function YouTubeOverlay({ onVideoUrlChange }: YouTubeOverlayProps) {
                 modestBranding: true,
                 enableJsApi: true
               })}
-              title="YouTube video preview"
+              title={YOUTUBE_PREVIEW_TITLE}
               allow="autoplay"
               className="pointer-events-none"
               data-testid="iframe-youtube"

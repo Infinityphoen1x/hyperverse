@@ -91,3 +91,23 @@ export const COLOR_PAD_I = '#BE00FF'; // I - purple (top-right)
 export const COLOR_PAD_E = '#00FFFF'; // E - cyan (top-left)
 export const COLOR_PARTICLE_GREEN = 'hsl(120, 100%, 50%)'; // Green particles
 export const COLOR_PARTICLE_RED = 'hsl(0, 100%, 50%)'; // Red particles
+
+// YouTube overlay UI strings
+export const YOUTUBE_LABEL_BUTTON = 'LOAD YOUTUBE';
+export const YOUTUBE_DIALOG_TITLE = 'LOAD YOUTUBE VIDEO';
+export const YOUTUBE_INPUT_LABEL = 'YouTube URL or Video ID';
+export const YOUTUBE_INPUT_PLACEHOLDER = 'https://youtube.com/watch?v=... or just the video ID';
+export const YOUTUBE_ERROR_EMPTY = 'Please enter a YouTube URL or video ID';
+export const YOUTUBE_ERROR_INVALID = 'Invalid YouTube URL or video ID';
+export const YOUTUBE_BUTTON_LOAD = 'LOAD';
+export const YOUTUBE_BUTTON_CANCEL = 'CANCEL';
+export const YOUTUBE_PREVIEW_LABEL = '▶ YouTube';
+export const YOUTUBE_PREVIEW_TITLE = 'YouTube video preview';
+export const YOUTUBE_HELP_TEXT = 'The video will play silently in the background. Use its timing for gameplay sync.';
+
+// YouTube overlay UI dimensions and opacity
+export const YOUTUBE_PREVIEW_WIDTH = 256; // px (w-64 in Tailwind)
+export const YOUTUBE_PREVIEW_HEIGHT = 144; // px (h-36 in Tailwind)
+export const YOUTUBE_PREVIEW_OPACITY_DEFAULT = 0.1; // 10%
+export const YOUTUBE_PREVIEW_OPACITY_HOVER = 0.2; // 20%
+export const YOUTUBE_CLOSE_ICON_SIZE = 14; // px
