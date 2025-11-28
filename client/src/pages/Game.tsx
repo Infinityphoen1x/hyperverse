@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useGameEngine, Difficulty, GameErrors, Note } from "@/lib/gameEngine";
-import { getYouTubeVideoTime, buildYouTubeEmbedUrl, pauseYouTubeVideo, resumeYouTubeVideo } from "@/lib/youtubeUtils";
+import { getYouTubeVideoTime, buildYouTubeEmbedUrl, pauseYouTubeVideo, resumeYouTubeVideo, seekYouTubeVideo } from "@/lib/youtubeUtils";
 import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from "@/lib/gameConstants";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
@@ -211,6 +211,7 @@ export default function Game() {
               </button>
               <button 
                 onClick={() => {
+                  seekYouTubeVideo(youtubeIframeRef.current, 0);
                   pauseYouTubeVideo(youtubeIframeRef.current);
                   restartGame();
                   setIsPauseMenuOpen(false);

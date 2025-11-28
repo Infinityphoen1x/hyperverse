@@ -110,3 +110,19 @@ export function resumeYouTubeVideo(iframeElement: HTMLIFrameElement | null): voi
     // Silently fail if video is not accessible
   }
 }
+
+/**
+ * Seek YouTube video to specific time (in seconds)
+ */
+export function seekYouTubeVideo(iframeElement: HTMLIFrameElement | null, timeInSeconds: number): void {
+  if (!iframeElement || !Number.isFinite(timeInSeconds)) return;
+  
+  try {
+    const videoElement = iframeElement.contentWindow?.document.querySelector('video') as HTMLVideoElement;
+    if (videoElement) {
+      videoElement.currentTime = timeInSeconds;
+    }
+  } catch (error) {
+    // Silently fail if video is not accessible
+  }
+}
