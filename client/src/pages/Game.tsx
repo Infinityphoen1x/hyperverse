@@ -204,7 +204,7 @@ export default function Game() {
             allow="autoplay"
             className="w-full h-full"
             data-testid="iframe-youtube-background"
-            key={`youtube-${youtubeStartTime}`}
+            key={`youtube-${youtubeStartTime}-${showYoutubeIframe}`}
           />
         </div>
       )}
