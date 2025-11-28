@@ -199,21 +199,25 @@ export default function Game() {
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col relative">
       {/* YouTube Background Layer - Auto-plays with audio for time sync */}
-      {youtubeVideoId && showYoutubeIframe && (
-        <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
-          <iframe
-            ref={youtubeIframeRef}
-            width="100%"
-            height="100%"
-            src={buildYouTubeEmbedUrl(youtubeVideoId, { ...YOUTUBE_BACKGROUND_EMBED_OPTIONS, start: youtubeStartTime })}
-            title="YouTube background audio/video sync"
-            allow="autoplay"
-            className="w-full h-full"
-            data-testid="iframe-youtube-background"
-            key={`youtube-${youtubeStartTime}-${showYoutubeIframe}`}
-          />
-        </div>
-      )}
+      {youtubeVideoId && showYoutubeIframe && (() => {
+        const iframeUrl = buildYouTubeEmbedUrl(youtubeVideoId, { ...YOUTUBE_BACKGROUND_EMBED_OPTIONS, start: youtubeStartTime });
+        console.log('YouTube iframe URL:', iframeUrl, 'youtubeStartTime:', youtubeStartTime);
+        return (
+          <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
+            <iframe
+              ref={youtubeIframeRef}
+              width="100%"
+              height="100%"
+              src={iframeUrl}
+              title="YouTube background audio/video sync"
+              allow="autoplay"
+              className="w-full h-full"
+              data-testid="iframe-youtube-background"
+              key={`youtube-${youtubeStartTime}-${showYoutubeIframe}`}
+            />
+          </div>
+        );
+      })()}
 
       {/* Visual Effects Layer */}
       <VisualEffects combo={combo} health={health} missCount={missCount} />
