@@ -47,7 +47,7 @@ export const DRAG_VELOCITY_THRESHOLD = 100; // px/s - minimum velocity for drag 
 // Vanishing point angle shift (combo-triggered)
 export const ANGLE_SHIFT_INTERVAL = 10; // Shift every 10x combo
 export const ANGLE_SHIFT_DISTANCE = 20; // Max pixel distance from center - dramatic shift
-export const ANGLE_SHIFT_DURATION = 400; // ms - smooth but noticeable transition
+export const ANGLE_SHIFT_DURATION = 2000; // ms - 2 second smooth animation for visible ray adjustment
 
 // Visual effects - particle and animation constants
 export const MAX_HEALTH = 200; // Game health system max
