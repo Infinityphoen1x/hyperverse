@@ -242,12 +242,12 @@ export default function Game() {
               </button>
               <button 
                 onClick={() => {
-                  console.log('[PAUSE-SYSTEM] REWIND button: seeking to 0');
+                  console.log('[PAUSE-SYSTEM] REWIND button: restarting game to 0');
                   pausedTimeRef.current = 0;
                   restartGame();
-                  pauseGame();
                   seekYouTubeVideo(0);
                   pauseYouTubeVideo();
+                  setIsPauseMenuOpen(false);
                 }}
                 className="px-12 py-4 bg-neon-yellow text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-neon-yellow"
                 data-testid="button-rewind"
