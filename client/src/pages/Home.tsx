@@ -5,13 +5,21 @@ import { BeatmapLoader } from "@/components/game/BeatmapLoader";
 
 export default function Home() {
   const [selectedDifficulty, setSelectedDifficulty] = useState('MEDIUM');
+  const [beatmapLoaded, setBeatmapLoaded] = useState(false);
+
+  const handleBeatmapLoad = (youtubeVideoId?: string, notes?: any[]) => {
+    // Store beatmap data for the game to use
+    const beatmapData = { youtubeVideoId, notes, difficulty: selectedDifficulty };
+    localStorage.setItem('pendingBeatmap', JSON.stringify(beatmapData));
+    setBeatmapLoaded(true);
+  };
 
   return (
     <div className="min-h-screen w-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black flex flex-col items-center justify-center relative overflow-hidden">
       {/* Beatmap Loader */}
       <BeatmapLoader 
         difficulty={selectedDifficulty as 'EASY' | 'MEDIUM' | 'HARD'}
-        onBeatmapLoad={() => {}}
+        onBeatmapLoad={handleBeatmapLoad}
       />
       {/* Background FX */}
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" />
@@ -52,9 +60,13 @@ export default function Home() {
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="mt-8 px-12 py-6 bg-neon-cyan text-black font-bold text-2xl font-orbitron rounded-sm shadow-[0_0_50px_cyan] border-2 border-white hover:bg-white transition-colors"
+            className={`mt-8 px-12 py-6 text-black font-bold text-2xl font-orbitron rounded-sm border-2 transition-colors ${
+              beatmapLoaded
+                ? 'bg-neon-pink shadow-[0_0_50px_rgba(255,0,127,0.8)] border-neon-pink'
+                : 'bg-neon-cyan shadow-[0_0_50px_cyan] border-white hover:bg-white'
+            }`}
           >
-            START SESSION
+            START SESSION {beatmapLoaded && '● BEATMAP READY'}
           </motion.button>
         </Link>
       </motion.div>

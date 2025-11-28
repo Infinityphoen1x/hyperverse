@@ -90,6 +90,27 @@ export default function Game() {
     startGame();
   }, [startGame]);
 
+  // Load pending beatmap from localStorage on mount
+  useEffect(() => {
+    const pendingBeatmapStr = localStorage.getItem('pendingBeatmap');
+    if (pendingBeatmapStr) {
+      try {
+        const beatmapData = JSON.parse(pendingBeatmapStr);
+        if (beatmapData.youtubeVideoId) {
+          setYoutubeVideoId(beatmapData.youtubeVideoId);
+        }
+        if (beatmapData.notes && beatmapData.notes.length > 0) {
+          setCustomNotes(beatmapData.notes);
+        }
+        // Clear it so it doesn't reload on refresh
+        localStorage.removeItem('pendingBeatmap');
+      } catch (error) {
+        console.error('Failed to load pending beatmap:', error);
+        localStorage.removeItem('pendingBeatmap');
+      }
+    }
+  }, []);
+
   // Restart game when beatmap is loaded (customNotes changes)
   useEffect(() => {
     if (customNotes && customNotes.length > 0) {
