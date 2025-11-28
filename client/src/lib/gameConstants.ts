@@ -21,6 +21,23 @@ export const FAILURE_ANIMATION_DURATION = 1100; // ms - time for failure animati
 
 // Soundpad timing
 export const ACTIVATION_WINDOW = 300; // ms - hit window for notes
+export const HIT_SUCCESS_DURATION = 200; // ms - how long hit feedback glows
+
+// Soundpad colors - RGB values for dynamic styling
+export const SOUNDPAD_COLORS = [
+  'rgb(255,0,127)',   // Lane 0 (W) - pink
+  'rgb(0,150,255)',   // Lane 1 (O) - blue
+  'rgb(190,0,255)',   // Lane 2 (I) - purple
+  'rgb(0,255,255)'    // Lane 3 (E) - cyan
+];
+
+// Soundpad Tailwind styles - derived from SOUNDPAD_COLORS
+export const SOUNDPAD_STYLES = [
+  { bg: 'bg-neon-pink/30', border: 'border-neon-pink/50', shadow: 'shadow-[0_0_15px_rgb(255,0,127)]' },
+  { bg: 'bg-neon-blue/30', border: 'border-neon-blue/50', shadow: 'shadow-[0_0_15px_rgb(0,150,255)]' },
+  { bg: 'bg-neon-purple/30', border: 'border-neon-purple/50', shadow: 'shadow-[0_0_15px_rgb(190,0,255)]' },
+  { bg: 'bg-neon-cyan/30', border: 'border-neon-cyan/50', shadow: 'shadow-[0_0_15px_rgb(0,255,255)]' },
+];
 
 // Deck wheel rotation constants
 export const ROTATION_SPEED = 2.0; // degrees per frame

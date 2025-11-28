@@ -1,22 +1,7 @@
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Note, GameErrors } from "@/lib/gameEngine";
-
-const ACTIVATION_WINDOW = 300; // ms - must hit within this window of note.time
-
-const PAD_COLORS = [
-  'rgb(255,0,127)',   // W - pink (lane 0)
-  'rgb(0,150,255)',   // O - blue (lane 1)
-  'rgb(190,0,255)',   // I - purple (lane 2)
-  'rgb(0,255,255)'    // E - cyan (lane 3)
-];
-
-const PAD_STYLES = [
-  { bg: 'bg-neon-pink/30', border: 'border-neon-pink/50', shadow: 'shadow-[0_0_15px_rgb(255,0,127)]' },
-  { bg: 'bg-neon-blue/30', border: 'border-neon-blue/50', shadow: 'shadow-[0_0_15px_rgb(0,150,255)]' },
-  { bg: 'bg-neon-cyan/30', border: 'border-neon-cyan/50', shadow: 'shadow-[0_0_15px_rgb(0,255,255)]' },
-  { bg: 'bg-neon-purple/30', border: 'border-neon-purple/50', shadow: 'shadow-[0_0_15px_rgb(190,0,255)]' },
-];
+import { ACTIVATION_WINDOW, HIT_SUCCESS_DURATION, SOUNDPAD_COLORS, SOUNDPAD_STYLES } from "@/lib/gameConstants";
 
 interface SoundPadProps {
   onPadHit: (index: number) => void;
@@ -25,37 +10,47 @@ interface SoundPadProps {
 }
 
 export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
+  const [hitFeedback, setHitFeedback] = useState<Record<number, boolean>>({ 0: false, 1: false, 2: false, 3: false });
   
-  // Shared Hit Logic for Feedback
-  const checkHitAndFeedback = (index: number) => {
+  // Validate pad index with bounds checking
+  const isValidPadIndex = (index: number): boolean => {
+    return Number.isFinite(index) && index >= 0 && index <= 3;
+  };
+
+  // Hit detection and feedback trigger - pass callback directly instead of window events
+  const checkHitAndTriggerFeedback = useCallback((index: number) => {
     try {
-      if (!Number.isFinite(index) || index < 0 || index > 3) {
+      if (!isValidPadIndex(index)) {
         GameErrors.log(`SoundPad: Invalid pad index ${index}`);
         return;
       }
       
+      // Trigger game engine hit
       onPadHit(index);
       
-      // Check for visual feedback (simulated "good" hit)
+      // Check for hittable note in this lane within activation window
       if (!Array.isArray(notes)) {
         GameErrors.log(`SoundPad: Notes is not an array`);
         return;
       }
       
-      const laneNotes = notes.filter(n => 
-        n && Number.isFinite(n.lane) && n.lane === index
-      );
-      const hasHittableNote = laneNotes.some(n => 
-        n && !n.hit && !n.missed && !n.tapMissFailure && Number.isFinite(n.time) && Math.abs(n.time - currentTime) < ACTIVATION_WINDOW
+      // Find hittable note on this lane (don't filter twice - check directly)
+      const hasHittableNote = notes.some(n => 
+        n && 
+        Number.isFinite(n.lane) && n.lane === index &&
+        !n.hit && !n.missed && !n.tapMissFailure && 
+        Number.isFinite(n.time) && 
+        Math.abs(n.time - currentTime) < ACTIVATION_WINDOW
       );
       
+      // Trigger visual feedback if hit is valid
       if (hasHittableNote) {
-        window.dispatchEvent(new CustomEvent(`pad-hit-${index}`));
+        setHitFeedback(prev => ({ ...prev, [index]: true }));
       }
     } catch (error) {
-      GameErrors.log(`SoundPad: checkHitAndFeedback error for pad ${index}: ${error instanceof Error ? error.message : 'Unknown'}`);
+      GameErrors.log(`SoundPad: checkHitAndTriggerFeedback error for pad ${index}: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
-  };
+  }, [onPadHit, notes, currentTime]);
 
   // Keyboard controls
   useEffect(() => {
@@ -63,15 +58,33 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
       if (e.repeat) return;
       const key = e.key.toLowerCase();
       switch (key) {
-        case 'w': checkHitAndFeedback(0); break;
-        case 'o': checkHitAndFeedback(1); break;
-        case 'i': checkHitAndFeedback(2); break;
-        case 'e': checkHitAndFeedback(3); break;
+        case 'w': checkHitAndTriggerFeedback(0); break;
+        case 'o': checkHitAndTriggerFeedback(1); break;
+        case 'i': checkHitAndTriggerFeedback(2); break;
+        case 'e': checkHitAndTriggerFeedback(3); break;
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onPadHit]);
+  }, [checkHitAndTriggerFeedback]);
+
+  // Clear hit feedback after duration
+  useEffect(() => {
+    const activeHits = Object.entries(hitFeedback).filter(([_, isActive]) => isActive);
+    if (activeHits.length === 0) return;
+    
+    const timer = setTimeout(() => {
+      setHitFeedback(prev => {
+        const updated = { ...prev };
+        activeHits.forEach(([index]) => {
+          updated[parseInt(index)] = false;
+        });
+        return updated;
+      });
+    }, HIT_SUCCESS_DURATION);
+    
+    return () => clearTimeout(timer);
+  }, [hitFeedback]);
 
   return (
     <div className="p-6 glass-panel rounded-xl border border-neon-pink/30 relative bg-black/40">
@@ -85,9 +98,8 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
           <div key={i} className="flex flex-col items-center gap-2">
             <PadButton 
               index={i} 
-              onClick={() => checkHitAndFeedback(i)} 
-              notes={notes.filter(n => n.lane === i)}
-              currentTime={currentTime}
+              onClick={() => checkHitAndTriggerFeedback(i)} 
+              isHitSuccess={hitFeedback[i]}
             />
             <div className="text-xs text-muted-foreground font-rajdhani font-bold tracking-wider">
               KEY: {['W', 'O', 'I', 'E'][i]}
@@ -99,23 +111,11 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
   );
 }
 
-function PadButton({ index, onClick, notes, currentTime }: { index: number; onClick: () => void; notes: Note[]; currentTime: number }) {
-  
-  const [isHitSuccess, setIsHitSuccess] = useState(false);
+function PadButton({ index, onClick, isHitSuccess }: { index: number; onClick: () => void; isHitSuccess: boolean }) {
   const [isPressed, setIsPressed] = useState(false);
-
-  // Listen for the specific event for this pad
-  useEffect(() => {
-    const handler = () => {
-      setIsHitSuccess(true);
-      setTimeout(() => setIsHitSuccess(false), 200);
-    };
-    window.addEventListener(`pad-hit-${index}`, handler);
-    return () => window.removeEventListener(`pad-hit-${index}`, handler);
-  }, [index]);
-
-  const padColor = PAD_COLORS[index];
-  const padStyle = PAD_STYLES[index];
+  
+  const padColor = SOUNDPAD_COLORS[index];
+  const padStyle = SOUNDPAD_STYLES[index];
 
   const handleMouseDown = () => {
     setIsPressed(true);
@@ -147,11 +147,9 @@ function PadButton({ index, onClick, notes, currentTime }: { index: number; onCl
       {/* Pad Background */}
       <motion.div 
         className={`absolute inset-0 rounded-xl overflow-hidden border-2 ${padStyle.bg} ${padStyle.border} ${padStyle.shadow} group-hover:border-opacity-100 transition-all duration-200`}
-        animate={isHitSuccess ? { boxShadow: `0 0 40px ${padColor}` } : {}}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-20" />
       </motion.div>
-
 
       {/* Hit Flash - Success */}
       {isHitSuccess && (
