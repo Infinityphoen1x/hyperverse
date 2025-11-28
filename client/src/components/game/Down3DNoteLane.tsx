@@ -591,8 +591,9 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 // Pressed note: collapse timing depends on state
                 let collapseDuration = holdDuration;
                 
-                if (note.holdReleaseFailure && getReleaseTime(note.id)) {
-                  collapseDuration = Math.max(1, getReleaseTime(note.id)! - pressTime);
+                if (note.holdReleaseFailure) {
+                  // holdReleaseFailure: always use full failure animation duration so greyscale is visible
+                  collapseDuration = FAILURE_ANIMATION_DURATION;
                 } else if (note.tooEarlyFailure || isHoldMissFailure) {
                   // tooEarlyFailure and pressed holdMissFailure use full failure animation duration
                   collapseDuration = FAILURE_ANIMATION_DURATION;
