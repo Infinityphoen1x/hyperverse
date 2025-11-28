@@ -785,7 +785,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             
             // TAP notes: trapezoid with narrower flanking rays for compact appearance
             // Narrower angles keep near-end width more constant like HOLD notes
-            const TRAPEZOID_DEPTH = 35; // Slower convergence rate 
+            const TRAPEZOID_DEPTH = 25; // Balanced convergence rate 
             const nearDist = 1 + (progress * (JUDGEMENT_RADIUS - 1)); // Both travel together
             const farDist = Math.max(0.1, nearDist - TRAPEZOID_DEPTH);
             
