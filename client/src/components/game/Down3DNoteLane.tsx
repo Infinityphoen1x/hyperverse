@@ -838,99 +838,37 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 return null;
               }
               
-              // Unified geometry: approach phase then collapse phase
-              // APPROACH: Near end grows from vanishing point (1) toward judgement line (187)
-              // COLLAPSE: After player presses, near end locks and far end moves toward it
+              // Calculate approach geometry (before press)
+              const approachGeometry = calculateApproachGeometry(timeUntilHit, pressTime, failures.isTooEarlyFailure, holdDuration);
+              const { nearDistance: approachNearDistance, farDistance: approachFarDistance } = approachGeometry;
               
-              let nearDistance, farDistance;
-              let lockedNearDistance: number | null = null;
-              let collapseProgress = 0; // Initialize here to avoid temporal dead zone
+              // Determine collapse timing
+              const collapseDuration = failures.hasAnyFailure ? FAILURE_ANIMATION_DURATION : holdDuration;
               
-              // APPROACH PHASE: Hold note is a flat rectangular strip moving toward camera
-              // Before press: both near and far move together, maintaining constant Z-length (strip width)
-              // Once past judgement: continue progressing (note moves past camera) unless clamped by press
-              const rawApproachProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+              // Calculate locked near distance (where note "grabs" on press)
+              const lockedNearDistance = calculateLockedNearDistance(note, pressTime, failures.isTooEarlyFailure);
               
-              // Determine if approach progress should clamp at judgement line
-              // Clamp for successful/failed presses (not too-early failures)
-              // Allow unclamped for unpressed misses (pass through judgement line like TAP notes)
-              const isSuccessfulPress = pressTime > 0 && !isTooEarlyFailure;
-              const approachProgress = isSuccessfulPress ? Math.min(rawApproachProgress, 1.0) : rawApproachProgress;
-              const approachNearDistance = Math.max(1, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
-              
-              // Strip width = fixed depth length based on duration
+              // Calculate collapse geometry (after press or for failures)
               const stripWidth = (note.duration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
-              const approachFarDistance = Math.max(1, approachNearDistance - stripWidth);
+              const farDistanceAtPress = lockedNearDistance ? Math.max(1, lockedNearDistance - stripWidth) : approachFarDistance;
+              const collapseGeo = calculateCollapseGeometry(
+                pressTime,
+                collapseDuration,
+                currentTime,
+                lockedNearDistance || approachNearDistance,
+                farDistanceAtPress,
+                approachNearDistance,
+                approachFarDistance
+              );
+              
+              const { nearDistance, farDistance, collapseProgress } = collapseGeo;
               
               // Determine greyscale state based on failure type and timing
-              if (isTooEarlyFailure && pressTime > 0) {
-                // tooEarlyFailure: turns greyscale instantly when pressed
-                isGreyed = true;
-              } else if (isHoldMissFailure && approachNearDistance >= JUDGEMENT_RADIUS) {
-                // holdMissFailure: turns greyscale when it passes judgement line
-                isGreyed = true;
-              } else if (isHoldReleaseFailure) {
-                // holdReleaseFailure: turns greyscale (all failures must greyscale)
-                isGreyed = true;
-              }
+              const greyscaleState = determineGreyscaleState(failures, pressTime, approachNearDistance);
               
-              // Determine collapse timing for ALL cases (needed before geometry calculations)
-              let collapseDuration = holdDuration;
-              if (isTooEarlyFailure || isHoldReleaseFailure || isHoldMissFailure) {
-                // All failures use full animation duration for consistent visual timing
-                collapseDuration = FAILURE_ANIMATION_DURATION;
-              }
-              
-              // COLLAPSE PHASE: Hold note consumption mechanic
-              // When you press and hold a note, it "consumes" - near end locks and far end contracts to it
-              if (note.tooEarlyFailure && pressTime && pressTime > 0) {
-                // tooEarlyFailure: Just use approach geometry and fade, don't collapse
-                nearDistance = approachNearDistance;
-                farDistance = approachFarDistance;
-              } else if (pressTime && pressTime > 0) {
-                // Pressed note: Consume mechanic - lock near end, contract far end toward it
-                if (note.hit) {
-                  // Successful hit (on-time release): lock near end at judgement line
-                  // This represents the note being "consumed" at the hit zone
-                  lockedNearDistance = JUDGEMENT_RADIUS;
-                } else {
-                  // Early-but-valid press: lock near end at the position where it was pressed
-                  // This represents "grabbing" the note before it reaches judgement line
-                  const timeUntilHitAtPress = note.time - pressTime;
-                  const pressApproachProgress = Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0);
-                  // Clamp at judgement line - near end never goes past it
-                  lockedNearDistance = Math.min(JUDGEMENT_RADIUS, 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1)));
-                }
-                
-                // Far end at press time: maintains strip width before press
-                const farDistanceAtPress = Math.max(1, lockedNearDistance - stripWidth);
-                
-                const timeSincePress = currentTime - pressTime;
-                collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
-                
-                // During collapse: near end locked, far end contracts toward near end
-                nearDistance = lockedNearDistance;
-                farDistance = farDistanceAtPress * (1 - collapseProgress) + lockedNearDistance * collapseProgress;
-              } else {
-                // No press yet OR unpressed holdMissFailure: use approach phase geometry
-                nearDistance = approachNearDistance;
-                farDistance = approachFarDistance;
-              }
-              
-              // Glow when key is held OR after successful release (while animating)
-              const hasActivePress = pressTime > 0 || note.hit;
-              
-              // Glow intensity scales with approach progress
-              const glowScale = hasActivePress ? 0.2 + (Math.min(approachProgress, 1.0) * 0.8) : 0.05;
-              
-              // During collapse: decrease glow as trapezoid collapses
-              let collapseGlowProgress = 0;
-              if (pressTime && pressTime > 0) {
-                const timeSincePress = currentTime - pressTime;
-                collapseGlowProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
-              }
-              const collapseGlow = collapseGlowProgress > 0 ? (1 - collapseGlowProgress) * 0.8 : 0;
-              const finalGlowScale = hasActivePress ? Math.max(glowScale - collapseGlow, 0.1) : 0.05;
+              // Calculate glow intensity
+              const glowCalc = calculateHoldNoteGlow(pressTime, currentTime, collapseDuration, approachGeometry.nearDistance > 0 ? (approachGeometry.nearDistance - 1) / (JUDGEMENT_RADIUS - 1) : 0, note);
+              const { finalGlowScale } = glowCalc;
               
               // Calculate trapezoid corners using helper function
               const corners = getTrapezoidCorners(
@@ -943,7 +881,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
               );
               
               if (!corners) {
-                if (note.tooEarlyFailure || note.holdReleaseFailure || note.holdMissFailure) {
+                if (failures.hasAnyFailure) {
                   GameErrors.updateAnimation(note.id, { status: 'failed', errorMsg: 'Invalid trapezoid geometry' });
                 }
                 return null;
@@ -951,97 +889,35 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
               
               const { x1, y1, x2, y2, x3, y3, x4, y4 } = corners;
               
-              // Calculate opacity and collapse progress based on note state
-              let opacity = 0.4 + Math.min(approachProgress, 1.0) * 0.6; // Default: fade in during approach
+              // Track hold note animation lifecycle
+              trackHoldNoteAnimationLifecycle(note, failures, currentTime, collapseProgress);
               
-              // Track hold note animation lifecycle - handle all failure types
-              // Build list of active failure types for this note
-              const activeFailureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
-              if (isTooEarlyFailure) activeFailureTypes.push('tooEarlyFailure');
-              if (isHoldReleaseFailure) activeFailureTypes.push('holdReleaseFailure');
-              if (isHoldMissFailure) activeFailureTypes.push('holdMissFailure');
-              
-              if (activeFailureTypes.length > 0) {
-                // Update all failure types for this note
-                for (const failureType of activeFailureTypes) {
-                  const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
-                  const failureTime = animEntry?.failureTime || note.failureTime || currentTime;
-                  const timeSinceFailure = Math.max(0, currentTime - failureTime);
-                  
-                  if (!animEntry) {
-                    // Create tracking entry for this failure type
-                    GameErrors.trackAnimation(note.id, failureType, note.failureTime || currentTime);
-                  } else if (animEntry.status === 'pending') {
-                    // If this animation is old enough to be complete, skip rendering and mark complete
-                    if (timeSinceFailure >= HOLD_ANIMATION_DURATION) {
-                      GameErrors.updateAnimation(note.id, { status: 'completed', renderStart: currentTime, renderEnd: currentTime });
-                    } else {
-                      // Otherwise mark as rendering on first visual frame
-                      GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
-                    }
-                  }
-                  
-                  // Mark as completed when animation finishes
-                  if (collapseProgress >= 0.99 && animEntry && animEntry.status !== 'completed') {
-                    GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
-                  }
-                }
-              }
-              
-              // Handle unpressed failures (no second calculation needed for pressed notes - already done above)
-              if (!pressTime || pressTime === 0) {
-                if (activeFailureTypes.length > 0) {
-                  // Unpressed failure: fade over standard failure duration
-                  const failureTime = note.failureTime || currentTime;
-                  const timeSinceFailure = Math.max(0, currentTime - failureTime);
-                  collapseProgress = Math.min(Math.max(timeSinceFailure / FAILURE_ANIMATION_DURATION, 0), 1.0);
-                }
-              }
-              
-              // Apply fade during collapse (pressed or unpressed failure)
+              // Calculate opacity (fade during collapse for failures)
+              const approachProgress = (approachGeometry.nearDistance - 1) / (JUDGEMENT_RADIUS - 1);
+              let opacity = 0.4 + Math.min(approachProgress, 1.0) * 0.6;
               if (collapseProgress > 0) {
                 opacity = Math.max(1.0 - collapseProgress, 0.0);
               }
               
-              const strokeWidth = 2 + (collapseProgress > 0 ? (1 - collapseProgress) * 2 : approachProgress * 2);
-              // Greyscale notes use fixed grey colors, never affected by health-based color shift
+              // Calculate colors using helper
               const baseColor = getColorForLane(note.lane);
+              const colors = calculateHoldNoteColors(greyscaleState.isGreyed, note.lane, baseColor);
               
-              // For hold notes, use OPAQUE colors with full saturation - not affected by health effects
-              let fillColor: string;
-              let glowColor: string;
-              
-              if (isGreyed) {
-                fillColor = GREYSCALE_FILL_COLOR;
-                glowColor = GREYSCALE_GLOW_COLOR;
-              } else {
-                // Use bright, fully opaque colors for each deck lane
-                if (note.lane === -1) {
-                  fillColor = COLOR_DECK_LEFT; // Q - green, fully opaque
-                  glowColor = COLOR_DECK_LEFT;
-                } else if (note.lane === -2) {
-                  fillColor = COLOR_DECK_RIGHT; // P - red, fully opaque
-                  glowColor = COLOR_DECK_RIGHT;
-                } else {
-                  fillColor = baseColor;
-                  glowColor = baseColor;
-                }
-              }
-              
-              const strokeColor = isGreyed ? 'rgba(120, 120, 120, 1)' : 'rgba(255,255,255,1)';
+              // Calculate stroke width
+              const strokeWidth = 2 + (collapseProgress > 0 ? (1 - collapseProgress) * 2 : approachProgress * 2);
               
               return (
                 <polygon
                   key={note.id}
                   points={`${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`}
-                  fill={fillColor}
+                  fill={colors.fillColor}
                   opacity={opacity}
-                  stroke={strokeColor}
+                  stroke={colors.strokeColor}
                   strokeWidth={strokeWidth}
                   style={{
-                    filter: isGreyed 
+                    filter: greyscaleState.isGreyed 
                       ? `drop-shadow(0 0 8px ${GREYSCALE_GLOW_COLOR}) grayscale(1)`
-                      : `drop-shadow(0 0 ${Math.max(20, 25 * finalGlowScale)}px ${glowColor}) drop-shadow(0 0 ${Math.max(12, 15 * finalGlowScale)}px ${glowColor})`,
+                      : `drop-shadow(0 0 ${Math.max(20, 25 * finalGlowScale)}px ${colors.glowColor}) drop-shadow(0 0 ${Math.max(12, 15 * finalGlowScale)}px ${colors.glowColor})`,
                     transition: 'all 0.05s linear',
                     mixBlendMode: 'screen',
                   }}
