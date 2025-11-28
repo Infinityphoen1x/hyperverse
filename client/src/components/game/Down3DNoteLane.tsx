@@ -499,13 +499,12 @@ interface Down3DNoteLaneProps {
 }
 
 export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo = 0, onPadHit, onDeckHoldStart, onDeckHoldEnd }: Down3DNoteLaneProps) {
-  // Jolt animation state for vanishing point
-  const [joltOffset, setJoltOffset] = useState({ x: 0, y: 0 });
+  // Dynamic vanishing point offset - shifts at combo milestones
+  const [vpOffset, setVpOffset] = useState({ x: 0, y: 0 });
   const prevComboMilestoneRef = useRef<number>(0);
   const animationStartRef = useRef<number>(0);
   const targetOffsetRef = useRef({ x: 0, y: 0 });
   const currentOffsetRef = useRef({ x: 0, y: 0 });
-  const [, setRenderTrigger] = useState(0);
   const vanishingPointShiftsRef = useRef<Array<{ milestone: number; fromOffset: { x: number; y: number }; toOffset: { x: number; y: number }; distance: number }>>([]);
   
   // Error tracking for vanishing point shifts
@@ -534,7 +533,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
     return shiftRecord;
   };
   
-  // Smooth animation loop for vanishing point travel
+  // Smooth animation loop for vanishing point offset
   useEffect(() => {
     let animationFrameId: number;
     
@@ -550,7 +549,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
         const newX = currentOffsetRef.current.x + (targetOffsetRef.current.x - currentOffsetRef.current.x) * easeProgress;
         const newY = currentOffsetRef.current.y + (targetOffsetRef.current.y - currentOffsetRef.current.y) * easeProgress;
         
-        setJoltOffset({ x: newX, y: newY });
+        setVpOffset({ x: newX, y: newY });
         animationFrameId = requestAnimationFrame(animate);
       }
     };
@@ -599,9 +598,9 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
   }, [combo]);
 
   
-  // Calculate dynamic vanishing point with jolt offset
-  const vpX = VANISHING_POINT_X + joltOffset.x;
-  const vpY = VANISHING_POINT_Y + joltOffset.y;
+  // Calculate dynamic vanishing point with offset
+  const vpX = VANISHING_POINT_X + vpOffset.x;
+  const vpY = VANISHING_POINT_Y + vpOffset.y;
 
   // Keyboard controls - route by lane type
   useEffect(() => {
