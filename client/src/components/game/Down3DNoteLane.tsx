@@ -502,7 +502,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
   // Dynamic vanishing point offset - shifts at combo milestones
   const [vpOffset, setVpOffset] = useState({ x: 0, y: 0 });
   const prevComboMilestoneRef = useRef<number>(0);
-  const animationStartRef = useRef<number>(0);
+  const animationStartRef = useRef<number>(Date.now() + ANGLE_SHIFT_DURATION); // Initialize far future so animation doesn't run until triggered
   const targetOffsetRef = useRef({ x: 0, y: 0 });
   const currentOffsetRef = useRef({ x: 0, y: 0 });
   const vanishingPointShiftsRef = useRef<Array<{ milestone: number; fromOffset: { x: number; y: number }; toOffset: { x: number; y: number }; distance: number }>>([]);
@@ -537,6 +537,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
   useEffect(() => {
     let animationFrameId: number;
     let lastAnimatedValues = { x: 0, y: 0 };
+    let completionLogged = false;
     
     const animate = () => {
       const now = Date.now();
@@ -552,10 +553,13 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
         
         lastAnimatedValues = { x: newX, y: newY };
         setVpOffset({ x: newX, y: newY });
-      } else if (lastAnimatedValues.x !== targetOffsetRef.current.x || lastAnimatedValues.y !== targetOffsetRef.current.y) {
+        completionLogged = false;
+      } else if (!completionLogged) {
         // Animation complete - snap to target and preserve for next milestone
+        completionLogged = true;
         lastAnimatedValues = { ...targetOffsetRef.current };
         currentOffsetRef.current = { ...targetOffsetRef.current };
+        console.log(`[VP-ANIM] Animation complete: currentRef now set to [${targetOffsetRef.current.x.toFixed(1)}, ${targetOffsetRef.current.y.toFixed(1)}]`);
         setVpOffset({ x: targetOffsetRef.current.x, y: targetOffsetRef.current.y });
       }
       
@@ -610,6 +614,13 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
   // Calculate dynamic vanishing point with offset
   const vpX = VANISHING_POINT_X + vpOffset.x;
   const vpY = VANISHING_POINT_Y + vpOffset.y;
+  
+  // Debug logging
+  useEffect(() => {
+    if (combo > 0 && combo % 5 === 0) {
+      console.log(`[VP-RENDER] Combo ${combo}: vpOffset=[${vpOffset.x.toFixed(1)}, ${vpOffset.y.toFixed(1)}] → vpX=${vpX.toFixed(1)}, vpY=${vpY.toFixed(1)}`);
+    }
+  }, [vpOffset, combo, vpX, vpY]);
 
   // Keyboard controls - route by lane type
   useEffect(() => {
