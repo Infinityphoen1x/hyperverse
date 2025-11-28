@@ -21,6 +21,7 @@ import {
   YOUTUBE_PREVIEW_OPACITY_DEFAULT,
   YOUTUBE_PREVIEW_OPACITY_HOVER,
   YOUTUBE_CLOSE_ICON_SIZE,
+  YOUTUBE_PREVIEW_EMBED_OPTIONS,
 } from "@/lib/gameConstants";
 import { X } from "lucide-react";
 
@@ -168,12 +169,7 @@ export function YouTubeOverlay({ onVideoUrlChange }: YouTubeOverlayProps) {
             <iframe
               width="100%"
               height="100%"
-              src={buildYouTubeEmbedUrl(videoId, {
-                autoplay: false,
-                controls: false,
-                modestBranding: true,
-                enableJsApi: true
-              })}
+              src={buildYouTubeEmbedUrl(videoId, YOUTUBE_PREVIEW_EMBED_OPTIONS)}
               title={YOUTUBE_PREVIEW_TITLE}
               allow="autoplay"
               className="pointer-events-none"

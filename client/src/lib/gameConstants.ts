@@ -111,3 +111,19 @@ export const YOUTUBE_PREVIEW_HEIGHT = 144; // px (h-36 in Tailwind)
 export const YOUTUBE_PREVIEW_OPACITY_DEFAULT = 0.1; // 10%
 export const YOUTUBE_PREVIEW_OPACITY_HOVER = 0.2; // 20%
 export const YOUTUBE_CLOSE_ICON_SIZE = 14; // px
+
+// YouTube embed options for iframe configuration
+export const YOUTUBE_PREVIEW_EMBED_OPTIONS = {
+  autoplay: false,
+  controls: false,
+  modestBranding: true,
+  enableJsApi: true
+};
+
+export const YOUTUBE_BACKGROUND_EMBED_OPTIONS = {
+  autoplay: true,
+  muted: true,
+  controls: false,
+  modestBranding: true,
+  enableJsApi: true
+};

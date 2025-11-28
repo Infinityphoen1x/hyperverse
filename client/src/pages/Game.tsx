@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useGameEngine, Difficulty, GameErrors, Note } from "@/lib/gameEngine";
 import { getYouTubeVideoTime, buildYouTubeEmbedUrl } from "@/lib/youtubeUtils";
+import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from "@/lib/gameConstants";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
 import { DeckHoldMeters } from "@/components/game/DeckHoldMeters";
@@ -121,13 +122,7 @@ export default function Game() {
             ref={youtubeIframeRef}
             width="100%"
             height="100%"
-            src={buildYouTubeEmbedUrl(youtubeVideoId, {
-              autoplay: true,
-              muted: true,
-              controls: false,
-              modestBranding: true,
-              enableJsApi: true
-            })}
+            src={buildYouTubeEmbedUrl(youtubeVideoId, YOUTUBE_BACKGROUND_EMBED_OPTIONS)}
             title="YouTube background audio/video sync"
             allow="autoplay"
             className="w-full h-full"
