@@ -127,3 +127,13 @@ export const YOUTUBE_BACKGROUND_EMBED_OPTIONS = {
   modestBranding: true,
   enableJsApi: true
 };
+
+// Down3D Note Lane - tunnel geometry constants
+export const LEAD_TIME = 4000; // ms - hold notes appear 4000ms before hit
+export const JUDGEMENT_RADIUS = 187; // px - judgement line position in tunnel
+export const HOLD_ANIMATION_DURATION = 1100; // ms - failure animation duration
+export const HOLD_ACTIVATION_WINDOW = 300; // ms - ±300ms press accuracy window
+export const TAP_HIT_FLASH_DURATION = 600; // ms - how long hit flash lasts
+export const HEXAGON_RADII = [22, 52, 89, 135, 187, 248]; // px - tunnel hexagon ring distances
+export const RAY_ANGLES = [0, 60, 120, 180, 240, 300]; // degrees - 6 tunnel rays
+export const TUNNEL_MAX_DISTANCE = 260; // px - max distance for soundpad positioning

@@ -4,10 +4,17 @@ import { useEffect } from "react";
 import { 
   BUTTON_CONFIG, 
   VANISHING_POINT_X, 
-  VANISHING_POINT_Y, 
-  JUDGEMENT_RADIUS,
+  VANISHING_POINT_Y,
   HOLD_NOTE_STRIP_WIDTH_MULTIPLIER,
-  FAILURE_ANIMATION_DURATION 
+  FAILURE_ANIMATION_DURATION,
+  LEAD_TIME,
+  JUDGEMENT_RADIUS,
+  HOLD_ANIMATION_DURATION,
+  HOLD_ACTIVATION_WINDOW,
+  TAP_HIT_FLASH_DURATION,
+  HEXAGON_RADII,
+  RAY_ANGLES,
+  TUNNEL_MAX_DISTANCE,
 } from "@/lib/gameConstants";
 
 // Extract health-based color calculation for tunnel effects
@@ -82,7 +89,6 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
   // Phase 1 (0 to 1): Note approaching, trapezoid growing
   // Phase 2 (1 to 2): Note at/past judgement, trapezoid shrinking
   const getPhaseProgress = (timeUntilHit: number, pressTime: number, currentTime: number, holdDuration: number = 1000): number => {
-    const LEAD_TIME = 4000;
     
     if (timeUntilHit > 0) {
       // Phase 1: Note approaching
@@ -117,31 +123,31 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
         
         if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
           // HOLD NOTE RENDER WINDOW: Determine time-based visibility (independent of game state)
-          // Start: 4000ms before note.time (LEAD_TIME)
+          // Start: LEAD_TIME ms before note.time
           // End: varies based on what happens to the note
           let visibilityEnd = -2000; // Default: 2000ms after note.time
           
-          // If failed, extend to show 1100ms failure animation from failureTime
+          // If failed, extend to show HOLD_ANIMATION_DURATION failure animation from failureTime
           if (n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
             const failureTime = n.failureTime || currentTime;
             const timeSinceNoteTime = failureTime - n.time;
-            visibilityEnd = -(timeSinceNoteTime + 1100);
+            visibilityEnd = -(timeSinceNoteTime + HOLD_ANIMATION_DURATION);
             
             if (!Number.isFinite(visibilityEnd)) {
               GameErrors.log(`Down3DNoteLane: Invalid visibilityEnd for failed note ${n.id}: failureTime=${failureTime}, noteTime=${n.time}`);
             }
           }
           
-          // If pressed/hit, extend to show full hold duration + 1100ms Phase 2 shrinking
+          // If pressed/hit, extend to show full hold duration + HOLD_ANIMATION_DURATION Phase 2 shrinking
           else if (n.pressTime && n.pressTime > 0) {
             const holdDuration = n.duration || 1000;
             const holdEndTime = n.pressTime + holdDuration;
-            const animationEnd = holdEndTime + 1100; // Phase 2 shrinking
+            const animationEnd = holdEndTime + HOLD_ANIMATION_DURATION; // Phase 2 shrinking
             visibilityEnd = -(animationEnd - n.time);
           }
           
-          // Visibility window: 4000ms before to end time (based on note outcome)
-          if (timeUntilHit >= visibilityEnd && timeUntilHit <= 4000) {
+          // Visibility window: LEAD_TIME ms before to end time (based on note outcome)
+          if (timeUntilHit >= visibilityEnd && timeUntilHit <= LEAD_TIME) {
             // Track which hold note to show for this lane (prioritize oldest/earliest)
             if (!holdNotesByLane[n.lane] || (n.time < (holdNotesByLane[n.lane]?.time || Infinity))) {
               holdNotesByLane[n.lane] = n;
@@ -150,13 +156,13 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
         } else {
           // TAP NOTE RENDER WINDOW: Time-based only, no game state filtering
           // Start: 2000ms before note.time
-          // End: 1100ms after failure, or 500ms after miss/glitch
+          // End: HOLD_ANIMATION_DURATION after failure, or 500ms after miss/glitch
           
-          // If failed, show for 1100ms from failureTime
+          // If failed, show for HOLD_ANIMATION_DURATION ms from failureTime
           if (n.tapMissFailure) {
             const failureTime = n.failureTime || currentTime;
             const timeSinceFail = currentTime - failureTime;
-            if (timeSinceFail >= 0 && timeSinceFail <= 1100) {
+            if (timeSinceFail >= 0 && timeSinceFail <= HOLD_ANIMATION_DURATION) {
               result.push(n);
             }
             continue;
@@ -218,7 +224,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
   };
 
   // 6 equally-spaced rays at 60° intervals
-  const allRayAngles = [0, 60, 120, 180, 240, 300];
+  const allRayAngles = RAY_ANGLES;
 
   // Map lanes to rays
   const getLaneAngle = (lane: number): number => {
@@ -238,7 +244,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
     return angle;
   };
 
-  const MAX_DISTANCE = 260;
+  const MAX_DISTANCE = TUNNEL_MAX_DISTANCE;
 
   // 6 soundpad buttons positioned at tunnel lanes
   const soundpadButtons = BUTTON_CONFIG.map(({ lane, key, angle, color }) => {
@@ -265,8 +271,8 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
           style={{ opacity: 1 }}
         >
           {/* Concentric hexagons - faint tunnel walls with variable thickness */}
-          {[22, 52, 89, 135, 187, 248].map((radius, idx) => {
-            const maxRadius = 248;
+          {HEXAGON_RADII.map((radius, idx) => {
+            const maxRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1];
             const progress = radius / maxRadius; // 0 to 1, thinner at center to thicker at edge
             
             // Generate hexagon points
@@ -421,8 +427,6 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 }
 
                 const timeUntilHit = note.time - currentTime;
-                const LEAD_TIME = 4000; // Hold notes appear 4000ms before hit
-                const JUDGEMENT_RADIUS = 187;
                 
                 if (!Number.isFinite(timeUntilHit) || !Number.isFinite(LEAD_TIME)) {
                   return null; // Skip if calculations would be invalid
@@ -436,9 +440,8 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 const isHoldMissFailure = note.holdMissFailure || false;
                 
                 // Define timing windows - accuracy-based (pure time-based, decoupled from deck dots)
-                const ACTIVATION_WINDOW = 300;
                 const timeSinceNoteSpawn = pressTime - note.time;
-                const isTooEarly = isCurrentlyHeld && Math.abs(timeSinceNoteSpawn) > ACTIVATION_WINDOW;
+                const isTooEarly = isCurrentlyHeld && Math.abs(timeSinceNoteSpawn) > HOLD_ACTIVATION_WINDOW;
                 const isValidActivation = isCurrentlyHeld && !isTooEarly;
                 
                 // Determine if note is greyed out (failed) - will be calculated after approachProgress
