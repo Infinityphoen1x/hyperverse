@@ -313,6 +313,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
 
       const noteIndex = notes.findIndex(n => 
         n && 
+        n.type === 'TAP' &&  // CRITICAL: Only TAP notes, not HOLD notes
         !n.hit && 
         !n.missed && 
         !n.tapMissFailure &&
