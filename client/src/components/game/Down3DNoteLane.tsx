@@ -567,6 +567,10 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               
               const { x1, y1, x2, y2, x3, y3, x4, y4 } = corners;
               
+              // Calculate opacity and collapse progress based on note state
+              let opacity = 0.4 + Math.min(approachProgress, 1.0) * 0.6; // Default: fade in during approach
+              let collapseProgress = 0;
+              
               // Track hold note animation lifecycle - handle all failure types
               // Build list of active failure types for this note
               const activeFailureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
@@ -600,10 +604,6 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                   }
                 }
               }
-              
-              // Calculate opacity and collapse progress based on note state
-              let opacity = 0.4 + Math.min(approachProgress, 1.0) * 0.6; // Default: fade in during approach
-              let collapseProgress = 0;
               
               // Determine collapse timing based on note state
               if (pressTime && pressTime > 0) {
