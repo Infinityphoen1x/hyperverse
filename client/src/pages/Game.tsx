@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useGameEngine, Difficulty, GameErrors, Note } from "@/lib/gameEngine";
-import { getYouTubeVideoTime, buildYouTubeEmbedUrl } from "@/lib/youtubeUtils";
+import { getYouTubeVideoTime, buildYouTubeEmbedUrl, initYouTubePlayer, seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo } from "@/lib/youtubeUtils";
 import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from "@/lib/gameConstants";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
@@ -37,9 +37,9 @@ export default function Game() {
   }, [youtubeIframeRef]);
   
   const [isPauseMenuOpen, setIsPauseMenuOpen] = useState(false);
-  const [youtubeStartTime, setYoutubeStartTime] = useState(0);
   const pausedTimeRef = useRef(0);
   const currentTimeRef = useRef(0);
+  const playerInitializedRef = useRef(false);
   
   const { 
     gameState, 
@@ -69,6 +69,14 @@ export default function Game() {
   useEffect(() => {
     currentTimeRef.current = currentTime;
   }, [currentTime]);
+
+  // Initialize YouTube player when iframe is ready
+  useEffect(() => {
+    if (youtubeVideoId && youtubeIframeRef.current && !playerInitializedRef.current && window.YT) {
+      initYouTubePlayer(youtubeIframeRef.current);
+      playerInitializedRef.current = true;
+    }
+  }, [youtubeVideoId]);
 
   // Clean up error check interval on unmount
   useEffect(() => {
@@ -132,17 +140,19 @@ export default function Game() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && gameState === 'PLAYING') {
         if (isPaused) {
-          const resumeTimeSeconds = Math.max(1, Math.floor((pausedTimeRef.current + 500) / 1000));
-          console.log('Resume: setting YouTube to', resumeTimeSeconds, 'seconds');
-          setYoutubeStartTime(resumeTimeSeconds);
+          const resumeTimeSeconds = pausedTimeRef.current / 1000;
+          console.log('Resume: seeking YouTube to', resumeTimeSeconds, 'seconds');
+          seekYouTubeVideo(resumeTimeSeconds);
+          playYouTubeVideo();
           resumeGame();
           setIsPauseMenuOpen(false);
         } else {
           pauseGame();
           pausedTimeRef.current = currentTimeRef.current;
-          const pauseTimeSeconds = Math.max(1, Math.floor((currentTimeRef.current + 500) / 1000));
-          console.log('Paused at:', currentTimeRef.current, 'ms, YouTube seek to', pauseTimeSeconds);
-          setYoutubeStartTime(pauseTimeSeconds);
+          const pauseTimeSeconds = currentTimeRef.current / 1000;
+          console.log('Paused at:', currentTimeRef.current, 'ms, seeking YouTube to', pauseTimeSeconds);
+          seekYouTubeVideo(pauseTimeSeconds);
+          pauseYouTubeVideo();
           setIsPauseMenuOpen(true);
         }
       }
@@ -190,12 +200,11 @@ export default function Game() {
             ref={youtubeIframeRef}
             width="100%"
             height="100%"
-            src={buildYouTubeEmbedUrl(youtubeVideoId, { ...YOUTUBE_BACKGROUND_EMBED_OPTIONS, start: youtubeStartTime })}
+            src={buildYouTubeEmbedUrl(youtubeVideoId, { ...YOUTUBE_BACKGROUND_EMBED_OPTIONS })}
             title="YouTube background audio/video sync"
             allow="autoplay"
             className="w-full h-full"
             data-testid="iframe-youtube-background"
-            key={`youtube-${youtubeStartTime}`}
           />
         </div>
       )}
@@ -217,9 +226,10 @@ export default function Game() {
             <div className="flex flex-col gap-4 mt-8">
               <button 
                 onClick={() => {
-                  const resumeTimeSeconds = Math.max(1, Math.floor((pausedTimeRef.current + 500) / 1000));
-                  console.log('RESUME button: setting YouTube to', resumeTimeSeconds, 'seconds');
-                  setYoutubeStartTime(resumeTimeSeconds);
+                  const resumeTimeSeconds = pausedTimeRef.current / 1000;
+                  console.log('RESUME button: seeking YouTube to', resumeTimeSeconds, 'seconds');
+                  seekYouTubeVideo(resumeTimeSeconds);
+                  playYouTubeVideo();
                   resumeGame();
                   setIsPauseMenuOpen(false);
                 }}
@@ -231,7 +241,8 @@ export default function Game() {
               <button 
                 onClick={() => {
                   restartGame();
-                  setYoutubeStartTime(0);
+                  seekYouTubeVideo(0);
+                  pauseYouTubeVideo();
                   setIsPauseMenuOpen(false);
                 }}
                 className="px-12 py-4 bg-neon-yellow text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-neon-yellow"
@@ -287,17 +298,19 @@ export default function Game() {
           <button
             onClick={() => {
               if (isPaused) {
-                const resumeTimeSeconds = Math.max(1, Math.floor((pausedTimeRef.current + 500) / 1000));
-                console.log('Play button: setting YouTube to', resumeTimeSeconds, 'seconds');
-                setYoutubeStartTime(resumeTimeSeconds);
+                const resumeTimeSeconds = pausedTimeRef.current / 1000;
+                console.log('Play button: seeking YouTube to', resumeTimeSeconds, 'seconds');
+                seekYouTubeVideo(resumeTimeSeconds);
+                playYouTubeVideo();
                 resumeGame();
                 setIsPauseMenuOpen(false);
               } else if (!isPaused) {
                 pauseGame();
                 pausedTimeRef.current = currentTimeRef.current;
-                const pauseTimeSeconds = Math.max(1, Math.floor((currentTimeRef.current + 500) / 1000));
-                console.log('Pause button: paused at', currentTimeRef.current, 'ms, YouTube seek to', pauseTimeSeconds);
-                setYoutubeStartTime(pauseTimeSeconds);
+                const pauseTimeSeconds = currentTimeRef.current / 1000;
+                console.log('Pause button: paused at', currentTimeRef.current, 'ms, seeking YouTube to', pauseTimeSeconds);
+                seekYouTubeVideo(pauseTimeSeconds);
+                pauseYouTubeVideo();
                 setIsPauseMenuOpen(true);
               }
             }}

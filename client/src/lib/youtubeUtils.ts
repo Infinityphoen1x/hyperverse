@@ -1,3 +1,11 @@
+// Declare YouTube IFrame API on window
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady: () => void;
+  }
+}
+
 /**
  * Extract YouTube video ID from URL or ID string
  * Supports: full URLs, shortened URLs, and raw video IDs
@@ -59,25 +67,108 @@ export function buildYouTubeEmbedUrl(videoId: string, options: {
 }
 
 /**
- * Check if YouTube video element is accessible and ready for time tracking
- * Returns currentTime in seconds, or null if video is not accessible
+ * YouTube IFrame API Player wrapper
+ * Provides pause/resume/seek functionality using official YouTube API
  */
-export function getYouTubeVideoTime(iframeElement: HTMLIFrameElement | null): number | null {
-  if (!iframeElement) return null;
+let ytPlayer: any = null;
+
+export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null): void {
+  if (!iframeElement || !window.YT) return;
   
   try {
-    const videoElement = iframeElement.contentWindow?.document.querySelector('video');
-    if (!videoElement) return null;
-    
-    const currentTime = videoElement.currentTime;
-    // Validate currentTime is a valid number
-    if (typeof currentTime === 'number' && !isNaN(currentTime) && isFinite(currentTime)) {
-      return currentTime;
+    ytPlayer = new window.YT.Player(iframeElement, {
+      events: {
+        onReady: () => console.log('YouTube player ready'),
+        onError: (e: any) => console.warn('YouTube player error:', e),
+      }
+    });
+  } catch (error) {
+    console.warn('Failed to initialize YouTube player:', error);
+  }
+}
+
+/**
+ * Get current video time from YouTube player
+ * Returns time in milliseconds to match game engine format
+ */
+export function getYouTubeVideoTime(iframeElement: HTMLIFrameElement | null): number | null {
+  if (!ytPlayer) {
+    // Try to initialize if not already done
+    if (iframeElement && window.YT && window.YT.Player) {
+      initYouTubePlayer(iframeElement);
+    } else {
+      return null;
+    }
+  }
+  
+  try {
+    if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
+      const timeSeconds = ytPlayer.getCurrentTime();
+      if (typeof timeSeconds === 'number' && !isNaN(timeSeconds) && isFinite(timeSeconds)) {
+        return timeSeconds * 1000; // Convert to milliseconds
+      }
     }
     return null;
   } catch (error) {
-    // Cross-origin or other access errors are silent - video may not be ready yet
+    console.warn('YouTube getCurrentTime failed:', error);
     return null;
+  }
+}
+
+/**
+ * Seek YouTube video to specific time (in seconds)
+ */
+export function seekYouTubeVideo(timeSeconds: number): boolean {
+  if (!ytPlayer || typeof ytPlayer.seekTo !== 'function') {
+    console.warn('YouTube seekTo unavailable');
+    return false;
+  }
+  
+  try {
+    ytPlayer.seekTo(Math.max(0, timeSeconds), true);
+    console.log('YouTube seekTo:', timeSeconds, 'seconds - success');
+    return true;
+  } catch (error) {
+    console.warn('YouTube seekTo failed:', error);
+    return false;
+  }
+}
+
+/**
+ * Play YouTube video
+ */
+export function playYouTubeVideo(): boolean {
+  if (!ytPlayer || typeof ytPlayer.playVideo !== 'function') {
+    console.warn('YouTube playVideo unavailable');
+    return false;
+  }
+  
+  try {
+    ytPlayer.playVideo();
+    console.log('YouTube play - success');
+    return true;
+  } catch (error) {
+    console.warn('YouTube play failed:', error);
+    return false;
+  }
+}
+
+/**
+ * Pause YouTube video
+ */
+export function pauseYouTubeVideo(): boolean {
+  if (!ytPlayer || typeof ytPlayer.pauseVideo !== 'function') {
+    console.warn('YouTube pauseVideo unavailable');
+    return false;
+  }
+  
+  try {
+    ytPlayer.pauseVideo();
+    console.log('YouTube pause - success');
+    return true;
+  } catch (error) {
+    console.warn('YouTube pause failed:', error);
+    return false;
   }
 }
 
