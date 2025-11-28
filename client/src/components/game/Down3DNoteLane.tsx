@@ -478,11 +478,13 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               
               // APPROACH PHASE: Hold note is a flat rectangular strip moving toward camera
               // Before press: both near and far move together, maintaining constant Z-length (strip width)
-              // Clamp to 1.0 only for successful holds and normal release failures
-              // Exception: tooEarlyFailure and unpressed misses continue past judgement line like TAP notes
               const rawApproachProgress = timeUntilHit > 0 ? (LEAD_TIME - timeUntilHit) / LEAD_TIME : 1.0 + (-timeUntilHit / LEAD_TIME);
-              const shouldClamp = (pressTime > 0) && !isTooEarlyFailure;
-              const approachProgress = shouldClamp ? Math.min(rawApproachProgress, 1.0) : rawApproachProgress;
+              
+              // Determine if approach progress should clamp at judgement line
+              // Clamp for successful/failed presses (not too-early failures)
+              // Allow unclamped for unpressed misses (pass through judgement line like TAP notes)
+              const isSuccessfulPress = pressTime > 0 && !isTooEarlyFailure;
+              const approachProgress = isSuccessfulPress ? Math.min(rawApproachProgress, 1.0) : rawApproachProgress;
               const approachNearDistance = Math.max(1, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
               
               // Strip width = fixed depth length based on duration
@@ -570,14 +572,15 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               const { x1, y1, x2, y2, x3, y3, x4, y4 } = corners;
               
               // Track hold note animation lifecycle - handle all failure types
-              if (note.tooEarlyFailure || note.holdReleaseFailure || note.holdMissFailure) {
-                const failureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
-                if (note.tooEarlyFailure) failureTypes.push('tooEarlyFailure');
-                if (note.holdReleaseFailure) failureTypes.push('holdReleaseFailure');
-                if (note.holdMissFailure) failureTypes.push('holdMissFailure');
-                
+              // Build list of active failure types for this note
+              const activeFailureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
+              if (isTooEarlyFailure) activeFailureTypes.push('tooEarlyFailure');
+              if (isHoldReleaseFailure) activeFailureTypes.push('holdReleaseFailure');
+              if (isHoldMissFailure) activeFailureTypes.push('holdMissFailure');
+              
+              if (activeFailureTypes.length > 0) {
                 // Update all failure types for this note
-                for (const failureType of failureTypes) {
+                for (const failureType of activeFailureTypes) {
                   const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
                   const failureTime = animEntry?.failureTime || note.failureTime || currentTime;
                   const timeSinceFailure = Math.max(0, currentTime - failureTime);
@@ -593,6 +596,11 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                       // Otherwise mark as rendering on first visual frame
                       GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
                     }
+                  }
+                  
+                  // Mark as completed when animation finishes
+                  if (collapseProgress >= 0.99 && animEntry && animEntry.status !== 'completed') {
+                    GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
                   }
                 }
               }
@@ -624,22 +632,6 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
                 
                 opacity = Math.max(1.0 - (collapseProgress * 0.8), 0.2); // Smooth fade from 1.0 to 0.2
-                
-                // Mark animations as completed when collapse finishes
-                if (collapseProgress >= 0.99 && (note.tooEarlyFailure || note.holdReleaseFailure || note.holdMissFailure)) {
-                  const failureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
-                  if (note.tooEarlyFailure) failureTypes.push('tooEarlyFailure');
-                  if (note.holdReleaseFailure) failureTypes.push('holdReleaseFailure');
-                  if (note.holdMissFailure) failureTypes.push('holdMissFailure');
-                  
-                  // Mark all failure types as completed
-                  for (const failureType of failureTypes) {
-                    const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
-                    if (animEntry && animEntry.status !== 'completed') {
-                      GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
-                    }
-                  }
-                }
               } else if (isTooEarlyFailure || isHoldReleaseFailure || isHoldMissFailure) {
                 // Unpressed failure (never pressed): collapse from judgement line over 1100ms
                 const failureTime = note.failureTime || currentTime;
