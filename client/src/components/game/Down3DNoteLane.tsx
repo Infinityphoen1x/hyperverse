@@ -517,7 +517,8 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                   // This represents "grabbing" the note before it reaches judgement line
                   const timeUntilHitAtPress = note.time - pressTime;
                   const pressApproachProgress = Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0);
-                  lockedNearDistance = 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1));
+                  // Clamp at judgement line - near end never goes past it
+                  lockedNearDistance = Math.min(JUDGEMENT_RADIUS, 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1)));
                 }
                 
                 // Far end at press time: maintains strip width before press
