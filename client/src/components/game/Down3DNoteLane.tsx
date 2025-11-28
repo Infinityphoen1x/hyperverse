@@ -531,43 +531,33 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
         
         if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
           // HOLD NOTE RENDER WINDOW: Determine time-based visibility (independent of game state)
-          // Start: LEAD_TIME ms before note.time
-          // End: varies based on what happens to the note
-          let visibilityEnd = -TAP_RENDER_WINDOW_MS; // Default: TAP_RENDER_WINDOW_MS ms after note.time
+          // HOLD notes have their own timing distinct from TAP notes:
+          // - TAP: appear 2000ms before, disappear 500ms after miss
+          // - HOLD: appear 4000ms before (LEAD_TIME), stay visible through active states, fade on completion
+          let visibilityEnd = currentTime + HOLD_ANIMATION_DURATION; // Default: show until animation ends
           
-          // If failed, extend to show HOLD_ANIMATION_DURATION failure animation from failureTime
+          // If failed, show HOLD_ANIMATION_DURATION failure animation from failureTime
           if (n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
             const failureTime = n.failureTime || currentTime;
-            const timeSinceNoteTime = failureTime - n.time;
-            visibilityEnd = -(timeSinceNoteTime + HOLD_ANIMATION_DURATION);
-            
-            if (!Number.isFinite(visibilityEnd)) {
-              GameErrors.log(`Down3DNoteLane: Invalid visibilityEnd for failed note ${n.id}: failureTime=${failureTime}, noteTime=${n.time}`);
-            }
+            visibilityEnd = failureTime + HOLD_ANIMATION_DURATION;
           }
-          
-          // If pressed/hit, extend to show full hold duration + HOLD_ANIMATION_DURATION Phase 2 shrinking
+          // If pressed/hit, show full hold duration + HOLD_ANIMATION_DURATION Phase 2 shrinking
           else if (n.pressHoldTime && n.pressHoldTime > 0) {
             const holdDuration = n.duration || 1000;
             const holdEndTime = n.pressHoldTime + holdDuration;
-            const animationEnd = holdEndTime + HOLD_ANIMATION_DURATION; // Phase 2 shrinking
-            visibilityEnd = -(animationEnd - n.time);
+            visibilityEnd = holdEndTime + HOLD_ANIMATION_DURATION; // Phase 2 shrinking
           }
           
-          // Visibility window: TAP_RENDER_WINDOW_MS before LEAD_TIME to end time (based on note outcome)
-          if (timeUntilHit >= visibilityEnd && timeUntilHit <= LEAD_TIME) {
-            // Track which hold note to show for this lane (prioritize earliest CURRENTLY VISIBLE note, not earliest overall)
+          // Visibility window: LEAD_TIME before hit to animation completion
+          if (currentTime <= visibilityEnd && timeUntilHit <= LEAD_TIME) {
+            // Track which hold note to show for this lane (earliest currently-visible note)
             if (!holdNotesByLane[n.lane]) {
               holdNotesByLane[n.lane] = n;
             } else {
-              // Replace stored note if new note is earlier AND stored note is completely done
               const stored = holdNotesByLane[n.lane];
+              // Only replace if new note is earlier (newer notes with lower time value have priority)
               if (stored && n.time < stored.time) {
-                // Check if stored note is complete (any final state)
-                const isStoredComplete = stored.hit || stored.missed || stored.tapMissFailure || stored.tooEarlyFailure || stored.holdMissFailure || stored.holdReleaseFailure;
-                if (isStoredComplete) {
-                  holdNotesByLane[n.lane] = n;
-                }
+                holdNotesByLane[n.lane] = n;
               }
             }
           }
