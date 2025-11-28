@@ -229,12 +229,12 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
               shouldMarkFailed = true;
               failureType = 'tapMissFailure';
             } else if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
-              // holdMissFailure: Note expired without being pressed (pressed too LATE)
+              // holdMissFailure: Note expired without being pressed AT ALL (user never pressed)
               if (!n.pressTime && time > n.time + HOLD_MISS_TIMEOUT) {
                 shouldMarkFailed = true;
                 failureType = 'holdMissFailure';
               } 
-              // holdReleaseFailure: Note was pressed but release timing failed (fallback timeout)
+              // holdReleaseFailure: Fallback timeout if user pressed in time but never released and trackHoldEnd didn't fire
               else if (n.pressTime && n.pressTime > 0 && !n.hit) {
                 const noteHoldDuration = n.duration || 1000;
                 if (time > n.pressTime + noteHoldDuration + HOLD_RELEASE_OFFSET) {
@@ -380,11 +380,25 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       const timeSinceNoteSpawn = currentTime - anyNote.time;
       
       if (Math.abs(timeSinceNoteSpawn) > HOLD_ACTIVATION_WINDOW) {
+        // tooEarlyFailure: Pressed BEFORE the activation window
         if (timeSinceNoteSpawn < -HOLD_ACTIVATION_WINDOW) {
           GameErrors.trackAnimation(anyNote.id, 'tooEarlyFailure', currentTime);
           const idx = notes.findIndex(n => n && n.id === anyNote.id);
           if (idx !== -1) {
             notes[idx] = { ...notes[idx], pressTime: currentTime, tooEarlyFailure: true, failureTime: currentTime };
+          }
+          comboRef.current = 0;
+          healthRef.current = Math.max(0, healthRef.current - 2);
+          setCombo(0);
+          setHealth(healthRef.current);
+          setNotes([...notes]);
+        } 
+        // holdMissFailure: Pressed AFTER the activation window (note expired)
+        else if (timeSinceNoteSpawn > HOLD_ACTIVATION_WINDOW) {
+          GameErrors.trackAnimation(anyNote.id, 'holdMissFailure', currentTime);
+          const idx = notes.findIndex(n => n && n.id === anyNote.id);
+          if (idx !== -1) {
+            notes[idx] = { ...notes[idx], pressTime: currentTime, holdMissFailure: true, failureTime: currentTime };
           }
           comboRef.current = 0;
           healthRef.current = Math.max(0, healthRef.current - 2);
