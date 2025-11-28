@@ -20,9 +20,9 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
     return [];
   }
 
-  const validNotes: BeatmapNote[] = [];
+  const validNoteIndices = new Set<number>();
 
-  // First pass: validate and filter
+  // First pass: validate and filter - collect indices of valid notes
   for (let i = 0; i < beatmapNotes.length; i++) {
     const note = beatmapNotes[i];
 
@@ -38,7 +38,7 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
       continue;
     }
 
-    validNotes.push(note);
+    validNoteIndices.add(i);
   }
 
   // Second pass: convert to game notes, preserving original indices
@@ -47,8 +47,8 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
   for (let i = 0; i < beatmapNotes.length; i++) {
     const note = beatmapNotes[i];
     
-    // Skip filtered notes but preserve index for ID generation
-    if (!validNotes.includes(note)) {
+    // Skip filtered notes but preserve index for ID generation - O(1) lookup with Set
+    if (!validNoteIndices.has(i)) {
       continue;
     }
 

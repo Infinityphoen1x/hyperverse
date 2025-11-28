@@ -206,7 +206,7 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
       notes,
     };
   } catch (error) {
-    console.error('Beatmap parse error:', error);
+    GameErrors.log(`BeatmapParser: Beatmap parse error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     return null;
   }
 }
