@@ -91,13 +91,13 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
         const timeUntilHit = n.time - currentTime;
         
         if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
-          // Hold notes: filter out HITS (successful holds)
-          if (n.hit) continue;
           // Missed holds stay visible for 500ms after note.time
           if (n.missed && timeUntilHit < -500) continue;
           
-          // Determine visibility window: extend for failure animations
+          // Determine visibility window: extend for both failure animations AND successful hold shrinking
           let visibilityEnd = -2000; // Default window end (2000ms after note.time)
+          
+          // Extend visibility for failure animations
           if (n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
             // Failure animations run for 1100ms from failureTime
             const failureTime = n.failureTime || currentTime;
@@ -109,7 +109,18 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
             }
           }
           
-          // Visibility window: 4000ms before (lead time) to end of failure animation
+          // Extend visibility for successful holds during shrinking animation
+          // If note is hit OR currently being held, show shrinking animation for full hold duration + 1100ms phase 2
+          if (n.hit || (n.pressTime && n.pressTime > 0)) {
+            const holdDuration = n.duration || 1000;
+            // Note stays visible for: hold duration + 1100ms shrinking + extra buffer
+            const pressTime = n.pressTime || n.time;
+            const holdEndTime = pressTime + holdDuration;
+            const animationEnd = holdEndTime + 1100; // Phase 2 shrinking duration
+            visibilityEnd = -(animationEnd - n.time);
+          }
+          
+          // Visibility window: 4000ms before (lead time) to end of animation
           if (timeUntilHit >= visibilityEnd && timeUntilHit <= 4000) {
             // Track which hold note to show for this lane (prioritize oldest/earliest)
             if (!holdNotesByLane[n.lane] || (n.time < (holdNotesByLane[n.lane]?.time || Infinity))) {
