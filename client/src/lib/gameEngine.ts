@@ -257,9 +257,11 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         }
       }
       
-      // Sync refs to state periodically for UI
+      // Sync currentTime to state every frame for meter updates
+      setCurrentTime(time);
+      
+      // Sync other state less frequently (every 50ms) to reduce re-renders
       if (time - lastStateUpdateRef.current >= 50) {
-        setCurrentTime(time);
         setNotes([...notesRef.current]);
         setCombo(comboRef.current);
         setHealth(healthRef.current);
