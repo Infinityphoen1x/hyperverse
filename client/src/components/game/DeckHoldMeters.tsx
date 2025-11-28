@@ -95,11 +95,12 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
   // Detect when a hold note ends and reset meter
   useEffect(() => {
     [-1, -2].forEach((lane) => {
-      // Find currently active note on this lane
+      // Find currently active note on this lane (must not be hit or failed)
       const activeNote = Array.isArray(notes) ? notes.find(n => 
         n &&
         n.lane === lane && 
         (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
+        !n.hit &&
         !n.tooEarlyFailure &&
         !n.holdMissFailure &&
         !n.holdReleaseFailure &&
@@ -127,11 +128,12 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       if (!Number.isInteger(lane) || !Array.isArray(notes)) return 0;
       if (!Number.isFinite(currentTime)) return 0;
       
-      // Find active hold note on this lane (pressTime set and not failed)
+      // Find active hold note on this lane (pressTime set, not hit, and not failed)
       const activeNote = notes.find(n => 
         n &&
         n.lane === lane && 
         (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
+        !n.hit &&
         !n.tooEarlyFailure &&
         !n.holdMissFailure &&
         !n.holdReleaseFailure &&
