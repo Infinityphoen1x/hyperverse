@@ -857,32 +857,53 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               </g>
             );
           })}
-        </svg>
 
-        {/* 6 Soundpad Buttons - positioned at tunnel edges on rays */}
-        {soundpadButtons.map(({ lane, key, color, xPosition, yPosition }) => (
-          <motion.button
-            key={`pad-${lane}`}
-            className="absolute w-12 h-12 rounded-lg font-bold font-rajdhani text-white text-xs focus:outline-none pointer-events-auto"
-            style={{
-              left: `${xPosition}px`,
-              top: `${yPosition}px`,
-              transform: 'translate(-50%, -50%)',
-              backgroundColor: `${color}40`,
-              border: `2px solid ${color}`,
-              boxShadow: `0 0 15px ${color}80`,
-              zIndex: 50,
-            }}
-            whileTap={{ scale: 0.9 }}
-            onMouseDown={() => {
-              onPadHit?.(lane);
-              window.dispatchEvent(new CustomEvent(`pad-hit-${lane}`));
-            }}
-            data-testid={`pad-button-${lane}`}
-          >
-            {key}
-          </motion.button>
-        ))}
+          {/* Soundpad buttons rendered as SVG circles */}
+          {soundpadButtons.map(({ lane, key, color, xPosition, yPosition }) => (
+            <g key={`pad-${lane}`}>
+              {/* Glow effect */}
+              <circle
+                cx={xPosition}
+                cy={yPosition}
+                r={24}
+                fill="none"
+                stroke={color}
+                strokeWidth={3}
+                opacity={0.3}
+              />
+              {/* Main button */}
+              <circle
+                cx={xPosition}
+                cy={yPosition}
+                r={20}
+                fill={color}
+                fillOpacity={0.25}
+                stroke={color}
+                strokeWidth={2}
+                style={{ cursor: 'pointer' }}
+                onMouseDown={() => {
+                  onPadHit?.(lane);
+                  window.dispatchEvent(new CustomEvent(`pad-hit-${lane}`));
+                }}
+                data-testid={`pad-button-${lane}`}
+              />
+              {/* Key label */}
+              <text
+                x={xPosition}
+                y={yPosition}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill="white"
+                fontSize={14}
+                fontWeight="bold"
+                fontFamily="Rajdhani, monospace"
+                style={{ pointerEvents: 'none' }}
+              >
+                {key}
+              </text>
+            </g>
+          ))}
+        </svg>
       </div>
     </div>
   );
