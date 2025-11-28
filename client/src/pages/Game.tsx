@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useGameEngine, Difficulty, GameErrors, Note } from "@/lib/gameEngine";
 import { getYouTubeVideoTime, buildYouTubeEmbedUrl } from "@/lib/youtubeUtils";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
-import { SoundPad } from "@/components/game/SoundPad";
+import { SoundPadButtons } from "@/components/game/SoundPadButtons";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
 import { DeckHoldMeters } from "@/components/game/DeckHoldMeters";
 import { VisualEffects } from "@/components/game/VisualEffects";
@@ -217,6 +217,9 @@ export default function Game() {
             currentTime={currentTime}
             health={health}
           />
+          
+          {/* 6 Soundpad Buttons positioned at tunnel lanes */}
+          <SoundPadButtons onPadHit={hitNote} />
         </div>
 
         {/* Right Deck */}
@@ -230,14 +233,6 @@ export default function Game() {
            />
         </div>
 
-        {/* Sound Pads - At Bottom Center */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 scale-75">
-          <SoundPad 
-            onPadHit={hitNote} 
-            notes={notes} 
-            currentTime={currentTime} 
-          />
-        </div>
       </main>
       
       {/* Controls Hint */}
