@@ -23,14 +23,13 @@ const getRectangleMeterColor = (lane: number): string => {
 };
 
 // Helper: Check if a note is an active (pressed, not failed) hold note on a specific lane
-// CRITICAL: Allow tooEarlyFailure if actively held - player still deserves meter credit for holding
-// Only exclude holdMissFailure and holdReleaseFailure which mean the hold was truly abandoned
 const isActiveHoldNote = (note: Note, lane: number): boolean => {
   return !!(
     note &&
     note.lane === lane && 
     (note.type === 'SPIN_LEFT' || note.type === 'SPIN_RIGHT') && 
     !note.hit &&
+    !note.tooEarlyFailure &&
     !note.holdMissFailure &&
     !note.holdReleaseFailure &&
     note.pressHoldTime && 
@@ -170,14 +169,19 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       
       // Duration comes directly from beatmap, not from rendering state
       const beatmapHoldDuration = (activeNote.duration && activeNote.duration > 0) ? activeNote.duration : DECK_METER_DEFAULT_HOLD_DURATION;
-      const elapsedSincePress = currentTime - activeNote.pressHoldTime;
       
-      // No negative progress
-      if (elapsedSincePress < 0) return 0;
+      // CRITICAL: Measure from note.time (not pressHoldTime) so early presses don't double-count
+      // Example: If note.time=1000, duration=1000, and player presses at 950 (early):
+      // - Meter should measure from 1000 to 2000 (1000ms window)
+      // - Not from 950 to 2000 (1050ms)
+      const holdEndTime = activeNote.time + beatmapHoldDuration;
+      const elapsedFromNoteTime = currentTime - activeNote.time;
       
-      // Calculate progress: 0→1.0 over hold duration
-      // This is pure math: (elapsed / duration), independent of note rendering state
-      const progress = Math.min(elapsedSincePress / beatmapHoldDuration, 1.0);
+      // No negative progress (before note.time)
+      if (elapsedFromNoteTime < 0) return 0;
+      
+      // Calculate progress: 0→1.0 over hold duration window starting from note.time
+      const progress = Math.min(elapsedFromNoteTime / beatmapHoldDuration, 1.0);
       
       // Sanity check
       if (!Number.isFinite(progress) || progress < 0 || progress > 1) return 0;
