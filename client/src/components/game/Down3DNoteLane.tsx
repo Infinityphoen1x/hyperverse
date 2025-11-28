@@ -783,15 +783,15 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             const noteColor = getColorForLane(note.lane);
             const JUDGEMENT_RADIUS = 187;
             
-            // TAP notes: minimal trapezoid (constant-width appearance)
-            // Wider flanking angles for more width, shorter depth
-            const TRAPEZOID_DEPTH = 32; // Shorter length along ray
+            // TAP notes: trapezoid matching HOLD note geometry
+            // Use same ±15° flanking rays as HOLD notes for proper tunnel perspective
+            const TRAPEZOID_DEPTH = 32; // Shorter length along ray than HOLD notes
             const nearDist = 1 + (progress * (JUDGEMENT_RADIUS - 1)); // Both travel together
-            const farDist = Math.max(0.1, nearDist - TRAPEZOID_DEPTH); // Cap at 0.1 to avoid vanishing point artifacts
+            const farDist = Math.max(0.1, nearDist - TRAPEZOID_DEPTH); // Maintains consistent near-end width
             
-            // Wider flanking angle for more width
-            const tapLeftRayAngle = tapRayAngle - 5.5;
-            const tapRightRayAngle = tapRayAngle + 5.5;
+            // Same flanking angles as HOLD notes (±15° from center ray)
+            const tapLeftRayAngle = tapRayAngle - 15;
+            const tapRightRayAngle = tapRayAngle + 15;
             const tapLeftRad = (tapLeftRayAngle * Math.PI) / 180;
             const tapRightRad = (tapRightRayAngle * Math.PI) / 180;
             
