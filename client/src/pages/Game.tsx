@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useGameEngine, Difficulty, GameErrors, Note } from "@/lib/gameEngine";
-import { getYouTubeVideoTime, buildYouTubeEmbedUrl, seekYouTubeVideo, pauseYouTubeVideo, playYouTubeVideo } from "@/lib/youtubeUtils";
+import { getYouTubeVideoTime, buildYouTubeEmbedUrl } from "@/lib/youtubeUtils";
 import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from "@/lib/gameConstants";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
@@ -37,6 +37,7 @@ export default function Game() {
   }, [youtubeIframeRef]);
   
   const [isPauseMenuOpen, setIsPauseMenuOpen] = useState(false);
+  const [youtubeStartTime, setYoutubeStartTime] = useState(0);
   const pausedTimeRef = useRef(0);
   const currentTimeRef = useRef(0);
   
@@ -131,18 +132,17 @@ export default function Game() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && gameState === 'PLAYING') {
         if (isPaused) {
-          const pauseTimeMs = pausedTimeRef.current;
-          const pauseTimeSeconds = pauseTimeMs / 1000;
-          console.log('Resume: seeking to', pauseTimeSeconds, 'seconds');
-          seekYouTubeVideo(youtubeIframeRef.current, pauseTimeSeconds);
-          playYouTubeVideo(youtubeIframeRef.current);
+          const resumeTimeSeconds = Math.max(1, Math.floor((pausedTimeRef.current + 500) / 1000));
+          console.log('Resume: setting YouTube to', resumeTimeSeconds, 'seconds');
+          setYoutubeStartTime(resumeTimeSeconds);
           resumeGame();
           setIsPauseMenuOpen(false);
         } else {
           pauseGame();
           pausedTimeRef.current = currentTimeRef.current;
-          console.log('Paused at:', pausedTimeRef.current, 'ms');
-          pauseYouTubeVideo(youtubeIframeRef.current);
+          const pauseTimeSeconds = Math.max(1, Math.floor((currentTimeRef.current + 500) / 1000));
+          console.log('Paused at:', currentTimeRef.current, 'ms, YouTube seek to', pauseTimeSeconds);
+          setYoutubeStartTime(pauseTimeSeconds);
           setIsPauseMenuOpen(true);
         }
       }
@@ -190,11 +190,12 @@ export default function Game() {
             ref={youtubeIframeRef}
             width="100%"
             height="100%"
-            src={buildYouTubeEmbedUrl(youtubeVideoId, { ...YOUTUBE_BACKGROUND_EMBED_OPTIONS })}
+            src={buildYouTubeEmbedUrl(youtubeVideoId, { ...YOUTUBE_BACKGROUND_EMBED_OPTIONS, start: youtubeStartTime })}
             title="YouTube background audio/video sync"
             allow="autoplay"
             className="w-full h-full"
             data-testid="iframe-youtube-background"
+            key={`youtube-${youtubeStartTime}`}
           />
         </div>
       )}
@@ -216,11 +217,9 @@ export default function Game() {
             <div className="flex flex-col gap-4 mt-8">
               <button 
                 onClick={() => {
-                  const pauseTimeMs = pausedTimeRef.current;
-                  const pauseTimeSeconds = pauseTimeMs / 1000;
-                  console.log('RESUME button: seeking to', pauseTimeSeconds, 'seconds');
-                  seekYouTubeVideo(youtubeIframeRef.current, pauseTimeSeconds);
-                  playYouTubeVideo(youtubeIframeRef.current);
+                  const resumeTimeSeconds = Math.max(1, Math.floor((pausedTimeRef.current + 500) / 1000));
+                  console.log('RESUME button: setting YouTube to', resumeTimeSeconds, 'seconds');
+                  setYoutubeStartTime(resumeTimeSeconds);
                   resumeGame();
                   setIsPauseMenuOpen(false);
                 }}
@@ -232,8 +231,7 @@ export default function Game() {
               <button 
                 onClick={() => {
                   restartGame();
-                  seekYouTubeVideo(youtubeIframeRef.current, 0);
-                  pauseYouTubeVideo(youtubeIframeRef.current);
+                  setYoutubeStartTime(0);
                   setIsPauseMenuOpen(false);
                 }}
                 className="px-12 py-4 bg-neon-yellow text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-neon-yellow"
@@ -289,18 +287,17 @@ export default function Game() {
           <button
             onClick={() => {
               if (isPaused) {
-                const pauseTimeMs = pausedTimeRef.current;
-                const pauseTimeSeconds = pauseTimeMs / 1000;
-                console.log('Play button: seeking to', pauseTimeSeconds, 'seconds');
-                seekYouTubeVideo(youtubeIframeRef.current, pauseTimeSeconds);
-                playYouTubeVideo(youtubeIframeRef.current);
+                const resumeTimeSeconds = Math.max(1, Math.floor((pausedTimeRef.current + 500) / 1000));
+                console.log('Play button: setting YouTube to', resumeTimeSeconds, 'seconds');
+                setYoutubeStartTime(resumeTimeSeconds);
                 resumeGame();
                 setIsPauseMenuOpen(false);
               } else if (!isPaused) {
                 pauseGame();
                 pausedTimeRef.current = currentTimeRef.current;
-                console.log('Pause button: paused at', pausedTimeRef.current, 'ms');
-                pauseYouTubeVideo(youtubeIframeRef.current);
+                const pauseTimeSeconds = Math.max(1, Math.floor((currentTimeRef.current + 500) / 1000));
+                console.log('Pause button: paused at', currentTimeRef.current, 'ms, YouTube seek to', pauseTimeSeconds);
+                setYoutubeStartTime(pauseTimeSeconds);
                 setIsPauseMenuOpen(true);
               }
             }}
