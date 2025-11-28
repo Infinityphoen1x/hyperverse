@@ -570,30 +570,33 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
       const newOffsetX = Math.cos(angle) * ANGLE_SHIFT_DISTANCE;
       const newOffsetY = Math.sin(angle) * ANGLE_SHIFT_DISTANCE;
       
-      // Validate the shift before applying
-      validateVanishingPointShift(currentMilestone, joltOffset, { x: newOffsetX, y: newOffsetY });
+      // Use current animated offset, not state (state lags behind animation)
+      const currentAnimOffset = currentOffsetRef.current;
       
-      // Start smooth transition from current offset to new angle
+      // Validate the shift before applying
+      validateVanishingPointShift(currentMilestone, currentAnimOffset, { x: newOffsetX, y: newOffsetY });
+      
+      // Start smooth transition from current animation frame to new angle
       animationStartRef.current = Date.now();
-      currentOffsetRef.current = { ...joltOffset };
+      currentOffsetRef.current = { ...currentAnimOffset };
       targetOffsetRef.current = { x: newOffsetX, y: newOffsetY };
       // NO RETURN TO CENTER - stays at new offset for immersive "tunnel angle" effect
     } else if (combo === 0) {
       prevComboMilestoneRef.current = 0;
       
       // Validate return to center on combo break
+      const currentAnimOffset = currentOffsetRef.current;
       if (vanishingPointShiftsRef.current.length > 0) {
-        const lastShift = vanishingPointShiftsRef.current[vanishingPointShiftsRef.current.length - 1];
-        const returnDistance = Math.sqrt(Math.pow(joltOffset.x, 2) + Math.pow(joltOffset.y, 2));
-        console.log(`[VP-RESET] Combo break: Returning to center from [${joltOffset.x.toFixed(1)}, ${joltOffset.y.toFixed(1)}] (distance: ${returnDistance.toFixed(2)}px)`);
+        const returnDistance = Math.sqrt(Math.pow(currentAnimOffset.x, 2) + Math.pow(currentAnimOffset.y, 2));
+        console.log(`[VP-RESET] Combo break: Returning to center from [${currentAnimOffset.x.toFixed(1)}, ${currentAnimOffset.y.toFixed(1)}] (distance: ${returnDistance.toFixed(2)}px)`);
       }
       
       // Smooth return to center on combo break
       animationStartRef.current = Date.now();
-      currentOffsetRef.current = { ...joltOffset };
+      currentOffsetRef.current = { ...currentAnimOffset };
       targetOffsetRef.current = { x: 0, y: 0 };
     }
-  }, [combo, joltOffset]);
+  }, [combo]);
 
   
   // Calculate dynamic vanishing point with jolt offset
