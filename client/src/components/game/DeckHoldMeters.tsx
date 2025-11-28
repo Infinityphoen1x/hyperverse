@@ -15,6 +15,21 @@ const getRectangleMeterColor = (lane: number): string => {
   return '#FFFFFF'; // Fallback
 };
 
+// Helper: Check if a note is an active (pressed, not failed) hold note on a specific lane
+const isActiveHoldNote = (note: Note, lane: number): boolean => {
+  return !!(
+    note &&
+    note.lane === lane && 
+    (note.type === 'SPIN_LEFT' || note.type === 'SPIN_RIGHT') && 
+    !note.hit &&
+    !note.tooEarlyFailure &&
+    !note.holdMissFailure &&
+    !note.holdReleaseFailure &&
+    note.pressTime && 
+    note.pressTime > 0
+  );
+};
+
 interface RectangleMeterProps {
   progress: number;
   outlineColor: string;
@@ -96,17 +111,7 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
   useEffect(() => {
     [-1, -2].forEach((lane) => {
       // Find currently active note on this lane (must not be hit or failed)
-      const activeNote = Array.isArray(notes) ? notes.find(n => 
-        n &&
-        n.lane === lane && 
-        (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
-        !n.hit &&
-        !n.tooEarlyFailure &&
-        !n.holdMissFailure &&
-        !n.holdReleaseFailure &&
-        n.pressTime && 
-        n.pressTime > 0
-      ) : null;
+      const activeNote = Array.isArray(notes) ? notes.find(n => isActiveHoldNote(n, lane)) : null;
       
       const currentNoteId = activeNote?.id || '';
       const prevNoteId = prevActiveNoteIdRef.current[lane];
@@ -129,17 +134,7 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       if (!Number.isFinite(currentTime)) return 0;
       
       // Find active hold note on this lane (pressTime set, not hit, and not failed)
-      const activeNote = notes.find(n => 
-        n &&
-        n.lane === lane && 
-        (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
-        !n.hit &&
-        !n.tooEarlyFailure &&
-        !n.holdMissFailure &&
-        !n.holdReleaseFailure &&
-        n.pressTime && 
-        n.pressTime > 0
-      );
+      const activeNote = notes.find(n => isActiveHoldNote(n, lane));
       
       if (!activeNote || !activeNote.pressTime) return 0;
       
