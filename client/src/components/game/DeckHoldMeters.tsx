@@ -108,6 +108,12 @@ const RectangleMeter = ({ progress, outlineColor, lane, completionGlow }: Rectan
 };
 
 export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
+  // CRITICAL: Meter calculation is INDEPENDENT of Hold Note rendering
+  // - Receives full, unfiltered notes array from gameEngine
+  // - Uses only note properties: duration, pressHoldTime, currentTime
+  // - Not affected by Down3DNoteLane's rendering skip (collapseProgress >= 1.0)
+  // - Meter fills based on (currentTime - pressHoldTime) / duration
+  
   const [completionGlow, setCompletionGlow] = useState<Record<number, boolean>>({ [-1]: false, [-2]: false });
   const prevCompletionRef = useRef<Record<number, boolean>>({ [-1]: false, [-2]: false });
   const prevActiveNoteIdRef = useRef<Record<number, string>>({ [-1]: '', [-2]: '' });
@@ -146,11 +152,13 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
   }, [notes]);
 
   // Calculate hold note progress with completion glow trigger
+  // INDEPENDENT CALCULATION: Uses only note properties, never affected by rendering state
   const getHoldProgress = (lane: number): number => {
     try {
       if (!Array.isArray(notes) || !Number.isFinite(currentTime)) return 0;
       
       // Find active hold note on this lane (pressHoldTime set, not hit, and not failed)
+      // This check is INDEPENDENT of rendering - uses raw note state from gameEngine
       const activeNote = notes.find(n => isActiveHoldNote(n, lane));
       
       // No active note = no progress
@@ -159,7 +167,7 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       // Must have pressHoldTime to show progress
       if (!activeNote.pressHoldTime || activeNote.pressHoldTime <= 0) return 0;
       
-      // Duration defaults to constant if beatmap doesn't specify (fallback for edge cases)
+      // Duration comes directly from beatmap, not from rendering state
       const beatmapHoldDuration = (activeNote.duration && activeNote.duration > 0) ? activeNote.duration : DECK_METER_DEFAULT_HOLD_DURATION;
       const elapsedSincePress = currentTime - activeNote.pressHoldTime;
       
@@ -167,6 +175,7 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       if (elapsedSincePress < 0) return 0;
       
       // Calculate progress: 0→1.0 over hold duration
+      // This is pure math: (elapsed / duration), independent of note rendering state
       const progress = Math.min(elapsedSincePress / beatmapHoldDuration, 1.0);
       
       // Sanity check
