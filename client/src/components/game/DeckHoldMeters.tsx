@@ -77,174 +77,55 @@ const RectangleMeter = ({ progress, outlineColor, lane, completionGlow }: Rectan
 };
 
 export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
-  // Track when holds end to briefly freeze meter for visual feedback
-  const [holdEndProgress, setHoldEndProgress] = useState<Record<number, number>>({ [-1]: 0, [-2]: 0 });
-  const [holdEndTime, setHoldEndTime] = useState<Record<number, number>>({ [-1]: 0, [-2]: 0 });
   const [completionGlow, setCompletionGlow] = useState<Record<number, boolean>>({ [-1]: false, [-2]: false });
-  const prevNoteStates = useRef<Record<number, boolean>>({ [-1]: false, [-2]: false });
+  const prevCompletionRef = useRef<Record<number, boolean>>({ [-1]: false, [-2]: false });
 
-  // Detect when hold notes transition from active to inactive
-  // Completion is based on beatmap hold duration
-  // SYNC WITH visibleNotes LOGIC: match Down3DNoteLane's hold note visibility criteria
-  useEffect(() => {
-    [-1, -2].forEach((lane) => {
-      try {
-        // Find hold note on this lane using same criteria as Down3DNoteLane visibility
-        // - Not hit (show frozen meter for hit notes via holdEndTime state)
-        // - Not missed
-        // - Has pressTime set (actively being held or was held)
-        // - Not failed (failed notes don't show meter)
-        const activeNote = Array.isArray(notes) ? notes.find(n => 
-          n && 
-          n.lane === lane && 
-          (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
-          !n.missed &&
-          !n.tooEarlyFailure &&
-          !n.holdMissFailure &&
-          !n.holdReleaseFailure
-        ) : null;
-        
-        const wasActive = prevNoteStates.current[lane];
-        const isActive = activeNote && (activeNote.pressTime || 0) > 0;
-        
-        // Hold just ended (was active, now inactive)
-        if (wasActive && !isActive) {
-          // Only freeze meter if note wasn't marked as failed
-          if (activeNote && !activeNote.tooEarlyFailure && !activeNote.holdMissFailure && !activeNote.holdReleaseFailure) {
-            const beatmapHoldDuration = activeNote.duration || 1000;
-            const pressTime = activeNote.pressTime || 0;
-            const holdDuration = currentTime - pressTime;
-            
-            // Validate calculations
-            if (!Number.isFinite(holdDuration) || holdDuration < 0) {
-              GameErrors.log(`DeckMeter: Invalid holdDuration=${holdDuration} for lane ${lane}, note ${activeNote.id}`);
-              setHoldEndProgress(prev => ({ ...prev, [lane]: 0 }));
-              setHoldEndTime(prev => ({ ...prev, [lane]: 0 }));
-              prevNoteStates.current[lane] = isActive || false;
-              return;
-            }
-            
-            const finalProgress = Math.min(holdDuration / beatmapHoldDuration, 1.0);
-            
-            // Validate final progress
-            if (!Number.isFinite(finalProgress) || finalProgress < 0 || finalProgress > 1) {
-              GameErrors.log(`DeckMeter: Invalid finalProgress=${finalProgress} for lane ${lane}, holdDuration=${holdDuration}, beatmapDuration=${beatmapHoldDuration}`);
-              setHoldEndProgress(prev => ({ ...prev, [lane]: 0 }));
-              setHoldEndTime(prev => ({ ...prev, [lane]: 0 }));
-              prevNoteStates.current[lane] = isActive || false;
-              return;
-            }
-            
-            setHoldEndProgress(prev => ({ ...prev, [lane]: finalProgress }));
-            setHoldEndTime(prev => ({ ...prev, [lane]: currentTime }));
-            
-            // Trigger completion glow if meter is full (95%+)
-            if (finalProgress >= COMPLETION_THRESHOLD) {
-              setCompletionGlow(prev => ({ ...prev, [lane]: true }));
-              setTimeout(() => setCompletionGlow(prev => ({ ...prev, [lane]: false })), 400);
-            }
-          } else {
-            // Failed hold - clear frozen state immediately
-            setHoldEndProgress(prev => ({ ...prev, [lane]: 0 }));
-            setHoldEndTime(prev => ({ ...prev, [lane]: 0 }));
-          }
-        }
-        
-        // New hold started, clear the end progress
-        if (!wasActive && isActive) {
-          setHoldEndProgress(prev => ({ ...prev, [lane]: 0 }));
-          setHoldEndTime(prev => ({ ...prev, [lane]: 0 }));
-          setCompletionGlow(prev => ({ ...prev, [lane]: false }));
-        }
-        
-        prevNoteStates.current[lane] = isActive || false;
-      } catch (error) {
-        GameErrors.log(`DeckMeter effect error for lane ${lane}: ${error instanceof Error ? error.message : 'Unknown'}`);
-      }
-    });
-  }, [currentTime, notes]);
-
-  // Get hold progress based on note.pressTime (single source of truth)
-  // Meter charges from 0% at press to 100% at press + 1000ms hold duration
-  // Synced with Down3DNoteLane which uses the same note.pressTime source
+  // Simple meter logic: just calculate progress based on active hold note's beatmap duration
+  // No complex state tracking - meter directly reflects current hold progress
   const getHoldProgress = (lane: number): number => {
     try {
-      if (!Number.isInteger(lane)) return 0;
+      if (!Number.isInteger(lane) || !Array.isArray(notes)) return 0;
+      if (!Number.isFinite(currentTime)) return 0;
       
-      // Validate time values
-      if (!Number.isFinite(currentTime)) {
-        return 0;
-      }
-      
-      // Find active hold note on this lane (currently being held with pressTime set)
-      // This uses the note's own pressTime, matching Down3DNoteLane's source of truth
-      // Excludes failed notes - they don't show meter
-      const activeNote = Array.isArray(notes) ? notes.find(n => 
+      // Find active hold note on this lane (pressTime set and not failed)
+      const activeNote = notes.find(n => 
         n &&
         n.lane === lane && 
         (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
-        !n.missed &&
         !n.tooEarlyFailure &&
         !n.holdMissFailure &&
         !n.holdReleaseFailure &&
         n.pressTime && 
         n.pressTime > 0
-      ) : null;
+      );
       
-      // Show frozen meter for 1000ms after hold ends (synced with shrinking animation)
-      const holdEndTimeVal = holdEndTime[lane] || 0;
-      if (holdEndTimeVal > 0 && currentTime - holdEndTimeVal < 1000) {
-        const frozenProgress = Math.min(Math.max(holdEndProgress[lane], 0), 1);
-        return frozenProgress;
-      }
+      if (!activeNote || !activeNote.pressTime) return 0;
       
-      // If no active hold note, return 0 (no charge without active note)
-      if (!activeNote) {
-        return 0;
-      }
-      
-      // If note has any failure flags, return 0 (no meter for failed notes)
-      if (activeNote.tooEarlyFailure || activeNote.holdMissFailure || activeNote.holdReleaseFailure) {
-        return 0;
-      }
-      
-      // Get press time from note object (single source of truth, matches Down3DNoteLane)
-      const pressTime = activeNote.pressTime || 0;
-      
-      // Not actively holding
-      if (!pressTime || pressTime <= 0) return 0;
-      
-      // Note: Activation already validated by gameEngine.trackHoldStart
-      // If pressTime is set, it was within ±300ms accuracy window
-      // No need to re-validate here
-      
-      // Meter charges over beatmap-defined hold duration (or 1000ms default)
+      // Calculate progress: elapsed time / beatmap hold duration
       const beatmapHoldDuration = activeNote.duration || 1000;
-      const actualHoldDuration = currentTime - pressTime;
+      const elapsedSincePress = currentTime - activeNote.pressTime;
       
-      if (actualHoldDuration < 0 || !Number.isFinite(actualHoldDuration)) {
+      if (elapsedSincePress < 0 || !Number.isFinite(elapsedSincePress)) {
         return 0;
       }
       
-      // Hold note duration has expired - meter is empty regardless of player still holding
-      if (actualHoldDuration >= beatmapHoldDuration) {
+      // Progress: 0 at start, 1.0 when beatmap duration is reached, stays at 1.0 after
+      const progress = Math.min(elapsedSincePress / beatmapHoldDuration, 1.0);
+      
+      if (!Number.isFinite(progress) || progress < 0) {
         return 0;
       }
       
-      // Progress = how much of the beatmap hold duration has elapsed
-      // 0% at press, 100% at press + beatmapHoldDuration (matches shrink animation in Down3DNoteLane)
-      const progress = actualHoldDuration / beatmapHoldDuration;
-      
-      // Clamp to valid range [0, 1]
-      const clampedProgress = Math.min(Math.max(progress, 0), 1);
-      
-      // Validate final result
-      if (!Number.isFinite(clampedProgress)) {
-        GameErrors.log(`DeckMeter: Final clamped progress invalid for lane ${lane}: ${clampedProgress}`);
-        return 0;
+      // Trigger completion glow when meter just reaches full (95%+)
+      if (progress >= COMPLETION_THRESHOLD && !prevCompletionRef.current[lane]) {
+        prevCompletionRef.current[lane] = true;
+        setCompletionGlow(prev => ({ ...prev, [lane]: true }));
+        setTimeout(() => setCompletionGlow(prev => ({ ...prev, [lane]: false })), 400);
+      } else if (progress < COMPLETION_THRESHOLD) {
+        prevCompletionRef.current[lane] = false;
       }
       
-      return clampedProgress;
+      return progress;
     } catch (error) {
       GameErrors.log(`DeckMeter getHoldProgress error for lane ${lane}: ${error instanceof Error ? error.message : 'Unknown'}`);
       return 0;
