@@ -804,39 +804,52 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             }
 
             const noteColor = getColorForLane(note.lane);
-            const glowColor = isFailed ? 'rgba(100,100,100,0.4)' : noteColor;
+            
+            // TAP notes use trapezoids like HOLD notes
+            const TRAPEZOID_WIDTH = 35; // width at judgement line
+            const nearDist = distance - TRAPEZOID_WIDTH / 2;
+            const farDist = distance + TRAPEZOID_WIDTH / 2;
+            
+            const trapezoid = getTrapezoidCorners(
+              getLaneAngle(note.lane),
+              nearDist,
+              farDist,
+              VANISHING_POINT_X,
+              VANISHING_POINT_Y,
+              note.id
+            );
+            
+            if (!trapezoid) return null;
+            
+            const points = `${trapezoid.x1},${trapezoid.y1} ${trapezoid.x2},${trapezoid.y2} ${trapezoid.x3},${trapezoid.y3} ${trapezoid.x4},${trapezoid.y4}`;
             
             return (
               <g key={note.id}>
-                {/* Main note circle */}
-                <circle
-                  cx={xPosition}
-                  cy={yPosition}
-                  r={radius * radiusScale}
-                  fill={isFailed ? 'rgba(80,80,80,0.4)' : noteColor}
+                {/* Main trapezoid */}
+                <polygon
+                  points={points}
+                  fill={isFailed ? 'rgba(80,80,80,0.3)' : noteColor}
                   opacity={isFailed ? (1 - failProgress) * 0.6 : finalOpacity}
                   style={{
                     filter: isFailed 
                       ? 'grayscale(1) brightness(0.5)' 
                       : isHit && hitFlashIntensity > 0 
-                        ? `brightness(1.8) drop-shadow(0 0 10px ${noteColor})`
-                        : 'none',
+                        ? `brightness(1.8) drop-shadow(0 0 15px ${noteColor})`
+                        : 'drop-shadow(0 0 8px rgba(0,0,0,0.3))',
                     transition: 'all 0.05s linear',
                   }}
                 />
-                {/* Glow */}
-                <circle
-                  cx={xPosition}
-                  cy={yPosition}
-                  r={radius * radiusScale}
+                {/* Border glow */}
+                <polygon
+                  points={points}
                   fill="none"
-                  stroke={glowColor}
-                  strokeWidth={2}
-                  opacity={isFailed ? (1 - failProgress) * 0.3 : (finalOpacity * 0.6)}
+                  stroke={isFailed ? 'rgba(100,100,100,0.4)' : noteColor}
+                  strokeWidth={isHit && hitFlashIntensity > 0 ? 3 : 2}
+                  opacity={isFailed ? (1 - failProgress) * 0.3 : (finalOpacity * 0.7)}
                   style={{
                     filter: isHit && hitFlashIntensity > 0 
-                      ? `drop-shadow(0 0 ${15 * hitFlashIntensity}px ${noteColor})`
-                      : `drop-shadow(0 0 ${10 * progress}px ${noteColor})`,
+                      ? `drop-shadow(0 0 ${20 * hitFlashIntensity}px ${noteColor})`
+                      : `drop-shadow(0 0 ${8 * progress}px ${noteColor})`,
                   }}
                 />
                 {/* Text label */}
@@ -846,7 +859,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                   textAnchor="middle"
                   dominantBaseline="middle"
                   fill="white"
-                  fontSize={Math.max(8, 10 * progress)}
+                  fontSize={Math.max(10, 12 * progress)}
                   fontWeight="bold"
                   fontFamily="Rajdhani, monospace"
                   opacity={isFailed ? (1 - failProgress) * 0.6 : finalOpacity}
