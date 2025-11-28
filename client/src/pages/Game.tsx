@@ -37,6 +37,7 @@ export default function Game() {
   }, [youtubeIframeRef]);
   
   const [isPauseMenuOpen, setIsPauseMenuOpen] = useState(false);
+  const [youtubeStartTime, setYoutubeStartTime] = useState(0);
   
   const { 
     gameState, 
@@ -175,11 +176,12 @@ export default function Game() {
             ref={youtubeIframeRef}
             width="100%"
             height="100%"
-            src={buildYouTubeEmbedUrl(youtubeVideoId, YOUTUBE_BACKGROUND_EMBED_OPTIONS)}
+            src={buildYouTubeEmbedUrl(youtubeVideoId, { ...YOUTUBE_BACKGROUND_EMBED_OPTIONS, start: youtubeStartTime })}
             title="YouTube background audio/video sync"
             allow="autoplay"
             className="w-full h-full"
             data-testid="iframe-youtube-background"
+            key={`youtube-${youtubeStartTime}`}
           />
         </div>
       )}
@@ -201,6 +203,7 @@ export default function Game() {
               <button 
                 onClick={() => {
                   resumeGame();
+                  setYoutubeStartTime(Math.floor(currentTime / 1000));
                   setIsPauseMenuOpen(false);
                 }}
                 className="px-12 py-4 bg-neon-cyan text-black font-bold font-orbitron text-lg hover:bg-white transition-colors"
@@ -211,6 +214,7 @@ export default function Game() {
               <button 
                 onClick={() => {
                   restartGame();
+                  setYoutubeStartTime(0);
                   setIsPauseMenuOpen(false);
                 }}
                 className="px-12 py-4 bg-neon-yellow text-black font-bold font-orbitron text-lg hover:bg-white transition-colors"
@@ -267,9 +271,11 @@ export default function Game() {
             onClick={() => {
               if (isPaused) {
                 resumeGame();
+                setYoutubeStartTime(Math.floor(currentTime / 1000));
                 setIsPauseMenuOpen(false);
               } else {
                 pauseGame();
+                setYoutubeStartTime(Math.floor(currentTime / 1000));
                 setIsPauseMenuOpen(true);
               }
             }}

@@ -42,6 +42,7 @@ export function buildYouTubeEmbedUrl(videoId: string, options: {
   controls?: boolean;
   modestBranding?: boolean;
   enableJsApi?: boolean;
+  start?: number; // Start time in seconds
 } = {}): string {
   const params = new URLSearchParams();
   
@@ -50,6 +51,9 @@ export function buildYouTubeEmbedUrl(videoId: string, options: {
   if (options.controls === false) params.append('controls', '0');
   if (options.modestBranding) params.append('modestbranding', '1');
   if (options.enableJsApi) params.append('enablejsapi', '1');
+  if (typeof options.start === 'number' && options.start > 0) {
+    params.append('start', Math.floor(options.start).toString());
+  }
   
   return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
 }
