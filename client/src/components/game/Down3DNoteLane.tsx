@@ -500,16 +500,25 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 collapseDuration = FAILURE_ANIMATION_DURATION;
               }
               
-              // COLLAPSE PHASE: After player presses, lock near end and calculate collapse
+              // COLLAPSE PHASE: Hold note consumption mechanic
+              // When you press and hold a note, it "consumes" - near end locks and far end contracts to it
               if (note.tooEarlyFailure && pressTime && pressTime > 0) {
                 // tooEarlyFailure: Just use approach geometry and fade, don't collapse
                 nearDistance = approachNearDistance;
                 farDistance = approachFarDistance;
               } else if (pressTime && pressTime > 0) {
-                // Successful hold OR holdReleaseFailure: Lock near end, collapse far end toward it
-                const timeUntilHitAtPress = note.time - pressTime;
-                const pressApproachProgress = Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0);
-                lockedNearDistance = 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1));
+                // Pressed note: Consume mechanic - lock near end, contract far end toward it
+                if (note.hit) {
+                  // Successful hit (on-time release): lock near end at judgement line
+                  // This represents the note being "consumed" at the hit zone
+                  lockedNearDistance = JUDGEMENT_RADIUS;
+                } else {
+                  // Early-but-valid press: lock near end at the position where it was pressed
+                  // This represents "grabbing" the note before it reaches judgement line
+                  const timeUntilHitAtPress = note.time - pressTime;
+                  const pressApproachProgress = Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0);
+                  lockedNearDistance = 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1));
+                }
                 
                 // Far end at press time: maintains strip width before press
                 const farDistanceAtPress = Math.max(1, lockedNearDistance - stripWidth);
@@ -517,7 +526,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 const timeSincePress = currentTime - pressTime;
                 collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
                 
-                // During collapse: near end locked, far end moves toward near end
+                // During collapse: near end locked, far end contracts toward near end
                 nearDistance = lockedNearDistance;
                 farDistance = farDistanceAtPress * (1 - collapseProgress) + lockedNearDistance * collapseProgress;
               } else {
