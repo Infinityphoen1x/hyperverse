@@ -355,8 +355,7 @@ const calculateLockedNearDistance = (
   pressHoldTime: number,
   isTooEarlyFailure: boolean,
   approachNearDistance: number,
-  failureTime: number | null,
-  currentTime: number
+  failureTime: number | null
 ): number | null => {
   // ISOLATED: Successful hits - lock at judgement line (187px) - CHECK FIRST before pressHoldTime
   if (note.hit) {
@@ -864,7 +863,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
               const collapseDuration = failures.hasAnyFailure ? FAILURE_ANIMATION_DURATION : holdDuration;
               
               // Calculate locked near distance (where note "grabs" on press)
-              const lockedNearDistance = calculateLockedNearDistance(note, pressHoldTime, failures.isTooEarlyFailure, approachNearDistance, failureTime, currentTime);
+              const lockedNearDistance = calculateLockedNearDistance(note, pressHoldTime, failures.isTooEarlyFailure, approachNearDistance, failureTime);
               
               // Calculate collapse geometry (after press or for failures)
               const stripWidth = (note.duration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
