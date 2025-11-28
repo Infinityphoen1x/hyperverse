@@ -444,14 +444,14 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 const isTooEarly = isCurrentlyHeld && Math.abs(timeSinceNoteSpawn) > ACTIVATION_WINDOW;
                 const isValidActivation = isCurrentlyHeld && !isTooEarly;
                 
-                // Determine if note is greyed out (failed)
+                // Determine if note is greyed out (failed) - will be calculated after approachProgress
                 let isGreyed = false;
+                let failureTime = note.failureTime || currentTime;
+                
                 if (isTooEarlyFailure || isHoldReleaseFailure || isHoldMissFailure) {
-                  isGreyed = true;
                   // Skip rendering if failure animation is complete (>1100ms)
-                  const failureTime = note.failureTime || currentTime;
-                  const timeSinceShrinkStart = Math.max(0, currentTime - failureTime);
-                  if (timeSinceShrinkStart > 1100) return null;
+                  const timeSinceFail = Math.max(0, currentTime - failureTime);
+                  if (timeSinceFail > 1100) return null;
                 }
               
               // Get ray angle
@@ -481,7 +481,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               // Clamp to 1.0 only for successful holds and normal release failures
               // Exception: tooEarlyFailure and unpressed misses continue past judgement line like TAP notes
               const rawApproachProgress = timeUntilHit > 0 ? (LEAD_TIME - timeUntilHit) / LEAD_TIME : 1.0 + (-timeUntilHit / LEAD_TIME);
-              const shouldClamp = (pressTime > 0) && !isTooEarlyFailure && !isHoldMissFailure;
+              const shouldClamp = (pressTime > 0) && !isTooEarlyFailure;
               const approachProgress = shouldClamp ? Math.min(rawApproachProgress, 1.0) : rawApproachProgress;
               const approachNearDistance = Math.max(1, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
               
@@ -489,22 +489,16 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               const stripWidth = (note.duration || 1000) * 0.15;
               const approachFarDistance = Math.max(1, approachNearDistance - stripWidth);
               
+              // holdMissFailure turns greyscale when it passes judgement line (approachNearDistance >= JUDGEMENT_RADIUS)
+              if (isHoldMissFailure && approachNearDistance >= JUDGEMENT_RADIUS) {
+                isGreyed = true;
+              }
+              
               // COLLAPSE PHASE: After player presses, lock near end and calculate collapse
               if (note.tooEarlyFailure && pressTime && pressTime > 0) {
-                // tooEarlyFailure: Lock near end at press position, collapse far end toward it
-                const timeUntilHitAtPress = note.time - pressTime;
-                const pressApproachProgress = Math.min(Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0), 1.0);
-                lockedNearDistance = 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1));
-                
-                // Far end at press time: maintains strip width before press
-                const farDistanceAtPress = Math.max(1, lockedNearDistance - stripWidth);
-                
-                const collapseDuration = 1100;
-                const timeSincePress = currentTime - pressTime;
-                const collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
-                
-                nearDistance = lockedNearDistance;
-                farDistance = farDistanceAtPress * (1 - collapseProgress) + lockedNearDistance * collapseProgress;
+                // tooEarlyFailure: Just use approach geometry and fade, don't collapse
+                nearDistance = approachNearDistance;
+                farDistance = approachFarDistance;
               } else if (pressTime && pressTime > 0) {
                 // Successful hold OR holdReleaseFailure: Lock near end, collapse far end toward it
                 const timeUntilHitAtPress = note.time - pressTime;
