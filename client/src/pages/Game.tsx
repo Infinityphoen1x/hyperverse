@@ -17,6 +17,7 @@ export default function Game() {
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
   const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
+  const errorCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Parse difficulty from URL with browser context check
   const difficulty = useMemo(() => {
@@ -56,16 +57,32 @@ export default function Game() {
   // Memoize score string formatting
   const scoreDisplay = useMemo(() => score.toString().padStart(6, '0'), [score]);
 
+  // Clean up error check interval on unmount
+  useEffect(() => {
+    return () => {
+      if (errorCheckIntervalRef.current) {
+        clearInterval(errorCheckIntervalRef.current);
+        errorCheckIntervalRef.current = null;
+      }
+    };
+  }, []);
+
   // Monitor errors and note stats
   useEffect(() => {
-    const checkErrors = setInterval(() => {
+    if (errorCheckIntervalRef.current) clearInterval(errorCheckIntervalRef.current);
+    errorCheckIntervalRef.current = setInterval(() => {
       if (GameErrors.notes.length > 0) {
         setGameErrors([...GameErrors.notes]);
       }
       // Update note statistics for ErrorLogViewer
       GameErrors.updateNoteStats(notes);
     }, 500);
-    return () => clearInterval(checkErrors);
+    return () => {
+      if (errorCheckIntervalRef.current) {
+        clearInterval(errorCheckIntervalRef.current);
+        errorCheckIntervalRef.current = null;
+      }
+    };
   }, [notes]);
 
   useEffect(() => {
