@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useGameEngine, Difficulty, GameErrors, Note } from "@/lib/gameEngine";
 import { getYouTubeVideoTime, buildYouTubeEmbedUrl } from "@/lib/youtubeUtils";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
-import { SoundPadButtons } from "@/components/game/SoundPadButtons";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
 import { DeckHoldMeters } from "@/components/game/DeckHoldMeters";
 import { VisualEffects } from "@/components/game/VisualEffects";
@@ -210,16 +209,14 @@ export default function Game() {
           />
         </div>
 
-        {/* Center 3D Notelane */}
+        {/* Center 3D Notelane with integrated soundpad buttons */}
         <div className="relative flex-1 flex items-center justify-center">
           <Down3DNoteLane 
             notes={notes} 
             currentTime={currentTime}
             health={health}
+            onPadHit={hitNote}
           />
-          
-          {/* 6 Soundpad Buttons positioned at tunnel lanes */}
-          <SoundPadButtons onPadHit={hitNote} />
         </div>
 
         {/* Right Deck */}

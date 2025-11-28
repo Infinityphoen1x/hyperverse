@@ -1,5 +1,15 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Note, GameErrors } from "@/lib/gameEngine";
+import { useEffect } from "react";
+
+const BUTTON_CONFIG = [
+  { lane: 0, key: 'W', angle: 120, color: '#FF007F' },    // W - top-left pink
+  { lane: 1, key: 'O', angle: 60, color: '#0096FF' },     // O - top-right blue
+  { lane: 2, key: 'I', angle: 300, color: '#BE00FF' },    // I - bottom-right purple
+  { lane: 3, key: 'E', angle: 240, color: '#00FFFF' },    // E - bottom-left cyan
+  { lane: -1, key: 'Q', angle: 180, color: '#00FF00' },   // Q - left deck green
+  { lane: -2, key: 'P', angle: 0, color: '#FF0000' },     // P - right deck red
+];
 
 // Extract health-based color calculation for tunnel effects
 const getHealthBasedRayColor = (health: number): string => {
@@ -51,9 +61,24 @@ interface Down3DNoteLaneProps {
   notes: Note[];
   currentTime: number;
   health?: number;
+  onPadHit?: (lane: number) => void;
 }
 
-export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteLaneProps) {
+export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: Down3DNoteLaneProps) {
+  // Keyboard controls for soundpad buttons
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.repeat) return;
+      const key = e.key.toLowerCase();
+      const config = BUTTON_CONFIG.find(c => c.key.toLowerCase() === key);
+      if (config && onPadHit) {
+        onPadHit(config.lane);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onPadHit]);
   // Helper: Calculate phase progress (0 to 2)
   // Phase 1 (0 to 1): Note approaching, trapezoid growing
   // Phase 2 (1 to 2): Note at/past judgement, trapezoid shrinking
@@ -217,6 +242,14 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
   const VANISHING_POINT_X = 350;
   const VANISHING_POINT_Y = 200;
   const MAX_DISTANCE = 260;
+
+  // 6 soundpad buttons positioned at tunnel lanes
+  const soundpadButtons = BUTTON_CONFIG.map(({ lane, key, angle, color }) => {
+    const rad = (angle * Math.PI) / 180;
+    const xPosition = VANISHING_POINT_X + Math.cos(rad) * MAX_DISTANCE;
+    const yPosition = VANISHING_POINT_Y + Math.sin(rad) * MAX_DISTANCE;
+    return { lane, key, angle, color, xPosition, yPosition };
+  });
 
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
@@ -803,6 +836,30 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
           })}
         </AnimatePresence>
 
+        {/* 6 Soundpad Buttons - positioned at tunnel edges on rays */}
+        {soundpadButtons.map(({ lane, key, color, xPosition, yPosition }) => (
+          <motion.button
+            key={`pad-${lane}`}
+            className="absolute w-12 h-12 rounded-lg font-bold font-rajdhani text-white text-xs focus:outline-none pointer-events-auto"
+            style={{
+              left: `${xPosition}px`,
+              top: `${yPosition}px`,
+              transform: 'translate(-50%, -50%)',
+              backgroundColor: `${color}40`,
+              border: `2px solid ${color}`,
+              boxShadow: `0 0 15px ${color}80`,
+              zIndex: 50,
+            }}
+            whileTap={{ scale: 0.9 }}
+            onMouseDown={() => {
+              onPadHit?.(lane);
+              window.dispatchEvent(new CustomEvent(`pad-hit-${lane}`));
+            }}
+            data-testid={`pad-button-${lane}`}
+          >
+            {key}
+          </motion.button>
+        ))}
       </div>
     </div>
   );
