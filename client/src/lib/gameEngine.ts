@@ -468,7 +468,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           else if (Math.abs(timeSinceExpectedRelease) < ACCURACY_GREAT_MS) points = ACCURACY_GREAT_POINTS;
           
           if (idx !== -1) {
-            notes[idx] = { ...notes[idx], hit: true };
+            notes[idx] = { ...notes[idx], hit: true, hitTime: currentTime };
           }
           scoreRef.current += points;
           comboRef.current += 1;
