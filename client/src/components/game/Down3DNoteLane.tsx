@@ -16,6 +16,7 @@ import {
   MAX_HEALTH,
   TAP_RENDER_WINDOW_MS,
   TAP_FALLTHROUGH_WINDOW_MS,
+  HOLD_RENDER_WINDOW_MS,
   TAP_JUDGEMENT_LINE_WIDTH,
   HOLD_JUDGEMENT_LINE_WIDTH,
   TUNNEL_CONTAINER_WIDTH,
@@ -533,7 +534,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
           // HOLD NOTE RENDER WINDOW: Determine time-based visibility (independent of game state)
           // HOLD notes have their own timing distinct from TAP notes:
           // - TAP: appear 2000ms before, disappear 500ms after miss
-          // - HOLD: appear 4000ms before (LEAD_TIME), stay visible through active states, fade on completion
+          // - HOLD: appear 4000ms before (HOLD_RENDER_WINDOW_MS), stay visible through active states, fade on completion
           let visibilityEnd = currentTime + HOLD_ANIMATION_DURATION; // Default: show until animation ends
           
           // If failed, show HOLD_ANIMATION_DURATION failure animation from failureTime
@@ -548,8 +549,8 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
             visibilityEnd = holdEndTime + HOLD_ANIMATION_DURATION; // Phase 2 shrinking
           }
           
-          // Visibility window: LEAD_TIME before hit to animation completion
-          if (currentTime <= visibilityEnd && timeUntilHit <= LEAD_TIME) {
+          // Visibility window: HOLD_RENDER_WINDOW_MS before hit to animation completion
+          if (currentTime <= visibilityEnd && timeUntilHit <= HOLD_RENDER_WINDOW_MS) {
             // Track which hold note to show for this lane (earliest currently-visible note)
             if (!holdNotesByLane[n.lane]) {
               holdNotesByLane[n.lane] = n;

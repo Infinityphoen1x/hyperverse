@@ -166,6 +166,7 @@ export const STATE_UPDATE_BATCH_INTERVAL = 50; // ms - batch state updates to re
 // Down3D Note Lane - TAP note timing and visuals
 export const TAP_RENDER_WINDOW_MS = 2000; // ms - TAP notes appear 2000ms before hit
 export const TAP_FALLTHROUGH_WINDOW_MS = 500; // ms - TAP notes visible 500ms after miss
+export const HOLD_RENDER_WINDOW_MS = 4000; // ms - HOLD notes appear 4000ms before hit
 export const TAP_JUDGEMENT_LINE_WIDTH = 35; // px - width of perpendicular judgement indicator
 export const HOLD_JUDGEMENT_LINE_WIDTH = 45; // px - width of perpendicular judgement indicator for deck
 
