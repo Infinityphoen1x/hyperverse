@@ -198,12 +198,12 @@ export default function Game() {
         <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
           <iframe
             ref={youtubeIframeRef}
-            width="100%"
-            height="100%"
+            width="480"
+            height="270"
             src={buildYouTubeEmbedUrl(youtubeVideoId, { ...YOUTUBE_BACKGROUND_EMBED_OPTIONS })}
             title="YouTube background audio/video sync"
             allow="autoplay"
-            className="w-full h-full"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             data-testid="iframe-youtube-background"
           />
         </div>
