@@ -122,12 +122,8 @@ export function isPlayerReady(): boolean {
  */
 export function getYouTubeVideoTime(iframeElement: HTMLIFrameElement | null): number | null {
   if (!ytPlayer) {
-    // Try to initialize if not already done
-    if (iframeElement && window.YT && window.YT.Player) {
-      initYouTubePlayer(iframeElement);
-    } else {
-      return null;
-    }
+    // Player not initialized yet - return null and let Game.tsx handle initialization
+    return null;
   }
   
   try {
