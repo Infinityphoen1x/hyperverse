@@ -481,9 +481,8 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               const approachProgress = Math.min(timeUntilHit > 0 ? (LEAD_TIME - timeUntilHit) / LEAD_TIME : 1.0, 1.0);
               const approachNearDistance = 1 + (approachProgress * (JUDGEMENT_RADIUS - 1));
               
-              // Strip width = fixed depth length based on duration and approach speed
-              // Approach speed: 186 units / 4000ms = 0.0465 units/ms
-              const stripWidth = (note.duration || 1000) * 0.0465;
+              // Strip width = fixed depth length based on duration
+              const stripWidth = (note.duration || 1000) * 0.15;
               const approachFarDistance = Math.max(1, approachNearDistance - stripWidth);
               
               // COLLAPSE PHASE: After player presses, lock near end and calculate collapse
