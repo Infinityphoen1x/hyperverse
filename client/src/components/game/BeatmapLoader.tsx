@@ -14,8 +14,29 @@ interface BeatmapLoaderProps {
 }
 
 export function BeatmapLoader({ difficulty, onBeatmapLoad }: BeatmapLoaderProps) {
+  const defaultBeatmap = `[METADATA]
+title: Sync Test
+artist: Dual Deck
+bpm: 120
+duration: 80000
+youtube: 
+
+[${difficulty}]
+5000|-1|HOLD_START|hold_L1
+5000|-2|HOLD_START|hold_R1
+6000|-1|HOLD_END|hold_L1
+6000|-2|HOLD_END|hold_R1
+15000|-1|HOLD_START|hold_L2
+15000|-2|HOLD_START|hold_R2
+16000|-1|HOLD_END|hold_L2
+16000|-2|HOLD_END|hold_R2
+25000|-1|HOLD_START|hold_L3
+25000|-2|HOLD_START|hold_R3
+26000|-1|HOLD_END|hold_L3
+26000|-2|HOLD_END|hold_R3`;
+  
   const [isOpen, setIsOpen] = useState(false);
-  const [beatmapText, setBeatmapText] = useState("");
+  const [beatmapText, setBeatmapText] = useState(defaultBeatmap);
   const [error, setError] = useState("");
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -101,26 +122,6 @@ export function BeatmapLoader({ difficulty, onBeatmapLoad }: BeatmapLoaderProps)
                   Paste Beatmap Text ({difficulty})
                 </label>
                 <Textarea
-                  placeholder={`[METADATA]
-title: Sync Test
-artist: Dual Deck
-bpm: 120
-duration: 80000
-youtube: 
-
-[${difficulty}]
-5000|-1|HOLD_START|hold_L1
-5000|-2|HOLD_START|hold_R1
-6000|-1|HOLD_END|hold_L1
-6000|-2|HOLD_END|hold_R1
-15000|-1|HOLD_START|hold_L2
-15000|-2|HOLD_START|hold_R2
-16000|-1|HOLD_END|hold_L2
-16000|-2|HOLD_END|hold_R2
-25000|-1|HOLD_START|hold_L3
-25000|-2|HOLD_START|hold_R3
-26000|-1|HOLD_END|hold_L3
-26000|-2|HOLD_END|hold_R3`}
                   value={beatmapText}
                   onChange={(e) => {
                     setBeatmapText(e.target.value);
