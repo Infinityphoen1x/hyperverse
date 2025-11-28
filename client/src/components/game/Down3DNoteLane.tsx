@@ -1,19 +1,14 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Note, GameErrors, getReleaseTime } from "@/lib/gameEngine";
 import { useEffect } from "react";
-
-// Hold note geometry constants
-const HOLD_NOTE_STRIP_WIDTH_MULTIPLIER = 0.15; // Convert duration (ms) to Z-depth: stripWidth = duration * 0.15
-const FAILURE_ANIMATION_DURATION = 1100; // ms - time for failure animations to complete
-
-const BUTTON_CONFIG = [
-  { lane: 0, key: 'W', angle: 120, color: '#FF007F' },    // W - top-left pink
-  { lane: 1, key: 'O', angle: 60, color: '#0096FF' },     // O - top-right blue
-  { lane: 2, key: 'I', angle: 300, color: '#BE00FF' },    // I - bottom-right purple
-  { lane: 3, key: 'E', angle: 240, color: '#00FFFF' },    // E - bottom-left cyan
-  { lane: -1, key: 'Q', angle: 180, color: '#00FF00' },   // Q - left deck green
-  { lane: -2, key: 'P', angle: 0, color: '#FF0000' },     // P - right deck red
-];
+import { 
+  BUTTON_CONFIG, 
+  VANISHING_POINT_X, 
+  VANISHING_POINT_Y, 
+  JUDGEMENT_RADIUS,
+  HOLD_NOTE_STRIP_WIDTH_MULTIPLIER,
+  FAILURE_ANIMATION_DURATION 
+} from "@/lib/gameConstants";
 
 // Extract health-based color calculation for tunnel effects
 const getHealthBasedRayColor = (health: number): string => {
@@ -243,8 +238,6 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
     return angle;
   };
 
-  const VANISHING_POINT_X = 350;
-  const VANISHING_POINT_Y = 200;
   const MAX_DISTANCE = 260;
 
   // 6 soundpad buttons positioned at tunnel lanes

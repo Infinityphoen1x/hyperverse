@@ -2,12 +2,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import wheelImg from "@assets/generated_images/neon_glowing_cyber_turntable_interface.png";
 import { GameErrors } from "@/lib/gameEngine";
-
-// Deck wheel rotation constants
-const ROTATION_SPEED = 2.0; // degrees per frame
-const SPIN_THRESHOLD = 30; // degrees - trigger onSpin event after this rotation
-const STATE_UPDATE_INTERVAL = 50; // ms - batch state updates to avoid excessive re-renders
-const DRAG_VELOCITY_THRESHOLD = 100; // px/s - minimum velocity to trigger onSpin on drag
+import { ROTATION_SPEED, SPIN_THRESHOLD, STATE_UPDATE_INTERVAL, DRAG_VELOCITY_THRESHOLD } from "@/lib/gameConstants";
 
 interface CamelotWheelProps {
   side: "left" | "right";

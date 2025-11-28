@@ -1,23 +1,11 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { GameErrors } from "@/lib/gameEngine";
+import { BUTTON_CONFIG, VANISHING_POINT_X, VANISHING_POINT_Y, JUDGEMENT_RADIUS } from "@/lib/gameConstants";
 
 interface SoundPadButtonsProps {
   onPadHit: (lane: number) => void;
 }
-
-const BUTTON_CONFIG = [
-  { lane: 0, key: 'W', angle: 120, color: '#FF007F' },    // W - top-left pink
-  { lane: 1, key: 'O', angle: 60, color: '#0096FF' },     // O - top-right blue
-  { lane: 2, key: 'I', angle: 300, color: '#BE00FF' },    // I - bottom-right purple
-  { lane: 3, key: 'E', angle: 240, color: '#00FFFF' },    // E - bottom-left cyan
-  { lane: -1, key: 'Q', angle: 180, color: '#00FF00' },   // Q - left deck green
-  { lane: -2, key: 'P', angle: 0, color: '#FF0000' },     // P - right deck red
-];
-
-const VANISHING_POINT_X = 350;
-const VANISHING_POINT_Y = 200;
-const JUDGEMENT_RADIUS = 187;
 
 export function SoundPadButtons({ onPadHit }: SoundPadButtonsProps) {
   const [pressedLanes, setPressedLanes] = useState<Set<number>>(new Set());
