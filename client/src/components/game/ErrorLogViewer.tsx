@@ -107,9 +107,11 @@ export function ErrorLogViewer() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="absolute bottom-12 right-0 bg-gray-950 border border-cyan-500 rounded-lg p-4 w-96 max-h-96 flex flex-col gap-3 shadow-2xl"
+            className="absolute bottom-12 right-0 bg-gray-950 border border-cyan-500 rounded-lg w-96 h-96 flex flex-col shadow-2xl"
             data-testid="panel-error-log-viewer"
           >
+            <div className="flex-1 overflow-y-auto flex flex-col gap-3 p-4"
+            >
             {/* Loaded Notes Stats */}
             {noteStats.total > 0 && (
               <div className="bg-gray-900 rounded p-2 text-xs text-purple-300 font-mono space-y-2">
@@ -251,14 +253,14 @@ export function ErrorLogViewer() {
 
             {/* Error Messages */}
             <div
-              className="overflow-y-auto max-h-48 bg-gray-900 rounded p-2 text-xs text-red-300 font-mono space-y-1"
+              className="bg-gray-900 rounded p-2 text-xs text-red-300 font-mono space-y-1 flex-1 overflow-y-auto"
               data-testid="list-error-messages"
             >
               {errors.length === 0 ? (
                 <div className="text-gray-500">No errors</div>
               ) : (
                 errors.map((error, idx) => (
-                  <div key={idx} className="truncate hover:text-red-200">
+                  <div key={idx} className="truncate hover:text-red-200 break-words whitespace-pre-wrap">
                     {error}
                   </div>
                 ))
@@ -282,26 +284,29 @@ export function ErrorLogViewer() {
               </details>
             )}
 
-            {/* Controls */}
-            <div className="flex gap-2 text-xs">
-              <button
-                onClick={downloadLogs}
-                className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white px-2 py-1 rounded transition"
-                data-testid="button-download-logs"
-              >
-                Download
-              </button>
-              <button
-                onClick={clearLogs}
-                className="flex-1 bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded transition"
-                data-testid="button-clear-logs"
-              >
-                Clear
-              </button>
             </div>
 
-            <div className="text-xs text-gray-500">
-              Updated: {new Date().toLocaleTimeString()}
+            {/* Controls - Fixed at bottom */}
+            <div className="border-t border-cyan-500/30 p-4 bg-gray-950 space-y-2 flex-shrink-0">
+              <div className="flex gap-2 text-xs">
+                <button
+                  onClick={downloadLogs}
+                  className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white px-2 py-1 rounded transition"
+                  data-testid="button-download-logs"
+                >
+                  Download
+                </button>
+                <button
+                  onClick={clearLogs}
+                  className="flex-1 bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded transition"
+                  data-testid="button-clear-logs"
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="text-xs text-gray-500 text-center">
+                Updated: {new Date().toLocaleTimeString()}
+              </div>
             </div>
           </motion.div>
         )}
