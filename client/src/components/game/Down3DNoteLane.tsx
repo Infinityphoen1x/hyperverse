@@ -419,7 +419,6 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 
                 // Define timing windows - accuracy-based (pure time-based, decoupled from deck dots)
                 const timeSinceNoteSpawn = pressTime - note.time;
-                const isTooEarly = isCurrentlyHeld && Math.abs(timeSinceNoteSpawn) > HOLD_ACTIVATION_WINDOW;
                 
                 // Determine if note is greyed out (failed) - will be calculated after approachProgress
                 let isGreyed = false;
