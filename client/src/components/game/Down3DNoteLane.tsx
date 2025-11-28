@@ -478,8 +478,9 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               
               // APPROACH PHASE: Hold note is a flat rectangular strip moving toward camera
               // Before press: both near and far move together, maintaining constant Z-length (strip width)
-              // Continue past judgement line for missed unpressed notes (like TAP notes do)
-              let approachProgress = timeUntilHit > 0 ? (LEAD_TIME - timeUntilHit) / LEAD_TIME : 1.0;
+              // Clamp to 1.0 only for successful/failed pressed holds, allow unclamped for unpressed misses
+              const rawApproachProgress = timeUntilHit > 0 ? (LEAD_TIME - timeUntilHit) / LEAD_TIME : 1.0 + (-timeUntilHit / LEAD_TIME);
+              const approachProgress = (pressTime > 0) ? Math.min(rawApproachProgress, 1.0) : rawApproachProgress;
               const approachNearDistance = Math.max(1, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
               
               // Strip width = fixed depth length based on duration
