@@ -13,7 +13,6 @@ export const BUTTON_CONFIG = [
 // 3D tunnel geometry constants
 export const VANISHING_POINT_X = 350;
 export const VANISHING_POINT_Y = 200;
-export const JUDGEMENT_RADIUS = 187;
 
 // Hold note geometry constants
 export const HOLD_NOTE_STRIP_WIDTH_MULTIPLIER = 0.15; // Convert duration (ms) to Z-depth
