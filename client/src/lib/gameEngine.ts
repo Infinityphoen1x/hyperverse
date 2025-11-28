@@ -371,6 +371,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       }
       
       const notes = notesRef.current;
+      
       const anyNote = notes.find(n => {
         if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT') || n.hit || n.missed) {
           return false;
