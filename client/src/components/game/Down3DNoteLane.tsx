@@ -729,8 +729,8 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             
             if (progress < 0 || progress > 1.25) return null; // Only render in valid window
             
-            const rayAngle = getLaneAngle(note.lane);
-            const rad = (rayAngle * Math.PI) / 180;
+            const tapRayAngle = getLaneAngle(note.lane);
+            const rad = (tapRayAngle * Math.PI) / 180;
             
             const JUDGEMENT_RADIUS = 187;
             // Distance grows from vanishing point (1) outward as progress goes 0->1
@@ -805,13 +805,13 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
 
             const noteColor = getColorForLane(note.lane);
             
-            // TAP notes use trapezoids like HOLD notes
-            const TRAPEZOID_WIDTH = 35; // width at judgement line
-            const nearDist = distance - TRAPEZOID_WIDTH / 2;
-            const farDist = distance + TRAPEZOID_WIDTH / 2;
+            // TAP notes use trapezoids like HOLD Phase 1: growing from vanishing point
+            // Near end grows toward judgement line, far end stays at vanishing point
+            const nearDist = 1 + (progress * (JUDGEMENT_RADIUS - 1)); // Grows from 1 to 187
+            const farDist = 1; // Stays at vanishing point
             
             const trapezoid = getTrapezoidCorners(
-              getLaneAngle(note.lane),
+              tapRayAngle,
               nearDist,
               farDist,
               VANISHING_POINT_X,
@@ -821,53 +821,35 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             
             if (!trapezoid) return null;
             
-            const points = `${trapezoid.x1},${trapezoid.y1} ${trapezoid.x2},${trapezoid.y2} ${trapezoid.x3},${trapezoid.y3} ${trapezoid.x4},${trapezoid.y4}`;
+            const { x1, y1, x2, y2, x3, y3, x4, y4 } = trapezoid;
+            const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`;
+            
+            // Opacity: fade in as approaching (0.4 → 1.0)
+            let tapOpacity = 0.4 + (progress * 0.6);
+            if (isFailed) {
+              tapOpacity = (1 - failProgress) * 0.6; // Fade out over 1000ms on failure
+            } else if (isHit) {
+              tapOpacity = (1 - (timeSinceHit / 600)) * (0.4 + (progress * 0.6)); // Fade on hit
+            }
             
             return (
-              <g key={note.id}>
-                {/* Main trapezoid */}
-                <polygon
-                  points={points}
-                  fill={isFailed ? 'rgba(80,80,80,0.3)' : noteColor}
-                  opacity={isFailed ? (1 - failProgress) * 0.6 : finalOpacity}
-                  style={{
-                    filter: isFailed 
-                      ? 'grayscale(1) brightness(0.5)' 
-                      : isHit && hitFlashIntensity > 0 
-                        ? `brightness(1.8) drop-shadow(0 0 15px ${noteColor})`
-                        : 'drop-shadow(0 0 8px rgba(0,0,0,0.3))',
-                    transition: 'all 0.05s linear',
-                  }}
-                />
-                {/* Border glow */}
-                <polygon
-                  points={points}
-                  fill="none"
-                  stroke={isFailed ? 'rgba(100,100,100,0.4)' : noteColor}
-                  strokeWidth={isHit && hitFlashIntensity > 0 ? 3 : 2}
-                  opacity={isFailed ? (1 - failProgress) * 0.3 : (finalOpacity * 0.7)}
-                  style={{
-                    filter: isHit && hitFlashIntensity > 0 
-                      ? `drop-shadow(0 0 ${20 * hitFlashIntensity}px ${noteColor})`
-                      : `drop-shadow(0 0 ${8 * progress}px ${noteColor})`,
-                  }}
-                />
-                {/* Text label */}
-                <text
-                  x={xPosition}
-                  y={yPosition}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fill="white"
-                  fontSize={Math.max(10, 12 * progress)}
-                  fontWeight="bold"
-                  fontFamily="Rajdhani, monospace"
-                  opacity={isFailed ? (1 - failProgress) * 0.6 : finalOpacity}
-                  style={{ pointerEvents: 'none' }}
-                >
-                  {getNoteKey(note.lane)}
-                </text>
-              </g>
+              <polygon
+                key={note.id}
+                points={points}
+                fill={isFailed ? 'rgba(80,80,80,0.3)' : noteColor}
+                opacity={Math.max(tapOpacity, 0)}
+                stroke={isFailed ? 'rgba(100,100,100,0.6)' : 'rgba(255,255,255,0.8)'}
+                strokeWidth={1.5 + (progress * 1.5)}
+                style={{
+                  filter: isFailed 
+                    ? 'drop-shadow(0 0 8px rgba(100,100,100,0.6)) grayscale(1)'
+                    : isHit && hitFlashIntensity > 0 
+                      ? `brightness(1.8) drop-shadow(0 0 20px ${noteColor})`
+                      : `drop-shadow(0 0 ${10 * progress}px ${noteColor})`,
+                  transition: 'all 0.05s linear',
+                  mixBlendMode: 'screen',
+                }}
+              />
             );
           })}
         </svg>
