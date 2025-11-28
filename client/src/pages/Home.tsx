@@ -61,7 +61,7 @@ export default function Home() {
       
       {/* Footer */}
       <div className="absolute bottom-8 text-white/30 text-xs font-mono">
-        SYSTEM_READY // V.1.0.0 // REPLIT_MOCKUP
+        SYSTEM_READY // V.1.2.0 // REPLIT_MOCKUP
       </div>
     </div>
   );
