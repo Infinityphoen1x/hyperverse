@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useGameEngine, Difficulty, GameErrors, Note } from "@/lib/gameEngine";
+import { getYouTubeVideoTime, buildYouTubeEmbedUrl } from "@/lib/youtubeUtils";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { SoundPad } from "@/components/game/SoundPad";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
@@ -30,13 +31,10 @@ export default function Game() {
   }, []);
   
   // Function to get current video time from YouTube iframe
+  // Uses utility function with robust error handling
   const getVideoTime = useCallback((): number | null => {
-    if (!youtubeIframeRef.current) return null;
-    try {
-      return (youtubeIframeRef.current as any).contentWindow.document.querySelector('video')?.currentTime ?? null;
-    } catch {
-      return null;
-    }
+    const time = getYouTubeVideoTime(youtubeIframeRef.current);
+    return time;
   }, [youtubeIframeRef]);
   
   const { 
@@ -98,15 +96,21 @@ export default function Game() {
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col relative">
-      {/* YouTube Background Layer */}
+      {/* YouTube Background Layer - Auto-plays with audio for time sync */}
       {youtubeVideoId && (
         <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
           <iframe
             ref={youtubeIframeRef}
             width="100%"
             height="100%"
-            src={`https://www.youtube.com/embed/${youtubeVideoId}?autoplay=1&controls=0&modestbranding=1&mute=1`}
-            title="YouTube background"
+            src={buildYouTubeEmbedUrl(youtubeVideoId, {
+              autoplay: true,
+              muted: true,
+              controls: false,
+              modestBranding: true,
+              enableJsApi: true
+            })}
+            title="YouTube background audio/video sync"
             allow="autoplay"
             className="w-full h-full"
             data-testid="iframe-youtube-background"

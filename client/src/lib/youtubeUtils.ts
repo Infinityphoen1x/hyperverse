@@ -30,3 +30,49 @@ export function extractYouTubeId(url: string): string | null {
   }
   return null;
 }
+
+/**
+ * Build YouTube embed URL with full audio/video sync support
+ * For background playback: muted with autoplay enabled
+ * For gameplay sync: must use currentTime property via iframe access
+ */
+export function buildYouTubeEmbedUrl(videoId: string, options: {
+  autoplay?: boolean;
+  muted?: boolean;
+  controls?: boolean;
+  modestBranding?: boolean;
+  enableJsApi?: boolean;
+} = {}): string {
+  const params = new URLSearchParams();
+  
+  if (options.autoplay) params.append('autoplay', '1');
+  if (options.muted) params.append('mute', '1');
+  if (options.controls === false) params.append('controls', '0');
+  if (options.modestBranding) params.append('modestbranding', '1');
+  if (options.enableJsApi) params.append('enablejsapi', '1');
+  
+  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+}
+
+/**
+ * Check if YouTube video element is accessible and ready for time tracking
+ * Returns currentTime in seconds, or null if video is not accessible
+ */
+export function getYouTubeVideoTime(iframeElement: HTMLIFrameElement | null): number | null {
+  if (!iframeElement) return null;
+  
+  try {
+    const videoElement = iframeElement.contentWindow?.document.querySelector('video');
+    if (!videoElement) return null;
+    
+    const currentTime = videoElement.currentTime;
+    // Validate currentTime is a valid number
+    if (typeof currentTime === 'number' && !isNaN(currentTime) && isFinite(currentTime)) {
+      return currentTime;
+    }
+    return null;
+  } catch (error) {
+    // Cross-origin or other access errors are silent - video may not be ready yet
+    return null;
+  }
+}

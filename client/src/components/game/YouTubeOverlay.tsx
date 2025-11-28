@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { extractYouTubeId } from "@/lib/youtubeUtils";
+import { extractYouTubeId, buildYouTubeEmbedUrl } from "@/lib/youtubeUtils";
 import { GameErrors } from "@/lib/gameEngine";
 import { X } from "lucide-react";
 
@@ -142,8 +142,13 @@ export function YouTubeOverlay({ onVideoUrlChange }: YouTubeOverlayProps) {
             <iframe
               width="100%"
               height="100%"
-              src={`https://www.youtube.com/embed/${videoId}?autoplay=0&controls=0&modestbranding=1`}
-              title="YouTube video player"
+              src={buildYouTubeEmbedUrl(videoId, {
+                autoplay: false,
+                controls: false,
+                modestBranding: true,
+                enableJsApi: true
+              })}
+              title="YouTube video preview"
               allow="autoplay"
               className="pointer-events-none"
               data-testid="iframe-youtube"
