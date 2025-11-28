@@ -1,4 +1,27 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  EASY_BPM,
+  MEDIUM_BPM,
+  HARD_BPM,
+  MS_PER_MINUTE,
+  NOTE_START_TIME,
+  MAX_GENERATED_NOTES,
+  SPIN_FREQUENCY,
+  SPIN_ALTERNATION,
+  TAP_HIT_WINDOW,
+  HOLD_MISS_TIMEOUT,
+  HOLD_RELEASE_OFFSET,
+  HOLD_RELEASE_WINDOW,
+  HOLD_ACTIVATION_WINDOW,
+  ACCURACY_PERFECT_MS,
+  ACCURACY_GREAT_MS,
+  ACCURACY_PERFECT_POINTS,
+  ACCURACY_GREAT_POINTS,
+  ACCURACY_NORMAL_POINTS,
+  NOTES_SYNC_INTERVAL,
+  STATE_UPDATE_BATCH_INTERVAL,
+  MAX_HEALTH,
+} from '@/lib/gameConstants';
 
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 
@@ -127,8 +150,8 @@ const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[]
     }
 
     const notes: Note[] = [];
-    const bpm = difficulty === 'EASY' ? 60 : difficulty === 'MEDIUM' ? 90 : 120;
-    const beatDuration = 60000 / bpm; // ms per beat
+    const bpm = difficulty === 'EASY' ? EASY_BPM : difficulty === 'MEDIUM' ? MEDIUM_BPM : HARD_BPM;
+    const beatDuration = MS_PER_MINUTE / bpm; // ms per beat
     
     if (!Number.isFinite(beatDuration) || beatDuration <= 0) {
       GameErrors.log(`Invalid beatDuration calculated: ${beatDuration}`);
@@ -145,23 +168,23 @@ const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[]
     
     const pattern = patterns[difficulty];
     
-    let currentTime = 2000; // Start after 2s
+    let currentTime = NOTE_START_TIME; // Start after initial delay
     let beatIndex = 0;
     let noteCount = 0;
     
-    while (currentTime < duration && noteCount < 1000) {
+    while (currentTime < duration && noteCount < MAX_GENERATED_NOTES) {
       const patternStep = beatIndex % pattern.length;
       const lane = pattern[patternStep];
       
-      // Every 4 beats, place a spin note instead of tap (more frequent for playability)
+      // Every N beats, place a spin note instead of tap (more frequent for playability)
       // This ensures hold notes are available more often for the deck lanes
-      const isSpin = beatIndex % 4 === 0 && beatIndex > 0;
+      const isSpin = beatIndex % SPIN_FREQUENCY === 0 && beatIndex > 0;
       
       notes.push({
         id: `note-${Math.round(currentTime)}-${beatIndex}`,
-        lane: isSpin ? (beatIndex % 8 === 0 ? -1 : -2) : lane, // Alternate left/right spins every 4 beats
+        lane: isSpin ? (beatIndex % SPIN_ALTERNATION === 0 ? -1 : -2) : lane, // Alternate left/right spins
         time: currentTime,
-        type: isSpin ? (beatIndex % 8 === 0 ? 'SPIN_LEFT' : 'SPIN_RIGHT') : 'TAP',
+        type: isSpin ? (beatIndex % SPIN_ALTERNATION === 0 ? 'SPIN_LEFT' : 'SPIN_RIGHT') : 'TAP',
         hit: false,
         missed: false,
       });
@@ -171,8 +194,8 @@ const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[]
       noteCount++;
     }
     
-    if (noteCount >= 1000) {
-      GameErrors.log(`Note generation capped at 1000 notes`);
+    if (noteCount >= MAX_GENERATED_NOTES) {
+      GameErrors.log(`Note generation capped at ${MAX_GENERATED_NOTES} notes`);
     }
     
     return notes;
@@ -186,7 +209,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   const [gameState, setGameState] = useState<'MENU' | 'PLAYING' | 'GAMEOVER'>('MENU');
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
-  const [health, setHealth] = useState(200);
+  const [health, setHealth] = useState(MAX_HEALTH);
   const [notes, setNotes] = useState<Note[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
   
@@ -199,18 +222,18 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   // Refs for game state (updated every frame without re-renders)
   const notesRef = useRef<Note[]>([]);
   const comboRef = useRef<number>(0);
-  const healthRef = useRef<number>(200);
+  const healthRef = useRef<number>(MAX_HEALTH);
   const scoreRef = useRef<number>(0);
 
   const startGame = useCallback(() => {
     scoreRef.current = 0;
     comboRef.current = 0;
-    healthRef.current = 200;
+    healthRef.current = MAX_HEALTH;
     notesRef.current = customNotes || generateNotes(difficulty);
     
     setScore(0);
     setCombo(0);
-    setHealth(200);
+    setHealth(MAX_HEALTH);
     setNotes(notesRef.current);
     setGameState('PLAYING');
     
@@ -246,16 +269,16 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
             let shouldMarkFailed = false;
             let failureType: keyof Note | '' = '';
             
-            if (n.type === 'TAP' && time > n.time + 300) {
+            if (n.type === 'TAP' && time > n.time + TAP_HIT_WINDOW) {
               shouldMarkFailed = true;
               failureType = 'tapMissFailure';
             } else if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
-              if (!n.pressTime && time > n.time + 1100) {
+              if (!n.pressTime && time > n.time + HOLD_MISS_TIMEOUT) {
                 shouldMarkFailed = true;
                 failureType = 'holdMissFailure';
               } else if (n.pressTime && n.pressTime > 0 && !n.hit) {
                 const noteHoldDuration = n.duration || 1000;
-                if (time > n.pressTime + noteHoldDuration + 600) {
+                if (time > n.pressTime + noteHoldDuration + HOLD_RELEASE_OFFSET) {
                   shouldMarkFailed = true;
                   failureType = 'holdMissFailure';
                 }
@@ -276,15 +299,15 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       // Sync currentTime every frame for meter calculations
       setCurrentTime(time);
       
-      // Sync notes every 16ms (~60fps) to let framer-motion animate smoothly without thrashing
+      // Sync notes at regular intervals to let framer-motion animate smoothly without thrashing
       // Too frequent updates break motion animations because the array reference changes constantly
-      if (time - lastNotesUpdateRef.current >= 16) {
+      if (time - lastNotesUpdateRef.current >= NOTES_SYNC_INTERVAL) {
         setNotes([...notesRef.current]);
         lastNotesUpdateRef.current = time;
       }
       
-      // Sync other state less frequently (every 50ms) to reduce re-renders
-      if (time - lastStateUpdateRef.current >= 50) {
+      // Sync other state less frequently to reduce re-renders
+      if (time - lastStateUpdateRef.current >= STATE_UPDATE_BATCH_INTERVAL) {
         setCombo(comboRef.current);
         setHealth(healthRef.current);
         setScore(scoreRef.current);
@@ -312,7 +335,6 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         return;
       }
       
-      const hitWindow = 300;
       const currentTime = currentTimeRef.current;
       const notes = notesRef.current;
       
@@ -332,19 +354,19 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         n.lane === lane && 
         Number.isFinite(n.time) &&
         Number.isFinite(currentTime) &&
-        Math.abs(n.time - currentTime) < hitWindow
+        Math.abs(n.time - currentTime) < TAP_HIT_WINDOW
       );
 
       if (noteIndex !== -1) {
         const note = notes[noteIndex];
         const accuracy = Math.abs(note.time - currentTime);
-        let points = 100;
-        if (accuracy < 50) points = 300;
-        else if (accuracy < 100) points = 200;
+        let points = ACCURACY_NORMAL_POINTS;
+        if (accuracy < ACCURACY_PERFECT_MS) points = ACCURACY_PERFECT_POINTS;
+        else if (accuracy < ACCURACY_GREAT_MS) points = ACCURACY_GREAT_POINTS;
 
         scoreRef.current += points;
         comboRef.current += 1;
-        healthRef.current = Math.min(200, healthRef.current + 1);
+        healthRef.current = Math.min(MAX_HEALTH, healthRef.current + 1);
         
         notes[noteIndex] = { ...note, hit: true, hitTime: currentTime };
         
@@ -397,10 +419,9 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       }
       
       const timeSinceNoteSpawn = currentTime - anyNote.time;
-      const holdActivationWindow = 300;
       
-      if (Math.abs(timeSinceNoteSpawn) > holdActivationWindow) {
-        if (timeSinceNoteSpawn < -holdActivationWindow) {
+      if (Math.abs(timeSinceNoteSpawn) > HOLD_ACTIVATION_WINDOW) {
+        if (timeSinceNoteSpawn < -HOLD_ACTIVATION_WINDOW) {
           GameErrors.trackAnimation(anyNote.id, 'tooEarlyFailure', currentTime);
           const idx = notes.findIndex(n => n && n.id === anyNote.id);
           if (idx !== -1) {
@@ -450,7 +471,6 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       
       if (activeNote && activeNote.pressTime && activeNote.pressTime > 0) {
         const holdDuration = activeNote.duration || 1000;
-        const RELEASE_WINDOW = 100;
         const pressTime = activeNote.pressTime;
         const expectedReleaseTime = pressTime + holdDuration;
         const timeSinceExpectedRelease = currentTime - expectedReleaseTime;
@@ -469,17 +489,17 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           setCombo(0);
           setHealth(healthRef.current);
           setNotes([...notes]);
-        } else if (Math.abs(timeSinceExpectedRelease) <= RELEASE_WINDOW) {
-          let points = 100;
-          if (Math.abs(timeSinceExpectedRelease) < 50) points = 300;
-          else if (Math.abs(timeSinceExpectedRelease) < 100) points = 200;
+        } else if (Math.abs(timeSinceExpectedRelease) <= HOLD_RELEASE_WINDOW) {
+          let points = ACCURACY_NORMAL_POINTS;
+          if (Math.abs(timeSinceExpectedRelease) < ACCURACY_PERFECT_MS) points = ACCURACY_PERFECT_POINTS;
+          else if (Math.abs(timeSinceExpectedRelease) < ACCURACY_GREAT_MS) points = ACCURACY_GREAT_POINTS;
           
           if (idx !== -1) {
             notes[idx] = { ...notes[idx], hit: true };
           }
           scoreRef.current += points;
           comboRef.current += 1;
-          healthRef.current = Math.min(200, healthRef.current + 1);
+          healthRef.current = Math.min(MAX_HEALTH, healthRef.current + 1);
           setScore(scoreRef.current);
           setCombo(comboRef.current);
           setHealth(healthRef.current);

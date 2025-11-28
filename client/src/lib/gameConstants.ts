@@ -136,3 +136,30 @@ export const TAP_HIT_FLASH_DURATION = 600; // ms - how long hit flash lasts
 export const HEXAGON_RADII = [22, 52, 89, 135, 187, 248]; // px - tunnel hexagon ring distances
 export const RAY_ANGLES = [0, 60, 120, 180, 240, 300]; // degrees - 6 tunnel rays
 export const TUNNEL_MAX_DISTANCE = 260; // px - max distance for soundpad positioning
+
+// Game Engine - note generation and timing
+export const EASY_BPM = 60;
+export const MEDIUM_BPM = 90;
+export const HARD_BPM = 120;
+export const MS_PER_MINUTE = 60000; // Conversion factor for BPM calculations
+export const NOTE_START_TIME = 2000; // ms - delay before first note spawns
+export const MAX_GENERATED_NOTES = 1000; // Cap for procedural note generation
+export const SPIN_FREQUENCY = 4; // Generate spin notes every N beats
+export const SPIN_ALTERNATION = 8; // Alternate left/right spins every N beats
+
+// Game Engine - hit window and accuracy
+export const TAP_HIT_WINDOW = 300; // ms - ±300ms window for TAP note hits
+export const HOLD_MISS_TIMEOUT = 1100; // ms - fail hold note if not pressed within this time
+export const HOLD_RELEASE_OFFSET = 600; // ms - additional time before hold release failure
+export const HOLD_RELEASE_WINDOW = 100; // ms - ±100ms accuracy window for hold release
+
+// Game Engine - accuracy point thresholds
+export const ACCURACY_PERFECT_MS = 50; // ≤50ms = 300 points
+export const ACCURACY_GREAT_MS = 100; // ≤100ms = 200 points
+export const ACCURACY_PERFECT_POINTS = 300;
+export const ACCURACY_GREAT_POINTS = 200;
+export const ACCURACY_NORMAL_POINTS = 100;
+
+// Game Engine - timing intervals (animation sync)
+export const NOTES_SYNC_INTERVAL = 16; // ms - sync notes for smooth animations (~60fps)
+export const STATE_UPDATE_BATCH_INTERVAL = 50; // ms - batch state updates to reduce renders
