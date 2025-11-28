@@ -177,9 +177,11 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   const [health, setHealth] = useState(MAX_HEALTH);
   const [notes, setNotes] = useState<Note[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   
   const requestRef = useRef<number | undefined>(undefined);
   const startTimeRef = useRef<number>(0);
+  const pausedTimeRef = useRef<number>(0);
   const currentTimeRef = useRef<number>(0);
   const lastStateUpdateRef = useRef<number>(0);
   const lastNotesUpdateRef = useRef<number>(0);
@@ -205,6 +207,12 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     startTimeRef.current = Date.now();
     
     const loop = () => {
+      // Skip update if paused
+      if (isPaused) {
+        requestRef.current = requestAnimationFrame(loop);
+        return;
+      }
+      
       // Check if YouTube video time is available (when a video is loaded)
       let time: number;
       if (getVideoTime) {
@@ -217,7 +225,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         }
       } else {
         const now = Date.now();
-        time = now - startTimeRef.current;
+        time = now - startTimeRef.current - pausedTimeRef.current;
       }
       
       currentTimeRef.current = time;
@@ -294,7 +302,18 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     };
     
     requestRef.current = requestAnimationFrame(loop);
-  }, [difficulty, getVideoTime, customNotes]);
+  }, [difficulty, getVideoTime, customNotes, isPaused]);
+  
+  const pauseGame = useCallback(() => {
+    pausedTimeRef.current = Date.now() - startTimeRef.current;
+    setIsPaused(true);
+  }, []);
+  
+  const resumeGame = useCallback(() => {
+    startTimeRef.current = Date.now() - pausedTimeRef.current;
+    pausedTimeRef.current = 0;
+    setIsPaused(false);
+  }, []);
 
   const hitNote = useCallback((lane: number) => {
     try {
@@ -591,11 +610,14 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     health,
     notes,
     currentTime,
+    isPaused,
     startGame,
     hitNote,
     trackHoldStart,
     trackHoldEnd,
     markNoteMissed,
-    setGameState
+    setGameState,
+    pauseGame,
+    resumeGame
   };
 };

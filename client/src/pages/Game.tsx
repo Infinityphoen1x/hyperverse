@@ -36,6 +36,8 @@ export default function Game() {
     return time;
   }, [youtubeIframeRef]);
   
+  const [isPauseMenuOpen, setIsPauseMenuOpen] = useState(false);
+  
   const { 
     gameState, 
     score, 
@@ -43,11 +45,14 @@ export default function Game() {
     health, 
     notes, 
     currentTime, 
+    isPaused,
     startGame, 
     hitNote,
     trackHoldStart,
     trackHoldEnd,
-    markNoteMissed
+    markNoteMissed,
+    pauseGame,
+    resumeGame
   } = useGameEngine(difficulty, youtubeVideoId ? getVideoTime : undefined, customNotes);
 
   // Memoize miss count to avoid filtering every render
@@ -113,6 +118,23 @@ export default function Game() {
     }
   }, []);
 
+  // ESC key to pause/resume
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && gameState === 'PLAYING') {
+        if (isPaused) {
+          resumeGame();
+          setIsPauseMenuOpen(false);
+        } else {
+          pauseGame();
+          setIsPauseMenuOpen(true);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameState, isPaused, pauseGame, resumeGame]);
+
   // Restart game when beatmap is loaded (customNotes changes)
   useEffect(() => {
     if (customNotes && customNotes.length > 0) {
@@ -168,6 +190,33 @@ export default function Game() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black opacity-80" />
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
 
+      {/* Pause Screen Overlay */}
+      {isPauseMenuOpen && isPaused && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="text-center space-y-8">
+            <h1 className="text-6xl font-orbitron text-neon-cyan neon-glow">PAUSED</h1>
+            <p className="text-neon-cyan font-rajdhani text-lg">Press ESC to resume</p>
+            <button 
+              onClick={() => {
+                resumeGame();
+                setIsPauseMenuOpen(false);
+              }}
+              className="px-12 py-4 bg-neon-cyan text-black font-bold font-orbitron text-lg hover:bg-white transition-colors mt-8"
+              data-testid="button-resume"
+            >
+              RESUME
+            </button>
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-12 py-4 bg-neon-pink text-black font-bold font-orbitron text-lg hover:bg-white transition-colors ml-4"
+              data-testid="button-quit"
+            >
+              QUIT
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* HUD */}
       <header className="relative z-10 flex justify-between items-center p-6 border-b border-white/10 bg-black/50 backdrop-blur-sm">
         <div className="flex items-center gap-4">
@@ -198,7 +247,22 @@ export default function Game() {
           <p className="text-neon-pink font-rajdhani text-sm tracking-[0.5em] uppercase">score</p>
         </div>
 
-        <div className="text-right">
+        <div className="text-right flex items-center gap-4">
+          <button
+            onClick={() => {
+              if (isPaused) {
+                resumeGame();
+                setIsPauseMenuOpen(false);
+              } else {
+                pauseGame();
+                setIsPauseMenuOpen(true);
+              }
+            }}
+            className="px-6 py-2 bg-neon-yellow/20 text-neon-yellow font-rajdhani text-sm hover:bg-neon-yellow/40 transition-colors rounded border border-neon-yellow"
+            data-testid="button-pause"
+          >
+            {isPaused ? '▶' : '⏸'}
+          </button>
           <motion.div 
             className="text-3xl font-bold font-orbitron neon-glow"
             style={{ color: combo % 20 === 0 && combo > 0 ? 'hsl(120, 100%, 50%)' : 'hsl(280, 100%, 60%)' }}
