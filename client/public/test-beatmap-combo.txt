@@ -1,35 +1,41 @@
-[
-  { "time": 1000, "lane": 0, "type": "TAP" },
-  { "time": 1600, "lane": 0, "type": "TAP" },
-  { "time": 2200, "lane": 0, "type": "TAP" },
-  { "time": 2800, "lane": 0, "type": "TAP" },
-  { "time": 3400, "lane": 0, "type": "TAP" },
-  { "time": 4000, "lane": 0, "type": "TAP" },
-  { "time": 4600, "lane": 0, "type": "TAP" },
-  { "time": 5200, "lane": 0, "type": "TAP" },
-  { "time": 5800, "lane": 0, "type": "TAP" },
-  { "time": 6400, "lane": 0, "type": "TAP" },
-  { "time": 7000, "lane": 0, "type": "TAP" },
-  { "time": 7600, "lane": 0, "type": "TAP" },
-  { "time": 8200, "lane": 0, "type": "TAP" },
-  { "time": 8800, "lane": 0, "type": "TAP" },
-  { "time": 9400, "lane": 0, "type": "TAP" },
-  { "time": 10000, "lane": 0, "type": "TAP" },
-  { "time": 10600, "lane": 0, "type": "TAP" },
-  { "time": 11200, "lane": 0, "type": "TAP" },
-  { "time": 11800, "lane": 0, "type": "TAP" },
-  { "time": 12400, "lane": 0, "type": "TAP" },
-  { "time": 13000, "lane": 0, "type": "TAP" },
-  { "time": 13600, "lane": 0, "type": "TAP" },
-  { "time": 14200, "lane": 0, "type": "TAP" },
-  { "time": 14800, "lane": 0, "type": "TAP" },
-  { "time": 15400, "lane": 0, "type": "TAP" },
-  { "time": 16000, "lane": 0, "type": "TAP" },
-  { "time": 16600, "lane": 0, "type": "TAP" },
-  { "time": 17200, "lane": 0, "type": "TAP" },
-  { "time": 17800, "lane": 0, "type": "TAP" },
-  { "time": 18400, "lane": 0, "type": "TAP" },
-  { "time": 19000, "lane": 0, "type": "TAP" },
-  { "time": 19600, "lane": 0, "type": "TAP" },
-  { "time": 20200, "lane": 0, "type": "TAP" }
-]
+[METADATA]
+title: Combo Test
+artist: Simple
+bpm: 120
+duration: 21000
+youtube: 
+
+[EASY]
+1000|0|TAP
+1600|0|TAP
+2200|0|TAP
+2800|0|TAP
+3400|0|TAP
+4000|0|TAP
+4600|0|TAP
+5200|0|TAP
+5800|0|TAP
+6400|0|TAP
+7000|0|TAP
+7600|0|TAP
+8200|0|TAP
+8800|0|TAP
+9400|0|TAP
+10000|0|TAP
+10600|0|TAP
+11200|0|TAP
+11800|0|TAP
+12400|0|TAP
+13000|0|TAP
+13600|0|TAP
+14200|0|TAP
+14800|0|TAP
+15400|0|TAP
+16000|0|TAP
+16600|0|TAP
+17200|0|TAP
+17800|0|TAP
+18400|0|TAP
+19000|0|TAP
+19600|0|TAP
+20200|0|TAP
