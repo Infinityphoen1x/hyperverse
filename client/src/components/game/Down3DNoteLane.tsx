@@ -105,10 +105,10 @@ interface GreyscaleState {
 
 const determineGreyscaleState = (
   failures: HoldNoteFailureStates,
-  pressTime: number,
+  pressHoldTime: number,
   approachNearDistance: number
 ): GreyscaleState => {
-  if (failures.isTooEarlyFailure && pressTime > 0) {
+  if (failures.isTooEarlyFailure && pressHoldTime > 0) {
     return { isGreyed: true, reason: 'tooEarlyImmediate' };
   }
   
@@ -153,14 +153,14 @@ interface ApproachGeometry {
 
 const calculateApproachGeometry = (
   timeUntilHit: number,
-  pressTime: number,
+  pressHoldTime: number,
   isTooEarlyFailure: boolean,
   holdDuration: number
 ): ApproachGeometry => {
   const stripWidth = (holdDuration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
   
   const rawApproachProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-  const isSuccessfulPress = pressTime > 0 && !isTooEarlyFailure;
+  const isSuccessfulPress = pressHoldTime > 0 && !isTooEarlyFailure;
   const approachProgress = isSuccessfulPress ? Math.min(rawApproachProgress, 1.0) : rawApproachProgress;
   
   const nearDistance = Math.max(1, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
@@ -320,7 +320,7 @@ interface CollapseGeometry {
 }
 
 const calculateCollapseGeometry = (
-  pressTime: number,
+  pressHoldTime: number,
   collapseDuration: number,
   currentTime: number,
   lockedNearDistance: number,
@@ -330,16 +330,16 @@ const calculateCollapseGeometry = (
   isSuccessfulHit: boolean = false
 ): CollapseGeometry => {
   // For unpressed notes (holdMissFailure): use approach geometry, no collapse
-  if (!pressTime || pressTime === 0) {
-    // Exception: successful hits should collapse from locked position even with pressTime=0
+  if (!pressHoldTime || pressHoldTime === 0) {
+    // Exception: successful hits should collapse from locked position even with pressHoldTime=0
     if (!isSuccessfulHit) {
       return { nearDistance: approachNearDistance, farDistance: approachFarDistance, collapseProgress: 0 };
     }
     // For successful hits: start collapse immediately from locked position
-    pressTime = currentTime;
+    pressHoldTime = currentTime;
   }
   
-  const timeSincePress = currentTime - pressTime;
+  const timeSincePress = currentTime - pressHoldTime;
   const collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
   
   // During collapse: near end locked, far end contracts toward it
@@ -352,19 +352,19 @@ const calculateCollapseGeometry = (
 /** Calculate locked near distance (where note "grabs" on press) */
 const calculateLockedNearDistance = (
   note: Note,
-  pressTime: number,
+  pressHoldTime: number,
   isTooEarlyFailure: boolean,
   approachNearDistance: number,
   failureTime: number | null,
   currentTime: number
 ): number | null => {
-  // ISOLATED: Successful hits - lock at judgement line (187px) - CHECK FIRST before pressTime
+  // ISOLATED: Successful hits - lock at judgement line (187px) - CHECK FIRST before pressHoldTime
   if (note.hit) {
     return JUDGEMENT_RADIUS;
   }
   
   // No press: includes holdMissFailure (never pressed)
-  if (!pressTime || pressTime === 0) return null;
+  if (!pressHoldTime || pressHoldTime === 0) return null;
   
   // ISOLATED: tooEarlyFailure - DON'T lock, use approach geometry
   if (isTooEarlyFailure) return null;
@@ -389,21 +389,21 @@ interface GlowCalculation {
 }
 
 const calculateHoldNoteGlow = (
-  pressTime: number,
+  pressHoldTime: number,
   currentTime: number,
   collapseDuration: number,
   approachProgress: number,
   note: Note
 ): GlowCalculation => {
-  const hasActivePress = pressTime > 0 || note.hit;
+  const hasActivePress = pressHoldTime > 0 || note.hit;
   
   // Base glow intensity scales with approach
   const glowScale = hasActivePress ? 0.2 + (Math.min(approachProgress, 1.0) * 0.8) : 0.05;
   
   // During collapse: decrease glow as trapezoid collapses
   let collapseGlow = 0;
-  if (pressTime && pressTime > 0) {
-    const timeSincePress = currentTime - pressTime;
+  if (pressHoldTime && pressHoldTime > 0) {
+    const timeSincePress = currentTime - pressHoldTime;
     const collapseGlowProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
     collapseGlow = collapseGlowProgress > 0 ? (1 - collapseGlowProgress) * 0.8 : 0;
   }
@@ -833,7 +833,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                   return null; // Skip if calculations would be invalid
                 }
                 
-                const pressTime = note.pressHoldTime || 0;
+                const pressHoldTime = note.pressHoldTime || 0;
                 const holdDuration = note.duration || 1000;
                 
                 // Get failure states using helper
@@ -857,20 +857,20 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
               }
               
               // Calculate approach geometry (before press)
-              const approachGeometry = calculateApproachGeometry(timeUntilHit, pressTime, failures.isTooEarlyFailure, holdDuration);
+              const approachGeometry = calculateApproachGeometry(timeUntilHit, pressHoldTime, failures.isTooEarlyFailure, holdDuration);
               const { nearDistance: approachNearDistance, farDistance: approachFarDistance } = approachGeometry;
               
               // Determine collapse timing
               const collapseDuration = failures.hasAnyFailure ? FAILURE_ANIMATION_DURATION : holdDuration;
               
               // Calculate locked near distance (where note "grabs" on press)
-              const lockedNearDistance = calculateLockedNearDistance(note, pressTime, failures.isTooEarlyFailure, approachNearDistance, failureTime, currentTime);
+              const lockedNearDistance = calculateLockedNearDistance(note, pressHoldTime, failures.isTooEarlyFailure, approachNearDistance, failureTime, currentTime);
               
               // Calculate collapse geometry (after press or for failures)
               const stripWidth = (note.duration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
               const farDistanceAtPress = lockedNearDistance ? Math.max(1, lockedNearDistance - stripWidth) : approachFarDistance;
               const collapseGeo = calculateCollapseGeometry(
-                pressTime,
+                pressHoldTime,
                 collapseDuration,
                 currentTime,
                 lockedNearDistance || approachNearDistance,
@@ -893,15 +893,15 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                   `nearDistance=${nearDistance.toFixed(1)} exceeds JUDGEMENT_RADIUS=${JUDGEMENT_RADIUS}. ` +
                   `lockedNearDistance=${lockedNearDistance?.toFixed(1)}, ` +
                   `collapseProgress=${collapseProgress.toFixed(2)}, ` +
-                  `pressTime=${pressTime}, currentTime=${currentTime}`
+                  `pressHoldTime=${pressHoldTime}, currentTime=${currentTime}`
                 );
               }
               
               // Determine greyscale state based on failure type and timing
-              const greyscaleState = determineGreyscaleState(failures, pressTime, approachNearDistance);
+              const greyscaleState = determineGreyscaleState(failures, pressHoldTime, approachNearDistance);
               
               // Calculate glow intensity
-              const glowCalc = calculateHoldNoteGlow(pressTime, currentTime, collapseDuration, approachGeometry.nearDistance > 0 ? (approachGeometry.nearDistance - 1) / (JUDGEMENT_RADIUS - 1) : 0, note);
+              const glowCalc = calculateHoldNoteGlow(pressHoldTime, currentTime, collapseDuration, approachGeometry.nearDistance > 0 ? (approachGeometry.nearDistance - 1) / (JUDGEMENT_RADIUS - 1) : 0, note);
               const { finalGlowScale } = glowCalc;
               
               // Calculate trapezoid corners using helper function
