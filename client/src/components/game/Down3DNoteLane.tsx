@@ -45,13 +45,10 @@ const getTrapezoidCorners = (
   farDistance: number,
   vanishingPointX: number,
   vanishingPointY: number,
-  rotationAngleDegrees: number = 0,
   noteId?: string
 ): { x1: number; y1: number; x2: number; y2: number; x3: number; y3: number; x4: number; y4: number } | null => {
-  // Apply rotation to ray angle based on vanishing point shift
-  const rotatedRayAngle = rayAngle + rotationAngleDegrees;
-  const leftRayAngle = rotatedRayAngle - 15;
-  const rightRayAngle = rotatedRayAngle + 15;
+  const leftRayAngle = rayAngle - 15;
+  const rightRayAngle = rayAngle + 15;
   const leftRad = (leftRayAngle * Math.PI) / 180;
   const rightRad = (rightRayAngle * Math.PI) / 180;
   
@@ -602,10 +599,6 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
   // Calculate dynamic vanishing point with jolt offset
   const vpX = VANISHING_POINT_X + joltOffset.x;
   const vpY = VANISHING_POINT_Y + joltOffset.y;
-  
-  // Calculate tunnel rotation angle from vanishing point offset
-  // Converts VP position offset to a rotation angle in degrees
-  const rotationAngleDegrees = (Math.atan2(joltOffset.y, joltOffset.x) * 180) / Math.PI;
 
   // Keyboard controls - route by lane type
   useEffect(() => {
