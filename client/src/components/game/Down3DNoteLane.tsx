@@ -855,23 +855,31 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
               // Determine collapse timing
               const collapseDuration = failures.hasAnyFailure ? FAILURE_ANIMATION_DURATION : holdDuration;
               
-              // Calculate locked near distance (where note "grabs" on press)
-              const lockedNearDistance = calculateLockedNearDistance(note, pressTime, failures.isTooEarlyFailure, approachNearDistance, failureTime, currentTime);
-              
-              // Calculate collapse geometry (after press or for failures)
-              const stripWidth = (note.duration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
-              const farDistanceAtPress = lockedNearDistance ? Math.max(1, lockedNearDistance - stripWidth) : approachFarDistance;
-              const collapseGeo = calculateCollapseGeometry(
-                pressTime,
-                collapseDuration,
-                currentTime,
-                lockedNearDistance || approachNearDistance,
-                farDistanceAtPress,
-                approachNearDistance,
-                approachFarDistance
-              );
-              
-              const { nearDistance, farDistance, collapseProgress } = collapseGeo;
+              // For tooEarlyFailure: don't lock, just fade using approach geometry
+              let nearDistance, farDistance, collapseProgress;
+              if (failures.isTooEarlyFailure) {
+                nearDistance = approachNearDistance;
+                farDistance = approachFarDistance;
+                collapseProgress = 0; // No collapse, just fade
+              } else {
+                // Calculate locked near distance (where note "grabs" on press)
+                const lockedNearDistance = calculateLockedNearDistance(note, pressTime, failures.isTooEarlyFailure, approachNearDistance, failureTime, currentTime);
+                
+                // Calculate collapse geometry (after press or for failures)
+                const stripWidth = (note.duration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
+                const farDistanceAtPress = lockedNearDistance ? Math.max(1, lockedNearDistance - stripWidth) : approachFarDistance;
+                const collapseGeo = calculateCollapseGeometry(
+                  pressTime,
+                  collapseDuration,
+                  currentTime,
+                  lockedNearDistance || approachNearDistance,
+                  farDistanceAtPress,
+                  approachNearDistance,
+                  approachFarDistance
+                );
+                
+                ({ nearDistance, farDistance, collapseProgress } = collapseGeo);
+              }
               
               // Determine greyscale state based on failure type and timing
               const greyscaleState = determineGreyscaleState(failures, pressTime, approachNearDistance);
