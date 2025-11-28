@@ -7,6 +7,8 @@ import {
   DECK_METER_COMPLETION_THRESHOLD,
   DECK_METER_COMPLETION_GLOW_DURATION,
   DECK_METER_DEFAULT_HOLD_DURATION,
+  COLOR_DECK_LEFT,
+  COLOR_DECK_RIGHT,
 } from "@/lib/gameConstants";
 
 interface DeckHoldMetersProps {
@@ -15,8 +17,8 @@ interface DeckHoldMetersProps {
 }
 
 const getRectangleMeterColor = (lane: number): string => {
-  if (lane === -1) return '#00FF00'; // Q - green
-  if (lane === -2) return '#FF0000'; // P - red
+  if (lane === -1) return COLOR_DECK_LEFT; // Q - green
+  if (lane === -2) return COLOR_DECK_RIGHT; // P - red
   return '#FFFFFF'; // Fallback
 };
 
@@ -109,6 +111,19 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
   const [completionGlow, setCompletionGlow] = useState<Record<number, boolean>>({ [-1]: false, [-2]: false });
   const prevCompletionRef = useRef<Record<number, boolean>>({ [-1]: false, [-2]: false });
   const prevActiveNoteIdRef = useRef<Record<number, string>>({ [-1]: '', [-2]: '' });
+  const glowTimeoutRef = useRef<Record<number, NodeJS.Timeout | null>>({ [-1]: null, [-2]: null });
+
+  // Clean up timeout refs on unmount
+  useEffect(() => {
+    return () => {
+      [-1, -2].forEach((lane) => {
+        if (glowTimeoutRef.current[lane]) {
+          clearTimeout(glowTimeoutRef.current[lane]!);
+          glowTimeoutRef.current[lane] = null;
+        }
+      });
+    };
+  }, []);
 
   // Detect when a hold note ends and reset meter
   useEffect(() => {
@@ -160,7 +175,8 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       if (progress >= DECK_METER_COMPLETION_THRESHOLD && !prevCompletionRef.current[lane]) {
         prevCompletionRef.current[lane] = true;
         setCompletionGlow(prev => ({ ...prev, [lane]: true }));
-        setTimeout(() => setCompletionGlow(prev => ({ ...prev, [lane]: false })), DECK_METER_COMPLETION_GLOW_DURATION);
+        if (glowTimeoutRef.current[lane]) clearTimeout(glowTimeoutRef.current[lane]!);
+        glowTimeoutRef.current[lane] = setTimeout(() => setCompletionGlow(prev => ({ ...prev, [lane]: false })), DECK_METER_COMPLETION_GLOW_DURATION);
       } else if (progress < DECK_METER_COMPLETION_THRESHOLD) {
         prevCompletionRef.current[lane] = false;
       }
@@ -180,13 +196,13 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       {/* Left Deck Hold Meter */}
       <div className="flex flex-col items-center gap-3">
         <div className="text-sm font-rajdhani text-neon-green font-bold tracking-widest">Q</div>
-        <RectangleMeter progress={leftProgress} outlineColor="#00FF00" lane={-1} completionGlow={completionGlow} />
+        <RectangleMeter progress={leftProgress} outlineColor={COLOR_DECK_LEFT} lane={-1} completionGlow={completionGlow} />
       </div>
 
       {/* Right Deck Hold Meter */}
       <div className="flex flex-col items-center gap-3">
         <div className="text-sm font-rajdhani text-neon-red font-bold tracking-widest">P</div>
-        <RectangleMeter progress={rightProgress} outlineColor="#FF0000" lane={-2} completionGlow={completionGlow} />
+        <RectangleMeter progress={rightProgress} outlineColor={COLOR_DECK_RIGHT} lane={-2} completionGlow={completionGlow} />
       </div>
     </div>
   );

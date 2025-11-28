@@ -81,3 +81,13 @@ export const DECK_METER_SEGMENT_WIDTH = 60; // px - width of each segment
 export const DECK_METER_COMPLETION_THRESHOLD = 0.95; // 0-1, progress needed to trigger glow
 export const DECK_METER_COMPLETION_GLOW_DURATION = 400; // ms - how long glow animation lasts
 export const DECK_METER_DEFAULT_HOLD_DURATION = 1000; // ms - default duration if beatmap doesn't specify
+
+// Color palette - consolidated references for UI elements
+export const COLOR_DECK_LEFT = '#00FF00'; // Q - green (left deck)
+export const COLOR_DECK_RIGHT = '#FF0000'; // P - red (right deck)
+export const COLOR_PAD_W = '#FF007F'; // W - pink (bottom-left)
+export const COLOR_PAD_O = '#0096FF'; // O - blue (bottom-right)
+export const COLOR_PAD_I = '#BE00FF'; // I - purple (top-right)
+export const COLOR_PAD_E = '#00FFFF'; // E - cyan (top-left)
+export const COLOR_PARTICLE_GREEN = 'hsl(120, 100%, 50%)'; // Green particles
+export const COLOR_PARTICLE_RED = 'hsl(0, 100%, 50%)'; // Red particles

@@ -22,6 +22,8 @@ import {
   GREYSCALE_INTENSITY,
   GLITCH_BACKGROUND_SIZE,
   PARTICLE_COLORS,
+  COLOR_PARTICLE_GREEN,
+  COLOR_PARTICLE_RED,
 } from "@/lib/gameConstants";
 
 interface Particle {
@@ -48,12 +50,16 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
   const [shakeOffset, setShakeOffset] = useState({ x: 0, y: 0 });
   const shakeIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const glitchIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const comboTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const chromaticTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Clean up all intervals on unmount
+  // Clean up all intervals and timeouts on unmount
   useEffect(() => {
     return () => {
       if (shakeIntervalRef.current) clearInterval(shakeIntervalRef.current);
       if (glitchIntervalRef.current) clearInterval(glitchIntervalRef.current);
+      if (comboTimeoutRef.current) clearTimeout(comboTimeoutRef.current);
+      if (chromaticTimeoutRef.current) clearTimeout(chromaticTimeoutRef.current);
     };
   }, []);
 
@@ -108,12 +114,15 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
           });
         }, SHAKE_INTERVAL);
         
-        setTimeout(() => {
+        if (comboTimeoutRef.current) clearTimeout(comboTimeoutRef.current);
+        comboTimeoutRef.current = setTimeout(() => {
           setShake(0);
           if (shakeIntervalRef.current) clearInterval(shakeIntervalRef.current);
           setShakeOffset({ x: 0, y: 0 });
         }, SHAKE_DURATION);
-        setTimeout(() => setChromatic(0), CHROMATIC_DURATION);
+        
+        if (chromaticTimeoutRef.current) clearTimeout(chromaticTimeoutRef.current);
+        chromaticTimeoutRef.current = setTimeout(() => setChromatic(0), CHROMATIC_DURATION);
       }
     } catch (error) {
       GameErrors.log(`VisualEffects: Particle effect error at combo ${combo}: ${error instanceof Error ? error.message : 'Unknown'}`);
@@ -267,8 +276,8 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
           style={{
             width: '100px',
             height: '100px',
-            borderColor: combo % (COMBO_PERFECT_MILESTONE * 2) === 0 ? 'hsl(120, 100%, 50%)' : 'hsl(0, 100%, 50%)',
-            boxShadow: combo % (COMBO_PERFECT_MILESTONE * 2) === 0 ? '0 0 50px hsl(120, 100%, 50%)' : '0 0 50px hsl(0, 100%, 50%)',
+            borderColor: combo % (COMBO_PERFECT_MILESTONE * 2) === 0 ? COLOR_PARTICLE_GREEN : COLOR_PARTICLE_RED,
+            boxShadow: combo % (COMBO_PERFECT_MILESTONE * 2) === 0 ? `0 0 50px ${COLOR_PARTICLE_GREEN}` : `0 0 50px ${COLOR_PARTICLE_RED}`,
           }}
         />
       )}
