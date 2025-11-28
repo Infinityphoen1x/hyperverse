@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useGameEngine, Difficulty, GameErrors, Note } from "@/lib/gameEngine";
-import { getYouTubeVideoTime, buildYouTubeEmbedUrl } from "@/lib/youtubeUtils";
+import { getYouTubeVideoTime, buildYouTubeEmbedUrl, pauseYouTubeVideo, resumeYouTubeVideo } from "@/lib/youtubeUtils";
 import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from "@/lib/gameConstants";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
@@ -52,7 +52,8 @@ export default function Game() {
     trackHoldEnd,
     markNoteMissed,
     pauseGame,
-    resumeGame
+    resumeGame,
+    restartGame
   } = useGameEngine(difficulty, youtubeVideoId ? getVideoTime : undefined, customNotes);
 
   // Memoize miss count to avoid filtering every render
@@ -196,23 +197,40 @@ export default function Game() {
           <div className="text-center space-y-8">
             <h1 className="text-6xl font-orbitron text-neon-cyan neon-glow">PAUSED</h1>
             <p className="text-neon-cyan font-rajdhani text-lg">Press ESC to resume</p>
-            <button 
-              onClick={() => {
-                resumeGame();
-                setIsPauseMenuOpen(false);
-              }}
-              className="px-12 py-4 bg-neon-cyan text-black font-bold font-orbitron text-lg hover:bg-white transition-colors mt-8"
-              data-testid="button-resume"
-            >
-              RESUME
-            </button>
-            <button 
-              onClick={() => window.location.reload()}
-              className="px-12 py-4 bg-neon-pink text-black font-bold font-orbitron text-lg hover:bg-white transition-colors ml-4"
-              data-testid="button-quit"
-            >
-              QUIT
-            </button>
+            <div className="flex flex-col gap-4 mt-8">
+              <button 
+                onClick={() => {
+                  resumeYouTubeVideo(youtubeIframeRef.current);
+                  resumeGame();
+                  setIsPauseMenuOpen(false);
+                }}
+                className="px-12 py-4 bg-neon-cyan text-black font-bold font-orbitron text-lg hover:bg-white transition-colors"
+                data-testid="button-resume"
+              >
+                RESUME
+              </button>
+              <button 
+                onClick={() => {
+                  pauseYouTubeVideo(youtubeIframeRef.current);
+                  restartGame();
+                  setIsPauseMenuOpen(false);
+                }}
+                className="px-12 py-4 bg-neon-yellow text-black font-bold font-orbitron text-lg hover:bg-white transition-colors"
+                data-testid="button-rewind"
+              >
+                REWIND
+              </button>
+              <button 
+                onClick={() => {
+                  pauseYouTubeVideo(youtubeIframeRef.current);
+                  window.location.href = '/';
+                }}
+                className="px-12 py-4 bg-neon-pink text-black font-bold font-orbitron text-lg hover:bg-white transition-colors"
+                data-testid="button-sever-node"
+              >
+                SEVER NODE
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -251,9 +269,11 @@ export default function Game() {
           <button
             onClick={() => {
               if (isPaused) {
+                resumeYouTubeVideo(youtubeIframeRef.current);
                 resumeGame();
                 setIsPauseMenuOpen(false);
               } else {
+                pauseYouTubeVideo(youtubeIframeRef.current);
                 pauseGame();
                 setIsPauseMenuOpen(true);
               }

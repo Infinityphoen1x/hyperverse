@@ -76,3 +76,37 @@ export function getYouTubeVideoTime(iframeElement: HTMLIFrameElement | null): nu
     return null;
   }
 }
+
+/**
+ * Pause YouTube video playback
+ */
+export function pauseYouTubeVideo(iframeElement: HTMLIFrameElement | null): void {
+  if (!iframeElement) return;
+  
+  try {
+    const videoElement = iframeElement.contentWindow?.document.querySelector('video') as HTMLVideoElement;
+    if (videoElement && !videoElement.paused) {
+      videoElement.pause();
+    }
+  } catch (error) {
+    // Silently fail if video is not accessible
+  }
+}
+
+/**
+ * Resume YouTube video playback
+ */
+export function resumeYouTubeVideo(iframeElement: HTMLIFrameElement | null): void {
+  if (!iframeElement) return;
+  
+  try {
+    const videoElement = iframeElement.contentWindow?.document.querySelector('video') as HTMLVideoElement;
+    if (videoElement && videoElement.paused) {
+      videoElement.play().catch(() => {
+        // Silently handle play() rejection (e.g., autoplay policy)
+      });
+    }
+  } catch (error) {
+    // Silently fail if video is not accessible
+  }
+}

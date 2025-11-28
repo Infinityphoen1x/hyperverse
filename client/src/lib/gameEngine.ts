@@ -310,9 +310,25 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   }, []);
   
   const resumeGame = useCallback(() => {
+    // Adjust startTimeRef so game time continues from where it paused
+    // Without resetting, time continues naturally
     startTimeRef.current = Date.now() - pausedTimeRef.current;
     pausedTimeRef.current = 0;
     setIsPaused(false);
+  }, []);
+  
+  const restartGame = useCallback(() => {
+    scoreRef.current = 0;
+    comboRef.current = 0;
+    healthRef.current = MAX_HEALTH;
+    pausedTimeRef.current = 0;
+    
+    setScore(0);
+    setCombo(0);
+    setHealth(MAX_HEALTH);
+    setIsPaused(false);
+    
+    startTimeRef.current = Date.now();
   }, []);
 
   const hitNote = useCallback((lane: number) => {
@@ -618,6 +634,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     markNoteMissed,
     setGameState,
     pauseGame,
-    resumeGame
+    resumeGame,
+    restartGame
   };
 };
