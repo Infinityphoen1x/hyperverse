@@ -35,11 +35,16 @@ export function YouTubeOverlay({ onVideoUrlChange }: YouTubeOverlayProps) {
   const [videoId, setVideoId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
+  // Consolidated error handling: set error state and log simultaneously
+  const setErrorAndLog = (message: string) => {
+    setError(message);
+    GameErrors.log(`YouTubeOverlay: ${message}`);
+  };
+
   const handleLoadVideo = () => {
     setError("");
     if (!urlInput.trim()) {
-      setError(YOUTUBE_ERROR_EMPTY);
-      GameErrors.log(`YouTubeOverlay: ${YOUTUBE_ERROR_EMPTY}`);
+      setErrorAndLog(YOUTUBE_ERROR_EMPTY);
       return;
     }
 
@@ -47,8 +52,7 @@ export function YouTubeOverlay({ onVideoUrlChange }: YouTubeOverlayProps) {
       const id = extractYouTubeId(urlInput);
       if (!id) {
         const msg = `${YOUTUBE_ERROR_INVALID}: "${urlInput}"`;
-        setError(msg);
-        GameErrors.log(`YouTubeOverlay: ${msg}`);
+        setErrorAndLog(msg);
         return;
       }
 
@@ -58,8 +62,7 @@ export function YouTubeOverlay({ onVideoUrlChange }: YouTubeOverlayProps) {
       setIsOpen(false);
     } catch (error) {
       const msg = `YouTube video loading error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-      setError(msg);
-      GameErrors.log(`YouTubeOverlay: ${msg}`);
+      setErrorAndLog(msg);
     }
   };
 
