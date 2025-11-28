@@ -48,6 +48,22 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
   const [shakeOffset, setShakeOffset] = useState({ x: 0, y: 0 });
   const shakeIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Initialize glitch animation CSS once on component mount
+  useEffect(() => {
+    const existingStyle = document.querySelector('style[data-glitch]');
+    if (!existingStyle) {
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes glitch-scroll {
+          0% { background-position: 0 0; }
+          100% { background-position: 0 ${GLITCH_BACKGROUND_SIZE}px; }
+        }
+      `;
+      style.setAttribute('data-glitch', 'true');
+      document.head.appendChild(style);
+    }
+  }, []);
+
   // Add particles on combo milestones
   useEffect(() => {
     try {
@@ -241,17 +257,4 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
       </div>
     </>
   );
-}
-
-// Add CSS for glitch animation
-const style = document.createElement('style');
-style.textContent = `
-  @keyframes glitch-scroll {
-    0% { background-position: 0 0; }
-    100% { background-position: 0 60px; }
-  }
-`;
-if (!document.querySelector('style[data-glitch]')) {
-  style.setAttribute('data-glitch', 'true');
-  document.head.appendChild(style);
 }
