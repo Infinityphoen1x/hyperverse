@@ -329,14 +329,21 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   const trackHoldStart = useCallback((lane: number) => {
     try {
       const currentTime = currentTimeRef.current;
-      if (!Number.isInteger(lane) || !Number.isFinite(currentTime)) {
-        GameErrors.log(`trackHoldStart: Invalid lane=${lane} or currentTime=${currentTime}`);
+      
+      // LANE ISOLATION: Only allow deck lanes (-1 for Q, -2 for P)
+      if (lane !== -1 && lane !== -2) {
+        GameErrors.log(`trackHoldStart: Invalid deck lane=${lane}, must be -1 (Q) or -2 (P)`);
+        return;
+      }
+      if (!Number.isFinite(currentTime)) {
+        GameErrors.log(`trackHoldStart: Invalid currentTime=${currentTime}`);
         return;
       }
       
-      // Find any hold note on this lane that hasn't been played, missed, or marked as failed
+      // Find hold note ONLY on this specific lane - no cross-lane interference
       // Once a hold note is marked as any failure type, it can never be activated again
       const anyNote = notes.find(n => {
+        // STRICT LANE CHECK: Ensure note belongs to THIS lane only
         if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT') || n.hit || n.missed) {
           return false;
         }
@@ -395,16 +402,19 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   const trackHoldEnd = useCallback((lane: number) => {
     try {
       const currentTime = currentTimeRef.current;
-      if (!Number.isInteger(lane)) {
-        GameErrors.log(`trackHoldEnd: Invalid lane=${lane}`);
+      
+      // LANE ISOLATION: Only allow deck lanes (-1 for Q, -2 for P)
+      if (lane !== -1 && lane !== -2) {
+        GameErrors.log(`trackHoldEnd: Invalid deck lane=${lane}, must be -1 (Q) or -2 (P)`);
         return;
       }
       
-      // Find the active hold note on this lane (pressed but not released yet)
+      // Find the active hold note ONLY on this specific lane (pressed but not released yet)
+      // STRICT LANE CHECK: Ensure no cross-lane interference (Q press doesn't affect P notes)
       // Exclude notes that already have any failure type - they can't fail again
       const activeNote = Array.isArray(notes) ? notes.find(n => 
         n && 
-        n.lane === lane && 
+        n.lane === lane &&  // CRITICAL: Match exact lane only
         (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
         n.pressTime && 
         n.pressTime > 0 &&
