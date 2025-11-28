@@ -163,3 +163,17 @@ export const ACCURACY_NORMAL_POINTS = 100;
 // Game Engine - timing intervals (animation sync)
 export const NOTES_SYNC_INTERVAL = 16; // ms - sync notes for smooth animations (~60fps)
 export const STATE_UPDATE_BATCH_INTERVAL = 50; // ms - batch state updates to reduce renders
+
+// Down3D Note Lane - TAP note timing and visuals
+export const TAP_RENDER_WINDOW_MS = 2000; // ms - TAP notes appear 2000ms before hit
+export const TAP_FALLTHROUGH_WINDOW_MS = 500; // ms - TAP notes visible 500ms after miss
+export const TAP_JUDGEMENT_LINE_WIDTH = 35; // px - width of perpendicular judgement indicator
+export const HOLD_JUDGEMENT_LINE_WIDTH = 45; // px - width of perpendicular judgement indicator for deck
+
+// Down3D Note Lane - tunnel container dimensions
+export const TUNNEL_CONTAINER_WIDTH = 700; // px
+export const TUNNEL_CONTAINER_HEIGHT = 600; // px
+
+// Down3D Note Lane - greyscale colors
+export const GREYSCALE_FILL_COLOR = 'rgba(80, 80, 80, 0.8)'; // Greyscale fill for failed notes
+export const GREYSCALE_GLOW_COLOR = 'rgba(100, 100, 100, 0.4)'; // Greyscale glow for failed notes

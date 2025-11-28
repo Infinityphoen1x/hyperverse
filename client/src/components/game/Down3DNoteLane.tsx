@@ -14,11 +14,22 @@ import {
   HEXAGON_RADII,
   RAY_ANGLES,
   TUNNEL_MAX_DISTANCE,
+  MAX_HEALTH,
+  TAP_RENDER_WINDOW_MS,
+  TAP_FALLTHROUGH_WINDOW_MS,
+  TAP_JUDGEMENT_LINE_WIDTH,
+  HOLD_JUDGEMENT_LINE_WIDTH,
+  TUNNEL_CONTAINER_WIDTH,
+  TUNNEL_CONTAINER_HEIGHT,
+  GREYSCALE_FILL_COLOR,
+  GREYSCALE_GLOW_COLOR,
+  COLOR_DECK_LEFT,
+  COLOR_DECK_RIGHT,
 } from "@/lib/gameConstants";
 
 // Extract health-based color calculation for tunnel effects
 const getHealthBasedRayColor = (health: number): string => {
-  const healthFactor = Math.max(0, 200 - health) / 200; // 0 at full health, 1 at 0 health
+  const healthFactor = Math.max(0, MAX_HEALTH - health) / MAX_HEALTH; // 0 at full health, 1 at 0 health
   const r = Math.round(0 + (255 - 0) * healthFactor);
   const g = Math.round(255 * (1 - healthFactor));
   const b = Math.round(255 * (1 - healthFactor));
@@ -69,7 +80,7 @@ interface Down3DNoteLaneProps {
   onPadHit?: (lane: number) => void;
 }
 
-export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: Down3DNoteLaneProps) {
+export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadHit }: Down3DNoteLaneProps) {
   // Keyboard controls for soundpad buttons
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -87,8 +98,8 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
 
   // Build RENDER LIST - purely time-based window for drawing notes
   // Separate from game state tracking - render list includes notes that need visual feedback
-  // TAP notes: appear 2000ms before hit, show glitch 500ms after miss, then disappear
-  // SPIN (hold) notes: appear 4000ms before, visible through animations
+  // TAP notes: appear TAP_RENDER_WINDOW_MS before hit, show glitch TAP_FALLTHROUGH_WINDOW_MS after miss, then disappear
+  // SPIN (hold) notes: appear LEAD_TIME before, visible through animations
   // CRITICAL: Only show ONE hold note per lane at a time (prevent double-up when both fail)
   const visibleNotes = Array.isArray(notes) ? (() => {
     const result: typeof notes = [];
@@ -110,7 +121,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
           // HOLD NOTE RENDER WINDOW: Determine time-based visibility (independent of game state)
           // Start: LEAD_TIME ms before note.time
           // End: varies based on what happens to the note
-          let visibilityEnd = -2000; // Default: 2000ms after note.time
+          let visibilityEnd = -TAP_RENDER_WINDOW_MS; // Default: TAP_RENDER_WINDOW_MS ms after note.time
           
           // If failed, extend to show HOLD_ANIMATION_DURATION failure animation from failureTime
           if (n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
@@ -131,7 +142,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             visibilityEnd = -(animationEnd - n.time);
           }
           
-          // Visibility window: LEAD_TIME ms before to end time (based on note outcome)
+          // Visibility window: TAP_RENDER_WINDOW_MS before LEAD_TIME to end time (based on note outcome)
           if (timeUntilHit >= visibilityEnd && timeUntilHit <= LEAD_TIME) {
             // Track which hold note to show for this lane (prioritize oldest/earliest)
             if (!holdNotesByLane[n.lane] || (n.time < (holdNotesByLane[n.lane]?.time || Infinity))) {
@@ -140,8 +151,8 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
           }
         } else {
           // TAP NOTE RENDER WINDOW: Time-based only, no game state filtering
-          // Start: 2000ms before note.time
-          // End: HOLD_ANIMATION_DURATION after failure, or 500ms after miss/glitch
+          // Start: TAP_RENDER_WINDOW_MS before note.time
+          // End: HOLD_ANIMATION_DURATION after failure, or TAP_FALLTHROUGH_WINDOW_MS after miss/glitch
           
           // If failed, show for HOLD_ANIMATION_DURATION ms from failureTime
           if (n.tapMissFailure) {
@@ -153,9 +164,9 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             continue;
           }
           
-          // Otherwise: show 2000ms before to 500ms after miss window
+          // Otherwise: show TAP_RENDER_WINDOW_MS before to TAP_FALLTHROUGH_WINDOW_MS after miss window
           // Note: Show in render list even if hit - let rendering logic decide what to draw
-          if (timeUntilHit <= 2000 && timeUntilHit >= -500) {
+          if (timeUntilHit <= TAP_RENDER_WINDOW_MS && timeUntilHit >= -TAP_FALLTHROUGH_WINDOW_MS) {
             result.push(n);
           }
         }
@@ -184,8 +195,8 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
       }
     })();
     
-    // Shift towards red (#FF0000) as health decreases (0-200 range)
-    const healthFactor = Math.max(0, 200 - health) / 200; // 0 at 200 health, 1 at 0 health
+    // Shift towards red (#FF0000) as health decreases (0-MAX_HEALTH range)
+    const healthFactor = Math.max(0, MAX_HEALTH - health) / MAX_HEALTH; // 0 at full health, 1 at 0 health
     if (healthFactor === 0) return baseColor;
     
     // Parse base color to RGB
@@ -238,8 +249,8 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
       <div 
         className="relative"
         style={{
-          width: '700px',
-          height: '600px',
+          width: `${TUNNEL_CONTAINER_WIDTH}px`,
+          height: `${TUNNEL_CONTAINER_HEIGHT}px`,
           margin: '0 auto',
         }}
       >
@@ -292,8 +303,8 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             { angle: 240, color: '#00FFFF', key: 'E' },   // E (lane 3) - bottom-left cyan
           ].map((lane, idx) => {
             const rad = (lane.angle * Math.PI) / 180;
-            const radius = 187;
-            const lineLength = 35;
+            const radius = JUDGEMENT_RADIUS;
+            const lineLength = TAP_JUDGEMENT_LINE_WIDTH;
             
             // Point on the ray at the radius
             const cx = VANISHING_POINT_X + Math.cos(rad) * radius;
@@ -615,16 +626,16 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               let glowColor: string;
               
               if (isGreyed) {
-                fillColor = 'rgba(80, 80, 80, 0.8)';
-                glowColor = 'rgba(100, 100, 100, 0.4)';
+                fillColor = GREYSCALE_FILL_COLOR;
+                glowColor = GREYSCALE_GLOW_COLOR;
               } else {
                 // Use bright, fully opaque colors for each deck lane
                 if (note.lane === -1) {
-                  fillColor = 'rgb(0, 255, 0)'; // Q - green, fully opaque
-                  glowColor = 'rgb(0, 255, 0)';
+                  fillColor = COLOR_DECK_LEFT; // Q - green, fully opaque
+                  glowColor = COLOR_DECK_LEFT;
                 } else if (note.lane === -2) {
-                  fillColor = 'rgb(255, 0, 0)'; // P - red, fully opaque
-                  glowColor = 'rgb(255, 0, 0)';
+                  fillColor = COLOR_DECK_RIGHT; // P - red, fully opaque
+                  glowColor = COLOR_DECK_RIGHT;
                 } else {
                   fillColor = baseColor;
                   glowColor = baseColor;
@@ -643,7 +654,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                   strokeWidth={strokeWidth}
                   style={{
                     filter: isGreyed 
-                      ? 'drop-shadow(0 0 8px rgba(100,100,100,0.6)) grayscale(1)'
+                      ? `drop-shadow(0 0 8px ${GREYSCALE_GLOW_COLOR}) grayscale(1)`
                       : `drop-shadow(0 0 ${Math.max(20, 25 * finalGlowScale)}px ${glowColor}) drop-shadow(0 0 ${Math.max(12, 15 * finalGlowScale)}px ${glowColor})`,
                     transition: 'all 0.05s linear',
                     mixBlendMode: 'screen',
@@ -658,12 +669,12 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
 
           {/* Judgement lines for hold notes */}
           {[
-            { angle: 180, color: '#00FF00' },   // Q - left deck, green
-            { angle: 0, color: '#FF0000' },     // P - right deck, red
+            { angle: 180, color: COLOR_DECK_LEFT },   // Q - left deck, green
+            { angle: 0, color: COLOR_DECK_RIGHT },     // P - right deck, red
           ].map((lane, idx) => {
             const rad = (lane.angle * Math.PI) / 180;
-            const radius = 187;
-            const lineLength = 45;
+            const radius = JUDGEMENT_RADIUS;
+            const lineLength = HOLD_JUDGEMENT_LINE_WIDTH;
             
             // Point on the ray at the radius
             const cx = VANISHING_POINT_X + Math.cos(rad) * radius;
