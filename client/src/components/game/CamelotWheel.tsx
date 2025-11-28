@@ -14,10 +14,22 @@ interface CamelotWheelProps {
 
 export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd = () => {}, onRotationChange = () => {} }: CamelotWheelProps) {
   const [internalRotation, setInternalRotation] = useState(0);
-  const [spinDirection, setSpinDirection] = useState(1); // 1 for clockwise, -1 for counter-clockwise
+  const [spinDirection, setSpinDirection] = useState(1);
   const [isKeyPressed, setIsKeyPressed] = useState(false);
   const rotationRef = useRef(0);
+  const spinDirectionRef = useRef(1);
+  const isKeyPressedRef = useRef(false);
+  const lastSpinRotationRef = useRef(0);
   const wheelLane = side === 'left' ? -1 : -2;
+
+  // Sync refs when state changes
+  useEffect(() => {
+    spinDirectionRef.current = spinDirection;
+  }, [spinDirection]);
+
+  useEffect(() => {
+    isKeyPressedRef.current = isKeyPressed;
+  }, [isKeyPressed]);
 
   // Single key toggle for spin direction
   useEffect(() => {
@@ -30,9 +42,7 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
       
       if (isLeftDeckKey || isRightDeckKey) {
         setIsKeyPressed(true);
-        setSpinDirection((prev) => prev * -1); // Toggle direction
-        
-        // Pass correct lane: -1 for left (Q), -2 for right (P)
+        setSpinDirection((prev) => prev * -1);
         setTimeout(() => onHoldStart(wheelLane), 0);
       }
     };
@@ -45,7 +55,6 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
       
       if (isLeftDeckKey || isRightDeckKey) {
         setIsKeyPressed(false);
-        // Defer callback to next microtask
         setTimeout(() => onHoldEnd(), 0);
       }
     };
@@ -56,31 +65,34 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [side, onHoldStart, onHoldEnd]);
+  }, [side, onHoldStart, onHoldEnd, wheelLane]);
 
-  // Continuous rotation loop using RAF
+  // Continuous rotation loop using RAF - no setState calls
   useEffect(() => {
     let animationId: number;
-    const rotationSpeed = 2.0; // degrees per frame (faster deck rotation)
-    const spinThreshold = 30; // trigger onSpin every N degrees
-    let lastSpinRotation = 0;
+    const rotationSpeed = 2.0;
+    const spinThreshold = 30;
+    let lastStateUpdateTime = 0;
 
     const animate = () => {
-      if (isKeyPressed) {
-        setInternalRotation((prev) => {
-          const rotationDelta = rotationSpeed * spinDirection;
-          const newRotation = prev + rotationDelta;
-          rotationRef.current = newRotation;
-          onRotationChange(newRotation);
+      if (isKeyPressedRef.current) {
+        const rotationDelta = rotationSpeed * spinDirectionRef.current;
+        const newRotation = rotationRef.current + rotationDelta;
+        rotationRef.current = newRotation;
+        onRotationChange(newRotation);
 
-          // Trigger onSpin event periodically based on rotation distance
-          if (Math.abs(newRotation - lastSpinRotation) >= spinThreshold) {
-            onSpin();
-            lastSpinRotation = newRotation;
-          }
-          
-          return newRotation;
-        });
+        // Trigger onSpin event periodically
+        if (Math.abs(newRotation - lastSpinRotationRef.current) >= spinThreshold) {
+          onSpin();
+          lastSpinRotationRef.current = newRotation;
+        }
+
+        // Update state periodically (every 50ms) for motion.div animation
+        const now = performance.now();
+        if (now - lastStateUpdateTime >= 50) {
+          setInternalRotation(newRotation);
+          lastStateUpdateTime = now;
+        }
       }
 
       animationId = requestAnimationFrame(animate);
@@ -88,7 +100,7 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
 
     animationId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationId);
-  }, [isKeyPressed, spinDirection, onSpin, onRotationChange]);
+  }, [onSpin, onRotationChange]);
 
 
   const handleDrag = (_: any, info: any) => {
