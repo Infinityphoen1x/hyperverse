@@ -805,10 +805,10 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
 
             const noteColor = getColorForLane(note.lane);
             
-            // TAP notes use trapezoids like HOLD Phase 1: growing from vanishing point
-            // Near end grows toward judgement line, far end stays at vanishing point
+            // TAP notes: both near and far ends travel together maintaining consistent width
+            const TRAPEZOID_WIDTH = 40; // Constant width as trapezoid travels
             const nearDist = 1 + (progress * (JUDGEMENT_RADIUS - 1)); // Grows from 1 to 187
-            const farDist = 1; // Stays at vanishing point
+            const farDist = nearDist - TRAPEZOID_WIDTH; // Maintains constant width
             
             const trapezoid = getTrapezoidCorners(
               tapRayAngle,
