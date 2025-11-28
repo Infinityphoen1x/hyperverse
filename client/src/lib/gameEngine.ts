@@ -100,8 +100,7 @@ const GameErrors = {
 export { GameErrors };
 
 // Beat pattern-based note generator (tied to BPM, not random)
-// Default duration: 300000ms (5 minutes) to ensure meters continue working throughout extended gameplay
-const generateNotes = (difficulty: Difficulty, duration: number = 300000): Note[] => {
+const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[] => {
   try {
     if (!difficulty || !['EASY', 'MEDIUM', 'HARD'].includes(difficulty)) {
       GameErrors.log(`Invalid difficulty: ${difficulty}`);
@@ -135,7 +134,7 @@ const generateNotes = (difficulty: Difficulty, duration: number = 300000): Note[
     let beatIndex = 0;
     let noteCount = 0;
     
-    while (currentTime < duration && noteCount < 5000) {
+    while (currentTime < duration && noteCount < 1000) {
       const patternStep = beatIndex % pattern.length;
       const lane = pattern[patternStep];
       
@@ -157,8 +156,8 @@ const generateNotes = (difficulty: Difficulty, duration: number = 300000): Note[
       noteCount++;
     }
     
-    if (noteCount >= 5000) {
-      GameErrors.log(`Note generation capped at 5000 notes`);
+    if (noteCount >= 1000) {
+      GameErrors.log(`Note generation capped at 1000 notes`);
     }
     
     return notes;
@@ -233,14 +232,12 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           const n = prev[i];
           if (!n) continue;
           
-          // Cleanup: Remove notes that are far past their visibility window
-          // TAP notes: remove if > 2600ms past spawn (4000ms lead + 300ms hit window + 300ms buffer for animation)
-          // HOLD notes: remove if > 6600ms past spawn (4000ms lead + 1100ms hold+release + 1100ms animation + 400ms buffer)
-          // Failure animations can occur late, so we need extra time for them to complete
-          const noteDuration = n.type === 'TAP' ? 2600 : 6600; // visibility + hold window + animation + buffer
-          if (time > n.time + noteDuration) {
-            continue; // Skip (remove) this note
-          }
+          // Keep notes in array indefinitely to ensure meters always have reference points
+          // They don't affect gameplay once hit/missed/failed, and keeping them allows:
+          // 1. Meters to maintain state even when no active holds are visible
+          // 2. Stats tracking to continue working
+          // 3. Better visual feedback persistence
+          // Notes will naturally stop affecting renders through hit/failed flags
           
           // Check for new failures only (skip already-failed notes)
           if (!n.hit && !n.missed && !n.tapMissFailure && !n.holdReleaseFailure && !n.tooEarlyFailure && !n.holdMissFailure) {
