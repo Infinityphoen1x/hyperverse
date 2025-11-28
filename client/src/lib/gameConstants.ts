@@ -44,3 +44,33 @@ export const ROTATION_SPEED = 2.0; // degrees per frame
 export const SPIN_THRESHOLD = 30; // degrees - trigger onSpin after this rotation
 export const STATE_UPDATE_INTERVAL = 50; // ms - batch state updates
 export const DRAG_VELOCITY_THRESHOLD = 100; // px/s - minimum velocity for drag spin
+
+// Visual effects - particle and animation constants
+export const MAX_HEALTH = 200; // Game health system max
+export const LOW_HEALTH_THRESHOLD = 160; // 80% of MAX_HEALTH - triggers continuous glitch
+export const COMBO_MILESTONE = 5; // Trigger particle effect every N combos
+export const COMBO_PERFECT_MILESTONE = 10; // Trigger perfect pulse every N combos
+export const PARTICLES_PER_EFFECT = 12; // Number of particles spawned per combo milestone
+export const MAX_PARTICLES_BUFFER = 60; // Max particles to keep alive at once
+export const PARTICLE_SIZE_MIN = 4; // px
+export const PARTICLE_SIZE_MAX = 12; // px
+export const SHAKE_INTERVAL = 50; // ms - how often to update shake offset
+export const SHAKE_OFFSET_MULTIPLIER = 16; // pixels - max random offset
+export const SHAKE_DURATION = 300; // ms - how long shake lasts
+export const CHROMATIC_DURATION = 400; // ms - how long chromatic aberration lasts
+export const CHROMATIC_INTENSITY = 0.8; // 0-1, strength of effect
+export const CHROMATIC_OFFSET_PX = 15; // pixels - aberration offset
+export const GLITCH_BASE_INTERVAL = 400; // ms - base glitch interval
+export const GLITCH_RANDOM_RANGE = 200; // ms - additional random time
+export const GLITCH_OPACITY = 0.3; // 0-1, base opacity of glitch lines
+export const GREYSCALE_INTENSITY = 0.8; // 0-1, max greyscale when health is 0
+export const GLITCH_BACKGROUND_SIZE = 60; // px - height of glitch scan lines
+
+// Visual effects - color palette for particle effects
+export const PARTICLE_COLORS = [
+  'hsl(120, 100%, 50%)',  // Green
+  'hsl(0, 100%, 50%)',    // Red
+  'hsl(180, 100%, 50%)',  // Cyan
+  'hsl(280, 100%, 60%)',  // Purple
+  'hsl(320, 100%, 60%)',  // Magenta
+];

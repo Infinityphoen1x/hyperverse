@@ -1,6 +1,28 @@
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { GameErrors } from "@/lib/gameEngine";
+import {
+  MAX_HEALTH,
+  LOW_HEALTH_THRESHOLD,
+  COMBO_MILESTONE,
+  COMBO_PERFECT_MILESTONE,
+  PARTICLES_PER_EFFECT,
+  MAX_PARTICLES_BUFFER,
+  PARTICLE_SIZE_MIN,
+  PARTICLE_SIZE_MAX,
+  SHAKE_INTERVAL,
+  SHAKE_OFFSET_MULTIPLIER,
+  SHAKE_DURATION,
+  CHROMATIC_DURATION,
+  CHROMATIC_INTENSITY,
+  CHROMATIC_OFFSET_PX,
+  GLITCH_BASE_INTERVAL,
+  GLITCH_RANDOM_RANGE,
+  GLITCH_OPACITY,
+  GREYSCALE_INTENSITY,
+  GLITCH_BACKGROUND_SIZE,
+  PARTICLE_COLORS,
+} from "@/lib/gameConstants";
 
 interface Particle {
   id: string;
@@ -34,34 +56,34 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
         return;
       }
       
-      if (combo > 0 && combo % 5 === 0) {
-        const newParticles = Array.from({ length: 12 }, (_, i) => ({
+      if (combo > 0 && combo % COMBO_MILESTONE === 0) {
+        const newParticles = Array.from({ length: PARTICLES_PER_EFFECT }, (_, i) => ({
           id: `${Date.now()}-${i}`,
           x: Math.random() * 100,
           y: Math.random() * 100,
-          color: ['hsl(120, 100%, 50%)', 'hsl(0, 100%, 50%)', 'hsl(180, 100%, 50%)', 'hsl(280, 100%, 60%)', 'hsl(320, 100%, 60%)'][Math.floor(Math.random() * 5)],
-          size: Math.random() * 8 + 4,
+          color: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)],
+          size: Math.random() * (PARTICLE_SIZE_MAX - PARTICLE_SIZE_MIN) + PARTICLE_SIZE_MIN,
         }));
         
-        setParticles(prev => [...prev, ...newParticles].slice(-60)); // Keep last 60 particles
+        setParticles(prev => [...prev, ...newParticles].slice(-MAX_PARTICLES_BUFFER));
         setShake(1);
-        setChromatic(0.8);
+        setChromatic(CHROMATIC_INTENSITY);
         
-        // Start shake with random offsets that update every 50ms
+        // Start shake with random offsets that update at SHAKE_INTERVAL
         if (shakeIntervalRef.current) clearInterval(shakeIntervalRef.current);
         shakeIntervalRef.current = setInterval(() => {
           setShakeOffset({
-            x: (Math.random() - 0.5) * 16,
-            y: (Math.random() - 0.5) * 16,
+            x: (Math.random() - 0.5) * SHAKE_OFFSET_MULTIPLIER,
+            y: (Math.random() - 0.5) * SHAKE_OFFSET_MULTIPLIER,
           });
-        }, 50);
+        }, SHAKE_INTERVAL);
         
         setTimeout(() => {
           setShake(0);
           if (shakeIntervalRef.current) clearInterval(shakeIntervalRef.current);
           setShakeOffset({ x: 0, y: 0 });
-        }, 300);
-        setTimeout(() => setChromatic(0), 400);
+        }, SHAKE_DURATION);
+        setTimeout(() => setChromatic(0), CHROMATIC_DURATION);
       }
     } catch (error) {
       GameErrors.log(`VisualEffects: Particle effect error at combo ${combo}: ${error instanceof Error ? error.message : 'Unknown'}`);
@@ -108,10 +130,10 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
         return;
       }
       
-      if (health < 160) {
+      if (health < LOW_HEALTH_THRESHOLD) {
         const glitchLoop = setInterval(() => {
-          setGlitch(prev => prev > 0 ? 0 : 0.3);
-        }, 400 + Math.random() * 200);
+          setGlitch(prev => prev > 0 ? 0 : GLITCH_OPACITY);
+        }, GLITCH_BASE_INTERVAL + Math.random() * GLITCH_RANDOM_RANGE);
         return () => clearInterval(glitchLoop);
       }
     } catch (error) {
@@ -119,11 +141,11 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
     }
   }, [health]);
 
-  // Calculate greyscale based on health (0-200 range)
-  const greyscaleIntensity = Math.max(0, (200 - health) / 200) * 0.8;
+  // Calculate greyscale based on health (0-MAX_HEALTH range)
+  const greyscaleIntensity = Math.max(0, (MAX_HEALTH - health) / MAX_HEALTH) * GREYSCALE_INTENSITY;
   
-  // Calculate glitch opacity multiplier based on health (increases as health decreases below 80%)
-  const glitchOpacityMultiplier = 1 + (Math.max(0, 160 - health) / 160) * 2; // 1x at 80% health (160), 3x at 0 health
+  // Calculate glitch opacity multiplier based on health (increases as health decreases below LOW_HEALTH_THRESHOLD)
+  const glitchOpacityMultiplier = 1 + (Math.max(0, LOW_HEALTH_THRESHOLD - health) / LOW_HEALTH_THRESHOLD) * 2;
 
   return (
     <>
@@ -150,7 +172,7 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
         <div
           className="absolute inset-0"
           style={{
-            filter: chromatic > 0 ? `drop-shadow(${chromatic * 15}px 0 0 rgb(255, 0, 127)) drop-shadow(${-chromatic * 15}px 0 0 rgb(0, 255, 255))` : 'none',
+            filter: chromatic > 0 ? `drop-shadow(${chromatic * CHROMATIC_OFFSET_PX}px 0 0 rgb(255, 0, 127)) drop-shadow(${-chromatic * CHROMATIC_OFFSET_PX}px 0 0 rgb(0, 255, 255))` : 'none',
           }}
         />
 
@@ -161,14 +183,14 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
           style={{
             backgroundImage: `linear-gradient(
               0deg,
-              rgba(255, 0, 127, ${Math.min(glitch * 0.3 * glitchOpacityMultiplier, 1)}) 0%,
+              rgba(255, 0, 127, ${Math.min(glitch * GLITCH_OPACITY * glitchOpacityMultiplier, 1)}) 0%,
               transparent 2%,
               transparent 8%,
-              rgba(0, 255, 255, ${Math.min(glitch * 0.3 * glitchOpacityMultiplier, 1)}) 10%,
+              rgba(0, 255, 255, ${Math.min(glitch * GLITCH_OPACITY * glitchOpacityMultiplier, 1)}) 10%,
               transparent 12%
             )`,
-            backgroundSize: '100% 60px',
-            backgroundPosition: `0 ${glitchPhase * 60}px`,
+            backgroundSize: `100% ${GLITCH_BACKGROUND_SIZE}px`,
+            backgroundPosition: `0 ${glitchPhase * GLITCH_BACKGROUND_SIZE}px`,
             animation: glitch > 0 ? `glitch-scroll ${0.1 + glitchPhase * 0.2}s linear infinite` : 'none',
           }}
         />
@@ -202,7 +224,7 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
       ))}
 
       {/* Radial Pulse on Perfect Hits */}
-      {combo % 10 === 0 && combo > 0 && (
+      {combo % COMBO_PERFECT_MILESTONE === 0 && combo > 0 && (
         <motion.div
           initial={{ scale: 0.5, opacity: 1 }}
           animate={{ scale: 3, opacity: 0 }}
@@ -211,8 +233,8 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
           style={{
             width: '100px',
             height: '100px',
-            borderColor: combo % 20 === 0 ? 'hsl(120, 100%, 50%)' : 'hsl(0, 100%, 50%)',
-            boxShadow: combo % 20 === 0 ? '0 0 50px hsl(120, 100%, 50%)' : '0 0 50px hsl(0, 100%, 50%)',
+            borderColor: combo % (COMBO_PERFECT_MILESTONE * 2) === 0 ? 'hsl(120, 100%, 50%)' : 'hsl(0, 100%, 50%)',
+            boxShadow: combo % (COMBO_PERFECT_MILESTONE * 2) === 0 ? '0 0 50px hsl(120, 100%, 50%)' : '0 0 50px hsl(0, 100%, 50%)',
           }}
         />
       )}
