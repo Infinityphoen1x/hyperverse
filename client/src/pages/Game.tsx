@@ -199,7 +199,7 @@ export default function Game() {
             allow="autoplay"
             className="w-full h-full"
             data-testid="iframe-youtube-background"
-            key={`youtube-${youtubeStartTime}`}
+            key={`youtube-${youtubeStartTime}-${countdownActive ? 'counting' : 'ready'}`}
           />
         </div>
       )}
@@ -252,7 +252,7 @@ export default function Game() {
                   setYoutubeStartTime(0);
                   setIsPauseMenuOpen(false);
                 }}
-                className="px-12 py-4 bg-neon-yellow text-black font-bold font-orbitron text-lg hover:bg-white transition-colors"
+                className="px-12 py-4 bg-neon-yellow text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-neon-yellow"
                 data-testid="button-rewind"
               >
                 REWIND
