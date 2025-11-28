@@ -126,16 +126,18 @@ export default function Game() {
       if (e.key === 'Escape' && gameState === 'PLAYING') {
         if (isPaused) {
           resumeGame();
+          setYoutubeStartTime(Math.floor(currentTime / 1000));
           setIsPauseMenuOpen(false);
         } else {
           pauseGame();
+          setYoutubeStartTime(Math.floor(currentTime / 1000) + 2);
           setIsPauseMenuOpen(true);
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, isPaused, pauseGame, resumeGame]);
+  }, [gameState, isPaused, pauseGame, resumeGame, currentTime]);
 
   // Restart game when beatmap is loaded (customNotes changes)
   useEffect(() => {
@@ -203,7 +205,6 @@ export default function Game() {
               <button 
                 onClick={() => {
                   resumeGame();
-                  setYoutubeStartTime(Math.floor(currentTime / 1000));
                   setIsPauseMenuOpen(false);
                 }}
                 className="px-12 py-4 bg-neon-cyan text-black font-bold font-orbitron text-lg hover:bg-white transition-colors"
@@ -275,7 +276,7 @@ export default function Game() {
                 setIsPauseMenuOpen(false);
               } else {
                 pauseGame();
-                setYoutubeStartTime(Math.floor(currentTime / 1000));
+                setYoutubeStartTime(Math.floor(currentTime / 1000) + 2);
                 setIsPauseMenuOpen(true);
               }
             }}
