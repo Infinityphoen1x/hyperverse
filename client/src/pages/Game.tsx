@@ -151,11 +151,12 @@ export default function Game() {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
     } else {
+      setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
       setShowYoutubeIframe(true);
       resumeGame();
       setCountdownActive(false);
     }
-  }, [countdownActive, countdown, resumeGame]);
+  }, [countdownActive, countdown, resumeGame, currentTime]);
 
   // Restart game when beatmap is loaded (customNotes changes)
   useEffect(() => {
