@@ -472,6 +472,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               
               let nearDistance, farDistance;
               let lockedNearDistance: number | null = null;
+              let collapseProgress = 0; // Initialize here to avoid temporal dead zone
               
               // APPROACH PHASE: Hold note is a flat rectangular strip moving toward camera
               // Before press: both near and far move together, maintaining constant Z-length (strip width)
@@ -520,7 +521,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 }
                 
                 const timeSincePress = currentTime - pressTime;
-                const collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
+                collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
                 
                 // During collapse: near end locked, far end moves toward near end
                 nearDistance = lockedNearDistance;
@@ -569,7 +570,6 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               
               // Calculate opacity and collapse progress based on note state
               let opacity = 0.4 + Math.min(approachProgress, 1.0) * 0.6; // Default: fade in during approach
-              let collapseProgress = 0;
               
               // Track hold note animation lifecycle - handle all failure types
               // Build list of active failure types for this note
