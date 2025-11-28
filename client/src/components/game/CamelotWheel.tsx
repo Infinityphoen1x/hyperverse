@@ -72,7 +72,6 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
   useEffect(() => {
     let animationId: number;
     let lastStateUpdateTime = 0;
-    let lastRotationChangeTime = 0;
 
     const animate = () => {
       if (isKeyPressedRef.current) {
