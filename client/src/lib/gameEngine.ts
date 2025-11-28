@@ -169,75 +169,6 @@ export const clearReleaseTimes = () => {
   releaseTimeMap.clear();
 };
 
-// Beat pattern-based note generator (tied to BPM, not random)
-const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[] => {
-  try {
-    if (!difficulty || !['EASY', 'MEDIUM', 'HARD'].includes(difficulty)) {
-      GameErrors.log(`Invalid difficulty: ${difficulty}`);
-      return [];
-    }
-    if (duration <= 0 || !Number.isFinite(duration)) {
-      GameErrors.log(`Invalid duration: ${duration}`);
-      return [];
-    }
-
-    const notes: Note[] = [];
-    const bpm = difficulty === 'EASY' ? EASY_BPM : difficulty === 'MEDIUM' ? MEDIUM_BPM : HARD_BPM;
-    const beatDuration = MS_PER_MINUTE / bpm; // ms per beat
-    
-    if (!Number.isFinite(beatDuration) || beatDuration <= 0) {
-      GameErrors.log(`Invalid beatDuration calculated: ${beatDuration}`);
-      return [];
-    }
-    
-    // Define repeating beat patterns (4-beat pattern for each difficulty)
-    // Pattern: lane number or -1/-2 for spins, repeated
-    const patterns = {
-      EASY: [0, 1, 2, 3], // Simple: one note per beat in each lane
-      MEDIUM: [0, 1, 2, 3, 0, 2, 1, 3], // 8-beat pattern alternating
-      HARD: [0, 1, 2, 3, 1, 0, 3, 2, 0, 2, 1, 3, 2, 1, 0, 3], // 16-beat complex
-    };
-    
-    const pattern = patterns[difficulty];
-    
-    let currentTime = NOTE_START_TIME; // Start after initial delay
-    let beatIndex = 0;
-    let noteCount = 0;
-    
-    while (currentTime < duration && noteCount < MAX_GENERATED_NOTES) {
-      const patternStep = beatIndex % pattern.length;
-      const lane = pattern[patternStep];
-      
-      // Every N beats, place a spin note instead of tap (more frequent for playability)
-      // This ensures hold notes are available more often for the deck lanes
-      const isSpin = beatIndex % SPIN_FREQUENCY === 0 && beatIndex > 0;
-      
-      notes.push({
-        id: `note-${Math.round(currentTime)}-${beatIndex}`,
-        lane: isSpin ? (beatIndex % SPIN_ALTERNATION === 0 ? -1 : -2) : lane, // Alternate left/right spins
-        time: currentTime,
-        type: isSpin ? (beatIndex % SPIN_ALTERNATION === 0 ? 'SPIN_LEFT' : 'SPIN_RIGHT') : 'TAP',
-        duration: isSpin ? 2000 : undefined, // SPIN notes: 2000ms hold duration for meter tracking
-        hit: false,
-        missed: false,
-      });
-      
-      currentTime += beatDuration;
-      beatIndex++;
-      noteCount++;
-    }
-    
-    if (noteCount >= MAX_GENERATED_NOTES) {
-      GameErrors.log(`Note generation capped at ${MAX_GENERATED_NOTES} notes`);
-    }
-    
-    return notes;
-  } catch (error) {
-    GameErrors.log(`generateNotes error: ${error instanceof Error ? error.message : 'Unknown'}`);
-    return [];
-  }
-};
-
 export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => number | null, customNotes?: Note[]) => {
   const [gameState, setGameState] = useState<'MENU' | 'PLAYING' | 'GAMEOVER'>('MENU');
   const [score, setScore] = useState(0);
@@ -262,7 +193,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     scoreRef.current = 0;
     comboRef.current = 0;
     healthRef.current = MAX_HEALTH;
-    notesRef.current = customNotes || generateNotes(difficulty);
+    notesRef.current = customNotes || [];
     
     setScore(0);
     setCombo(0);
