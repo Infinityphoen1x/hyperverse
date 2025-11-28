@@ -495,22 +495,28 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
                 farDistance = 1;
               } else {
                 // Phase 2: Shrinking - trapezoid collapses with fade over holdDuration
-                // Near end STAYS at the position it was when player pressed (shows press timing)
-                // Far end moves from vanishing point toward the near end
+                // For PRESSED notes: Near end STAYS at position when player pressed (shows press timing)
+                // For UNPRESSED notes: Start from judgement line and shrink to nothing
                 const shrinkProgress = Math.min(holdProgress - 1.0, 1.0); // 0 to 1.0 during phase 2
                 
-                // Calculate where the near end was at moment of press
-                // Only valid if press was within the activation window (±300ms from note.time)
-                // If press was too late, cap at judgement line
-                const timeUntilHitAtPress = note.time - pressTime;
-                const holdProgressAtPress = (LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME;
+                if (pressTime && pressTime > 0) {
+                  // Pressed note: lock to press position
+                  // Calculate where the near end was at moment of press
+                  // Only valid if press was within the activation window (±300ms from note.time)
+                  // If press was too late, cap at judgement line
+                  const timeUntilHitAtPress = note.time - pressTime;
+                  const holdProgressAtPress = (LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME;
+                  
+                  // Lock near end to position at moment of press
+                  // If press was too late (negative timeUntilHitAtPress), this caps at 1.0 (judgement line)
+                  // If press was too early, this stays below 1.0 (early position)
+                  nearDistance = 1 + (Math.min(Math.max(holdProgressAtPress, 0), 1.0) * (JUDGEMENT_RADIUS - 1));
+                } else {
+                  // Unpressed note (never pressed): start from judgement line and shrink
+                  nearDistance = JUDGEMENT_RADIUS;
+                }
                 
-                // Lock near end to position at moment of press
-                // If press was too late (negative timeUntilHitAtPress), this caps at 1.0 (judgement line)
-                // If press was too early, this stays below 1.0 (early position)
-                nearDistance = 1 + (Math.min(Math.max(holdProgressAtPress, 0), 1.0) * (JUDGEMENT_RADIUS - 1));
-                
-                // Far end moves from vanishing point (1) toward the locked near end
+                // Far end moves from vanishing point (1) toward the locked/judgement near end
                 farDistance = 1 + (shrinkProgress * (nearDistance - 1));
               }
               
