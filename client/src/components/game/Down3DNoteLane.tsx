@@ -504,28 +504,28 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
   const [joltOffset, setJoltOffset] = useState({ x: 0, y: 0 });
   const prevComboMilestoneRef = useRef<number>(0);
   
-  // Detect combo milestones (10, 20, 30, etc.)
+  // Detect combo milestones (10, 20, 30, etc.) - shift vanishing point to new angle, stays offset
   useEffect(() => {
     const currentMilestone = Math.floor(combo / 10) * 10;
     if (combo > 0 && currentMilestone !== prevComboMilestoneRef.current) {
       prevComboMilestoneRef.current = currentMilestone;
-      // Trigger jolt: up then random side
+      
+      // Each milestone: jump up then shift to NEW random angle - STAYS OFFSET (viewing angle shift)
       const angle = Math.random() * Math.PI * 2;
       const distance = 8;
-      const sideX = Math.cos(angle) * distance;
-      const sideY = Math.sin(angle) * distance;
+      const newOffsetX = Math.cos(angle) * distance;
+      const newOffsetY = -JOLT_RADIUS * 0.3;
       
       // Animate: jump up (negative Y) then shift to side
       setJoltOffset({ x: 0, y: -JOLT_RADIUS });
       setTimeout(() => {
-        setJoltOffset({ x: sideX, y: -JOLT_RADIUS * 0.3 });
+        // Shift to new angle and STAY - feels like tunnel rotating to different view
+        setJoltOffset({ x: newOffsetX, y: newOffsetY });
       }, JOLT_UP_DURATION);
-      setTimeout(() => {
-        setJoltOffset({ x: 0, y: 0 });
-      }, JOLT_UP_DURATION + JOLT_SIDE_DURATION);
+      // NO RETURN TO CENTER - stays at new offset for immersive "tunnel angle" effect
     } else if (combo === 0) {
       prevComboMilestoneRef.current = 0;
-      setJoltOffset({ x: 0, y: 0 });
+      setJoltOffset({ x: 0, y: 0 }); // Only reset on combo break
     }
   }, [combo]);
   
