@@ -90,6 +90,13 @@ export default function Game() {
     startGame();
   }, [startGame]);
 
+  // Restart game when beatmap is loaded (customNotes changes)
+  useEffect(() => {
+    if (customNotes && customNotes.length > 0) {
+      startGame();
+    }
+  }, [customNotes, startGame]);
+
   if (gameState === 'GAMEOVER') {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center space-y-8">
