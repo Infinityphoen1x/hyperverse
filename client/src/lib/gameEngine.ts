@@ -229,14 +229,17 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
               shouldMarkFailed = true;
               failureType = 'tapMissFailure';
             } else if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
+              // holdMissFailure: Note expired without being pressed (pressed too LATE)
               if (!n.pressTime && time > n.time + HOLD_MISS_TIMEOUT) {
                 shouldMarkFailed = true;
                 failureType = 'holdMissFailure';
-              } else if (n.pressTime && n.pressTime > 0 && !n.hit) {
+              } 
+              // holdReleaseFailure: Note was pressed but release timing failed (fallback timeout)
+              else if (n.pressTime && n.pressTime > 0 && !n.hit) {
                 const noteHoldDuration = n.duration || 1000;
                 if (time > n.pressTime + noteHoldDuration + HOLD_RELEASE_OFFSET) {
                   shouldMarkFailed = true;
-                  failureType = 'holdMissFailure';
+                  failureType = 'holdReleaseFailure';
                 }
               }
             }
