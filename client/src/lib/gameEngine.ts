@@ -27,8 +27,8 @@ export interface Note {
   missed: boolean;
   tapMissFailure?: boolean; // TAP note failed (>300ms past note time)
   tooEarlyFailure?: boolean; // HOLD note pressed outside ±300ms window (too early)
-  holdMissFailure?: boolean; // HOLD note expired without activation
-  holdReleaseFailure?: boolean; // HOLD note released outside accuracy window
+  holdMissFailure?: boolean; // HOLD note pressed too LATE - note expired before activation window
+  holdReleaseFailure?: boolean; // HOLD note was pressed in time but released too EARLY (failed release accuracy)
   pressTime?: number; // HOLD note: when player pressed (for release accuracy calculation)
   hitTime?: number; // Timestamp when note was successfully hit (for animation timing)
   failureTime?: number; // Timestamp when failure was marked (for animation timing)
