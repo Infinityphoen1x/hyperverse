@@ -108,16 +108,17 @@ const determineGreyscaleState = (
   pressHoldTime: number,
   approachNearDistance: number
 ): GreyscaleState => {
+  // holdReleaseFailure: Always greyscale immediately
+  if (failures.isHoldReleaseFailure) {
+    return { isGreyed: true, reason: 'holdReleaseFailure' };
+  }
+  
   if (failures.isTooEarlyFailure && pressHoldTime > 0) {
     return { isGreyed: true, reason: 'tooEarlyImmediate' };
   }
   
   if (failures.isHoldMissFailure && approachNearDistance >= JUDGEMENT_RADIUS) {
     return { isGreyed: true, reason: 'holdMissAtJudgement' };
-  }
-  
-  if (failures.isHoldReleaseFailure) {
-    return { isGreyed: true, reason: 'holdReleaseFailure' };
   }
   
   return { isGreyed: false, reason: 'none' };
@@ -839,7 +840,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 const failures = getHoldNoteFailureStates(note);
                 
                 // ERROR CHECK: failureTime MUST be set when note has any failure
-                if (failures.hasAnyFailure && !note.failureTime) {
+                if (failures.hasAnyFailure && note.failureTime === undefined) {
                   GameErrors.log(`CRITICAL: Note ${note.id} has ${failures.isTooEarlyFailure ? 'tooEarlyFailure' : failures.isHoldReleaseFailure ? 'holdReleaseFailure' : 'holdMissFailure'} but failureTime is missing!`);
                   return null; // Skip rendering to avoid animation timing corruption
                 }
