@@ -476,28 +476,44 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               let nearDistance, farDistance;
               let lockedNearDistance: number | null = null;
               
-              // APPROACH PHASE: Calculate near end position based on approach progress
+              // APPROACH PHASE: Calculate near and far end positions based on approach progress
+              // Near end represents note.time, far end represents note.time + duration
               const approachProgress = Math.min(timeUntilHit > 0 ? (LEAD_TIME - timeUntilHit) / LEAD_TIME : 1.0, 1.0);
               const approachNearDistance = 1 + (approachProgress * (JUDGEMENT_RADIUS - 1));
               
+              // Far end appears based on when it should be released (note.time + duration)
+              const timeUntilFarHit = (note.time + (note.duration || 1000)) - currentTime;
+              const farApproachProgress = Math.min(timeUntilFarHit > 0 ? (LEAD_TIME - timeUntilFarHit) / LEAD_TIME : 1.0, 1.0);
+              const approachFarDistance = 1 + (farApproachProgress * (JUDGEMENT_RADIUS - 1));
+              
               // COLLAPSE PHASE: After player presses, lock near end and calculate collapse
               if (note.tooEarlyFailure && pressTime && pressTime > 0) {
-                // tooEarlyFailure: Lock near end at where it was at press time, collapse far end toward it
+                // tooEarlyFailure: Lock near end at press position, collapse far end toward it
                 const timeUntilHitAtPress = note.time - pressTime;
                 const pressApproachProgress = Math.min(Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0), 1.0);
                 lockedNearDistance = 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1));
+                
+                // Far end should have been growing during approach; collapse it back to near end
+                const timeUntilFarAtPress = (note.time + (note.duration || 1000)) - pressTime;
+                const farApproachProgress = Math.min(Math.max((LEAD_TIME - timeUntilFarAtPress) / LEAD_TIME, 0), 1.0);
+                const farDistanceAtPress = 1 + (farApproachProgress * (JUDGEMENT_RADIUS - 1));
                 
                 const collapseDuration = 1100;
                 const timeSincePress = currentTime - pressTime;
                 const collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
                 
                 nearDistance = lockedNearDistance;
-                farDistance = lockedNearDistance * (1 - collapseProgress) + 1 * collapseProgress;
+                farDistance = farDistanceAtPress * (1 - collapseProgress) + lockedNearDistance * collapseProgress;
               } else if (pressTime && pressTime > 0) {
-                // Successful hold OR holdReleaseFailure: Calculate where near end was at moment of press
+                // Successful hold OR holdReleaseFailure: Lock near end, collapse far end toward it
                 const timeUntilHitAtPress = note.time - pressTime;
                 const pressApproachProgress = Math.min(Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0), 1.0);
                 lockedNearDistance = 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1));
+                
+                // Far end at press time (what it would have been if continuing approach)
+                const timeUntilFarAtPress = (note.time + (note.duration || 1000)) - pressTime;
+                const farApproachProgress = Math.min(Math.max((LEAD_TIME - timeUntilFarAtPress) / LEAD_TIME, 0), 1.0);
+                const farDistanceAtPress = 1 + (farApproachProgress * (JUDGEMENT_RADIUS - 1));
                 
                 // Determine collapse duration based on fail state (MUST MATCH OPACITY TIMING)
                 let actualReleaseTime = getReleaseTime(note.id);
@@ -510,13 +526,13 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 const timeSincePress = currentTime - pressTime;
                 const collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
                 
-                // During collapse: near end locked, far end moves toward vanishing point
+                // During collapse: near end locked, far end moves toward near end
                 nearDistance = lockedNearDistance;
-                farDistance = lockedNearDistance * (1 - collapseProgress) + 1 * collapseProgress;
+                farDistance = farDistanceAtPress * (1 - collapseProgress) + lockedNearDistance * collapseProgress;
               } else {
                 // No press yet OR unpressed holdMissFailure: use approach phase geometry
                 nearDistance = approachNearDistance;
-                farDistance = 1;
+                farDistance = approachFarDistance;
               }
               
               // Glow when key is held OR after successful release (while animating)
