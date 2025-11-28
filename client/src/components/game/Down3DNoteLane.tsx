@@ -560,10 +560,14 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
             if (!holdNotesByLane[n.lane]) {
               holdNotesByLane[n.lane] = n;
             } else {
-              // Only replace if this note is earlier AND hasn't been hit/missed yet
+              // Replace stored note if new note is earlier AND stored note is completely done
               const stored = holdNotesByLane[n.lane];
-              if (stored && n.time < stored.time && !stored.hit && !stored.missed) {
-                holdNotesByLane[n.lane] = n;
+              if (stored && n.time < stored.time) {
+                // Check if stored note is complete (any final state)
+                const isStoredComplete = stored.hit || stored.missed || stored.tapMissFailure || stored.tooEarlyFailure || stored.holdMissFailure || stored.holdReleaseFailure;
+                if (isStoredComplete) {
+                  holdNotesByLane[n.lane] = n;
+                }
               }
             }
           }
