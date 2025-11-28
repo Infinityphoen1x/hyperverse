@@ -775,7 +775,6 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
             }
 
             const noteColor = getColorForLane(note.lane);
-            const JUDGEMENT_RADIUS = 187;
             
             // TAP notes: trapezoid with narrower flanking rays for compact appearance
             // Depth scales with progress: smaller at vanishing point, larger at judgement line
