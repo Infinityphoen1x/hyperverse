@@ -481,23 +481,24 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               const approachNearDistance = 1 + (approachProgress * (JUDGEMENT_RADIUS - 1));
               
               // COLLAPSE PHASE: After player presses, lock near end and calculate collapse
-              if (pressTime && pressTime > 0) {
-                // Calculate where near end was at moment of press
+              if (note.tooEarlyFailure && pressTime && pressTime > 0) {
+                // tooEarlyFailure: Stay at press position, don't collapse geometrically (just fade)
+                const timeUntilHitAtPress = note.time - pressTime;
+                const pressApproachProgress = Math.min(Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0), 1.0);
+                nearDistance = 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1));
+                farDistance = 1;
+              } else if (pressTime && pressTime > 0) {
+                // Successful hold OR holdReleaseFailure: Calculate where near end was at moment of press
                 const timeUntilHitAtPress = note.time - pressTime;
                 const pressApproachProgress = Math.min(Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0), 1.0);
                 lockedNearDistance = 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1));
                 
-                // Determine collapse end time based on fail state (MUST MATCH OPACITY TIMING)
+                // Determine collapse duration based on fail state (MUST MATCH OPACITY TIMING)
                 let actualReleaseTime = getReleaseTime(note.id);
                 let collapseDuration = holdDuration;
                 
                 if (note.holdReleaseFailure && actualReleaseTime) {
                   collapseDuration = Math.max(1, actualReleaseTime - pressTime);
-                } else if (note.tooEarlyFailure) {
-                  // tooEarlyFailure: full 1100ms animation
-                  collapseDuration = 1100;
-                } else if (note.holdMissFailure) {
-                  collapseDuration = holdDuration;
                 }
                 
                 const timeSincePress = currentTime - pressTime;
@@ -506,8 +507,8 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 // During collapse: near end locked, far end moves toward vanishing point
                 nearDistance = lockedNearDistance;
                 farDistance = lockedNearDistance * (1 - collapseProgress) + 1 * collapseProgress;
-              } else if (isTooEarlyFailure || isHoldReleaseFailure || isHoldMissFailure) {
-                // Failed notes that were never pressed: collapse from judgement line down over 1100ms
+              } else if (isHoldMissFailure) {
+                // holdMissFailure (unpressed): collapse from judgement line down over 1100ms
                 // Ensure failureTime is set (should always be set by gameEngine, but use fallback)
                 if (!note.failureTime) {
                   note.failureTime = currentTime;
