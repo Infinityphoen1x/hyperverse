@@ -783,39 +783,24 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             const noteColor = getColorForLane(note.lane);
             const JUDGEMENT_RADIUS = 187;
             
-            // TAP notes: simple rectangles aligned to ray, traveling together
-            const distance = 1 + (progress * (JUDGEMENT_RADIUS - 1)); // Distance along ray
-            const rad = (tapRayAngle * Math.PI) / 180;
+            // TAP notes: trapezoids with both near and far ends traveling together
+            // Use same flanking ray geometry as HOLD notes (±15° from center ray)
+            const TRAPEZOID_DEPTH = 50; // Depth along ray (constant as it travels)
+            const nearDist = 1 + (progress * (JUDGEMENT_RADIUS - 1)); // Both travel together
+            const farDist = nearDist - TRAPEZOID_DEPTH; // Maintains constant depth
             
-            // Center point on the ray at this distance
-            const cx = VANISHING_POINT_X + Math.cos(rad) * distance;
-            const cy = VANISHING_POINT_Y + Math.sin(rad) * distance;
+            const trapezoid = getTrapezoidCorners(
+              tapRayAngle,
+              nearDist,
+              farDist,
+              VANISHING_POINT_X,
+              VANISHING_POINT_Y,
+              note.id
+            );
             
-            // Rectangle perpendicular to the ray
-            const NOTE_WIDTH = 30;   // Width along the ray direction
-            const NOTE_HEIGHT = 25;  // Height perpendicular to ray
+            if (!trapezoid) return null;
             
-            // Ray direction (forward along ray)
-            const rayDx = Math.cos(rad);
-            const rayDy = Math.sin(rad);
-            
-            // Perpendicular direction (90° rotated)
-            const perpDx = -Math.sin(rad);
-            const perpDy = Math.cos(rad);
-            
-            // Four corners of the rectangle
-            const hw = NOTE_WIDTH / 2;  // Half-width along ray
-            const hh = NOTE_HEIGHT / 2; // Half-height perpendicular to ray
-            
-            const x1 = cx - rayDx * hw - perpDx * hh;
-            const y1 = cy - rayDy * hw - perpDy * hh;
-            const x2 = cx + rayDx * hw - perpDx * hh;
-            const y2 = cy + rayDy * hw - perpDy * hh;
-            const x3 = cx + rayDx * hw + perpDx * hh;
-            const y3 = cy + rayDy * hw + perpDy * hh;
-            const x4 = cx - rayDx * hw + perpDx * hh;
-            const y4 = cy - rayDy * hw + perpDy * hh;
-            
+            const { x1, y1, x2, y2, x3, y3, x4, y4 } = trapezoid;
             const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`;
             
             // Opacity: fade in as approaching (0.4 → 1.0)
