@@ -133,7 +133,7 @@ export default function Game() {
           setIsPauseMenuOpen(false);
         } else {
           pauseGame();
-          setYoutubeStartTime(Math.floor(currentTime / 1000) + 2);
+          setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
           setIsPauseMenuOpen(true);
         }
       }
@@ -311,7 +311,7 @@ export default function Game() {
                 setIsPauseMenuOpen(false);
               } else if (!isPaused) {
                 pauseGame();
-                setYoutubeStartTime(Math.floor(currentTime / 1000) + 2);
+                setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
                 setIsPauseMenuOpen(true);
               }
             }}
