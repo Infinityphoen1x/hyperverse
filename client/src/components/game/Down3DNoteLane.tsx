@@ -2,6 +2,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Note, GameErrors, getReleaseTime } from "@/lib/gameEngine";
 import { useEffect } from "react";
 
+// Hold note geometry constants
+const HOLD_NOTE_STRIP_WIDTH_MULTIPLIER = 0.15; // Convert duration (ms) to Z-depth: stripWidth = duration * 0.15
+const FAILURE_ANIMATION_DURATION = 1100; // ms - time for failure animations to complete
+
 const BUTTON_CONFIG = [
   { lane: 0, key: 'W', angle: 120, color: '#FF007F' },    // W - top-left pink
   { lane: 1, key: 'O', angle: 60, color: '#0096FF' },     // O - top-right blue
@@ -488,16 +492,15 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               const approachNearDistance = Math.max(1, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
               
               // Strip width = fixed depth length based on duration
-              const stripWidth = (note.duration || 1000) * 0.15;
+              const stripWidth = (note.duration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
               const approachFarDistance = Math.max(1, approachNearDistance - stripWidth);
               
-              // tooEarlyFailure turns greyscale instantly when pressed
+              // Determine greyscale state based on failure type and timing
               if (isTooEarlyFailure && pressTime > 0) {
+                // tooEarlyFailure: turns greyscale instantly when pressed
                 isGreyed = true;
-              }
-              
-              // holdMissFailure turns greyscale when it passes judgement line (approachNearDistance >= JUDGEMENT_RADIUS)
-              if (isHoldMissFailure && approachNearDistance >= JUDGEMENT_RADIUS) {
+              } else if (isHoldMissFailure && approachNearDistance >= JUDGEMENT_RADIUS) {
+                // holdMissFailure: turns greyscale when it passes judgement line
                 isGreyed = true;
               }
               
@@ -605,40 +608,33 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 }
               }
               
-              // Opacity: increases during approach, fades during collapse
-              let opacity = 0.4 + Math.min(approachProgress, 1.0) * 0.6;
+              // Calculate opacity and collapse progress based on note state
+              let opacity = 0.4 + Math.min(approachProgress, 1.0) * 0.6; // Default: fade in during approach
               let collapseProgress = 0;
               
-              // During collapse: fade from 1.0 to 0.2
+              // Determine collapse timing based on note state
               if (pressTime && pressTime > 0) {
-                // Use same collapse timing as geometry
-                let actualReleaseTime = getReleaseTime(note.id);
-                let collapseEndTime = note.time + holdDuration;
+                // Pressed note: collapse timing depends on state
                 let collapseDuration = holdDuration;
                 
-                if (note.holdReleaseFailure && actualReleaseTime) {
-                  collapseEndTime = actualReleaseTime;
-                  collapseDuration = Math.max(1, collapseEndTime - pressTime);
-                } else if (note.tooEarlyFailure) {
-                  // tooEarlyFailure: give full 1100ms for animation to complete
-                  collapseDuration = 1100;
-                  collapseEndTime = pressTime + 1100;
-                } else if (note.holdMissFailure) {
-                  collapseDuration = holdDuration;
-                  collapseEndTime = note.time + holdDuration;
+                if (note.holdReleaseFailure && getReleaseTime(note.id)) {
+                  collapseDuration = Math.max(1, getReleaseTime(note.id)! - pressTime);
+                } else if (note.tooEarlyFailure || isHoldMissFailure) {
+                  // tooEarlyFailure and pressed holdMissFailure use full failure animation duration
+                  collapseDuration = FAILURE_ANIMATION_DURATION;
                 }
                 
                 const timeSincePress = currentTime - pressTime;
                 collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
-                
-                opacity = Math.max(1.0 - (collapseProgress * 0.8), 0.2); // Smooth fade from 1.0 to 0.2
-              } else if (isTooEarlyFailure || isHoldReleaseFailure || isHoldMissFailure) {
-                // Unpressed failure (never pressed): collapse from judgement line over 1100ms
+              } else if (activeFailureTypes.length > 0) {
+                // Unpressed failure: fade over standard failure duration
                 const failureTime = note.failureTime || currentTime;
-                const collapseDuration = 1100;
                 const timeSinceFailure = Math.max(0, currentTime - failureTime);
-                collapseProgress = Math.min(Math.max(timeSinceFailure / collapseDuration, 0), 1.0);
-                
+                collapseProgress = Math.min(Math.max(timeSinceFailure / FAILURE_ANIMATION_DURATION, 0), 1.0);
+              }
+              
+              // Apply fade during collapse (pressed or unpressed failure)
+              if (collapseProgress > 0) {
                 opacity = Math.max(1.0 - (collapseProgress * 0.8), 0.2);
               }
               
