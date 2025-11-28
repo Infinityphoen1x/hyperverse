@@ -536,6 +536,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
   // Smooth animation loop for vanishing point offset
   useEffect(() => {
     let animationFrameId: number;
+    let lastAnimatedValues = { x: 0, y: 0 };
     
     const animate = () => {
       const now = Date.now();
@@ -549,13 +550,17 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
         const newX = currentOffsetRef.current.x + (targetOffsetRef.current.x - currentOffsetRef.current.x) * easeProgress;
         const newY = currentOffsetRef.current.y + (targetOffsetRef.current.y - currentOffsetRef.current.y) * easeProgress;
         
+        lastAnimatedValues = { x: newX, y: newY };
         setVpOffset({ x: newX, y: newY });
-        animationFrameId = requestAnimationFrame(animate);
-      } else {
+      } else if (lastAnimatedValues.x !== targetOffsetRef.current.x || lastAnimatedValues.y !== targetOffsetRef.current.y) {
         // Animation complete - snap to target and preserve for next milestone
+        lastAnimatedValues = { ...targetOffsetRef.current };
         currentOffsetRef.current = { ...targetOffsetRef.current };
         setVpOffset({ x: targetOffsetRef.current.x, y: targetOffsetRef.current.y });
       }
+      
+      // Always continue animation loop
+      animationFrameId = requestAnimationFrame(animate);
     };
     
     animationFrameId = requestAnimationFrame(animate);
