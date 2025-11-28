@@ -32,8 +32,8 @@ const isActiveHoldNote = (note: Note, lane: number): boolean => {
     !note.tooEarlyFailure &&
     !note.holdMissFailure &&
     !note.holdReleaseFailure &&
-    note.pressTime && 
-    note.pressTime > 0
+    note.pressHoldTime && 
+    note.pressHoldTime > 0
   );
 };
 
@@ -150,18 +150,18 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
     try {
       if (!Array.isArray(notes) || !Number.isFinite(currentTime)) return 0;
       
-      // Find active hold note on this lane (pressTime set, not hit, and not failed)
+      // Find active hold note on this lane (pressHoldTime set, not hit, and not failed)
       const activeNote = notes.find(n => isActiveHoldNote(n, lane));
       
       // No active note = no progress
       if (!activeNote) return 0;
       
-      // Must have pressTime to show progress
-      if (!activeNote.pressTime || activeNote.pressTime <= 0) return 0;
+      // Must have pressHoldTime to show progress
+      if (!activeNote.pressHoldTime || activeNote.pressHoldTime <= 0) return 0;
       
       // Duration defaults to constant if beatmap doesn't specify (fallback for edge cases)
       const beatmapHoldDuration = (activeNote.duration && activeNote.duration > 0) ? activeNote.duration : DECK_METER_DEFAULT_HOLD_DURATION;
-      const elapsedSincePress = currentTime - activeNote.pressTime;
+      const elapsedSincePress = currentTime - activeNote.pressHoldTime;
       
       // No negative progress
       if (elapsedSincePress < 0) return 0;

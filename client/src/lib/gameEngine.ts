@@ -29,8 +29,16 @@ export interface Note {
   tooEarlyFailure?: boolean; // HOLD note pressed outside ±300ms window (too early)
   holdMissFailure?: boolean; // HOLD note pressed too LATE - note expired before activation window
   holdReleaseFailure?: boolean; // HOLD note was pressed in time but released too EARLY (failed release accuracy)
-  pressTime?: number; // HOLD note: when player pressed (for release accuracy calculation)
-  hitTime?: number; // Timestamp when note was successfully hit (for animation timing)
+  
+  // TAP note fields (mutually exclusive with HOLD fields)
+  pressTime?: number; // TAP note: when player pressed
+  hitTime?: number; // TAP/HOLD: Timestamp when note was successfully completed
+  
+  // HOLD note fields (mutually exclusive with TAP fields)
+  pressHoldTime?: number; // HOLD note: when player started holding
+  releaseTime?: number; // HOLD note: when player released
+  pressReleaseTime?: number; // HOLD note: when player successfully released (within accuracy window)
+  
   failureTime?: number; // Timestamp when failure was marked (for animation timing)
 }
 
@@ -230,14 +238,14 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
               failureType = 'tapMissFailure';
             } else if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
               // holdMissFailure: Note expired without being pressed AT ALL (user never pressed)
-              if (!n.pressTime && time > n.time + HOLD_MISS_TIMEOUT) {
+              if (!n.pressHoldTime && time > n.time + HOLD_MISS_TIMEOUT) {
                 shouldMarkFailed = true;
                 failureType = 'holdMissFailure';
               } 
               // holdReleaseFailure: Fallback timeout if user pressed in time but never released and trackHoldEnd didn't fire
-              else if (n.pressTime && n.pressTime > 0 && !n.hit) {
+              else if (n.pressHoldTime && n.pressHoldTime > 0 && !n.hit) {
                 const noteHoldDuration = n.duration || 1000;
-                if (time > n.pressTime + noteHoldDuration + HOLD_RELEASE_OFFSET) {
+                if (time > n.pressHoldTime + noteHoldDuration + HOLD_RELEASE_OFFSET) {
                   shouldMarkFailed = true;
                   failureType = 'holdReleaseFailure';
                 }
@@ -385,7 +393,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           GameErrors.trackAnimation(anyNote.id, 'tooEarlyFailure', currentTime);
           const idx = notes.findIndex(n => n && n.id === anyNote.id);
           if (idx !== -1) {
-            notes[idx] = { ...notes[idx], pressTime: currentTime, tooEarlyFailure: true, failureTime: currentTime };
+            notes[idx] = { ...notes[idx], pressHoldTime: currentTime, tooEarlyFailure: true, failureTime: currentTime };
           }
           comboRef.current = 0;
           healthRef.current = Math.max(0, healthRef.current - 2);
@@ -398,7 +406,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           GameErrors.trackAnimation(anyNote.id, 'holdMissFailure', currentTime);
           const idx = notes.findIndex(n => n && n.id === anyNote.id);
           if (idx !== -1) {
-            notes[idx] = { ...notes[idx], pressTime: currentTime, holdMissFailure: true, failureTime: currentTime };
+            notes[idx] = { ...notes[idx], pressHoldTime: currentTime, holdMissFailure: true, failureTime: currentTime };
           }
           comboRef.current = 0;
           healthRef.current = Math.max(0, healthRef.current - 2);
@@ -411,7 +419,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       
       const idx = notes.findIndex(n => n && n.id === anyNote.id);
       if (idx !== -1) {
-        notes[idx] = { ...notes[idx], pressTime: currentTime };
+        notes[idx] = { ...notes[idx], pressHoldTime: currentTime };
         setNotes([...notes]);
       }
     } catch (error) {
@@ -433,8 +441,8 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         n && 
         n.lane === lane &&
         (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
-        n.pressTime && 
-        n.pressTime > 0 &&
+        n.pressHoldTime && 
+        n.pressHoldTime > 0 &&
         !n.hit &&
         !n.missed &&
         !n.tooEarlyFailure &&
@@ -442,20 +450,20 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         !n.holdReleaseFailure
       ) : null;
       
-      if (activeNote && activeNote.pressTime && activeNote.pressTime > 0) {
+      if (activeNote && activeNote.pressHoldTime && activeNote.pressHoldTime > 0) {
         const holdDuration = activeNote.duration || 1000;
-        const pressTime = activeNote.pressTime;
-        const expectedReleaseTime = pressTime + holdDuration;
+        const pressHoldTime = activeNote.pressHoldTime;
+        const expectedReleaseTime = pressHoldTime + holdDuration;
         const timeSinceExpectedRelease = currentTime - expectedReleaseTime;
         const idx = notes.findIndex(n => n && n.id === activeNote.id);
         
         // Track release time for animations
         setReleaseTime(activeNote.id, currentTime);
         
-        if (currentTime - pressTime < holdDuration) {
+        if (currentTime - pressHoldTime < holdDuration) {
           GameErrors.trackAnimation(activeNote.id, 'holdReleaseFailure', currentTime);
           if (idx !== -1) {
-            notes[idx] = { ...notes[idx], holdReleaseFailure: true, failureTime: currentTime };
+            notes[idx] = { ...notes[idx], releaseTime: currentTime, holdReleaseFailure: true, failureTime: currentTime };
           }
           comboRef.current = 0;
           healthRef.current = Math.max(0, healthRef.current - 2);
@@ -468,7 +476,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           else if (Math.abs(timeSinceExpectedRelease) < ACCURACY_GREAT_MS) points = ACCURACY_GREAT_POINTS;
           
           if (idx !== -1) {
-            notes[idx] = { ...notes[idx], hit: true, hitTime: currentTime };
+            notes[idx] = { ...notes[idx], hit: true, releaseTime: currentTime, pressReleaseTime: currentTime };
           }
           scoreRef.current += points;
           comboRef.current += 1;
@@ -480,7 +488,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         } else {
           GameErrors.trackAnimation(activeNote.id, 'holdReleaseFailure', currentTime);
           if (idx !== -1) {
-            notes[idx] = { ...notes[idx], holdReleaseFailure: true, failureTime: currentTime };
+            notes[idx] = { ...notes[idx], releaseTime: currentTime, holdReleaseFailure: true, failureTime: currentTime };
           }
           comboRef.current = 0;
           healthRef.current = Math.max(0, healthRef.current - 2);

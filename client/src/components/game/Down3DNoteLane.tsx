@@ -547,9 +547,9 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
           }
           
           // If pressed/hit, extend to show full hold duration + HOLD_ANIMATION_DURATION Phase 2 shrinking
-          else if (n.pressTime && n.pressTime > 0) {
+          else if (n.pressHoldTime && n.pressHoldTime > 0) {
             const holdDuration = n.duration || 1000;
-            const holdEndTime = n.pressTime + holdDuration;
+            const holdEndTime = n.pressHoldTime + holdDuration;
             const animationEnd = holdEndTime + HOLD_ANIMATION_DURATION; // Phase 2 shrinking
             visibilityEnd = -(animationEnd - n.time);
           }
@@ -833,7 +833,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                   return null; // Skip if calculations would be invalid
                 }
                 
-                const pressTime = note.pressTime || 0;
+                const pressTime = note.pressHoldTime || 0;
                 const holdDuration = note.duration || 1000;
                 
                 // Get failure states using helper
@@ -938,7 +938,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
               }
               
               // Override with collapse fade if note was successfully pressed
-              if (collapseProgress > 0 && note.pressTime && note.pressTime > 0) {
+              if (collapseProgress > 0 && note.pressHoldTime && note.pressHoldTime > 0) {
                 opacity = Math.max(1.0 - collapseProgress, 0.0);
               }
               
