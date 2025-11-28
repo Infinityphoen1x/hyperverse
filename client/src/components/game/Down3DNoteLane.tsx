@@ -869,17 +869,18 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 return null;
               }
               
-              // Calculate approach geometry (before press)
+              // Calculate approach geometry (before press) - LANE ISOLATED
               const approachGeometry = calculateApproachGeometry(timeUntilHit, pressHoldTime, failures.isTooEarlyFailure, holdDuration);
-              const { nearDistance: approachNearDistance, farDistance: approachFarDistance } = approachGeometry;
+              const approachNearDistance = approachGeometry.nearDistance;
+              const approachFarDistance = approachGeometry.farDistance;
               
               // Determine collapse timing
               const collapseDuration = failures.hasAnyFailure ? FAILURE_ANIMATION_DURATION : holdDuration;
               
-              // Calculate locked near distance (where note "grabs" on press)
+              // Calculate locked near distance (where note "grabs" on press) - LANE ISOLATED
               const lockedNearDistance = calculateLockedNearDistance(note, pressHoldTime, failures.isTooEarlyFailure, approachNearDistance, failureTime);
               
-              // Calculate collapse geometry (after press or for failures)
+              // Calculate collapse geometry (after press or for failures) - LANE ISOLATED
               const stripWidth = (note.duration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
               const farDistanceAtPress = lockedNearDistance ? Math.max(1, lockedNearDistance - stripWidth) : approachFarDistance;
               const collapseGeo = calculateCollapseGeometry(
@@ -893,7 +894,9 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 note.hit  // Pass successful hit flag so they collapse immediately
               );
               
-              const { nearDistance, farDistance, collapseProgress } = collapseGeo;
+              const nearDistance = collapseGeo.nearDistance;
+              const farDistance = collapseGeo.farDistance;
+              const collapseProgress = collapseGeo.collapseProgress;
               
               // ERROR HANDLING: Check if geometry proceeds past judgement line when it shouldn't
               const isSuccessfulHit = note.hit;
