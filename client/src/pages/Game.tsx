@@ -128,13 +128,12 @@ export default function Game() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && gameState === 'PLAYING') {
         if (isPaused) {
-          setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
           setCountdownActive(true);
           setCountdown(3);
-          setShowYoutubeIframe(false);
           setIsPauseMenuOpen(false);
         } else {
           pauseGame();
+          setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
           setShowYoutubeIframe(false);
           setIsPauseMenuOpen(true);
         }
@@ -239,10 +238,8 @@ export default function Game() {
             <div className="flex flex-col gap-4 mt-8">
               <button 
                 onClick={() => {
-                  setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
                   setCountdownActive(true);
                   setCountdown(3);
-                  setShowYoutubeIframe(false);
                   setIsPauseMenuOpen(false);
                 }}
                 className="px-12 py-4 bg-neon-cyan text-black font-bold font-orbitron text-lg hover:bg-white transition-colors"
@@ -310,13 +307,12 @@ export default function Game() {
           <button
             onClick={() => {
               if (isPaused && !countdownActive) {
-                setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
                 setCountdownActive(true);
                 setCountdown(3);
-                setShowYoutubeIframe(false);
                 setIsPauseMenuOpen(false);
               } else if (!isPaused) {
                 pauseGame();
+                setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
                 setShowYoutubeIframe(false);
                 setIsPauseMenuOpen(true);
               }
