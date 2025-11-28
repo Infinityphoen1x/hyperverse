@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Note, GameErrors, getReleaseTime } from "@/lib/gameEngine";
 import { useEffect } from "react";
 import { 
@@ -11,7 +11,6 @@ import {
   JUDGEMENT_RADIUS,
   HOLD_ANIMATION_DURATION,
   HOLD_ACTIVATION_WINDOW,
-  TAP_HIT_FLASH_DURATION,
   HEXAGON_RADII,
   RAY_ANGLES,
   TUNNEL_MAX_DISTANCE,
@@ -85,20 +84,6 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onPadHit]);
-  // Helper: Calculate phase progress (0 to 2)
-  // Phase 1 (0 to 1): Note approaching, trapezoid growing
-  // Phase 2 (1 to 2): Note at/past judgement, trapezoid shrinking
-  const getPhaseProgress = (timeUntilHit: number, pressTime: number, currentTime: number, holdDuration: number = 1000): number => {
-    
-    if (timeUntilHit > 0) {
-      // Phase 1: Note approaching
-      return (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-    } else {
-      // Phase 2: Note at/past judgement, shrink based on hold duration from beatmap
-      const elapsedHoldTime = currentTime - pressTime;
-      return Math.min(1.0 + (elapsedHoldTime / holdDuration), 2.0);
-    }
-  };
 
   // Build RENDER LIST - purely time-based window for drawing notes
   // Separate from game state tracking - render list includes notes that need visual feedback
@@ -185,13 +170,6 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
     
     return result;
   })() : [];
-
-
-  const getNoteKey = (lane: number): string => {
-    if (lane === -1) return 'Q';
-    if (lane === -2) return 'P';
-    return ['W', 'O', 'I', 'E'][lane];
-  };
 
   const getColorForLane = (lane: number): string => {
     const baseColor = (() => {
@@ -460,14 +438,6 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 console.warn(`Invalid ray angle for lane ${note.lane}`);
                 return null;
               }
-              const rad = (rayAngle * Math.PI) / 180;
-              
-              // Get flanking ray angles (±15° from center ray)
-              // These are only used for trapezoid geometry, not rendered as separate rays
-              const leftRayAngle = rayAngle - 15;
-              const rightRayAngle = rayAngle + 15;
-              const leftRad = (leftRayAngle * Math.PI) / 180;
-              const rightRad = (rightRayAngle * Math.PI) / 180;
               
               // Unified geometry: approach phase then collapse phase
               // APPROACH: Near end grows from vanishing point (1) toward judgement line (187)
