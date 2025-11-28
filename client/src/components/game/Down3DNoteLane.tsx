@@ -72,6 +72,103 @@ const getTrapezoidCorners = (
   return corners;
 };
 
+// ============================================================================
+// HELPER FUNCTIONS FOR HOLD NOTE STATE MANAGEMENT
+// ============================================================================
+
+/** Extract all failure states from a note */
+interface HoldNoteFailureStates {
+  isTooEarlyFailure: boolean;
+  isHoldReleaseFailure: boolean;
+  isHoldMissFailure: boolean;
+  hasAnyFailure: boolean;
+}
+
+const getHoldNoteFailureStates = (note: Note): HoldNoteFailureStates => {
+  const isTooEarlyFailure = note.tooEarlyFailure || false;
+  const isHoldReleaseFailure = note.holdReleaseFailure || false;
+  const isHoldMissFailure = note.holdMissFailure || false;
+  
+  return {
+    isTooEarlyFailure,
+    isHoldReleaseFailure,
+    isHoldMissFailure,
+    hasAnyFailure: isTooEarlyFailure || isHoldReleaseFailure || isHoldMissFailure,
+  };
+};
+
+/** Determine if note should render in greyscale based on failure type and timing */
+interface GreyscaleState {
+  isGreyed: boolean;
+  reason: 'none' | 'tooEarlyImmediate' | 'holdMissAtJudgement' | 'holdReleaseFailure';
+}
+
+const determineGreyscaleState = (
+  failures: HoldNoteFailureStates,
+  pressTime: number,
+  approachNearDistance: number
+): GreyscaleState => {
+  if (failures.isTooEarlyFailure && pressTime > 0) {
+    return { isGreyed: true, reason: 'tooEarlyImmediate' };
+  }
+  
+  if (failures.isHoldMissFailure && approachNearDistance >= JUDGEMENT_RADIUS) {
+    return { isGreyed: true, reason: 'holdMissAtJudgement' };
+  }
+  
+  if (failures.isHoldReleaseFailure) {
+    return { isGreyed: true, reason: 'holdReleaseFailure' };
+  }
+  
+  return { isGreyed: false, reason: 'none' };
+};
+
+/** Mark animation as completed if it's done failing */
+const markAnimationCompletedIfDone = (
+  note: Note,
+  failures: HoldNoteFailureStates,
+  timeSinceFail: number,
+  currentTime: number
+): void => {
+  if (timeSinceFail > HOLD_ANIMATION_DURATION) {
+    const failureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
+    if (failures.isTooEarlyFailure) failureTypes.push('tooEarlyFailure');
+    if (failures.isHoldReleaseFailure) failureTypes.push('holdReleaseFailure');
+    if (failures.isHoldMissFailure) failureTypes.push('holdMissFailure');
+    
+    for (const failureType of failureTypes) {
+      const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
+      if (animEntry && animEntry.status !== 'completed') {
+        GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
+      }
+    }
+  }
+};
+
+/** Calculate geometry for approach phase (before press) */
+interface ApproachGeometry {
+  nearDistance: number;
+  farDistance: number;
+}
+
+const calculateApproachGeometry = (
+  timeUntilHit: number,
+  pressTime: number,
+  isTooEarlyFailure: boolean,
+  holdDuration: number
+): ApproachGeometry => {
+  const stripWidth = (holdDuration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
+  
+  const rawApproachProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+  const isSuccessfulPress = pressTime > 0 && !isTooEarlyFailure;
+  const approachProgress = isSuccessfulPress ? Math.min(rawApproachProgress, 1.0) : rawApproachProgress;
+  
+  const nearDistance = Math.max(1, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
+  const farDistance = Math.max(1, nearDistance - stripWidth);
+  
+  return { nearDistance, farDistance };
+};
+
 interface Down3DNoteLaneProps {
   notes: Note[];
   currentTime: number;
