@@ -556,9 +556,15 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
           
           // Visibility window: TAP_RENDER_WINDOW_MS before LEAD_TIME to end time (based on note outcome)
           if (timeUntilHit >= visibilityEnd && timeUntilHit <= LEAD_TIME) {
-            // Track which hold note to show for this lane (prioritize oldest/earliest)
-            if (!holdNotesByLane[n.lane] || (n.time < (holdNotesByLane[n.lane]?.time || Infinity))) {
+            // Track which hold note to show for this lane (prioritize earliest CURRENTLY VISIBLE note, not earliest overall)
+            if (!holdNotesByLane[n.lane]) {
               holdNotesByLane[n.lane] = n;
+            } else {
+              // Only replace if this note is earlier AND hasn't been hit/missed yet
+              const stored = holdNotesByLane[n.lane];
+              if (stored && n.time < stored.time && !stored.hit && !stored.missed) {
+                holdNotesByLane[n.lane] = n;
+              }
             }
           }
         } else {
