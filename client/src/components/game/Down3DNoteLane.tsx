@@ -503,17 +503,21 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 const timeSincePress = currentTime - pressTime;
                 const collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
                 
-                // During collapse: near end locked, far end moves toward it
+                // During collapse: near end locked, far end moves toward vanishing point
                 nearDistance = lockedNearDistance;
-                farDistance = 1 + (collapseProgress * (lockedNearDistance - 1));
+                farDistance = lockedNearDistance * (1 - collapseProgress) + 1 * collapseProgress;
               } else if (isTooEarlyFailure || isHoldReleaseFailure || isHoldMissFailure) {
                 // Failed notes that were never pressed: collapse from judgement line down over 1100ms
-                const failureTime = note.failureTime || currentTime;
+                // Ensure failureTime is set (should always be set by gameEngine, but use fallback)
+                if (!note.failureTime) {
+                  note.failureTime = currentTime;
+                }
+                const failureTime = note.failureTime;
                 const collapseDuration = 1100;
                 const timeSinceFailure = Math.max(0, currentTime - failureTime);
                 const collapseProgress = Math.min(Math.max(timeSinceFailure / collapseDuration, 0), 1.0);
                 
-                // Unpressed failure: starts at judgement line, collapses to vanishing point
+                // Unpressed failure: starts at judgement line (near), collapses toward vanishing point (far)
                 nearDistance = JUDGEMENT_RADIUS;
                 farDistance = JUDGEMENT_RADIUS * (1 - collapseProgress) + 1 * collapseProgress;
               } else {
