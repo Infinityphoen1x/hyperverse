@@ -537,12 +537,17 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
           // - HOLD: appear 4000ms before (HOLD_RENDER_WINDOW_MS), stay visible through active states, fade on completion
           let visibilityEnd = currentTime + HOLD_ANIMATION_DURATION; // Default: show until animation ends
           
-          // If failed, show HOLD_ANIMATION_DURATION failure animation from failureTime
+          // If failed (any failure state), show HOLD_ANIMATION_DURATION failure animation from failureTime
           if (n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
             const failureTime = n.failureTime || currentTime;
             visibilityEnd = failureTime + HOLD_ANIMATION_DURATION;
           }
-          // If pressed/hit, show full hold duration + HOLD_ANIMATION_DURATION Phase 2 shrinking
+          // If release completed (either successful or failed), show animation from release point
+          else if (n.pressReleaseTime || n.releaseTime) {
+            const releasePoint = n.pressReleaseTime || n.releaseTime || currentTime;
+            visibilityEnd = releasePoint + HOLD_ANIMATION_DURATION;
+          }
+          // If currently being held (pressed but not yet released), show through expected end + animation
           else if (n.pressHoldTime && n.pressHoldTime > 0) {
             const holdDuration = n.duration || 1000;
             const holdEndTime = n.pressHoldTime + holdDuration;
