@@ -74,3 +74,10 @@ export const PARTICLE_COLORS = [
   'hsl(280, 100%, 60%)',  // Purple
   'hsl(320, 100%, 60%)',  // Magenta
 ];
+
+// Deck hold meter constants
+export const DECK_METER_SEGMENTS = 16; // Number of visual segments in meter
+export const DECK_METER_SEGMENT_WIDTH = 60; // px - width of each segment
+export const DECK_METER_COMPLETION_THRESHOLD = 0.95; // 0-1, progress needed to trigger glow
+export const DECK_METER_COMPLETION_GLOW_DURATION = 400; // ms - how long glow animation lasts
+export const DECK_METER_DEFAULT_HOLD_DURATION = 1000; // ms - default duration if beatmap doesn't specify

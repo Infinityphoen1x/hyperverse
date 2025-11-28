@@ -1,8 +1,13 @@
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { Note, GameErrors } from "@/lib/gameEngine";
-
-const COMPLETION_THRESHOLD = 0.95;
+import {
+  DECK_METER_SEGMENTS,
+  DECK_METER_SEGMENT_WIDTH,
+  DECK_METER_COMPLETION_THRESHOLD,
+  DECK_METER_COMPLETION_GLOW_DURATION,
+  DECK_METER_DEFAULT_HOLD_DURATION,
+} from "@/lib/gameConstants";
 
 interface DeckHoldMetersProps {
   notes: Note[];
@@ -38,20 +43,18 @@ interface RectangleMeterProps {
 }
 
 const RectangleMeter = ({ progress, outlineColor, lane, completionGlow }: RectangleMeterProps) => {
-  const segments = 16;
-  
   // Validate progress before rendering
   if (!Number.isFinite(progress) || progress < 0 || progress > 1) {
     GameErrors.log(`DeckMeter: Invalid progress=${progress} for lane ${lane}`);
     return null;
   }
   
-  const filledSegments = Math.ceil(progress * segments);
-  const isFull = progress >= COMPLETION_THRESHOLD;
+  const filledSegments = Math.ceil(progress * DECK_METER_SEGMENTS);
+  const isFull = progress >= DECK_METER_COMPLETION_THRESHOLD;
   
   // Validate segment count
-  if (!Number.isFinite(filledSegments) || filledSegments < 0 || filledSegments > segments) {
-    GameErrors.log(`DeckMeter: Invalid filledSegments=${filledSegments} for lane ${lane} (max=${segments})`);
+  if (!Number.isFinite(filledSegments) || filledSegments < 0 || filledSegments > DECK_METER_SEGMENTS) {
+    GameErrors.log(`DeckMeter: Invalid filledSegments=${filledSegments} for lane ${lane} (max=${DECK_METER_SEGMENTS})`);
     return null;
   }
 
@@ -61,7 +64,7 @@ const RectangleMeter = ({ progress, outlineColor, lane, completionGlow }: Rectan
       animate={completionGlow[lane] ? { scale: 1.15 } : { scale: 1 }}
       transition={{ duration: 0.15 }}
     >
-      {Array.from({ length: segments }).map((_, idx) => {
+      {Array.from({ length: DECK_METER_SEGMENTS }).map((_, idx) => {
         const fillColor = getRectangleMeterColor(lane);
         const isFilled = idx < filledSegments;
         
@@ -73,7 +76,7 @@ const RectangleMeter = ({ progress, outlineColor, lane, completionGlow }: Rectan
             key={idx}
             className="h-4 rounded-sm border-2"
             style={{
-              width: '60px',
+              width: `${DECK_METER_SEGMENT_WIDTH}px`,
               borderColor: outlineColor,
               background: isFilled ? fillColor : 'transparent',
               boxShadow: fullMeterGlow
@@ -127,7 +130,7 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
     });
   }, [notes, currentTime]);
 
-  // Simple meter logic: just calculate progress based on active hold note's beatmap duration
+  // Calculate hold note progress with completion glow trigger
   const getHoldProgress = (lane: number): number => {
     try {
       if (!Number.isInteger(lane) || !Array.isArray(notes)) return 0;
@@ -139,7 +142,7 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       if (!activeNote || !activeNote.pressTime) return 0;
       
       // Calculate progress: elapsed time / beatmap hold duration
-      const beatmapHoldDuration = activeNote.duration || 1000;
+      const beatmapHoldDuration = activeNote.duration || DECK_METER_DEFAULT_HOLD_DURATION;
       const elapsedSincePress = currentTime - activeNote.pressTime;
       
       if (elapsedSincePress < 0 || !Number.isFinite(elapsedSincePress)) {
@@ -154,11 +157,11 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       }
       
       // Trigger completion glow when meter just reaches full (95%+)
-      if (progress >= COMPLETION_THRESHOLD && !prevCompletionRef.current[lane]) {
+      if (progress >= DECK_METER_COMPLETION_THRESHOLD && !prevCompletionRef.current[lane]) {
         prevCompletionRef.current[lane] = true;
         setCompletionGlow(prev => ({ ...prev, [lane]: true }));
-        setTimeout(() => setCompletionGlow(prev => ({ ...prev, [lane]: false })), 400);
-      } else if (progress < COMPLETION_THRESHOLD) {
+        setTimeout(() => setCompletionGlow(prev => ({ ...prev, [lane]: false })), DECK_METER_COMPLETION_GLOW_DURATION);
+      } else if (progress < DECK_METER_COMPLETION_THRESHOLD) {
         prevCompletionRef.current[lane] = false;
       }
       
