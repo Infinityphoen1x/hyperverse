@@ -140,7 +140,7 @@ export default function Game() {
   // ESC key to pause/resume
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && gameState === 'PLAYING' && currentTimeRef.current > 100) {
+      if (e.key === 'Escape' && gameState === 'PLAYING') {
         if (isPaused) {
           const resumeTimeSeconds = pausedTimeRef.current / 1000;
           console.log('[PAUSE-SYSTEM] Resume: seeking YouTube to', resumeTimeSeconds, 'seconds');
@@ -242,12 +242,12 @@ export default function Game() {
               </button>
               <button 
                 onClick={() => {
-                  console.log('[PAUSE-SYSTEM] REWIND button: seeking to 0, pausing');
+                  console.log('[PAUSE-SYSTEM] REWIND button: seeking to 0');
                   pausedTimeRef.current = 0;
                   restartGame();
+                  pauseGame();
                   seekYouTubeVideo(0);
                   pauseYouTubeVideo();
-                  setIsPauseMenuOpen(false);
                 }}
                 className="px-12 py-4 bg-neon-yellow text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-neon-yellow"
                 data-testid="button-rewind"
