@@ -730,14 +730,6 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             if (progress < 0 || progress > 1.25) return null; // Only render in valid window
             
             const tapRayAngle = getLaneAngle(note.lane);
-            const rad = (tapRayAngle * Math.PI) / 180;
-            
-            const JUDGEMENT_RADIUS = 187;
-            // Distance grows from vanishing point (1) outward as progress goes 0->1
-            const distance = 1 + (progress * (JUDGEMENT_RADIUS - 1));
-            const xPosition = VANISHING_POINT_X + Math.cos(rad) * distance;
-            const yPosition = VANISHING_POINT_Y + Math.sin(rad) * distance;
-            const radius = 14 + (progress * 8); // Grows as it approaches
             
             // Track note state: hit, failed, or approaching
             const isHit = note.hit || false;
@@ -779,31 +771,17 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               return null;
             }
             
-            // HIT SUCCESS: Show burst effect for 600ms then fade
-            let finalOpacity = 0.15 + progress * 0.85;
-            let hitFlashIntensity = 0;
-            let radiusScale = 1;
-            
+            // HIT SUCCESS: Fade on successful hit
             if (isHit && timeSinceHit < 600) {
-              // Hit burst: 0-200ms = scale up and bright flash, 200-600ms = fade away
-              const hitProgress = timeSinceHit / 600;
-              hitFlashIntensity = Math.max(0, 1 - hitProgress); // 1 to 0 over 600ms
-              
-              // First 1/3: scale up to 1.4x, then shrink
-              if (hitProgress < 0.33) {
-                radiusScale = 1 + (hitProgress / 0.33) * 0.4; // 1x to 1.4x
-              } else {
-                radiusScale = 1.4 - ((hitProgress - 0.33) / 0.67) * 0.4; // 1.4x back to 1x
-              }
-              
-              // Fade out during hit burst
-              finalOpacity = (1 - hitProgress) * (0.15 + progress * 0.85);
+              // Hit success: trapezoid fades out over 600ms
+              // (no special scaling, just uses tapOpacity below)
             } else if (isHit && timeSinceHit >= 600) {
               // Note already finished its hit animation, don't render anymore
               return null;
             }
 
             const noteColor = getColorForLane(note.lane);
+            const JUDGEMENT_RADIUS = 187;
             
             // TAP notes: both near and far ends travel together maintaining consistent width
             const TRAPEZOID_WIDTH = 40; // Constant width as trapezoid travels
@@ -832,6 +810,8 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               tapOpacity = (1 - (timeSinceHit / 600)) * (0.4 + (progress * 0.6)); // Fade on hit
             }
             
+            const hitFlashIntensity = isHit && timeSinceHit < 600 ? Math.max(0, 1 - (timeSinceHit / 600)) : 0;
+            
             return (
               <polygon
                 key={note.id}
@@ -843,7 +823,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 style={{
                   filter: isFailed 
                     ? 'drop-shadow(0 0 8px rgba(100,100,100,0.6)) grayscale(1)'
-                    : isHit && hitFlashIntensity > 0 
+                    : hitFlashIntensity > 0 
                       ? `brightness(1.8) drop-shadow(0 0 20px ${noteColor})`
                       : `drop-shadow(0 0 ${10 * progress}px ${noteColor})`,
                   transition: 'all 0.05s linear',
