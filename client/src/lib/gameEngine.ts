@@ -313,7 +313,6 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
 
       const noteIndex = notes.findIndex(n => 
         n && 
-        n.type === 'TAP' &&  // CRITICAL: Only TAP notes, not HOLD notes
         !n.hit && 
         !n.missed && 
         !n.tapMissFailure &&
@@ -372,33 +371,6 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       }
       
       const notes = notesRef.current;
-      
-      // DEBUG: Log rejection reasons for all notes in this lane
-      const allLaneNotes = notes.filter(n => n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT'));
-      const rejectionReasons: Record<string, string> = {};
-      
-      for (const n of allLaneNotes) {
-        if (n.hit) {
-          rejectionReasons[n.id] = 'already hit';
-        } else if (n.missed) {
-          rejectionReasons[n.id] = 'already missed';
-        } else if (n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
-          rejectionReasons[n.id] = `failed(${n.tooEarlyFailure ? 'early' : n.holdMissFailure ? 'miss' : 'release'})`;
-        } else if (n.pressHoldTime && n.pressHoldTime > 0) {
-          rejectionReasons[n.id] = `already pressed at ${n.pressHoldTime}`;
-        } else {
-          const timeSinceNoteSpawn = currentTime - n.time;
-          if (timeSinceNoteSpawn < -LEAD_TIME) {
-            rejectionReasons[n.id] = `too far future(${timeSinceNoteSpawn}ms)`;
-          } else {
-            rejectionReasons[n.id] = 'VALID';
-          }
-        }
-      }
-      
-      if (Object.keys(rejectionReasons).length > 0) {
-        GameErrors.log(`trackHoldStart Lane ${laneStr}: ${Object.entries(rejectionReasons).map(([id, reason]) => `${id}=${reason}`).join(' | ')}`);
-      }
       
       const anyNote = notes.find(n => {
         if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT')) {

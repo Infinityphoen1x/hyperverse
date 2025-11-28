@@ -491,23 +491,42 @@ interface Down3DNoteLaneProps {
   currentTime: number;
   health?: number;
   onPadHit?: (lane: number) => void;
+  onDeckHoldStart?: (lane: number) => void;
+  onDeckHoldEnd?: (lane: number) => void;
 }
 
-export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadHit }: Down3DNoteLaneProps) {
-  // Keyboard controls for soundpad buttons
+export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadHit, onDeckHoldStart, onDeckHoldEnd }: Down3DNoteLaneProps) {
+  // Keyboard controls - route by lane type
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.repeat) return;
       const key = e.key.toLowerCase();
       const config = BUTTON_CONFIG.find(c => c.key.toLowerCase() === key);
-      if (config && onPadHit) {
-        onPadHit(config.lane);
+      if (config) {
+        // CRITICAL: Route by lane - soundpads (0-3) use onPadHit, decks (-1,-2) use onDeckHoldStart
+        if (config.lane >= 0 && config.lane <= 3 && onPadHit) {
+          onPadHit(config.lane);
+        } else if ((config.lane === -1 || config.lane === -2) && onDeckHoldStart) {
+          onDeckHoldStart(config.lane);
+        }
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      const config = BUTTON_CONFIG.find(c => c.key.toLowerCase() === key);
+      if (config && (config.lane === -1 || config.lane === -2) && onDeckHoldEnd) {
+        onDeckHoldEnd(config.lane);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onPadHit]);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [onPadHit, onDeckHoldStart, onDeckHoldEnd]);
 
   // Build RENDER LIST - purely time-based window for drawing notes
   // Separate from game state tracking - render list includes notes that need visual feedback

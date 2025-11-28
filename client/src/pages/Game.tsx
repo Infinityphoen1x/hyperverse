@@ -265,6 +265,8 @@ export default function Game() {
             currentTime={currentTime}
             health={health}
             onPadHit={hitNote}
+            onDeckHoldStart={trackHoldStart}
+            onDeckHoldEnd={trackHoldEnd}
           />
         </div>
 
