@@ -47,6 +47,20 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
   const [prevMissCount, setPrevMissCount] = useState(0);
   const [shakeOffset, setShakeOffset] = useState({ x: 0, y: 0 });
   const shakeIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const glitchIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clean up all intervals on unmount
+  useEffect(() => {
+    return () => {
+      if (shakeIntervalRef.current) clearInterval(shakeIntervalRef.current);
+      if (glitchIntervalRef.current) clearInterval(glitchIntervalRef.current);
+    };
+  }, []);
+
+  // Helper function to toggle glitch state for clarity
+  const toggleGlitchState = (prevGlitch: number): number => {
+    return prevGlitch > 0 ? 0 : GLITCH_OPACITY;
+  };
 
   // Initialize glitch animation CSS once on component mount
   useEffect(() => {
@@ -148,9 +162,13 @@ export function VisualEffects({ combo, health = 100, missCount = 0 }: VisualEffe
       
       if (health < LOW_HEALTH_THRESHOLD) {
         const glitchLoop = setInterval(() => {
-          setGlitch(prev => prev > 0 ? 0 : GLITCH_OPACITY);
+          setGlitch(toggleGlitchState);
         }, GLITCH_BASE_INTERVAL + Math.random() * GLITCH_RANDOM_RANGE);
-        return () => clearInterval(glitchLoop);
+        glitchIntervalRef.current = glitchLoop;
+        return () => {
+          clearInterval(glitchLoop);
+          glitchIntervalRef.current = null;
+        };
       }
     } catch (error) {
       GameErrors.log(`VisualEffects: Health-based glitch loop error: ${error instanceof Error ? error.message : 'Unknown'}`);
