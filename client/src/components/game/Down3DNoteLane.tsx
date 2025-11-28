@@ -10,7 +10,6 @@ import {
   LEAD_TIME,
   JUDGEMENT_RADIUS,
   HOLD_ANIMATION_DURATION,
-  HOLD_ACTIVATION_WINDOW,
   HEXAGON_RADII,
   RAY_ANGLES,
   TUNNEL_MAX_DISTANCE,
@@ -423,13 +422,9 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 
                 const pressTime = note.pressTime || 0;
                 const holdDuration = note.duration || 1000; // Use beatmap duration, fallback to 1000ms
-                const isCurrentlyHeld = pressTime > 0;
                 const isTooEarlyFailure = note.tooEarlyFailure || false;
                 const isHoldReleaseFailure = note.holdReleaseFailure || false;
                 const isHoldMissFailure = note.holdMissFailure || false;
-                
-                // Define timing windows - accuracy-based (pure time-based, decoupled from deck dots)
-                const timeSinceNoteSpawn = pressTime - note.time;
                 
                 // Determine if note is greyed out (failed) - will be calculated after approachProgress
                 let isGreyed = false;
