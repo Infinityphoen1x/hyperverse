@@ -42,6 +42,7 @@ export default function Game() {
   const [countdown, setCountdown] = useState(3);
   const [showYoutubeIframe, setShowYoutubeIframe] = useState(true);
   const pausedTimeRef = useRef(0);
+  const currentTimeRef = useRef(0);
   
   const { 
     gameState, 
@@ -66,6 +67,11 @@ export default function Game() {
   
   // Memoize score string formatting
   const scoreDisplay = useMemo(() => score.toString().padStart(6, '0'), [score]);
+
+  // Keep currentTime in sync with ref for use in event handlers
+  useEffect(() => {
+    currentTimeRef.current = currentTime;
+  }, [currentTime]);
 
   // Clean up error check interval on unmount
   useEffect(() => {
@@ -129,13 +135,13 @@ export default function Game() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && gameState === 'PLAYING') {
         if (isPaused) {
-          pausedTimeRef.current = currentTime;
+          pausedTimeRef.current = currentTimeRef.current;
           setCountdownActive(true);
           setCountdown(3);
           setIsPauseMenuOpen(false);
         } else {
           pauseGame();
-          setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
+          setYoutubeStartTime(Math.floor((currentTimeRef.current + 500) / 1000));
           setShowYoutubeIframe(false);
           setIsPauseMenuOpen(true);
         }
@@ -143,7 +149,7 @@ export default function Game() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, isPaused, pauseGame, currentTime]);
+  }, [gameState, isPaused, pauseGame]);
 
   // Countdown timer effect
   useEffect(() => {
@@ -241,7 +247,7 @@ export default function Game() {
             <div className="flex flex-col gap-4 mt-8">
               <button 
                 onClick={() => {
-                  pausedTimeRef.current = currentTime;
+                  pausedTimeRef.current = currentTimeRef.current;
                   setCountdownActive(true);
                   setCountdown(3);
                   setIsPauseMenuOpen(false);
@@ -311,13 +317,13 @@ export default function Game() {
           <button
             onClick={() => {
               if (isPaused && !countdownActive) {
-                pausedTimeRef.current = currentTime;
+                pausedTimeRef.current = currentTimeRef.current;
                 setCountdownActive(true);
                 setCountdown(3);
                 setIsPauseMenuOpen(false);
               } else if (!isPaused) {
                 pauseGame();
-                setYoutubeStartTime(Math.floor((currentTime + 500) / 1000));
+                setYoutubeStartTime(Math.floor((currentTimeRef.current + 500) / 1000));
                 setShowYoutubeIframe(false);
                 setIsPauseMenuOpen(true);
               }
