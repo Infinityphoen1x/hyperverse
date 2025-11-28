@@ -874,6 +874,21 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
               
               const { nearDistance, farDistance, collapseProgress } = collapseGeo;
               
+              // ERROR HANDLING: Check if geometry proceeds past judgement line when it shouldn't
+              const isSuccessfulHit = note.hit;
+              const isHoldReleaseFailure = failures.isHoldReleaseFailure;
+              const shouldNotPassJudgement = isSuccessfulHit || isHoldReleaseFailure;
+              
+              if (shouldNotPassJudgement && nearDistance > JUDGEMENT_RADIUS) {
+                GameErrors.log(
+                  `GEOMETRY ERROR: Note ${note.id} (${isSuccessfulHit ? 'successful hit' : 'holdReleaseFailure'}) ` +
+                  `nearDistance=${nearDistance.toFixed(1)} exceeds JUDGEMENT_RADIUS=${JUDGEMENT_RADIUS}. ` +
+                  `lockedNearDistance=${lockedNearDistance?.toFixed(1)}, ` +
+                  `collapseProgress=${collapseProgress.toFixed(2)}, ` +
+                  `pressTime=${pressTime}, currentTime=${currentTime}`
+                );
+              }
+              
               // Determine greyscale state based on failure type and timing
               const greyscaleState = determineGreyscaleState(failures, pressTime, approachNearDistance);
               
