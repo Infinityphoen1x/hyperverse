@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Note, GameErrors } from "@/lib/gameEngine";
+import { Note, GameErrors, getReleaseTime } from "@/lib/gameEngine";
 import { useEffect } from "react";
 
 const BUTTON_CONFIG = [
@@ -527,12 +527,20 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 const pressApproachProgress = Math.min(Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0), 1.0);
                 lockedNearDistance = 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1));
                 
-                // Collapse duration: from press time to (note.time + holdDuration)
-                const holdEndTime = note.time + holdDuration;
-                const collapseStartTime = pressTime;
-                const collapseDuration = holdEndTime - collapseStartTime;
+                // Determine collapse end time based on fail state
+                let actualReleaseTime = getReleaseTime(note.id);
+                let collapseEndTime = note.time + holdDuration;
                 
-                // Calculate collapse progress (0 to 1 during hold window)
+                // For fail states: use actual release time or expected time
+                if (note.holdReleaseFailure && actualReleaseTime) {
+                  collapseEndTime = actualReleaseTime;
+                } else if (note.tooEarlyFailure) {
+                  collapseEndTime = note.time + holdDuration; // Still collapse over full expected duration
+                } else if (note.holdMissFailure) {
+                  collapseEndTime = note.time + holdDuration; // Collapse over expected duration
+                }
+                
+                const collapseDuration = collapseEndTime - pressTime;
                 const timeSincePress = currentTime - pressTime;
                 const collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
                 

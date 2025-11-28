@@ -99,6 +99,21 @@ const GameErrors = {
 
 export { GameErrors };
 
+// Release time tracking for fail state animations (not in schema to maintain mockup simplicity)
+export const releaseTimeMap = new Map<string, number>();
+
+export const setReleaseTime = (noteId: string, releaseTime: number) => {
+  releaseTimeMap.set(noteId, releaseTime);
+};
+
+export const getReleaseTime = (noteId: string): number | undefined => {
+  return releaseTimeMap.get(noteId);
+};
+
+export const clearReleaseTimes = () => {
+  releaseTimeMap.clear();
+};
+
 // Beat pattern-based note generator (tied to BPM, not random)
 const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[] => {
   try {
@@ -440,6 +455,9 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         const expectedReleaseTime = pressTime + holdDuration;
         const timeSinceExpectedRelease = currentTime - expectedReleaseTime;
         const idx = notes.findIndex(n => n && n.id === activeNote.id);
+        
+        // Track release time for animations
+        setReleaseTime(activeNote.id, currentTime);
         
         if (currentTime - pressTime < holdDuration) {
           GameErrors.trackAnimation(activeNote.id, 'holdReleaseFailure', currentTime);
