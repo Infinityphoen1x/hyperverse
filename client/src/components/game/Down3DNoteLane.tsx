@@ -547,17 +547,17 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
         // Smooth easing: ease-out (deceleration)
         const easeProgress = 1 - Math.pow(1 - progress, 3);
         
-        joltOffset.x = currentOffsetRef.current.x + (targetOffsetRef.current.x - currentOffsetRef.current.x) * easeProgress;
-        joltOffset.y = currentOffsetRef.current.y + (targetOffsetRef.current.y - currentOffsetRef.current.y) * easeProgress;
+        const newX = currentOffsetRef.current.x + (targetOffsetRef.current.x - currentOffsetRef.current.x) * easeProgress;
+        const newY = currentOffsetRef.current.y + (targetOffsetRef.current.y - currentOffsetRef.current.y) * easeProgress;
         
-        setRenderTrigger(Date.now());
+        setJoltOffset({ x: newX, y: newY });
         animationFrameId = requestAnimationFrame(animate);
       }
     };
     
     animationFrameId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [joltOffset]);
+  }, []);
   
   // Detect combo milestones (10, 20, 30, etc.) - shift vanishing point to new angle, stays offset
   useEffect(() => {
