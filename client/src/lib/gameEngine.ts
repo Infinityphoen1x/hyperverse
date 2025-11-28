@@ -484,16 +484,19 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         GameErrors.log(`trackHoldEnd: Lane ${laneStr} - Found active note ${activeNote.id} at currentTime=${currentTime}, pressHoldTime=${activeNote.pressHoldTime}, duration=${activeNote.duration}`);
         
         const holdDuration = activeNote.duration || 1000;
-        const pressHoldTime = activeNote.pressHoldTime;
-        const expectedReleaseTime = pressHoldTime + holdDuration;
+        // CRITICAL: Release window is from note.time to note.time + duration
+        // NOT from pressHoldTime (when player actually pressed)
+        // This matches meter calculation which uses note.time as reference
+        const expectedReleaseTime = activeNote.time + holdDuration;
         const timeSinceExpectedRelease = currentTime - expectedReleaseTime;
         const idx = notes.findIndex(n => n && n.id === activeNote.id);
         
         // Track release time for animations
         setReleaseTime(activeNote.id, currentTime);
         
-        if (currentTime - pressHoldTime < holdDuration) {
-          GameErrors.log(`trackHoldEnd: Lane ${laneStr} note ${activeNote.id} - HOLD_RELEASE_FAILURE (released too early: ${currentTime - pressHoldTime}ms < ${holdDuration}ms)`);
+        if (currentTime - activeNote.time < holdDuration) {
+          const elapsedFromNoteTime = currentTime - activeNote.time;
+          GameErrors.log(`trackHoldEnd: Lane ${laneStr} note ${activeNote.id} - HOLD_RELEASE_FAILURE (released too early: ${elapsedFromNoteTime}ms < ${holdDuration}ms)`);
           GameErrors.trackAnimation(activeNote.id, 'holdReleaseFailure', currentTime);
           if (idx !== -1) {
             notes[idx] = { ...notes[idx], releaseTime: currentTime, holdReleaseFailure: true, failureTime: currentTime };
