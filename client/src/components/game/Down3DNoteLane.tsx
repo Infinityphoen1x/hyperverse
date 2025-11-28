@@ -867,7 +867,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
           <circle cx={vpX} cy={vpY} r="6" fill="rgba(0,255,255,0.05)" />
           
           {/* Judgement line indicators - perpendicular to rays */}
-          {/* Second-last ring is at radius 187 */}
+          {/* Uses dynamic VP for perspective shift */}
           {[
             { angle: 120, color: '#FF007F', key: 'W' },   // W (lane 0) - top-left pink
             { angle: 60, color: '#0096FF', key: 'O' },    // O (lane 1) - top-right blue
@@ -878,7 +878,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
             const radius = JUDGEMENT_RADIUS;
             const lineLength = TAP_JUDGEMENT_LINE_WIDTH;
             
-            // Point on the ray at the radius
+            // Point on the ray at the radius - uses DYNAMIC VP for perspective
             const cx = vpX + Math.cos(rad) * radius;
             const cy = vpY + Math.sin(rad) * radius;
             
@@ -929,6 +929,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
           })}
           
           {/* Variable-width lines for tunnel rays - 6 equally spaced rays that shift toward red at low health */}
+          {/* Uses DYNAMIC VP for perspective shifts at combo milestones */}
           {allRayAngles.map((angle) => {
             const rad = (angle * Math.PI) / 180;
             
@@ -941,13 +942,13 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
                 {Array.from({ length: segments }).map((_, segIdx) => {
                   const segProgress = (segIdx + 1) / segments;
                   
-                  // Start point
-                  const x1 = VANISHING_POINT_X + Math.cos(rad) * (1 + segProgress * MAX_DISTANCE - (MAX_DISTANCE / segments));
-                  const y1 = VANISHING_POINT_Y + Math.sin(rad) * (1 + segProgress * MAX_DISTANCE - (MAX_DISTANCE / segments));
+                  // Start point - uses DYNAMIC VP for perspective
+                  const x1 = vpX + Math.cos(rad) * (1 + segProgress * MAX_DISTANCE - (MAX_DISTANCE / segments));
+                  const y1 = vpY + Math.sin(rad) * (1 + segProgress * MAX_DISTANCE - (MAX_DISTANCE / segments));
                   
-                  // End point
-                  const x2 = VANISHING_POINT_X + Math.cos(rad) * (1 + segProgress * MAX_DISTANCE);
-                  const y2 = VANISHING_POINT_Y + Math.sin(rad) * (1 + segProgress * MAX_DISTANCE);
+                  // End point - uses DYNAMIC VP for perspective
+                  const x2 = vpX + Math.cos(rad) * (1 + segProgress * MAX_DISTANCE);
+                  const y2 = vpY + Math.sin(rad) * (1 + segProgress * MAX_DISTANCE);
                   
                   // Stroke width: thin at vanishing point, thick at edge
                   const strokeWidth = 0.3 + segProgress * 3.5;
