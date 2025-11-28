@@ -169,6 +169,145 @@ const calculateApproachGeometry = (
   return { nearDistance, farDistance };
 };
 
+// ============================================================================
+// HELPER FUNCTIONS FOR TAP NOTE RENDERING
+// ============================================================================
+
+/** TAP note state tracking */
+interface TapNoteState {
+  isHit: boolean;
+  isFailed: boolean;
+  failureTime: number | null;
+  hitTime: number | null;
+  timeSinceFail: number;
+  timeSinceHit: number;
+}
+
+const getTapNoteState = (note: Note, currentTime: number): TapNoteState => {
+  const isHit = note.hit || false;
+  const isFailed = note.tapMissFailure || false;
+  const failureTime = note.failureTime || null;
+  const hitTime = note.hitTime || null;
+  
+  const timeSinceFail = failureTime ? Math.max(0, currentTime - failureTime) : 0;
+  const timeSinceHit = isHit && hitTime ? Math.max(0, currentTime - hitTime) : 0;
+  
+  return { isHit, isFailed, failureTime, hitTime, timeSinceFail, timeSinceHit };
+};
+
+/** Determine if TAP note should still be rendered */
+const shouldRenderTapNote = (state: TapNoteState, progress: number): boolean => {
+  // Out of visible progress window
+  if (progress < 0 || progress > 1.25) return false;
+  
+  // After hit animation finishes (600ms)
+  if (state.isHit && state.timeSinceHit >= 600) return false;
+  
+  // After failure animation finishes (1100ms)
+  if (state.isFailed && state.timeSinceFail > 1100) return false;
+  
+  return true;
+};
+
+/** Track TAP note animation lifecycle in error log */
+const trackTapNoteAnimation = (note: Note, state: TapNoteState, currentTime: number): void => {
+  if (!state.isFailed) return; // Only track failures
+  
+  const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === 'tapMissFailure');
+  if (!animEntry) {
+    // First render: create tracking entry
+    GameErrors.trackAnimation(note.id, 'tapMissFailure', state.failureTime || currentTime);
+  } else if (animEntry.status === 'pending') {
+    // Transition from pending to rendering (or skip if already finished)
+    if (state.timeSinceFail >= 1100) {
+      GameErrors.updateAnimation(note.id, { status: 'completed', renderStart: currentTime, renderEnd: currentTime });
+    } else {
+      GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
+    }
+  } else if (animEntry.status === 'rendering' && state.timeSinceFail >= 1100) {
+    // Mark completed when animation finishes
+    GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
+  }
+};
+
+/** Calculate geometry for TAP note trapezoid */
+interface TapNoteGeometry {
+  x1: number; y1: number;
+  x2: number; y2: number;
+  x3: number; y3: number;
+  x4: number; y4: number;
+  points: string;
+}
+
+const calculateTapNoteGeometry = (
+  progress: number,
+  tapRayAngle: number
+): TapNoteGeometry => {
+  const MIN_DEPTH = 5;
+  const MAX_DEPTH = 40;
+  const TRAPEZOID_DEPTH = MIN_DEPTH + (progress * (MAX_DEPTH - MIN_DEPTH));
+  const nearDist = 1 + (progress * (JUDGEMENT_RADIUS - 1));
+  const farDist = Math.max(0.1, nearDist - TRAPEZOID_DEPTH);
+  
+  // Narrower flanking angles (±8°) for compact appearance
+  const tapLeftRayAngle = tapRayAngle - 8;
+  const tapRightRayAngle = tapRayAngle + 8;
+  const tapLeftRad = (tapLeftRayAngle * Math.PI) / 180;
+  const tapRightRad = (tapRightRayAngle * Math.PI) / 180;
+  
+  const x1 = VANISHING_POINT_X + Math.cos(tapLeftRad) * farDist;
+  const y1 = VANISHING_POINT_Y + Math.sin(tapLeftRad) * farDist;
+  const x2 = VANISHING_POINT_X + Math.cos(tapRightRad) * farDist;
+  const y2 = VANISHING_POINT_Y + Math.sin(tapRightRad) * farDist;
+  const x3 = VANISHING_POINT_X + Math.cos(tapRightRad) * nearDist;
+  const y3 = VANISHING_POINT_Y + Math.sin(tapRightRad) * nearDist;
+  const x4 = VANISHING_POINT_X + Math.cos(tapLeftRad) * nearDist;
+  const y4 = VANISHING_POINT_Y + Math.sin(tapLeftRad) * nearDist;
+  
+  return {
+    x1, y1, x2, y2, x3, y3, x4, y4,
+    points: `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`,
+  };
+};
+
+/** Calculate opacity and visual styling for TAP note */
+interface TapNoteStyle {
+  opacity: number;
+  fill: string;
+  stroke: string;
+  filter: string;
+  hitFlashIntensity: number;
+}
+
+const calculateTapNoteStyle = (
+  progress: number,
+  state: TapNoteState,
+  noteColor: string
+): TapNoteStyle => {
+  let opacity = 0.4 + (progress * 0.6);
+  if (state.isFailed) {
+    const failProgress = Math.min(state.timeSinceFail / 1000, 1.0);
+    opacity = (1 - failProgress) * 0.6;
+  } else if (state.isHit) {
+    opacity = (1 - (state.timeSinceHit / 600)) * (0.4 + (progress * 0.6));
+  }
+  
+  const hitFlashIntensity = state.isHit && state.timeSinceHit < 600 
+    ? Math.max(0, 1 - (state.timeSinceHit / 600)) 
+    : 0;
+  
+  const fill = state.isFailed ? 'rgba(80,80,80,0.3)' : noteColor;
+  const stroke = state.isFailed ? 'rgba(100,100,100,0.6)' : 'rgba(255,255,255,0.8)';
+  
+  const filter = state.isFailed
+    ? 'drop-shadow(0 0 8px rgba(100,100,100,0.6)) grayscale(1)'
+    : hitFlashIntensity > 0
+      ? `brightness(1.8) drop-shadow(0 0 20px ${noteColor})`
+      : `drop-shadow(0 0 ${10 * progress}px ${noteColor})`;
+  
+  return { opacity: Math.max(opacity, 0), fill, stroke, filter, hitFlashIntensity };
+};
+
 interface Down3DNoteLaneProps {
   notes: Note[];
   currentTime: number;
@@ -804,126 +943,46 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
             );
           })}
 
-          {/* TAP notes rendered as SVG circles - following ray paths */}
+          {/* TAP notes - using helper functions for clarity */}
           {visibleNotes
             .filter(n => n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT')
             .map(note => {
             const timeUntilHit = note.time - currentTime;
             const progress = 1 - (timeUntilHit / 2000);
             
-            if (progress < 0 || progress > 1.25) return null; // Only render in valid window
+            // Get TAP note state using helper
+            const state = getTapNoteState(note, currentTime);
             
-            const tapRayAngle = getLaneAngle(note.lane);
-            
-            // Track note state: hit, failed, or approaching
-            const isHit = note.hit || false;
-            const isFailed = note.tapMissFailure || false;
-            const failureTime = note.failureTime;
-            
-            if (isFailed && !failureTime) {
+            // Validate and early exit
+            if (state.isFailed && !state.failureTime) {
               GameErrors.log(`Down3DNoteLane: TAP failure missing failureTime: ${note.id}`);
-              return null; // Safety: skip if malformed
-            }
-            const timeSinceFail = failureTime ? Math.max(0, currentTime - failureTime) : 0;
-            const timeSinceHit = isHit && note.hitTime ? Math.max(0, currentTime - note.hitTime) : 0;
-            
-            // Track TAP note animation lifecycle
-            if (isFailed) {
-              const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === 'tapMissFailure');
-              if (!animEntry) {
-                // First render of this TAP failure - create tracking entry
-                GameErrors.trackAnimation(note.id, 'tapMissFailure', failureTime || currentTime);
-              } else if (animEntry.status === 'pending') {
-                // If animation is old, jump straight to complete; otherwise mark rendering
-                if (timeSinceFail >= 1100) {
-                  GameErrors.updateAnimation(note.id, { status: 'completed', renderStart: currentTime, renderEnd: currentTime });
-                  return null; // Animation already finished, don't render
-                } else {
-                  GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
-                }
-              } else if (animEntry.status === 'rendering' && timeSinceFail >= 1100) {
-                // Mark as completed when animation finishes (BEFORE returning null)
-                GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
-                return null; // Animation finished, don't render
-              }
-            }
-            
-            // Fade over 1000ms to match HOLD failure animations (consistent visual language)
-            const failProgress = Math.min(timeSinceFail / 1000, 1.0); // 0 to 1 over 1000ms fade
-            // Hide after 1100ms (animation + buffer) to match HOLD failures
-            if (timeSinceFail > 1100) {
-              // Mark animations as completed before returning (safety check for stuck animations)
-              if (isFailed) {
-                const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === 'tapMissFailure');
-                if (animEntry && animEntry.status !== 'completed') {
-                  GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
-                }
-              }
               return null;
             }
             
-            // HIT SUCCESS: Fade on successful hit
-            if (isHit && timeSinceHit < 600) {
-              // Hit success: trapezoid fades out over 600ms
-              // (no special scaling, just uses tapOpacity below)
-            } else if (isHit && timeSinceHit >= 600) {
-              // Note already finished its hit animation, don't render anymore
+            // Check if should render
+            if (!shouldRenderTapNote(state, progress)) {
               return null;
             }
-
+            
+            // Track animation lifecycle
+            trackTapNoteAnimation(note, state, currentTime);
+            
+            // Get rendering data
+            const tapRayAngle = getLaneAngle(note.lane);
             const noteColor = getColorForLane(note.lane);
-            
-            // TAP notes: trapezoid with narrower flanking rays for compact appearance
-            // Depth scales with progress: smaller at vanishing point, larger at judgement line
-            // This creates the illusion of notes growing as they approach
-            const MIN_DEPTH = 5;
-            const MAX_DEPTH = 40;
-            const TRAPEZOID_DEPTH = MIN_DEPTH + (progress * (MAX_DEPTH - MIN_DEPTH));
-            const nearDist = 1 + (progress * (JUDGEMENT_RADIUS - 1)); // Both travel together
-            const farDist = Math.max(0.1, nearDist - TRAPEZOID_DEPTH);
-            
-            // Narrower flanking angles (±8° instead of ±15°) for consistent near-end width
-            const tapLeftRayAngle = tapRayAngle - 8;
-            const tapRightRayAngle = tapRayAngle + 8;
-            const tapLeftRad = (tapLeftRayAngle * Math.PI) / 180;
-            const tapRightRad = (tapRightRayAngle * Math.PI) / 180;
-            
-            // Calculate trapezoid corners with minimal flanking
-            const x1 = VANISHING_POINT_X + Math.cos(tapLeftRad) * farDist;
-            const y1 = VANISHING_POINT_Y + Math.sin(tapLeftRad) * farDist;
-            const x2 = VANISHING_POINT_X + Math.cos(tapRightRad) * farDist;
-            const y2 = VANISHING_POINT_Y + Math.sin(tapRightRad) * farDist;
-            const x3 = VANISHING_POINT_X + Math.cos(tapRightRad) * nearDist;
-            const y3 = VANISHING_POINT_Y + Math.sin(tapRightRad) * nearDist;
-            const x4 = VANISHING_POINT_X + Math.cos(tapLeftRad) * nearDist;
-            const y4 = VANISHING_POINT_Y + Math.sin(tapLeftRad) * nearDist;
-            
-            const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`;
-            
-            // Opacity: fade in as approaching (0.4 → 1.0)
-            let tapOpacity = 0.4 + (progress * 0.6);
-            if (isFailed) {
-              tapOpacity = (1 - failProgress) * 0.6;
-            } else if (isHit) {
-              tapOpacity = (1 - (timeSinceHit / 600)) * (0.4 + (progress * 0.6));
-            }
-            
-            const hitFlashIntensity = isHit && timeSinceHit < 600 ? Math.max(0, 1 - (timeSinceHit / 600)) : 0;
+            const geometry = calculateTapNoteGeometry(progress, tapRayAngle);
+            const style = calculateTapNoteStyle(progress, state, noteColor);
             
             return (
               <polygon
                 key={note.id}
-                points={points}
-                fill={isFailed ? 'rgba(80,80,80,0.3)' : noteColor}
-                opacity={Math.max(tapOpacity, 0)}
-                stroke={isFailed ? 'rgba(100,100,100,0.6)' : 'rgba(255,255,255,0.8)'}
+                points={geometry.points}
+                fill={style.fill}
+                opacity={style.opacity}
+                stroke={style.stroke}
                 strokeWidth={1.5}
                 style={{
-                  filter: isFailed 
-                    ? 'drop-shadow(0 0 8px rgba(100,100,100,0.6)) grayscale(1)'
-                    : hitFlashIntensity > 0 
-                      ? `brightness(1.8) drop-shadow(0 0 20px ${noteColor})`
-                      : `drop-shadow(0 0 ${10 * progress}px ${noteColor})`,
+                  filter: style.filter,
                   transition: 'all 0.05s linear',
                   mixBlendMode: 'screen',
                 }}
