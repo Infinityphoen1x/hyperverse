@@ -141,7 +141,7 @@ export default function Game() {
           setIsPauseMenuOpen(false);
         } else {
           pauseGame();
-          setYoutubeStartTime(Math.floor((currentTimeRef.current + 500) / 1000));
+          setYoutubeStartTime(Math.max(1, Math.floor((currentTimeRef.current + 500) / 1000)));
           setShowYoutubeIframe(false);
           setIsPauseMenuOpen(true);
         }
@@ -159,7 +159,7 @@ export default function Game() {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
     } else {
-      setYoutubeStartTime(Math.floor((pausedTimeRef.current + 500) / 1000));
+      setYoutubeStartTime(Math.max(1, Math.floor((pausedTimeRef.current + 500) / 1000)));
       setShowYoutubeIframe(true);
       resumeGame();
       setCountdownActive(false);
@@ -323,7 +323,7 @@ export default function Game() {
                 setIsPauseMenuOpen(false);
               } else if (!isPaused) {
                 pauseGame();
-                setYoutubeStartTime(Math.floor((currentTimeRef.current + 500) / 1000));
+                setYoutubeStartTime(Math.max(1, Math.floor((currentTimeRef.current + 500) / 1000)));
                 setShowYoutubeIframe(false);
                 setIsPauseMenuOpen(true);
               }
