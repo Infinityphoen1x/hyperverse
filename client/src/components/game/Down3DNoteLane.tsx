@@ -702,14 +702,17 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
             const yPosition = VANISHING_POINT_Y + yOffset;
             const scale = 0.12 + (progress * 0.88);
             
-            // Failed tap note - greyscale like failed hold notes
+            // Track note state: hit, failed, or approaching
+            const isHit = note.hit || false;
             const isFailed = note.tapMissFailure || false;
             const failureTime = note.failureTime;
+            
             if (isFailed && !failureTime) {
               GameErrors.log(`Down3DNoteLane: TAP failure missing failureTime: ${note.id}`);
               return null; // Safety: skip if malformed
             }
             const timeSinceFail = failureTime ? Math.max(0, currentTime - failureTime) : 0;
+            const timeSinceHit = isHit && note.hitTime ? Math.max(0, currentTime - note.hitTime) : 0;
             
             // Track TAP note animation lifecycle
             if (isFailed) {
@@ -738,6 +741,30 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
             if (timeSinceFail > 1100) {
               return null;
             }
+            
+            // HIT SUCCESS: Show burst effect for 600ms then fade
+            let finalOpacity = 0.15 + progress * 0.85;
+            let finalScale = scale;
+            let hitFlashIntensity = 0;
+            
+            if (isHit && timeSinceHit < 600) {
+              // Hit burst: 0-200ms = scale up and bright flash, 200-600ms = fade away
+              const hitProgress = timeSinceHit / 600;
+              hitFlashIntensity = Math.max(0, 1 - hitProgress); // 1 to 0 over 600ms
+              
+              // First 1/3: scale up to 1.4x, then shrink
+              if (hitProgress < 0.33) {
+                finalScale = scale * (1 + (hitProgress / 0.33) * 0.4); // 1x to 1.4x
+              } else {
+                finalScale = scale * (1.4 - ((hitProgress - 0.33) / 0.67) * 0.4); // 1.4x back to 1x
+              }
+              
+              // Fade out during hit burst
+              finalOpacity = (1 - hitProgress) * (0.15 + progress * 0.85);
+            } else if (isHit && timeSinceHit >= 600) {
+              // Note already finished its hit animation, don't render anymore
+              return null;
+            }
 
             return (
               <motion.div
@@ -747,14 +774,21 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
                   backgroundColor: isFailed ? 'rgba(80,80,80,0.6)' : getColorForLane(note.lane),
                   boxShadow: isFailed 
                     ? `0 0 ${6 * scale}px rgba(100,0,0,0.4)` 
-                    : `0 0 ${30 * scale}px ${getColorForLane(note.lane)}, inset 0 0 ${18 * scale}px rgba(255,255,255,0.4)`,
+                    : isHit && hitFlashIntensity > 0
+                      ? `0 0 ${Math.max(30, 50 * hitFlashIntensity) * scale}px ${getColorForLane(note.lane)}, 0 0 ${Math.max(50, 80 * hitFlashIntensity) * scale}px ${getColorForLane(note.lane)}, inset 0 0 ${30 * hitFlashIntensity * scale}px rgba(255,255,255,0.8)`
+                      : `0 0 ${30 * scale}px ${getColorForLane(note.lane)}, inset 0 0 ${18 * scale}px rgba(255,255,255,0.4)`,
                   left: `${xPosition}px`,
                   top: `${yPosition}px`,
-                  transform: `translate(-50%, -50%) scale(${scale})`,
-                  opacity: isFailed ? (1 - failProgress) * 0.6 : (0.15 + progress * 0.85),
+                  transform: `translate(-50%, -50%) scale(${finalScale})`,
+                  opacity: isFailed ? (1 - failProgress) * 0.6 : finalOpacity,
                   zIndex: Math.floor(progress * 1000),
-                  border: `2px solid rgba(100,100,100,${isFailed ? (1-failProgress) * 0.6 : 0.4 * progress})`,
-                  filter: isFailed ? 'grayscale(1) brightness(0.5)' : 'none',
+                  border: isFailed 
+                    ? `2px solid rgba(100,100,100,${(1-failProgress) * 0.6})` 
+                    : isHit && hitFlashIntensity > 0
+                      ? `2px solid rgba(255,255,255,${0.8 * hitFlashIntensity})`
+                      : `2px solid rgba(100,100,100,${0.4 * progress})`,
+                  filter: isFailed ? 'grayscale(1) brightness(0.5)' : isHit && hitFlashIntensity > 0 ? 'brightness(1.8) drop-shadow(0 0 10px currentColor)' : 'none',
+                  transition: 'all 0.05s linear',
                 }}
               >
                 {getNoteKey(note.lane)}
