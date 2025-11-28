@@ -1,10 +1,13 @@
 import { motion } from "framer-motion";
 import { Note, GameErrors } from "@/lib/gameEngine";
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { 
   BUTTON_CONFIG, 
   VANISHING_POINT_X, 
   VANISHING_POINT_Y,
+  JOLT_UP_DURATION,
+  JOLT_SIDE_DURATION,
+  JOLT_RADIUS,
   HOLD_NOTE_STRIP_WIDTH_MULTIPLIER,
   FAILURE_ANIMATION_DURATION,
   LEAD_TIME,
@@ -490,12 +493,46 @@ interface Down3DNoteLaneProps {
   notes: Note[];
   currentTime: number;
   health?: number;
+  combo?: number;
   onPadHit?: (lane: number) => void;
   onDeckHoldStart?: (lane: number) => void;
   onDeckHoldEnd?: (lane: number) => void;
 }
 
-export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadHit, onDeckHoldStart, onDeckHoldEnd }: Down3DNoteLaneProps) {
+export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo = 0, onPadHit, onDeckHoldStart, onDeckHoldEnd }: Down3DNoteLaneProps) {
+  // Jolt animation state for vanishing point
+  const [joltOffset, setJoltOffset] = useState({ x: 0, y: 0 });
+  const prevComboMilestoneRef = useRef<number>(0);
+  
+  // Detect combo milestones (10, 20, 30, etc.)
+  useEffect(() => {
+    const currentMilestone = Math.floor(combo / 10) * 10;
+    if (combo > 0 && currentMilestone !== prevComboMilestoneRef.current) {
+      prevComboMilestoneRef.current = currentMilestone;
+      // Trigger jolt: up then random side
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 8;
+      const sideX = Math.cos(angle) * distance;
+      const sideY = Math.sin(angle) * distance;
+      
+      // Animate: jump up (negative Y) then shift to side
+      setJoltOffset({ x: 0, y: -JOLT_RADIUS });
+      setTimeout(() => {
+        setJoltOffset({ x: sideX, y: -JOLT_RADIUS * 0.3 });
+      }, JOLT_UP_DURATION);
+      setTimeout(() => {
+        setJoltOffset({ x: 0, y: 0 });
+      }, JOLT_UP_DURATION + JOLT_SIDE_DURATION);
+    } else if (combo === 0) {
+      prevComboMilestoneRef.current = 0;
+      setJoltOffset({ x: 0, y: 0 });
+    }
+  }, [combo]);
+  
+  // Calculate dynamic vanishing point with jolt offset
+  const vpX = VANISHING_POINT_X + joltOffset.x;
+  const vpY = VANISHING_POINT_Y + joltOffset.y;
+
   // Keyboard controls - route by lane type
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -680,8 +717,8 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
   // 6 soundpad buttons positioned at tunnel lanes
   const soundpadButtons = BUTTON_CONFIG.map(({ lane, key, angle, color }) => {
     const rad = (angle * Math.PI) / 180;
-    const xPosition = VANISHING_POINT_X + Math.cos(rad) * MAX_DISTANCE;
-    const yPosition = VANISHING_POINT_Y + Math.sin(rad) * MAX_DISTANCE;
+    const xPosition = vpX + Math.cos(rad) * MAX_DISTANCE;
+    const yPosition = vpY + Math.sin(rad) * MAX_DISTANCE;
     return { lane, key, angle, color, xPosition, yPosition };
   });
 
@@ -709,8 +746,8 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
             // Generate hexagon points
             const points = Array.from({ length: 6 }).map((_, i) => {
               const angle = (i * 60 * Math.PI) / 180;
-              const x = VANISHING_POINT_X + radius * Math.cos(angle);
-              const y = VANISHING_POINT_Y + radius * Math.sin(angle);
+              const x = vpX + radius * Math.cos(angle);
+              const y = vpY + radius * Math.sin(angle);
               return `${x},${y}`;
             }).join(' ');
             
@@ -734,7 +771,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
           })}
 
           {/* Vanishing point - nearly invisible */}
-          <circle cx={VANISHING_POINT_X} cy={VANISHING_POINT_Y} r="6" fill="rgba(0,255,255,0.05)" />
+          <circle cx={vpX} cy={vpY} r="6" fill="rgba(0,255,255,0.05)" />
           
           {/* Judgement line indicators - perpendicular to rays */}
           {/* Second-last ring is at radius 187 */}
@@ -749,8 +786,8 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
             const lineLength = TAP_JUDGEMENT_LINE_WIDTH;
             
             // Point on the ray at the radius
-            const cx = VANISHING_POINT_X + Math.cos(rad) * radius;
-            const cy = VANISHING_POINT_Y + Math.sin(rad) * radius;
+            const cx = vpX + Math.cos(rad) * radius;
+            const cy = vpY + Math.sin(rad) * radius;
             
             // Perpendicular direction (rotate 90 degrees)
             const perpRad = rad + Math.PI / 2;
@@ -954,8 +991,8 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 rayAngle,
                 nearDistance,
                 farDistance,
-                VANISHING_POINT_X,
-                VANISHING_POINT_Y,
+                vpX,
+                vpY,
                 note.id
               );
               
@@ -1027,8 +1064,8 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
             const lineLength = HOLD_JUDGEMENT_LINE_WIDTH;
             
             // Point on the ray at the radius
-            const cx = VANISHING_POINT_X + Math.cos(rad) * radius;
-            const cy = VANISHING_POINT_Y + Math.sin(rad) * radius;
+            const cx = vpX + Math.cos(rad) * radius;
+            const cy = vpY + Math.sin(rad) * radius;
             
             // Perpendicular direction (rotate 90 degrees)
             const perpRad = rad + Math.PI / 2;

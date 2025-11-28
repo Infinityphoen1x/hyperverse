@@ -257,6 +257,7 @@ export default function Game() {
             notes={notes} 
             currentTime={currentTime}
             health={health}
+            combo={combo}
             onPadHit={hitNote}
             onDeckHoldStart={trackHoldStart}
             onDeckHoldEnd={trackHoldEnd}
