@@ -71,20 +71,29 @@ export function buildYouTubeEmbedUrl(videoId: string, options: {
  * Provides pause/resume/seek functionality using official YouTube API
  */
 let ytPlayer: any = null;
+let playerReady = false;
 
 export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null): void {
   if (!iframeElement || !window.YT) return;
+  if (ytPlayer) return; // Already initialized
   
   try {
     ytPlayer = new window.YT.Player(iframeElement, {
       events: {
-        onReady: () => console.log('YouTube player ready'),
+        onReady: () => {
+          playerReady = true;
+          console.log('YouTube player ready and initialized');
+        },
         onError: (e: any) => console.warn('YouTube player error:', e),
       }
     });
   } catch (error) {
     console.warn('Failed to initialize YouTube player:', error);
   }
+}
+
+export function isPlayerReady(): boolean {
+  return playerReady && ytPlayer !== null;
 }
 
 /**
@@ -119,8 +128,8 @@ export function getYouTubeVideoTime(iframeElement: HTMLIFrameElement | null): nu
  * Seek YouTube video to specific time (in seconds)
  */
 export function seekYouTubeVideo(timeSeconds: number): boolean {
-  if (!ytPlayer || typeof ytPlayer.seekTo !== 'function') {
-    console.warn('YouTube seekTo unavailable');
+  if (!isPlayerReady()) {
+    console.warn('YouTube player not ready for seekTo');
     return false;
   }
   
@@ -138,8 +147,8 @@ export function seekYouTubeVideo(timeSeconds: number): boolean {
  * Play YouTube video
  */
 export function playYouTubeVideo(): boolean {
-  if (!ytPlayer || typeof ytPlayer.playVideo !== 'function') {
-    console.warn('YouTube playVideo unavailable');
+  if (!isPlayerReady()) {
+    console.warn('YouTube player not ready for playVideo');
     return false;
   }
   
@@ -157,8 +166,8 @@ export function playYouTubeVideo(): boolean {
  * Pause YouTube video
  */
 export function pauseYouTubeVideo(): boolean {
-  if (!ytPlayer || typeof ytPlayer.pauseVideo !== 'function') {
-    console.warn('YouTube pauseVideo unavailable');
+  if (!isPlayerReady()) {
+    console.warn('YouTube player not ready for pauseVideo');
     return false;
   }
   
