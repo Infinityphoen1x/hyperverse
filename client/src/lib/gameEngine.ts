@@ -357,6 +357,8 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   const trackHoldStart = useCallback((lane: number) => {
     try {
       const currentTime = currentTimeRef.current;
+      const laneStr = lane === -1 ? 'Q' : 'P';
+      GameErrors.log(`trackHoldStart: Lane ${laneStr} (${lane}) at currentTime=${currentTime}`);
       
       if (lane !== -1 && lane !== -2) {
         GameErrors.log(`trackHoldStart: Invalid deck lane=${lane}, must be -1 (Q) or -2 (P)`);
@@ -375,15 +377,19 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         if (n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
           return false;
         }
-        if (n.pressTime && n.pressTime > 0) {
+        // FIX: Check pressHoldTime, not pressTime (pressTime is for TAP notes)
+        if (n.pressHoldTime && n.pressHoldTime > 0) {
           return false;
         }
         return true;
       });
       
       if (!anyNote) {
+        GameErrors.log(`trackHoldStart: Lane ${laneStr} - NO HOLD NOTE FOUND at currentTime=${currentTime}`);
         return;
       }
+      
+      GameErrors.log(`trackHoldStart: Lane ${laneStr} - FOUND HOLD NOTE ${anyNote.id}, time=${anyNote.time}ms, spawn offset=${currentTime - anyNote.time}ms`);
       
       const timeSinceNoteSpawn = currentTime - anyNote.time;
       
