@@ -427,9 +427,9 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 let failureTime = note.failureTime || currentTime;
                 
                 if (isTooEarlyFailure || isHoldReleaseFailure || isHoldMissFailure) {
-                  // Skip rendering if failure animation is complete (>1100ms)
+                  // Skip rendering if failure animation is complete
                   const timeSinceFail = Math.max(0, currentTime - failureTime);
-                  if (timeSinceFail > 1100) return null;
+                  if (timeSinceFail > HOLD_ANIMATION_DURATION) return null;
                 }
               
               // Get ray angle
@@ -449,7 +449,8 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               
               // APPROACH PHASE: Hold note is a flat rectangular strip moving toward camera
               // Before press: both near and far move together, maintaining constant Z-length (strip width)
-              const rawApproachProgress = timeUntilHit > 0 ? (LEAD_TIME - timeUntilHit) / LEAD_TIME : 1.0 + (-timeUntilHit / LEAD_TIME);
+              // Once past judgement: continue progressing (note moves past camera) unless clamped by press
+              const rawApproachProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
               
               // Determine if approach progress should clamp at judgement line
               // Clamp for successful/failed presses (not too-early failures)
@@ -563,7 +564,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                     GameErrors.trackAnimation(note.id, failureType, note.failureTime || currentTime);
                   } else if (animEntry.status === 'pending') {
                     // If this animation is old enough to be complete, skip rendering and mark complete
-                    if (timeSinceFailure >= 1100) {
+                    if (timeSinceFailure >= HOLD_ANIMATION_DURATION) {
                       GameErrors.updateAnimation(note.id, { status: 'completed', renderStart: currentTime, renderEnd: currentTime });
                     } else {
                       // Otherwise mark as rendering on first visual frame
@@ -601,7 +602,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               
               // Apply fade during collapse (pressed or unpressed failure)
               if (collapseProgress > 0) {
-                opacity = Math.max(1.0 - (collapseProgress * 0.8), 0.2);
+                opacity = Math.max(1.0 - collapseProgress, 0.0);
               }
               
               const strokeWidth = 2 + (collapseProgress > 0 ? (1 - collapseProgress) * 2 : approachProgress * 2);
