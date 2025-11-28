@@ -783,31 +783,47 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             const noteColor = getColorForLane(note.lane);
             const JUDGEMENT_RADIUS = 187;
             
-            // TAP notes: both near and far ends travel together maintaining consistent width
-            const TRAPEZOID_WIDTH = 40; // Constant width as trapezoid travels
-            const nearDist = 1 + (progress * (JUDGEMENT_RADIUS - 1)); // Grows from 1 to 187
-            const farDist = nearDist - TRAPEZOID_WIDTH; // Maintains constant width
+            // TAP notes: simple rectangles aligned to ray, traveling together
+            const distance = 1 + (progress * (JUDGEMENT_RADIUS - 1)); // Distance along ray
+            const rad = (tapRayAngle * Math.PI) / 180;
             
-            const trapezoid = getTrapezoidCorners(
-              tapRayAngle,
-              nearDist,
-              farDist,
-              VANISHING_POINT_X,
-              VANISHING_POINT_Y,
-              note.id
-            );
+            // Center point on the ray at this distance
+            const cx = VANISHING_POINT_X + Math.cos(rad) * distance;
+            const cy = VANISHING_POINT_Y + Math.sin(rad) * distance;
             
-            if (!trapezoid) return null;
+            // Rectangle perpendicular to the ray
+            const NOTE_WIDTH = 30;   // Width along the ray direction
+            const NOTE_HEIGHT = 25;  // Height perpendicular to ray
             
-            const { x1, y1, x2, y2, x3, y3, x4, y4 } = trapezoid;
+            // Ray direction (forward along ray)
+            const rayDx = Math.cos(rad);
+            const rayDy = Math.sin(rad);
+            
+            // Perpendicular direction (90° rotated)
+            const perpDx = -Math.sin(rad);
+            const perpDy = Math.cos(rad);
+            
+            // Four corners of the rectangle
+            const hw = NOTE_WIDTH / 2;  // Half-width along ray
+            const hh = NOTE_HEIGHT / 2; // Half-height perpendicular to ray
+            
+            const x1 = cx - rayDx * hw - perpDx * hh;
+            const y1 = cy - rayDy * hw - perpDy * hh;
+            const x2 = cx + rayDx * hw - perpDx * hh;
+            const y2 = cy + rayDy * hw - perpDy * hh;
+            const x3 = cx + rayDx * hw + perpDx * hh;
+            const y3 = cy + rayDy * hw + perpDy * hh;
+            const x4 = cx - rayDx * hw + perpDx * hh;
+            const y4 = cy - rayDy * hw + perpDy * hh;
+            
             const points = `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`;
             
             // Opacity: fade in as approaching (0.4 → 1.0)
             let tapOpacity = 0.4 + (progress * 0.6);
             if (isFailed) {
-              tapOpacity = (1 - failProgress) * 0.6; // Fade out over 1000ms on failure
+              tapOpacity = (1 - failProgress) * 0.6;
             } else if (isHit) {
-              tapOpacity = (1 - (timeSinceHit / 600)) * (0.4 + (progress * 0.6)); // Fade on hit
+              tapOpacity = (1 - (timeSinceHit / 600)) * (0.4 + (progress * 0.6));
             }
             
             const hitFlashIntensity = isHit && timeSinceHit < 600 ? Math.max(0, 1 - (timeSinceHit / 600)) : 0;
@@ -819,7 +835,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 fill={isFailed ? 'rgba(80,80,80,0.3)' : noteColor}
                 opacity={Math.max(tapOpacity, 0)}
                 stroke={isFailed ? 'rgba(100,100,100,0.6)' : 'rgba(255,255,255,0.8)'}
-                strokeWidth={1.5 + (progress * 1.5)}
+                strokeWidth={1.5}
                 style={{
                   filter: isFailed 
                     ? 'drop-shadow(0 0 8px rgba(100,100,100,0.6)) grayscale(1)'
