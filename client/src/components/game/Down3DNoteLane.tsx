@@ -561,9 +561,14 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
               holdNotesByLane[n.lane] = n;
             } else {
               const stored = holdNotesByLane[n.lane];
-              // Only replace if new note is earlier (newer notes with lower time value have priority)
-              if (stored && n.time < stored.time) {
-                holdNotesByLane[n.lane] = n;
+              if (stored) {
+                // Replace if:
+                // 1. New note is earlier (lower time value), OR
+                // 2. Stored note has already passed its visibility end (expired/completed animation)
+                const storedIsExpired = currentTime > (stored.failureTime ? (stored.failureTime + HOLD_ANIMATION_DURATION) : (stored.time + LEAD_TIME + 2000));
+                if (n.time < stored.time || storedIsExpired) {
+                  holdNotesByLane[n.lane] = n;
+                }
               }
             }
           }
