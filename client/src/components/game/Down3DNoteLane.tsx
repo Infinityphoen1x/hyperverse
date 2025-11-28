@@ -785,7 +785,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             
             // TAP notes: trapezoid matching HOLD note geometry
             // Use same ±15° flanking rays as HOLD notes for proper tunnel perspective
-            const TRAPEZOID_DEPTH = 32; // Shorter length along ray than HOLD notes
+            const TRAPEZOID_DEPTH = 20; // Compact depth maintains consistent near-end width
             const nearDist = 1 + (progress * (JUDGEMENT_RADIUS - 1)); // Both travel together
             const farDist = Math.max(0.1, nearDist - TRAPEZOID_DEPTH); // Maintains consistent near-end width
             
