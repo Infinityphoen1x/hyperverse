@@ -141,6 +141,8 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   
   const requestRef = useRef<number | undefined>(undefined);
   const startTimeRef = useRef<number>(0);
+  const currentTimeRef = useRef<number>(0);
+  const lastStateUpdateRef = useRef<number>(0);
 
   const startGame = useCallback(() => {
     setScore(0);
@@ -170,7 +172,14 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         time = now - startTimeRef.current;
       }
       
-      setCurrentTime(time);
+      // Update ref immediately (fast, no re-render)
+      currentTimeRef.current = time;
+      
+      // Update state periodically (every 50ms) for display purposes
+      if (time - lastStateUpdateRef.current >= 50) {
+        setCurrentTime(time);
+        lastStateUpdateRef.current = time;
+      }
       
       // Check for missed notes and cleanup old notes
       let shouldGameOver = false;
@@ -266,6 +275,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       }
       
       const hitWindow = 300; // ms
+      const currentTime = currentTimeRef.current;
       
       setNotes(prev => {
         if (!Array.isArray(prev)) {
@@ -318,6 +328,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
 
   const trackHoldStart = useCallback((lane: number) => {
     try {
+      const currentTime = currentTimeRef.current;
       if (!Number.isInteger(lane) || !Number.isFinite(currentTime)) {
         GameErrors.log(`trackHoldStart: Invalid lane=${lane} or currentTime=${currentTime}`);
         return;
@@ -379,10 +390,11 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     } catch (error) {
       GameErrors.log(`trackHoldStart error: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
-  }, [currentTime, notes]);
+  }, [notes]);
 
   const trackHoldEnd = useCallback((lane: number) => {
     try {
+      const currentTime = currentTimeRef.current;
       if (!Number.isInteger(lane)) {
         GameErrors.log(`trackHoldEnd: Invalid lane=${lane}`);
         return;
@@ -455,7 +467,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     } catch (error) {
       GameErrors.log(`trackHoldEnd error: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
-  }, [currentTime, notes]);
+  }, [notes]);
 
   const markNoteMissed = useCallback((noteId: string) => {
     try {

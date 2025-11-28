@@ -1,0 +1,108 @@
+{
+  "timestamp": "2025-11-28T00:00:40.254Z",
+  "errorLog": [],
+  "animationStats": {
+    "total": 13,
+    "completed": 5,
+    "failed": 0,
+    "pending": 0
+  },
+  "animationDetails": [
+    {
+      "noteId": "note-5333-5",
+      "type": "tapMissFailure",
+      "failureTime": 5637,
+      "status": "rendering",
+      "renderStart": 5637
+    },
+    {
+      "noteId": "note-7333-8",
+      "type": "holdMissFailure",
+      "failureTime": 8437,
+      "status": "completed",
+      "renderStart": 8437,
+      "renderEnd": 9429
+    },
+    {
+      "noteId": "note-8667-10",
+      "type": "tapMissFailure",
+      "failureTime": 8972,
+      "status": "rendering",
+      "renderStart": 8972
+    },
+    {
+      "noteId": "note-15333-20",
+      "type": "tooEarlyFailure",
+      "failureTime": 11238,
+      "status": "completed",
+      "renderStart": 11337,
+      "renderEnd": 12236
+    },
+    {
+      "noteId": "note-18667-25",
+      "type": "tapMissFailure",
+      "failureTime": 18972,
+      "status": "rendering",
+      "renderStart": 18972
+    },
+    {
+      "noteId": "note-18000-24",
+      "type": "holdMissFailure",
+      "failureTime": 19109,
+      "status": "completed",
+      "renderStart": 19109,
+      "renderEnd": 20111
+    },
+    {
+      "noteId": "note-19333-26",
+      "type": "tapMissFailure",
+      "failureTime": 19644,
+      "status": "rendering",
+      "renderStart": 19644
+    },
+    {
+      "noteId": "note-20000-27",
+      "type": "tapMissFailure",
+      "failureTime": 20305,
+      "status": "rendering",
+      "renderStart": 20305
+    },
+    {
+      "noteId": "note-21333-29",
+      "type": "tapMissFailure",
+      "failureTime": 21638,
+      "status": "rendering",
+      "renderStart": 21638
+    },
+    {
+      "noteId": "note-26000-36",
+      "type": "tooEarlyFailure",
+      "failureTime": 22436,
+      "status": "completed",
+      "renderStart": 22464,
+      "renderEnd": 23492
+    },
+    {
+      "noteId": "note-23333-32",
+      "type": "tooEarlyFailure",
+      "failureTime": 22822,
+      "status": "completed",
+      "renderStart": 22881,
+      "renderEnd": 23813
+    },
+    {
+      "noteId": "note-22667-31",
+      "type": "tapMissFailure",
+      "failureTime": 22972,
+      "status": "rendering",
+      "renderStart": 22972
+    },
+    {
+      "noteId": "note-24000-33",
+      "type": "tapMissFailure",
+      "failureTime": 24306,
+      "status": "rendering",
+      "renderStart": 24306
+    }
+  ]
+}
