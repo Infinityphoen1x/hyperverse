@@ -177,8 +177,8 @@ const calculateApproachGeometry = (
 interface TapNoteState {
   isHit: boolean;
   isFailed: boolean;
-  failureTime: number | null;
-  hitTime: number | null;
+  failureTime: number | undefined;
+  hitTime: number | undefined;
   timeSinceFail: number;
   timeSinceHit: number;
 }
@@ -186,8 +186,8 @@ interface TapNoteState {
 const getTapNoteState = (note: Note, currentTime: number): TapNoteState => {
   const isHit = note.hit || false;
   const isFailed = note.tapMissFailure || false;
-  const failureTime = note.failureTime || null;
-  const hitTime = note.hitTime || null;
+  const failureTime = note.failureTime;
+  const hitTime = note.hitTime;
   
   const timeSinceFail = failureTime ? Math.max(0, currentTime - failureTime) : 0;
   const timeSinceHit = isHit && hitTime ? Math.max(0, currentTime - hitTime) : 0;
@@ -837,6 +837,13 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
                 
                 // Get failure states using helper
                 const failures = getHoldNoteFailureStates(note);
+                
+                // ERROR CHECK: failureTime MUST be set when note has any failure
+                if (failures.hasAnyFailure && !note.failureTime) {
+                  GameErrors.log(`CRITICAL: Note ${note.id} has ${failures.isTooEarlyFailure ? 'tooEarlyFailure' : failures.isHoldReleaseFailure ? 'holdReleaseFailure' : 'holdMissFailure'} but failureTime is missing!`);
+                  return null; // Skip rendering to avoid animation timing corruption
+                }
+                
                 const failureTime = note.failureTime || currentTime;
                 
                 // Early exit if failure animation is complete
