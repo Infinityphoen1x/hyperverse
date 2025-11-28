@@ -348,15 +348,23 @@ const calculateLockedNearDistance = (
   note: Note,
   pressTime: number,
   isTooEarlyFailure: boolean,
-  approachNearDistance: number
+  approachNearDistance: number,
+  failureTime: number | null,
+  currentTime: number
 ): number | null => {
   if (!pressTime || pressTime === 0) return null; // No press
   
   // For tooEarlyFailure: DON'T lock - return null so it uses approach geometry
   if (isTooEarlyFailure) return null;
   
-  // For all other presses (success or failures): lock at current approach position
-  // This ensures collapse animation works from wherever the note is when pressed
+  // For holdReleaseFailure: lock at position where failure occurred (at failureTime)
+  if (note.holdReleaseFailure && failureTime) {
+    const timeUntilHitAtFailure = note.time - failureTime;
+    const approachProgressAtFailure = Math.max((LEAD_TIME - timeUntilHitAtFailure) / LEAD_TIME, 0);
+    return Math.max(1, 1 + (approachProgressAtFailure * (JUDGEMENT_RADIUS - 1)));
+  }
+  
+  // For successful hits and other presses: lock at current approach position
   return approachNearDistance;
 };
 
@@ -843,7 +851,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
               const collapseDuration = failures.hasAnyFailure ? FAILURE_ANIMATION_DURATION : holdDuration;
               
               // Calculate locked near distance (where note "grabs" on press)
-              const lockedNearDistance = calculateLockedNearDistance(note, pressTime, failures.isTooEarlyFailure, approachNearDistance);
+              const lockedNearDistance = calculateLockedNearDistance(note, pressTime, failures.isTooEarlyFailure, approachNearDistance, failureTime, currentTime);
               
               // Calculate collapse geometry (after press or for failures)
               const stripWidth = (note.duration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
