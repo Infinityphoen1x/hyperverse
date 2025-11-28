@@ -6,8 +6,6 @@ import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
 import { DeckHoldMeters } from "@/components/game/DeckHoldMeters";
 import { VisualEffects } from "@/components/game/VisualEffects";
-import { YouTubeOverlay } from "@/components/game/YouTubeOverlay";
-import { BeatmapLoader } from "@/components/game/BeatmapLoader";
 import { ErrorLogViewer } from "@/components/game/ErrorLogViewer";
 import { motion } from "framer-motion";
 
@@ -169,24 +167,6 @@ export default function Game() {
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black opacity-80" />
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
-      
-      {/* YouTube Overlay Control */}
-      <YouTubeOverlay 
-        onVideoUrlChange={(videoId) => setYoutubeVideoId(videoId)}
-      />
-
-      {/* Beatmap Loader */}
-      <BeatmapLoader 
-        difficulty={difficulty}
-        onBeatmapLoad={(youtubeVideoId, notes) => {
-          if (youtubeVideoId) {
-            setYoutubeVideoId(youtubeVideoId);
-          }
-          if (notes) {
-            setCustomNotes(notes);
-          }
-        }}
-      />
 
       {/* HUD */}
       <header className="relative z-10 flex justify-between items-center p-6 border-b border-white/10 bg-black/50 backdrop-blur-sm">
