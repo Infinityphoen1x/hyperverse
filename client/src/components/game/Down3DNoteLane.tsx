@@ -503,6 +503,36 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
   // Jolt animation state for vanishing point
   const [joltOffset, setJoltOffset] = useState({ x: 0, y: 0 });
   const prevComboMilestoneRef = useRef<number>(0);
+  const animationStartRef = useRef<number>(0);
+  const targetOffsetRef = useRef({ x: 0, y: 0 });
+  const currentOffsetRef = useRef({ x: 0, y: 0 });
+  const [, setRenderTrigger] = useState(0);
+  
+  // Smooth animation loop for vanishing point travel
+  useEffect(() => {
+    let animationFrameId: number;
+    
+    const animate = () => {
+      const now = Date.now();
+      const elapsed = now - animationStartRef.current;
+      const TRANSITION_DURATION = 150; // ms - smooth but quick travel
+      
+      if (elapsed < TRANSITION_DURATION) {
+        const progress = Math.min(elapsed / TRANSITION_DURATION, 1);
+        // Smooth easing: ease-out (deceleration)
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        
+        joltOffset.x = currentOffsetRef.current.x + (targetOffsetRef.current.x - currentOffsetRef.current.x) * easeProgress;
+        joltOffset.y = currentOffsetRef.current.y + (targetOffsetRef.current.y - currentOffsetRef.current.y) * easeProgress;
+        
+        setRenderTrigger(Date.now());
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    };
+    
+    animationFrameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [joltOffset]);
   
   // Detect combo milestones (10, 20, 30, etc.) - shift vanishing point to new angle, stays offset
   useEffect(() => {
@@ -516,18 +546,25 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
       const newOffsetX = Math.cos(angle) * distance;
       const newOffsetY = -JOLT_RADIUS * 0.3;
       
-      // Animate: jump up (negative Y) then shift to side
+      // Jump up immediately
+      currentOffsetRef.current = { x: 0, y: -JOLT_RADIUS };
       setJoltOffset({ x: 0, y: -JOLT_RADIUS });
+      
+      // After up phase, smoothly shift to new angle
       setTimeout(() => {
-        // Shift to new angle and STAY - feels like tunnel rotating to different view
-        setJoltOffset({ x: newOffsetX, y: newOffsetY });
+        animationStartRef.current = Date.now();
+        currentOffsetRef.current = { x: 0, y: -JOLT_RADIUS };
+        targetOffsetRef.current = { x: newOffsetX, y: newOffsetY };
       }, JOLT_UP_DURATION);
       // NO RETURN TO CENTER - stays at new offset for immersive "tunnel angle" effect
     } else if (combo === 0) {
       prevComboMilestoneRef.current = 0;
-      setJoltOffset({ x: 0, y: 0 }); // Only reset on combo break
+      // Smooth return to center on combo break
+      animationStartRef.current = Date.now();
+      currentOffsetRef.current = { ...joltOffset };
+      targetOffsetRef.current = { x: 0, y: 0 };
     }
-  }, [combo]);
+  }, [combo, joltOffset]);
   
   // Calculate dynamic vanishing point with jolt offset
   const vpX = VANISHING_POINT_X + joltOffset.x;
