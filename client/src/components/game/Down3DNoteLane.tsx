@@ -530,23 +530,35 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 // Determine collapse end time based on fail state
                 let actualReleaseTime = getReleaseTime(note.id);
                 let collapseEndTime = note.time + holdDuration;
+                let collapseStartTime = pressTime;
                 
                 // For fail states: use actual release time or expected time
                 if (note.holdReleaseFailure && actualReleaseTime) {
                   collapseEndTime = actualReleaseTime;
                 } else if (note.tooEarlyFailure) {
-                  collapseEndTime = note.time + holdDuration; // Still collapse over full expected duration
+                  collapseEndTime = note.time + holdDuration; // Collapse over full expected duration
                 } else if (note.holdMissFailure) {
                   collapseEndTime = note.time + holdDuration; // Collapse over expected duration
                 }
                 
-                const collapseDuration = collapseEndTime - pressTime;
-                const timeSincePress = currentTime - pressTime;
+                const collapseDuration = Math.max(1, collapseEndTime - collapseStartTime);
+                const timeSincePress = currentTime - collapseStartTime;
                 const collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
                 
                 // During collapse: near end locked, far end moves toward it
                 nearDistance = lockedNearDistance;
                 farDistance = 1 + (collapseProgress * (lockedNearDistance - 1));
+              } else if (isTooEarlyFailure || isHoldReleaseFailure || isHoldMissFailure) {
+                // Failed notes that were never pressed: collapse from judgement line down
+                const failureTime = note.failureTime || currentTime;
+                const collapseEndTime = note.time + holdDuration;
+                const collapseDuration = Math.max(1, collapseEndTime - failureTime);
+                const timeSinceFailure = Math.max(0, currentTime - failureTime);
+                const collapseProgress = Math.min(Math.max(timeSinceFailure / collapseDuration, 0), 1.0);
+                
+                // Unpressed failure: starts at judgement line, collapses to vanishing point
+                nearDistance = JUDGEMENT_RADIUS;
+                farDistance = JUDGEMENT_RADIUS * (1 - collapseProgress) + 1 * collapseProgress;
               } else {
                 // No press yet: use approach phase geometry
                 nearDistance = approachNearDistance;
