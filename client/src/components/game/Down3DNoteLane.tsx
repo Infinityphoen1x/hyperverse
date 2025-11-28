@@ -551,6 +551,10 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
         
         setVpOffset({ x: newX, y: newY });
         animationFrameId = requestAnimationFrame(animate);
+      } else {
+        // Animation complete - snap to target and preserve for next milestone
+        currentOffsetRef.current = { ...targetOffsetRef.current };
+        setVpOffset({ x: targetOffsetRef.current.x, y: targetOffsetRef.current.y });
       }
     };
     
