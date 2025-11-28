@@ -75,10 +75,22 @@ export function buildYouTubeEmbedUrl(videoId: string, options: {
  */
 let ytPlayer: any = null;
 let playerReady = false;
+let onReadyCallback: (() => void) | null = null;
 
-export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null): void {
+export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null, onReady?: () => void): void {
   if (!iframeElement || !window.YT) return;
-  if (ytPlayer) return; // Already initialized
+  if (ytPlayer) {
+    // Already initialized - if onReady callback provided and player is ready, call it immediately
+    if (onReady && playerReady) {
+      onReady();
+    }
+    return;
+  }
+  
+  // Store callback for when player becomes ready
+  if (onReady) {
+    onReadyCallback = onReady;
+  }
   
   try {
     ytPlayer = new window.YT.Player(iframeElement, {
@@ -86,6 +98,11 @@ export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null): void
         onReady: () => {
           playerReady = true;
           console.log('YouTube player ready and initialized');
+          // Call the registered callback if one exists
+          if (onReadyCallback) {
+            onReadyCallback();
+            onReadyCallback = null;
+          }
         },
         onError: (e: any) => console.warn('YouTube player error:', e),
       }

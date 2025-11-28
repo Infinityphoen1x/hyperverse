@@ -73,19 +73,13 @@ export default function Game() {
   // Initialize YouTube player and seek to 0 when iframe is ready
   useEffect(() => {
     if (youtubeVideoId && youtubeIframeRef.current && !playerInitializedRef.current && window.YT) {
-      initYouTubePlayer(youtubeIframeRef.current);
+      initYouTubePlayer(youtubeIframeRef.current, () => {
+        // This callback fires when player is truly ready
+        seekYouTubeVideo(0);
+        pauseYouTubeVideo();
+        console.log('[INIT] YouTube synchronized to 0ms and paused on ready');
+      });
       playerInitializedRef.current = true;
-      
-      // Ensure YouTube player is at position 0 and paused before game starts
-      const seekAndPauseInterval = setInterval(() => {
-        if (seekYouTubeVideo(0) && pauseYouTubeVideo()) {
-          console.log('[INIT] YouTube synchronized to 0ms and paused');
-          clearInterval(seekAndPauseInterval);
-        }
-      }, 100);
-      
-      // Cleanup interval after 2 seconds (should succeed within first try)
-      setTimeout(() => clearInterval(seekAndPauseInterval), 2000);
     }
   }, [youtubeVideoId]);
 
