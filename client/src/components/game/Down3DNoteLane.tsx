@@ -857,53 +857,39 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               </g>
             );
           })}
-
-          {/* Soundpad buttons rendered as SVG circles */}
-          {soundpadButtons.map(({ lane, key, color, xPosition, yPosition }) => (
-            <g key={`pad-${lane}`}>
-              {/* Glow effect */}
-              <circle
-                cx={xPosition}
-                cy={yPosition}
-                r={24}
-                fill="none"
-                stroke={color}
-                strokeWidth={3}
-                opacity={0.3}
-              />
-              {/* Main button */}
-              <circle
-                cx={xPosition}
-                cy={yPosition}
-                r={20}
-                fill={color}
-                fillOpacity={0.25}
-                stroke={color}
-                strokeWidth={2}
-                style={{ cursor: 'pointer' }}
-                onMouseDown={() => {
-                  onPadHit?.(lane);
-                  window.dispatchEvent(new CustomEvent(`pad-hit-${lane}`));
-                }}
-                data-testid={`pad-button-${lane}`}
-              />
-              {/* Key label */}
-              <text
-                x={xPosition}
-                y={yPosition}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="white"
-                fontSize={14}
-                fontWeight="bold"
-                fontFamily="Rajdhani, monospace"
-                style={{ pointerEvents: 'none' }}
-              >
-                {key}
-              </text>
-            </g>
-          ))}
         </svg>
+
+        {/* 6 Soundpad Buttons as circles - absolutely positioned */}
+        {soundpadButtons.map(({ lane, key, color, xPosition, yPosition }) => (
+          <motion.button
+            key={`pad-${lane}`}
+            className="absolute rounded-full font-bold font-rajdhani text-white focus:outline-none pointer-events-auto"
+            style={{
+              width: '40px',
+              height: '40px',
+              left: `${xPosition}px`,
+              top: `${yPosition}px`,
+              transform: 'translate(-50%, -50%)',
+              backgroundColor: color,
+              opacity: 0.25,
+              border: `2px solid ${color}`,
+              boxShadow: `0 0 20px ${color}, 0 0 30px ${color}99`,
+              zIndex: 50,
+              fontSize: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            whileTap={{ scale: 0.9 }}
+            onMouseDown={() => {
+              onPadHit?.(lane);
+              window.dispatchEvent(new CustomEvent(`pad-hit-${lane}`));
+            }}
+            data-testid={`pad-button-${lane}`}
+          >
+            {key}
+          </motion.button>
+        ))}
       </div>
     </div>
   );
