@@ -32,7 +32,7 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
     isKeyPressedRef.current = isKeyPressed;
   }, [isKeyPressed]);
 
-  // Single key toggle for spin direction
+  // Single key toggle for spin direction - stable listeners to prevent recreation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.repeat) return;
@@ -44,7 +44,7 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
       if (isLeftDeckKey || isRightDeckKey) {
         setIsKeyPressed(true);
         setSpinDirection((prev) => prev * -1);
-        setTimeout(() => onHoldStart(wheelLane), 0);
+        onHoldStart(wheelLane);
       }
     };
 
@@ -56,7 +56,7 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
       
       if (isLeftDeckKey || isRightDeckKey) {
         setIsKeyPressed(false);
-        setTimeout(() => onHoldEnd(), 0);
+        onHoldEnd();
       }
     };
 
@@ -66,7 +66,7 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [side, onHoldStart, onHoldEnd, wheelLane]);
+  }, [side, wheelLane, onHoldStart, onHoldEnd]);
 
   // Continuous rotation loop using RAF - batches callbacks to prevent excessive parent updates
   useEffect(() => {
@@ -111,15 +111,11 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
         return;
       }
       
-      setInternalRotation((prev) => {
-        if (!Number.isFinite(prev)) {
-          GameErrors.log(`CamelotWheel: Invalid rotation state ${prev}`);
-          return prev;
-        }
-        const newRot = prev + info.delta.x;
-        onRotationChange(newRot);
-        return newRot;
-      });
+      // Update ref first for RAF loop consistency, then batch state update
+      const newRot = rotationRef.current + info.delta.x;
+      rotationRef.current = newRot;
+      setInternalRotation(newRot);
+      onRotationChange(newRot);
       
       // Trigger spin event if drag velocity exceeds threshold
       if (info.velocity && typeof info.velocity === 'object' && Number.isFinite(info.velocity.x) && 
@@ -134,10 +130,10 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
   return (
     <div className="flex flex-col items-center gap-6 relative">
 
-      {/* Hitline at top edge */}
-      <div className={`absolute z-40 -top-16 ${side === 'left' ? 'left-0' : 'right-0'}`}>
+      {/* Hitline at top edge - scales with wheel */}
+      <div className={`absolute z-40 -top-8 md:-top-10 ${side === 'left' ? 'left-1/2 -translate-x-1/4' : 'right-1/2 translate-x-1/4'}`}>
         <div 
-          className={`w-1 h-16 ${side === 'left' ? 'bg-neon-green/70 shadow-[0_0_20px_rgb(0,255,0)]' : 'bg-neon-red/70 shadow-[0_0_20px_rgb(255,0,0)]'}`}
+          className={`w-1 h-8 md:h-10 ${side === 'left' ? 'bg-neon-green/70 shadow-[0_0_20px_rgb(0,255,0)]' : 'bg-neon-red/70 shadow-[0_0_20px_rgb(255,0,0)]'}`}
         />
       </div>
 
@@ -162,7 +158,13 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
                alt="Turntable" 
                className="w-full h-full object-cover opacity-80 mix-blend-screen"
                draggable={false}
+               onError={(e) => {
+                 // Fallback to gradient if image fails to load
+                 (e.target as HTMLImageElement).style.display = 'none';
+               }}
              />
+             {/* Fallback pattern if image doesn't load */}
+             <div className="absolute inset-0 bg-gradient-conic from-neon-green via-neon-blue to-neon-red opacity-20" />
              
              {/* Center Axis */}
              <div className="absolute inset-0 m-auto w-20 h-20 rounded-full bg-black border-2 border-neon-cyan flex items-center justify-center z-20">
