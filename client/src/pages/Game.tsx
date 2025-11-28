@@ -138,19 +138,19 @@ export default function Game() {
   // ESC key to pause/resume
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && gameState === 'PLAYING') {
+      if (e.key === 'Escape' && gameState === 'PLAYING' && currentTimeRef.current > 100) {
         if (isPaused) {
           const resumeTimeSeconds = pausedTimeRef.current / 1000;
-          console.log('Resume: seeking YouTube to', resumeTimeSeconds, 'seconds');
+          console.log('[PAUSE-SYSTEM] Resume: seeking YouTube to', resumeTimeSeconds, 'seconds');
           seekYouTubeVideo(resumeTimeSeconds);
           playYouTubeVideo();
           resumeGame();
           setIsPauseMenuOpen(false);
         } else {
-          pauseGame();
           pausedTimeRef.current = currentTimeRef.current;
-          const pauseTimeSeconds = currentTimeRef.current / 1000;
-          console.log('Paused at:', currentTimeRef.current, 'ms, seeking YouTube to', pauseTimeSeconds);
+          const pauseTimeSeconds = pausedTimeRef.current / 1000;
+          console.log('[PAUSE-SYSTEM] Pause: saving time', pausedTimeRef.current, 'ms, seeking YouTube to', pauseTimeSeconds);
+          pauseGame();
           seekYouTubeVideo(pauseTimeSeconds);
           pauseYouTubeVideo();
           setIsPauseMenuOpen(true);
@@ -227,7 +227,7 @@ export default function Game() {
               <button 
                 onClick={() => {
                   const resumeTimeSeconds = pausedTimeRef.current / 1000;
-                  console.log('RESUME button: seeking YouTube to', resumeTimeSeconds, 'seconds');
+                  console.log('[PAUSE-SYSTEM] RESUME button: seeking YouTube to', resumeTimeSeconds, 'seconds');
                   seekYouTubeVideo(resumeTimeSeconds);
                   playYouTubeVideo();
                   resumeGame();
@@ -240,6 +240,8 @@ export default function Game() {
               </button>
               <button 
                 onClick={() => {
+                  console.log('[PAUSE-SYSTEM] REWIND button: seeking to 0, pausing');
+                  pausedTimeRef.current = 0;
                   restartGame();
                   seekYouTubeVideo(0);
                   pauseYouTubeVideo();
@@ -299,16 +301,16 @@ export default function Game() {
             onClick={() => {
               if (isPaused) {
                 const resumeTimeSeconds = pausedTimeRef.current / 1000;
-                console.log('Play button: seeking YouTube to', resumeTimeSeconds, 'seconds');
+                console.log('[PAUSE-SYSTEM] Play button: seeking YouTube to', resumeTimeSeconds, 'seconds');
                 seekYouTubeVideo(resumeTimeSeconds);
                 playYouTubeVideo();
                 resumeGame();
                 setIsPauseMenuOpen(false);
-              } else if (!isPaused) {
-                pauseGame();
+              } else {
                 pausedTimeRef.current = currentTimeRef.current;
-                const pauseTimeSeconds = currentTimeRef.current / 1000;
-                console.log('Pause button: paused at', currentTimeRef.current, 'ms, seeking YouTube to', pauseTimeSeconds);
+                const pauseTimeSeconds = pausedTimeRef.current / 1000;
+                console.log('[PAUSE-SYSTEM] Pause button: saving time', pausedTimeRef.current, 'ms, seeking YouTube to', pauseTimeSeconds);
+                pauseGame();
                 seekYouTubeVideo(pauseTimeSeconds);
                 pauseYouTubeVideo();
                 setIsPauseMenuOpen(true);
