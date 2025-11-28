@@ -719,27 +719,25 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               />
             );
           })}
-        </svg>
 
-        {/* Notes falling through tunnel - following ray paths */}
-        <AnimatePresence>
+          {/* TAP notes rendered as SVG circles - following ray paths */}
           {visibleNotes
             .filter(n => n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT')
             .map(note => {
             const timeUntilHit = note.time - currentTime;
             const progress = 1 - (timeUntilHit / 2000);
             
+            if (progress < 0 || progress > 1.25) return null; // Only render in valid window
+            
             const rayAngle = getLaneAngle(note.lane);
             const rad = (rayAngle * Math.PI) / 180;
             
             const JUDGEMENT_RADIUS = 187;
+            // Distance grows from vanishing point (1) outward as progress goes 0->1
             const distance = 1 + (progress * (JUDGEMENT_RADIUS - 1));
-            const xOffset = Math.cos(rad) * distance;
-            const yOffset = Math.sin(rad) * distance;
-            
-            const xPosition = VANISHING_POINT_X + xOffset;
-            const yPosition = VANISHING_POINT_Y + yOffset;
-            const scale = 0.12 + (progress * 0.88);
+            const xPosition = VANISHING_POINT_X + Math.cos(rad) * distance;
+            const yPosition = VANISHING_POINT_Y + Math.sin(rad) * distance;
+            const radius = 14 + (progress * 8); // Grows as it approaches
             
             // Track note state: hit, failed, or approaching
             const isHit = note.hit || false;
@@ -805,36 +803,61 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               return null;
             }
 
+            const noteColor = getColorForLane(note.lane);
+            const glowColor = isFailed ? 'rgba(100,100,100,0.4)' : noteColor;
+            
             return (
-              <motion.div
-                key={note.id}
-                className="absolute w-14 h-14 rounded-lg flex items-center justify-center text-black font-bold text-sm font-rajdhani pointer-events-none"
-                style={{
-                  backgroundColor: isFailed ? 'rgba(80,80,80,0.6)' : getColorForLane(note.lane),
-                  boxShadow: isFailed 
-                    ? `0 0 ${6 * scale}px rgba(100,0,0,0.4)` 
-                    : isHit && hitFlashIntensity > 0
-                      ? `0 0 ${Math.max(30, 50 * hitFlashIntensity) * scale}px ${getColorForLane(note.lane)}, 0 0 ${Math.max(50, 80 * hitFlashIntensity) * scale}px ${getColorForLane(note.lane)}, inset 0 0 ${30 * hitFlashIntensity * scale}px rgba(255,255,255,0.8)`
-                      : `0 0 ${30 * scale}px ${getColorForLane(note.lane)}, inset 0 0 ${18 * scale}px rgba(255,255,255,0.4)`,
-                  left: `${xPosition}px`,
-                  top: `${yPosition}px`,
-                  transform: `translate(-50%, -50%) scale(${finalScale})`,
-                  opacity: isFailed ? (1 - failProgress) * 0.6 : finalOpacity,
-                  zIndex: Math.floor(progress * 1000),
-                  border: isFailed 
-                    ? `2px solid rgba(100,100,100,${(1-failProgress) * 0.6})` 
-                    : isHit && hitFlashIntensity > 0
-                      ? `2px solid rgba(255,255,255,${0.8 * hitFlashIntensity})`
-                      : `2px solid rgba(100,100,100,${0.4 * progress})`,
-                  filter: isFailed ? 'grayscale(1) brightness(0.5)' : isHit && hitFlashIntensity > 0 ? 'brightness(1.8) drop-shadow(0 0 10px currentColor)' : 'none',
-                  transition: 'all 0.05s linear',
-                }}
-              >
-                {getNoteKey(note.lane)}
-              </motion.div>
+              <g key={note.id}>
+                {/* Main note circle */}
+                <circle
+                  cx={xPosition}
+                  cy={yPosition}
+                  r={radius}
+                  fill={isFailed ? 'rgba(80,80,80,0.4)' : noteColor}
+                  opacity={isFailed ? (1 - failProgress) * 0.6 : finalOpacity}
+                  style={{
+                    filter: isFailed 
+                      ? 'grayscale(1) brightness(0.5)' 
+                      : isHit && hitFlashIntensity > 0 
+                        ? `brightness(1.8) drop-shadow(0 0 10px ${noteColor})`
+                        : 'none',
+                    transition: 'all 0.05s linear',
+                  }}
+                />
+                {/* Glow */}
+                <circle
+                  cx={xPosition}
+                  cy={yPosition}
+                  r={radius}
+                  fill="none"
+                  stroke={glowColor}
+                  strokeWidth={2}
+                  opacity={isFailed ? (1 - failProgress) * 0.3 : (finalOpacity * 0.6)}
+                  style={{
+                    filter: isHit && hitFlashIntensity > 0 
+                      ? `drop-shadow(0 0 ${15 * hitFlashIntensity}px ${noteColor})`
+                      : `drop-shadow(0 0 ${10 * progress}px ${noteColor})`,
+                  }}
+                />
+                {/* Text label */}
+                <text
+                  x={xPosition}
+                  y={yPosition}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill="white"
+                  fontSize={Math.max(8, 10 * progress)}
+                  fontWeight="bold"
+                  fontFamily="Rajdhani, monospace"
+                  opacity={isFailed ? (1 - failProgress) * 0.6 : finalOpacity}
+                  style={{ pointerEvents: 'none' }}
+                >
+                  {getNoteKey(note.lane)}
+                </text>
+              </g>
             );
           })}
-        </AnimatePresence>
+        </svg>
 
         {/* 6 Soundpad Buttons - positioned at tunnel edges on rays */}
         {soundpadButtons.map(({ lane, key, color, xPosition, yPosition }) => (
