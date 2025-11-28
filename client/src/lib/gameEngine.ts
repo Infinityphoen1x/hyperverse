@@ -45,8 +45,8 @@ export interface Note {
 // Error tracking for debugging
 interface AnimationErrorEntry {
   noteId: string;
-  type: 'tapMissFailure' | 'tooEarlyFailure' | 'holdMissFailure' | 'holdReleaseFailure';
-  failureTime: number;
+  type: 'tapMissFailure' | 'tooEarlyFailure' | 'holdMissFailure' | 'holdReleaseFailure' | 'successful';
+  failureTime?: number;
   renderStart?: number;
   renderEnd?: number;
   status: 'pending' | 'rendering' | 'completed' | 'failed';
@@ -65,6 +65,17 @@ const GameErrors = {
     failed: 0,
     byLane: {} as Record<number, number>,
   },
+  renderStats: {
+    rendered: 0,
+    preMissed: 0,
+  },
+  hitStats: {
+    successfulHits: 0,
+    tapMissFailures: 0,
+    tooEarlyFailures: 0,
+    holdMissFailures: 0,
+    holdReleaseFailures: 0,
+  },
   log: (msg: string) => {
     const timestamp = Date.now();
     const error = `[${timestamp}] ${msg}`;
@@ -72,7 +83,7 @@ const GameErrors = {
     if (GameErrors.notes.length > 100) GameErrors.notes.shift();
     console.warn(`[GAME ERROR] ${error}`);
   },
-  trackAnimation: (noteId: string, type: AnimationErrorEntry['type'], failureTime: number) => {
+  trackAnimation: (noteId: string, type: AnimationErrorEntry['type'], failureTime?: number) => {
     GameErrors.animations.push({
       noteId,
       type,
@@ -80,6 +91,10 @@ const GameErrors = {
       status: 'pending',
     });
     if (GameErrors.animations.length > 200) GameErrors.animations.shift();
+  },
+  trackRender: (rendered: number, preMissed: number) => {
+    GameErrors.renderStats.rendered = rendered;
+    GameErrors.renderStats.preMissed = preMissed;
   },
   updateAnimation: (noteId: string, updates: Partial<AnimationErrorEntry>) => {
     const entry = GameErrors.animations.find(a => a.noteId === noteId);
@@ -96,27 +111,44 @@ const GameErrors = {
       byLane: {} as Record<number, number>,
     };
     
+    const hitStats = {
+      successfulHits: 0,
+      tapMissFailures: 0,
+      tooEarlyFailures: 0,
+      holdMissFailures: 0,
+      holdReleaseFailures: 0,
+    };
+    
     allNotes.forEach(n => {
       if (n.type === 'TAP') stats.tap++;
       else stats.hold++;
       
-      if (n.hit) stats.hit++;
+      if (n.hit) {
+        stats.hit++;
+        hitStats.successfulHits++;
+      }
       if (n.missed) stats.missed++;
       if (n.tapMissFailure || n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
         stats.failed++;
+        if (n.tapMissFailure) hitStats.tapMissFailures++;
+        if (n.tooEarlyFailure) hitStats.tooEarlyFailures++;
+        if (n.holdMissFailure) hitStats.holdMissFailures++;
+        if (n.holdReleaseFailure) hitStats.holdReleaseFailures++;
       }
       
       stats.byLane[n.lane] = (stats.byLane[n.lane] || 0) + 1;
     });
     
     GameErrors.noteStats = stats;
+    GameErrors.hitStats = hitStats;
   },
   getAnimationStats: () => {
     const total = GameErrors.animations.length;
     const completed = GameErrors.animations.filter(a => a.status === 'completed').length;
     const failed = GameErrors.animations.filter(a => a.status === 'failed').length;
     const pending = GameErrors.animations.filter(a => a.status === 'pending').length;
-    return { total, completed, failed, pending };
+    const rendering = GameErrors.animations.filter(a => a.status === 'rendering').length;
+    return { total, completed, failed, pending, rendering };
   }
 };
 

@@ -6,10 +6,12 @@ import { ChevronDown } from 'lucide-react';
 export function ErrorLogViewer() {
   const [isOpen, setIsOpen] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
-  const [animationStats, setAnimationStats] = useState({ total: 0, completed: 0, failed: 0, pending: 0 });
+  const [animationStats, setAnimationStats] = useState({ total: 0, completed: 0, failed: 0, pending: 0, rendering: 0 });
   const [animations, setAnimations] = useState<any[]>([]);
   const [errorCounts, setErrorCounts] = useState({ beatmapLoader: 0, parser: 0, converter: 0, meter: 0, trapezoid: 0, game: 0 });
   const [noteStats, setNoteStats] = useState({ total: 0, tap: 0, hold: 0, hit: 0, missed: 0, failed: 0, byLane: {} as Record<number, number> });
+  const [renderStats, setRenderStats] = useState({ rendered: 0, preMissed: 0 });
+  const [hitStats, setHitStats] = useState({ successfulHits: 0, tapMissFailures: 0, tooEarlyFailures: 0, holdMissFailures: 0, holdReleaseFailures: 0 });
 
   // Update logs in real-time
   useEffect(() => {
@@ -18,6 +20,8 @@ export function ErrorLogViewer() {
       setAnimationStats(GameErrors.getAnimationStats());
       setAnimations([...GameErrors.animations]);
       setNoteStats({ ...GameErrors.noteStats });
+      setRenderStats({ ...GameErrors.renderStats });
+      setHitStats({ ...GameErrors.hitStats });
       
       // Count errors by category
       const counts = {
@@ -67,8 +71,12 @@ export function ErrorLogViewer() {
   const clearLogs = () => {
     GameErrors.notes = [];
     GameErrors.animations = [];
+    GameErrors.renderStats = { rendered: 0, preMissed: 0 };
+    GameErrors.hitStats = { successfulHits: 0, tapMissFailures: 0, tooEarlyFailures: 0, holdMissFailures: 0, holdReleaseFailures: 0 };
     setErrors([]);
     setAnimations([]);
+    setRenderStats({ rendered: 0, preMissed: 0 });
+    setHitStats({ successfulHits: 0, tapMissFailures: 0, tooEarlyFailures: 0, holdMissFailures: 0, holdReleaseFailures: 0 });
   };
 
   return (
@@ -145,31 +153,75 @@ export function ErrorLogViewer() {
               </div>
             )}
 
+            {/* Render & Hit Tracking */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-gray-900 rounded p-2 text-xs text-green-300 font-mono space-y-1">
+                <div className="font-bold text-green-400">RENDER TRACKING</div>
+                <div className="bg-gray-800 p-1 rounded">
+                  <div className="text-gray-500">Rendered</div>
+                  <div className="text-lg font-bold">{renderStats.rendered}</div>
+                </div>
+                <div className="bg-gray-800 p-1 rounded">
+                  <div className="text-gray-500">Pre-Missed</div>
+                  <div className="text-lg font-bold text-yellow-300">{renderStats.preMissed}</div>
+                </div>
+              </div>
+
+              <div className="bg-gray-900 rounded p-2 text-xs text-blue-300 font-mono space-y-1">
+                <div className="font-bold text-blue-400">HIT RESULTS</div>
+                <div className="bg-gray-800 p-1 rounded">
+                  <div className="text-green-400">✓ Successful</div>
+                  <div className="text-lg font-bold text-green-300">{hitStats.successfulHits}</div>
+                </div>
+                <div className="bg-gray-800 p-1 rounded">
+                  <div className="text-red-400">✗ Failed</div>
+                  <div className="text-lg font-bold text-red-300">{hitStats.tapMissFailures + hitStats.tooEarlyFailures + hitStats.holdMissFailures + hitStats.holdReleaseFailures}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Failure Breakdown */}
+            {(hitStats.tapMissFailures > 0 || hitStats.tooEarlyFailures > 0 || hitStats.holdMissFailures > 0 || hitStats.holdReleaseFailures > 0) && (
+              <div className="bg-gray-900 rounded p-2 text-xs text-red-300 font-mono space-y-1">
+                <div className="font-bold text-red-400 mb-1">FAILURE BREAKDOWN</div>
+                <div className="grid grid-cols-2 gap-1">
+                  {hitStats.tapMissFailures > 0 && <div><span className="text-gray-500">TAP Miss</span>: {hitStats.tapMissFailures}</div>}
+                  {hitStats.tooEarlyFailures > 0 && <div><span className="text-gray-500">Too Early</span>: {hitStats.tooEarlyFailures}</div>}
+                  {hitStats.holdMissFailures > 0 && <div><span className="text-gray-500">Hold Miss</span>: {hitStats.holdMissFailures}</div>}
+                  {hitStats.holdReleaseFailures > 0 && <div><span className="text-gray-500">Release Fail</span>: {hitStats.holdReleaseFailures}</div>}
+                </div>
+              </div>
+            )}
+
             {/* Animation Stats */}
             <div className="bg-gray-900 rounded p-2 text-xs text-cyan-300 font-mono space-y-2">
-              <div className="font-bold text-cyan-400 mb-1">ANIMATION TRACKING</div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-gray-800 p-1.5 rounded">
-                  <div className="text-gray-400">Total Tracked</div>
+              <div className="font-bold text-cyan-400 mb-1">ANIMATION LIFECYCLE</div>
+              <div className="grid grid-cols-4 gap-1">
+                <div className="bg-gray-800 p-1 rounded">
+                  <div className="text-gray-400 text-xs">Total</div>
                   <div className="text-lg font-bold">{animationStats.total}</div>
                 </div>
-                <div className="bg-gray-800 p-1.5 rounded">
-                  <div className="text-green-400">✓ Completed</div>
-                  <div className="text-lg font-bold text-green-300">{animationStats.completed}</div>
-                </div>
-                <div className="bg-gray-800 p-1.5 rounded">
-                  <div className="text-yellow-400">⏳ Rendering</div>
+                <div className="bg-gray-800 p-1 rounded">
+                  <div className="text-yellow-400 text-xs">Pending</div>
                   <div className="text-lg font-bold text-yellow-300">{animationStats.pending}</div>
+                </div>
+                <div className="bg-gray-800 p-1 rounded">
+                  <div className="text-blue-400 text-xs">Rendering</div>
+                  <div className="text-lg font-bold text-blue-300">{animationStats.rendering}</div>
+                </div>
+                <div className="bg-gray-800 p-1 rounded">
+                  <div className="text-green-400 text-xs">✓ Completed</div>
+                  <div className="text-lg font-bold text-green-300">{animationStats.completed}</div>
                 </div>
               </div>
               {animationStats.failed > 0 && (
-                <div className="bg-red-900/30 border border-red-600 p-1.5 rounded">
-                  <div className="text-red-400">✗ Errors</div>
+                <div className="bg-red-900/30 border border-red-600 p-1 rounded">
+                  <div className="text-red-400 text-xs">✗ Animation Errors</div>
                   <div className="text-lg font-bold text-red-300">{animationStats.failed}</div>
                 </div>
               )}
               <div className="text-xs text-gray-500 italic pt-1 border-t border-gray-700">
-                Lifecycle: pending → rendering → completed (1100ms per animation)
+                Lifecycle: pending → rendering → completed
               </div>
             </div>
 
