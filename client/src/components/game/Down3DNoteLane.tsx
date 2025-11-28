@@ -922,6 +922,11 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
               const farDistance = collapseGeo.farDistance;
               const collapseProgress = collapseGeo.collapseProgress;
               
+              // CRITICAL: Skip rendering once collapse animation completes
+              if (collapseProgress >= 1.0) {
+                return null;
+              }
+              
               // ERROR HANDLING: Check if geometry proceeds past judgement line when it shouldn't
               const isSuccessfulHit = note.hit;
               const isHoldReleaseFailure = failures.isHoldReleaseFailure;
