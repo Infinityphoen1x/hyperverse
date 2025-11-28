@@ -373,21 +373,27 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       const notes = notesRef.current;
       
       const anyNote = notes.find(n => {
-        if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT') || n.hit || n.missed) {
+        if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT')) {
+          return false;
+        }
+        
+        // CRITICAL: Check time proximity FIRST before any state checks
+        // Only match notes within LEAD_TIME window (note spawned and is "visible")
+        const timeSinceNoteSpawn = currentTime - n.time;
+        if (timeSinceNoteSpawn < -LEAD_TIME) {
+          return false; // Note is too far in the future - player pressing randomly
+        }
+        
+        // NOW check state (only after confirming note is in valid time window)
+        if (n.hit || n.missed) {
           return false;
         }
         if (n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
           return false;
         }
-        // FIX: Check pressHoldTime, not pressTime (pressTime is for TAP notes)
+        // Check pressHoldTime (already being held)
         if (n.pressHoldTime && n.pressHoldTime > 0) {
           return false;
-        }
-        // CRITICAL: Only match notes within reasonable time range (within LEAD_TIME before + ACTIVATION_WINDOW after)
-        // Don't match notes that are way in the future (>4 seconds ahead)
-        const timeSinceNoteSpawn = currentTime - n.time;
-        if (timeSinceNoteSpawn < -LEAD_TIME) {
-          return false; // Note is too far in the future
         }
         return true;
       });
