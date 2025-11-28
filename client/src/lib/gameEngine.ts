@@ -100,7 +100,8 @@ const GameErrors = {
 export { GameErrors };
 
 // Beat pattern-based note generator (tied to BPM, not random)
-const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[] => {
+// Default duration: 300000ms (5 minutes) to ensure meters continue working throughout extended gameplay
+const generateNotes = (difficulty: Difficulty, duration: number = 300000): Note[] => {
   try {
     if (!difficulty || !['EASY', 'MEDIUM', 'HARD'].includes(difficulty)) {
       GameErrors.log(`Invalid difficulty: ${difficulty}`);
@@ -134,7 +135,7 @@ const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[]
     let beatIndex = 0;
     let noteCount = 0;
     
-    while (currentTime < duration && noteCount < 1000) {
+    while (currentTime < duration && noteCount < 5000) {
       const patternStep = beatIndex % pattern.length;
       const lane = pattern[patternStep];
       
@@ -156,8 +157,8 @@ const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[]
       noteCount++;
     }
     
-    if (noteCount >= 1000) {
-      GameErrors.log(`Note generation capped at 1000 notes`);
+    if (noteCount >= 5000) {
+      GameErrors.log(`Note generation capped at 5000 notes`);
     }
     
     return notes;
