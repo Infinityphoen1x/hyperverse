@@ -831,16 +831,20 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
           className="absolute inset-0 w-full h-full"
           style={{ opacity: 1 }}
         >
-          {/* Concentric hexagons - faint tunnel walls with variable thickness (FIXED at center) */}
+          {/* Concentric hexagons - faint tunnel walls with variable thickness (DYNAMIC VP for inner, FIXED outer corner endpoints) */}
           {HEXAGON_RADII.map((radius, idx) => {
             const maxRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1];
             const progress = radius / maxRadius; // 0 to 1, thinner at center to thicker at edge
             
-            // Generate hexagon points - fixed at hexCenterX/hexCenterY, NOT using dynamic VP
+            // Outer hexagon is fixed, inner hexagons use DYNAMIC VP for perspective
+            const centerX = idx === HEXAGON_RADII.length - 1 ? hexCenterX : vpX;
+            const centerY = idx === HEXAGON_RADII.length - 1 ? hexCenterY : vpY;
+            
+            // Generate hexagon points - outer stays fixed, inner use dynamic VP
             const points = Array.from({ length: 6 }).map((_, i) => {
               const angle = (i * 60 * Math.PI) / 180;
-              const x = hexCenterX + radius * Math.cos(angle);
-              const y = hexCenterY + radius * Math.sin(angle);
+              const x = centerX + radius * Math.cos(angle);
+              const y = centerY + radius * Math.sin(angle);
               return `${x},${y}`;
             }).join(' ');
             
@@ -928,12 +932,17 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
             );
           })}
           
-          {/* Variable-width lines for tunnel rays - 6 equally spaced rays that shift toward red at low health */}
-          {/* Uses DYNAMIC VP for perspective shifts at combo milestones */}
+          {/* Variable-width lines for tunnel rays - 6 equally spaced rays from dynamic VP to FIXED outer hexagon corners */}
+          {/* Rays pivot around dynamic VP but endpoints stay fixed at outer hexagon */}
           {allRayAngles.map((angle) => {
             const rad = (angle * Math.PI) / 180;
             
             const rayColor = getHealthBasedRayColor(health);
+            
+            // Fixed outer hexagon corner position (where ray ends)
+            const maxRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1];
+            const cornerX = hexCenterX + maxRadius * Math.cos(rad);
+            const cornerY = hexCenterY + maxRadius * Math.sin(rad);
             
             // Create line with multiple segments for smooth thickness and opacity gradient
             const segments = 12;
@@ -942,13 +951,13 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
                 {Array.from({ length: segments }).map((_, segIdx) => {
                   const segProgress = (segIdx + 1) / segments;
                   
-                  // Start point - uses DYNAMIC VP for perspective
-                  const x1 = vpX + Math.cos(rad) * (1 + segProgress * MAX_DISTANCE - (MAX_DISTANCE / segments));
-                  const y1 = vpY + Math.sin(rad) * (1 + segProgress * MAX_DISTANCE - (MAX_DISTANCE / segments));
+                  // Interpolate from dynamic VP to fixed outer corner
+                  const x1 = vpX + (cornerX - vpX) * ((segProgress - 1/segments));
+                  const y1 = vpY + (cornerY - vpY) * ((segProgress - 1/segments));
                   
-                  // End point - uses DYNAMIC VP for perspective
-                  const x2 = vpX + Math.cos(rad) * (1 + segProgress * MAX_DISTANCE);
-                  const y2 = vpY + Math.sin(rad) * (1 + segProgress * MAX_DISTANCE);
+                  // End point - interpolate toward fixed outer corner
+                  const x2 = vpX + (cornerX - vpX) * segProgress;
+                  const y2 = vpY + (cornerY - vpY) * segProgress;
                   
                   // Stroke width: thin at vanishing point, thick at edge
                   const strokeWidth = 0.3 + segProgress * 3.5;
