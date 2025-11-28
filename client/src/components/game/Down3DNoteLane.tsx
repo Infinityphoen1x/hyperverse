@@ -245,7 +245,9 @@ interface TapNoteGeometry {
 
 const calculateTapNoteGeometry = (
   progress: number,
-  tapRayAngle: number
+  tapRayAngle: number,
+  vpX: number,
+  vpY: number
 ): TapNoteGeometry => {
   const MIN_DEPTH = 5;
   const MAX_DEPTH = 40;
@@ -259,14 +261,14 @@ const calculateTapNoteGeometry = (
   const tapLeftRad = (tapLeftRayAngle * Math.PI) / 180;
   const tapRightRad = (tapRightRayAngle * Math.PI) / 180;
   
-  const x1 = VANISHING_POINT_X + Math.cos(tapLeftRad) * farDist;
-  const y1 = VANISHING_POINT_Y + Math.sin(tapLeftRad) * farDist;
-  const x2 = VANISHING_POINT_X + Math.cos(tapRightRad) * farDist;
-  const y2 = VANISHING_POINT_Y + Math.sin(tapRightRad) * farDist;
-  const x3 = VANISHING_POINT_X + Math.cos(tapRightRad) * nearDist;
-  const y3 = VANISHING_POINT_Y + Math.sin(tapRightRad) * nearDist;
-  const x4 = VANISHING_POINT_X + Math.cos(tapLeftRad) * nearDist;
-  const y4 = VANISHING_POINT_Y + Math.sin(tapLeftRad) * nearDist;
+  const x1 = vpX + Math.cos(tapLeftRad) * farDist;
+  const y1 = vpY + Math.sin(tapLeftRad) * farDist;
+  const x2 = vpX + Math.cos(tapRightRad) * farDist;
+  const y2 = vpY + Math.sin(tapRightRad) * farDist;
+  const x3 = vpX + Math.cos(tapRightRad) * nearDist;
+  const y3 = vpY + Math.sin(tapRightRad) * nearDist;
+  const x4 = vpX + Math.cos(tapLeftRad) * nearDist;
+  const y4 = vpY + Math.sin(tapLeftRad) * nearDist;
   
   return {
     x1, y1, x2, y2, x3, y3, x4, y4,
@@ -1217,7 +1219,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
             // Get rendering data
             const tapRayAngle = getLaneAngle(note.lane);
             const noteColor = getColorForLane(note.lane);
-            const geometry = calculateTapNoteGeometry(progress, tapRayAngle);
+            const geometry = calculateTapNoteGeometry(progress, tapRayAngle, vpX, vpY);
             const style = calculateTapNoteStyle(progress, state, noteColor);
             
             return (
