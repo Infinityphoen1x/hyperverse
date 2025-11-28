@@ -125,17 +125,17 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
     };
   }, []);
 
-  // Detect when a hold note ends and reset meter
+  // Detect when a hold note changes state and reset meter
   useEffect(() => {
+    if (!Array.isArray(notes)) return;
+    
     [-1, -2].forEach((lane) => {
-      // Find currently active note on this lane (must not be hit or failed)
-      const activeNote = Array.isArray(notes) ? notes.find(n => isActiveHoldNote(n, lane)) : null;
-      
+      const activeNote = notes.find(n => isActiveHoldNote(n, lane));
       const currentNoteId = activeNote?.id || '';
       const prevNoteId = prevActiveNoteIdRef.current[lane];
       
-      // Hold note changed or ended - reset glow
-      if (prevNoteId && prevNoteId !== currentNoteId) {
+      // Note ID changed (including from having active to having none) - reset glow
+      if (prevNoteId !== currentNoteId) {
         prevCompletionRef.current[lane] = false;
         setCompletionGlow(prev => ({ ...prev, [lane]: false }));
       }
@@ -143,40 +143,44 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       // Update tracking
       prevActiveNoteIdRef.current[lane] = currentNoteId;
     });
-  }, [notes, currentTime]);
+  }, [notes]);
 
   // Calculate hold note progress with completion glow trigger
   const getHoldProgress = (lane: number): number => {
     try {
-      if (!Number.isInteger(lane) || !Array.isArray(notes)) return 0;
-      if (!Number.isFinite(currentTime)) return 0;
+      if (!Array.isArray(notes) || !Number.isFinite(currentTime)) return 0;
       
       // Find active hold note on this lane (pressTime set, not hit, and not failed)
       const activeNote = notes.find(n => isActiveHoldNote(n, lane));
       
-      if (!activeNote || !activeNote.pressTime) return 0;
+      // No active note = no progress
+      if (!activeNote) return 0;
       
-      // Calculate progress: elapsed time / beatmap hold duration
-      const beatmapHoldDuration = activeNote.duration || DECK_METER_DEFAULT_HOLD_DURATION;
+      // Must have pressTime to show progress
+      if (!activeNote.pressTime || activeNote.pressTime <= 0) return 0;
+      
+      // Duration defaults to constant if not specified (for generated SPIN notes)
+      const beatmapHoldDuration = (activeNote.duration && activeNote.duration > 0) ? activeNote.duration : DECK_METER_DEFAULT_HOLD_DURATION;
       const elapsedSincePress = currentTime - activeNote.pressTime;
       
-      if (elapsedSincePress < 0 || !Number.isFinite(elapsedSincePress)) {
-        return 0;
-      }
+      // No negative progress
+      if (elapsedSincePress < 0) return 0;
       
-      // Progress: 0 at start, 1.0 when beatmap duration is reached, stays at 1.0 after
+      // Calculate progress: 0→1.0 over hold duration
       const progress = Math.min(elapsedSincePress / beatmapHoldDuration, 1.0);
       
-      if (!Number.isFinite(progress) || progress < 0) {
-        return 0;
-      }
+      // Sanity check
+      if (!Number.isFinite(progress) || progress < 0 || progress > 1) return 0;
       
-      // Trigger completion glow when meter just reaches full (95%+)
+      // Trigger completion glow when meter reaches threshold
       if (progress >= DECK_METER_COMPLETION_THRESHOLD && !prevCompletionRef.current[lane]) {
         prevCompletionRef.current[lane] = true;
         setCompletionGlow(prev => ({ ...prev, [lane]: true }));
         if (glowTimeoutRef.current[lane]) clearTimeout(glowTimeoutRef.current[lane]!);
-        glowTimeoutRef.current[lane] = setTimeout(() => setCompletionGlow(prev => ({ ...prev, [lane]: false })), DECK_METER_COMPLETION_GLOW_DURATION);
+        glowTimeoutRef.current[lane] = setTimeout(
+          () => setCompletionGlow(prev => ({ ...prev, [lane]: false })),
+          DECK_METER_COMPLETION_GLOW_DURATION
+        );
       } else if (progress < DECK_METER_COMPLETION_THRESHOLD) {
         prevCompletionRef.current[lane] = false;
       }

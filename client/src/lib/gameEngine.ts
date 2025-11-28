@@ -217,6 +217,7 @@ const generateNotes = (difficulty: Difficulty, duration: number = 60000): Note[]
         lane: isSpin ? (beatIndex % SPIN_ALTERNATION === 0 ? -1 : -2) : lane, // Alternate left/right spins
         time: currentTime,
         type: isSpin ? (beatIndex % SPIN_ALTERNATION === 0 ? 'SPIN_LEFT' : 'SPIN_RIGHT') : 'TAP',
+        duration: isSpin ? 2000 : undefined, // SPIN notes: 2000ms hold duration for meter tracking
         hit: false,
         missed: false,
       });
