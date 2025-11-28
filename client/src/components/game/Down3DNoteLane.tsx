@@ -781,8 +781,8 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
             
             // HIT SUCCESS: Show burst effect for 600ms then fade
             let finalOpacity = 0.15 + progress * 0.85;
-            let finalScale = scale;
             let hitFlashIntensity = 0;
+            let radiusScale = 1;
             
             if (isHit && timeSinceHit < 600) {
               // Hit burst: 0-200ms = scale up and bright flash, 200-600ms = fade away
@@ -791,9 +791,9 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               
               // First 1/3: scale up to 1.4x, then shrink
               if (hitProgress < 0.33) {
-                finalScale = scale * (1 + (hitProgress / 0.33) * 0.4); // 1x to 1.4x
+                radiusScale = 1 + (hitProgress / 0.33) * 0.4; // 1x to 1.4x
               } else {
-                finalScale = scale * (1.4 - ((hitProgress - 0.33) / 0.67) * 0.4); // 1.4x back to 1x
+                radiusScale = 1.4 - ((hitProgress - 0.33) / 0.67) * 0.4; // 1.4x back to 1x
               }
               
               // Fade out during hit burst
@@ -812,7 +812,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 <circle
                   cx={xPosition}
                   cy={yPosition}
-                  r={radius}
+                  r={radius * radiusScale}
                   fill={isFailed ? 'rgba(80,80,80,0.4)' : noteColor}
                   opacity={isFailed ? (1 - failProgress) * 0.6 : finalOpacity}
                   style={{
@@ -828,7 +828,7 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 <circle
                   cx={xPosition}
                   cy={yPosition}
-                  r={radius}
+                  r={radius * radiusScale}
                   fill="none"
                   stroke={glowColor}
                   strokeWidth={2}
