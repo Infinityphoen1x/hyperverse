@@ -79,6 +79,20 @@ youtube:
     }
   };
 
+  const handleQuickLoadEscapingGravity = async () => {
+    setError("");
+    try {
+      const response = await fetch("/escaping-gravity.txt");
+      if (!response.ok) throw new Error("Failed to load beatmap file");
+      const content = await response.text();
+      setBeatmapText(content);
+    } catch (error) {
+      const msg = `Failed to load escaping-gravity.txt: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      setError(msg);
+      GameErrors.log(`BeatmapLoader: ${msg}`);
+    }
+  };
+
   return (
     <div className="absolute top-4 left-4 z-30">
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -163,6 +177,14 @@ youtube:
                 data-testid="button-confirm-beatmap"
               >
                 LOAD
+              </Button>
+              <Button
+                onClick={handleQuickLoadEscapingGravity}
+                size="sm"
+                className="bg-neon-yellow/30 text-neon-yellow hover:bg-neon-yellow/50 font-rajdhani text-xs"
+                data-testid="button-quick-load-gravity"
+              >
+                ESCAPING GRAVITY
               </Button>
               <Button
                 variant="outline"
