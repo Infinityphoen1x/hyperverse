@@ -159,7 +159,7 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       // Must have pressTime to show progress
       if (!activeNote.pressTime || activeNote.pressTime <= 0) return 0;
       
-      // Duration defaults to constant if not specified (for generated SPIN notes)
+      // Duration defaults to constant if beatmap doesn't specify (fallback for edge cases)
       const beatmapHoldDuration = (activeNote.duration && activeNote.duration > 0) ? activeNote.duration : DECK_METER_DEFAULT_HOLD_DURATION;
       const elapsedSincePress = currentTime - activeNote.pressTime;
       

@@ -1,13 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  EASY_BPM,
-  MEDIUM_BPM,
-  HARD_BPM,
-  MS_PER_MINUTE,
-  NOTE_START_TIME,
-  MAX_GENERATED_NOTES,
-  SPIN_FREQUENCY,
-  SPIN_ALTERNATION,
   TAP_HIT_WINDOW,
   HOLD_MISS_TIMEOUT,
   HOLD_RELEASE_OFFSET,
