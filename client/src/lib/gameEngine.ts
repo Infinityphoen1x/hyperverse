@@ -437,6 +437,12 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       }
       
       const notes = notesRef.current;
+      const laneStr = lane === -1 ? 'Q' : 'P';
+      
+      // DEBUG: Log search attempt
+      const potentialNotes = Array.isArray(notes) ? notes.filter(n => n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT')) : [];
+      GameErrors.log(`trackHoldEnd: Lane ${laneStr} (${lane}), Found ${potentialNotes.length} HOLD notes on this lane`);
+      
       const activeNote = Array.isArray(notes) ? notes.find(n => 
         n && 
         n.lane === lane &&
@@ -451,6 +457,8 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       ) : null;
       
       if (activeNote && activeNote.pressHoldTime && activeNote.pressHoldTime > 0) {
+        GameErrors.log(`trackHoldEnd: Lane ${laneStr} - Found active note ${activeNote.id} at currentTime=${currentTime}, pressHoldTime=${activeNote.pressHoldTime}, duration=${activeNote.duration}`);
+        
         const holdDuration = activeNote.duration || 1000;
         const pressHoldTime = activeNote.pressHoldTime;
         const expectedReleaseTime = pressHoldTime + holdDuration;
@@ -461,6 +469,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         setReleaseTime(activeNote.id, currentTime);
         
         if (currentTime - pressHoldTime < holdDuration) {
+          GameErrors.log(`trackHoldEnd: Lane ${laneStr} note ${activeNote.id} - HOLD_RELEASE_FAILURE (released too early: ${currentTime - pressHoldTime}ms < ${holdDuration}ms)`);
           GameErrors.trackAnimation(activeNote.id, 'holdReleaseFailure', currentTime);
           if (idx !== -1) {
             notes[idx] = { ...notes[idx], releaseTime: currentTime, holdReleaseFailure: true, failureTime: currentTime };
@@ -471,6 +480,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           setHealth(healthRef.current);
           setNotes([...notes]);
         } else if (Math.abs(timeSinceExpectedRelease) <= HOLD_RELEASE_WINDOW) {
+          GameErrors.log(`trackHoldEnd: Lane ${laneStr} note ${activeNote.id} - SUCCESSFUL HIT (accuracy: ${Math.abs(timeSinceExpectedRelease)}ms, window: ${HOLD_RELEASE_WINDOW}ms)`);
           let points = ACCURACY_NORMAL_POINTS;
           if (Math.abs(timeSinceExpectedRelease) < ACCURACY_PERFECT_MS) points = ACCURACY_PERFECT_POINTS;
           else if (Math.abs(timeSinceExpectedRelease) < ACCURACY_GREAT_MS) points = ACCURACY_GREAT_POINTS;
@@ -486,6 +496,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           setHealth(healthRef.current);
           setNotes([...notes]);
         } else {
+          GameErrors.log(`trackHoldEnd: Lane ${laneStr} note ${activeNote.id} - HOLD_RELEASE_FAILURE (released too late: ${timeSinceExpectedRelease}ms > window ${HOLD_RELEASE_WINDOW}ms)`);
           GameErrors.trackAnimation(activeNote.id, 'holdReleaseFailure', currentTime);
           if (idx !== -1) {
             notes[idx] = { ...notes[idx], releaseTime: currentTime, holdReleaseFailure: true, failureTime: currentTime };
@@ -496,6 +507,8 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           setHealth(healthRef.current);
           setNotes([...notes]);
         }
+      } else {
+        GameErrors.log(`trackHoldEnd: Lane ${laneStr} - NO ACTIVE NOTE FOUND (currentTime=${currentTime})`);
       }
     } catch (error) {
       GameErrors.log(`trackHoldEnd error: ${error instanceof Error ? error.message : 'Unknown'}`);
