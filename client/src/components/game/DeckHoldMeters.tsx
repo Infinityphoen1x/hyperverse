@@ -85,11 +85,23 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
 
   // Detect when hold notes transition from active to inactive
   // Completion is based on beatmap hold duration
+  // SYNC WITH visibleNotes LOGIC: match Down3DNoteLane's hold note visibility criteria
   useEffect(() => {
     [-1, -2].forEach((lane) => {
       try {
+        // Find hold note on this lane using same criteria as Down3DNoteLane visibility
+        // - Not hit (show frozen meter for hit notes via holdEndTime state)
+        // - Not missed
+        // - Has pressTime set (actively being held or was held)
+        // - Not failed (failed notes don't show meter)
         const activeNote = Array.isArray(notes) ? notes.find(n => 
-          n && n.lane === lane && (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && !n.hit && !n.missed
+          n && 
+          n.lane === lane && 
+          (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
+          !n.missed &&
+          !n.tooEarlyFailure &&
+          !n.holdMissFailure &&
+          !n.holdReleaseFailure
         ) : null;
         
         const wasActive = prevNoteStates.current[lane];
@@ -166,12 +178,15 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       
       // Find active hold note on this lane (currently being held with pressTime set)
       // This uses the note's own pressTime, matching Down3DNoteLane's source of truth
+      // Excludes failed notes - they don't show meter
       const activeNote = Array.isArray(notes) ? notes.find(n => 
         n &&
         n.lane === lane && 
         (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
-        !n.hit && 
         !n.missed &&
+        !n.tooEarlyFailure &&
+        !n.holdMissFailure &&
+        !n.holdReleaseFailure &&
         n.pressTime && 
         n.pressTime > 0
       ) : null;
