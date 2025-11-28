@@ -90,14 +90,9 @@ export default function Game() {
     startGame();
   }, [startGame]);
 
-  // Memoize deck callbacks to prevent event listener re-registration on every parent render
+  // Memoize deck callbacks for visual rotation only (gameplay input from keyboard handler only)
   const handleLeftDeckSpin = useCallback(() => hitNote(-1), [hitNote]);
-  const handleLeftDeckHoldStart = useCallback(() => trackHoldStart(-1), [trackHoldStart]);
-  const handleLeftDeckHoldEnd = useCallback(() => trackHoldEnd(-1), [trackHoldEnd]);
-  
   const handleRightDeckSpin = useCallback(() => hitNote(-2), [hitNote]);
-  const handleRightDeckHoldStart = useCallback(() => trackHoldStart(-2), [trackHoldStart]);
-  const handleRightDeckHoldEnd = useCallback(() => trackHoldEnd(-2), [trackHoldEnd]);
 
   // Load pending beatmap from localStorage on mount
   useEffect(() => {
@@ -244,8 +239,6 @@ export default function Game() {
            <CamelotWheel 
              side="left" 
              onSpin={handleLeftDeckSpin}
-             onHoldStart={handleLeftDeckHoldStart}
-             onHoldEnd={handleLeftDeckHoldEnd}
              onRotationChange={setLeftDeckRotation}
            />
         </div>
@@ -275,8 +268,6 @@ export default function Game() {
            <CamelotWheel 
              side="right" 
              onSpin={handleRightDeckSpin}
-             onHoldStart={handleRightDeckHoldStart}
-             onHoldEnd={handleRightDeckHoldEnd}
              onRotationChange={setRightDeckRotation}
            />
         </div>
