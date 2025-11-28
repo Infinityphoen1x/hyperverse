@@ -102,20 +102,25 @@ export function BeatmapLoader({ difficulty, onBeatmapLoad }: BeatmapLoaderProps)
                 </label>
                 <Textarea
                   placeholder={`[METADATA]
-title: Song Name
-artist: Artist
+title: Sync Test
+artist: Dual Deck
 bpm: 120
-duration: 180000
-youtube: https://youtube.com/watch?v=...
+duration: 80000
+youtube: 
 
 [${difficulty}]
-1000|0|TAP
-2000|1|TAP
-3000|-1|HOLD_START|hold_L1
-4000|-1|HOLD_END|hold_L1
-5000|2|TAP
-6000|-2|HOLD_START|hold_R1
-7000|-2|HOLD_END|hold_R1`}
+5000|-1|HOLD_START|hold_L1
+5000|-2|HOLD_START|hold_R1
+6000|-1|HOLD_END|hold_L1
+6000|-2|HOLD_END|hold_R1
+15000|-1|HOLD_START|hold_L2
+15000|-2|HOLD_START|hold_R2
+16000|-1|HOLD_END|hold_L2
+16000|-2|HOLD_END|hold_R2
+25000|-1|HOLD_START|hold_L3
+25000|-2|HOLD_START|hold_R3
+26000|-1|HOLD_END|hold_L3
+26000|-2|HOLD_END|hold_R3`}
                   value={beatmapText}
                   onChange={(e) => {
                     setBeatmapText(e.target.value);
