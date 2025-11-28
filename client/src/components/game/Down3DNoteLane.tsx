@@ -357,6 +357,11 @@ const calculateLockedNearDistance = (
   // For tooEarlyFailure: DON'T lock - return null so it uses approach geometry
   if (isTooEarlyFailure) return null;
   
+  // For successful hits: lock at judgement line (187px) - note is consumed here
+  if (note.hit) {
+    return JUDGEMENT_RADIUS;
+  }
+  
   // For holdReleaseFailure: lock at position where failure occurred (at failureTime)
   if (note.holdReleaseFailure && failureTime) {
     const timeUntilHitAtFailure = note.time - failureTime;
@@ -364,7 +369,7 @@ const calculateLockedNearDistance = (
     return Math.max(1, 1 + (approachProgressAtFailure * (JUDGEMENT_RADIUS - 1)));
   }
   
-  // For successful hits and other presses: lock at current approach position
+  // Fallback: lock at approach position
   return approachNearDistance;
 };
 
