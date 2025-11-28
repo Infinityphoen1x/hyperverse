@@ -5,6 +5,7 @@ import {
   HOLD_RELEASE_OFFSET,
   HOLD_RELEASE_WINDOW,
   HOLD_ACTIVATION_WINDOW,
+  LEAD_TIME,
   ACCURACY_PERFECT_MS,
   ACCURACY_GREAT_MS,
   ACCURACY_PERFECT_POINTS,
@@ -380,6 +381,12 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         // FIX: Check pressHoldTime, not pressTime (pressTime is for TAP notes)
         if (n.pressHoldTime && n.pressHoldTime > 0) {
           return false;
+        }
+        // CRITICAL: Only match notes within reasonable time range (within LEAD_TIME before + ACTIVATION_WINDOW after)
+        // Don't match notes that are way in the future (>4 seconds ahead)
+        const timeSinceNoteSpawn = currentTime - n.time;
+        if (timeSinceNoteSpawn < -LEAD_TIME) {
+          return false; // Note is too far in the future
         }
         return true;
       });
