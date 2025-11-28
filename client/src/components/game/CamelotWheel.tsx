@@ -3,6 +3,12 @@ import { useState, useEffect, useRef } from "react";
 import wheelImg from "@assets/generated_images/neon_glowing_cyber_turntable_interface.png";
 import { GameErrors } from "@/lib/gameEngine";
 
+// Deck wheel rotation constants
+const ROTATION_SPEED = 2.0; // degrees per frame
+const SPIN_THRESHOLD = 30; // degrees - trigger onSpin event after this rotation
+const STATE_UPDATE_INTERVAL = 50; // ms - batch state updates to avoid excessive re-renders
+const DRAG_VELOCITY_THRESHOLD = 100; // px/s - minimum velocity to trigger onSpin on drag
+
 interface CamelotWheelProps {
   side: "left" | "right";
   onSpin: () => void;
@@ -67,30 +73,29 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
     };
   }, [side, onHoldStart, onHoldEnd, wheelLane]);
 
-  // Continuous rotation loop using RAF - no setState calls
+  // Continuous rotation loop using RAF - batches callbacks to prevent excessive parent updates
   useEffect(() => {
     let animationId: number;
-    const rotationSpeed = 2.0;
-    const spinThreshold = 30;
     let lastStateUpdateTime = 0;
+    let lastRotationChangeTime = 0;
 
     const animate = () => {
       if (isKeyPressedRef.current) {
-        const rotationDelta = rotationSpeed * spinDirectionRef.current;
+        const rotationDelta = ROTATION_SPEED * spinDirectionRef.current;
         const newRotation = rotationRef.current + rotationDelta;
         rotationRef.current = newRotation;
-        onRotationChange(newRotation);
 
-        // Trigger onSpin event periodically
-        if (Math.abs(newRotation - lastSpinRotationRef.current) >= spinThreshold) {
+        // Trigger onSpin event periodically when rotation threshold exceeded
+        if (Math.abs(newRotation - lastSpinRotationRef.current) >= SPIN_THRESHOLD) {
           onSpin();
           lastSpinRotationRef.current = newRotation;
         }
 
-        // Update state periodically (every 50ms) for motion.div animation
+        // Batch state updates and callbacks: only call onRotationChange when state updates
         const now = performance.now();
-        if (now - lastStateUpdateTime >= 50) {
+        if (now - lastStateUpdateTime >= STATE_UPDATE_INTERVAL) {
           setInternalRotation(newRotation);
+          onRotationChange(newRotation); // Call only when state updates, not every frame
           lastStateUpdateTime = now;
         }
       }
@@ -105,8 +110,9 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
 
   const handleDrag = (_: any, info: any) => {
     try {
-      if (!info || !info.delta || !Number.isFinite(info.delta.x)) {
-        GameErrors.log(`CamelotWheel: Invalid drag info`);
+      // Validate full framer-motion drag info structure
+      if (!info || typeof info !== 'object' || !info.delta || !Number.isFinite(info.delta.x)) {
+        GameErrors.log(`CamelotWheel: Invalid drag info structure`);
         return;
       }
       
@@ -120,7 +126,9 @@ export function CamelotWheel({ side, onSpin, onHoldStart = () => {}, onHoldEnd =
         return newRot;
       });
       
-      if (info.velocity && Math.abs(info.velocity.x) > 100) {
+      // Trigger spin event if drag velocity exceeds threshold
+      if (info.velocity && typeof info.velocity === 'object' && Number.isFinite(info.velocity.x) && 
+          Math.abs(info.velocity.x) > DRAG_VELOCITY_THRESHOLD) {
         onSpin();
       }
     } catch (error) {
