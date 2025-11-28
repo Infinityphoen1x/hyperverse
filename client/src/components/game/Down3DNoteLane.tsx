@@ -469,6 +469,9 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               } else if (isHoldMissFailure && approachNearDistance >= JUDGEMENT_RADIUS) {
                 // holdMissFailure: turns greyscale when it passes judgement line
                 isGreyed = true;
+              } else if (isHoldReleaseFailure) {
+                // holdReleaseFailure: turns greyscale (all failures must greyscale)
+                isGreyed = true;
               }
               
               // COLLAPSE PHASE: After player presses, lock near end and calculate collapse
