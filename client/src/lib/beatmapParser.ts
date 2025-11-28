@@ -96,7 +96,7 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
       return null;
     }
     
-    // Parse note lines
+    // Parse note lines - supports both old (duration-based) and new (start/end) HOLD formats
     const notes: Array<{
       time: number;
       lane: number;
@@ -104,6 +104,10 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
       duration?: number;
       holdId?: string;
     }> = [];
+    
+    // First pass: collect all HOLD_START and HOLD_END points
+    const holdStarts: Record<string, { time: number; lane: number }> = {};
+    const holdEnds: Record<string, { time: number; lane: number }> = {};
     
     for (let lineIdx = 0; lineIdx < noteLines.length; lineIdx++) {
       const line = noteLines[lineIdx];
@@ -122,9 +126,33 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
         continue;
       }
       
-      if (type === 'TAP') {
+      // Handle new start/end format
+      if (type === 'HOLD_START') {
+        if (parts.length < 4) {
+          GameErrors.log(`BeatmapParser: HOLD_START line ${lineIdx} missing holdId: "${line}"`);
+          continue;
+        }
+        const holdId = parts[3].trim();
+        if (!holdId) {
+          GameErrors.log(`BeatmapParser: HOLD_START line ${lineIdx} missing holdId`);
+          continue;
+        }
+        holdStarts[holdId] = { time, lane };
+      } else if (type === 'HOLD_END') {
+        if (parts.length < 4) {
+          GameErrors.log(`BeatmapParser: HOLD_END line ${lineIdx} missing holdId: "${line}"`);
+          continue;
+        }
+        const holdId = parts[3].trim();
+        if (!holdId) {
+          GameErrors.log(`BeatmapParser: HOLD_END line ${lineIdx} missing holdId`);
+          continue;
+        }
+        holdEnds[holdId] = { time, lane };
+      } else if (type === 'TAP') {
         notes.push({ time, lane, type: 'TAP' });
       } else if (type === 'HOLD') {
+        // Old single-line HOLD format (backward compatibility)
         if (parts.length < 5) {
           GameErrors.log(`BeatmapParser: HOLD note line ${lineIdx} missing duration or holdId: "${line}"`);
           continue;
@@ -142,9 +170,35 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
         }
         
         notes.push({ time, lane, type: 'HOLD', duration, holdId });
-      } else if (type !== 'TAP' && type !== 'HOLD') {
+      } else if (type !== 'TAP' && type !== 'HOLD' && type !== 'HOLD_START' && type !== 'HOLD_END') {
         GameErrors.log(`BeatmapParser: Line ${lineIdx} unknown note type: "${type}"`);
       }
+    }
+    
+    // Second pass: convert HOLD_START/HOLD_END pairs to HOLD notes
+    for (const holdId in holdStarts) {
+      if (!holdEnds[holdId]) {
+        GameErrors.log(`BeatmapParser: HOLD_START "${holdId}" has no matching HOLD_END`);
+        continue;
+      }
+      
+      const start = holdStarts[holdId];
+      const end = holdEnds[holdId];
+      
+      // Validate start and end are on same lane
+      if (start.lane !== end.lane) {
+        GameErrors.log(`BeatmapParser: HOLD "${holdId}" has mismatched lanes: start lane=${start.lane}, end lane=${end.lane}`);
+        continue;
+      }
+      
+      // Validate end time is after start time
+      if (end.time <= start.time) {
+        GameErrors.log(`BeatmapParser: HOLD "${holdId}" has invalid timing: start=${start.time}, end=${end.time}`);
+        continue;
+      }
+      
+      const duration = end.time - start.time;
+      notes.push({ time: start.time, lane: start.lane, type: 'HOLD', duration, holdId });
     }
     
     return {
