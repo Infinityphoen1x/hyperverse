@@ -83,6 +83,7 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
     } else if (note.type === 'HOLD') {
       // HOLD can only be on deck lanes (-1, -2)
       type = note.lane === -2 ? 'SPIN_RIGHT' : 'SPIN_LEFT';
+      GameErrors.log(`BeatmapConverter: HOLD note ${note.holdId} lane=${note.lane} → type=${type}`);
     } else {
       // Should never reach here due to parsing, but type-safe default
       type = 'TAP';

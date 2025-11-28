@@ -111,9 +111,11 @@ youtube: https://youtube.com/watch?v=...
 [${difficulty}]
 1000|0|TAP
 2000|1|TAP
-3000|-1|HOLD_START|hold_1
-4000|-1|HOLD_END|hold_1
-5000|2|TAP`}
+3000|-1|HOLD_START|hold_L1
+4000|-1|HOLD_END|hold_L1
+5000|2|TAP
+6000|-2|HOLD_START|hold_R1
+7000|-2|HOLD_END|hold_R1`}
                   value={beatmapText}
                   onChange={(e) => {
                     setBeatmapText(e.target.value);
