@@ -136,12 +136,17 @@ export default function Game() {
       if (e.key === 'Escape' && gameState === 'PLAYING') {
         if (isPaused) {
           pausedTimeRef.current = currentTimeRef.current;
+          console.log('Resume clicked, pausedTimeRef set to:', pausedTimeRef.current);
           setCountdownActive(true);
           setCountdown(3);
           setIsPauseMenuOpen(false);
         } else {
+          const capturedTime = currentTimeRef.current;
+          console.log('Pause clicked, currentTimeRef:', capturedTime);
           pauseGame();
-          setYoutubeStartTime(Math.max(1, Math.floor((currentTimeRef.current + 500) / 1000)));
+          const startTime = Math.max(1, Math.floor((capturedTime + 500) / 1000));
+          console.log('Setting youtubeStartTime to:', startTime);
+          setYoutubeStartTime(startTime);
           setShowYoutubeIframe(false);
           setIsPauseMenuOpen(true);
         }
@@ -159,7 +164,9 @@ export default function Game() {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
     } else {
-      setYoutubeStartTime(Math.max(1, Math.floor((pausedTimeRef.current + 500) / 1000)));
+      const startTime = Math.max(1, Math.floor((pausedTimeRef.current + 500) / 1000));
+      console.log('Countdown finished, pausedTimeRef:', pausedTimeRef.current, 'setting youtubeStartTime to:', startTime);
+      setYoutubeStartTime(startTime);
       setShowYoutubeIframe(true);
       resumeGame();
       setCountdownActive(false);
@@ -252,6 +259,7 @@ export default function Game() {
               <button 
                 onClick={() => {
                   pausedTimeRef.current = currentTimeRef.current;
+                  console.log('RESUME button clicked, pausedTimeRef set to:', pausedTimeRef.current);
                   setCountdownActive(true);
                   setCountdown(3);
                   setIsPauseMenuOpen(false);
@@ -322,12 +330,17 @@ export default function Game() {
             onClick={() => {
               if (isPaused && !countdownActive) {
                 pausedTimeRef.current = currentTimeRef.current;
+                console.log('Play button clicked, pausedTimeRef set to:', pausedTimeRef.current);
                 setCountdownActive(true);
                 setCountdown(3);
                 setIsPauseMenuOpen(false);
               } else if (!isPaused) {
+                const capturedTime = currentTimeRef.current;
+                console.log('Pause button clicked, currentTimeRef:', capturedTime);
                 pauseGame();
-                setYoutubeStartTime(Math.max(1, Math.floor((currentTimeRef.current + 500) / 1000)));
+                const startTime = Math.max(1, Math.floor((capturedTime + 500) / 1000));
+                console.log('Setting youtubeStartTime to:', startTime);
+                setYoutubeStartTime(startTime);
                 setShowYoutubeIframe(false);
                 setIsPauseMenuOpen(true);
               }
