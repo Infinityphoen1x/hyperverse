@@ -929,7 +929,16 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, onPadH
               // Calculate opacity (fade during collapse for failures)
               const approachProgress = (approachGeometry.nearDistance - 1) / (JUDGEMENT_RADIUS - 1);
               let opacity = 0.4 + Math.min(approachProgress, 1.0) * 0.6;
-              if (collapseProgress > 0) {
+              
+              // Fade out for ALL failures based on time since failure
+              if (failures.hasAnyFailure && failureTime) {
+                const timeSinceFailure = Math.max(0, currentTime - failureTime);
+                const failFadeProgress = Math.min(timeSinceFailure / HOLD_ANIMATION_DURATION, 1.0);
+                opacity = opacity * (1.0 - failFadeProgress);
+              }
+              
+              // Override with collapse fade if note was successfully pressed
+              if (collapseProgress > 0 && note.pressTime && note.pressTime > 0) {
                 opacity = Math.max(1.0 - collapseProgress, 0.0);
               }
               
