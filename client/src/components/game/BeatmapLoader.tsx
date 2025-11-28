@@ -86,19 +86,22 @@ export function BeatmapLoader({ difficulty, onBeatmapLoad }: BeatmapLoaderProps)
             {isLoaded ? 'BEATMAP LOADED' : 'LOAD BEATMAP'}
           </Button>
         </DialogTrigger>
-        <DialogContent className="bg-black/95 border-neon-cyan/50 backdrop-blur-sm max-w-2xl max-h-[80vh]">
+        <DialogContent className="bg-black/95 border-neon-cyan/50 backdrop-blur-sm max-w-5xl max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-neon-cyan font-orbitron tracking-wider">
               LOAD BEATMAP
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm text-neon-pink font-rajdhani">
-                Paste Beatmap Text ({difficulty})
-              </label>
-              <Textarea
-                placeholder={`[METADATA]
+          <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+            {/* Main content area: textarea and instructions side-by-side */}
+            <div className="flex gap-4 flex-1 min-h-0">
+              {/* Left: Textarea */}
+              <div className="flex-1 flex flex-col gap-2 min-w-0">
+                <label className="text-sm text-neon-pink font-rajdhani">
+                  Paste Beatmap Text ({difficulty})
+                </label>
+                <Textarea
+                  placeholder={`[METADATA]
 title: Song Name
 artist: Artist
 bpm: 120
@@ -111,35 +114,53 @@ youtube: https://youtube.com/watch?v=...
 3000|-1|HOLD_START|hold_1
 4000|-1|HOLD_END|hold_1
 5000|2|TAP`}
-                value={beatmapText}
-                onChange={(e) => {
-                  setBeatmapText(e.target.value);
-                  setError("");
-                }}
-                className="bg-black/50 border-neon-cyan/30 text-white placeholder:text-white/20 font-mono text-xs resize-none"
-                rows={20}
-                data-testid="textarea-beatmap"
-              />
+                  value={beatmapText}
+                  onChange={(e) => {
+                    setBeatmapText(e.target.value);
+                    setError("");
+                  }}
+                  className="bg-black/50 border-neon-cyan/30 text-white placeholder:text-white/20 font-mono text-xs resize-none flex-1"
+                  data-testid="textarea-beatmap"
+                />
+              </div>
+
+              {/* Right: Instructions */}
+              <div className="w-64 flex flex-col gap-2 overflow-y-auto">
+                <div className="bg-black/50 border border-neon-cyan/20 rounded p-3 text-xs text-white/60 font-rajdhani space-y-2 flex-shrink-0">
+                  <p className="font-bold text-neon-cyan">FORMAT</p>
+                  <div className="space-y-1">
+                    <p className="text-white/80">[METADATA]:</p>
+                    <p className="ml-2 text-white/50">title, artist, bpm</p>
+                    <p className="ml-2 text-white/50">duration, youtube</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-neon-cyan mt-2">TAP:</p>
+                    <p className="font-mono ml-2 text-white/50">time|lane|TAP</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-neon-cyan">HOLD:</p>
+                    <p className="font-mono ml-2 text-white/50 text-xs">start|lane</p>
+                    <p className="font-mono ml-2 text-white/50 text-xs">|HOLD_START</p>
+                    <p className="font-mono ml-2 text-white/50 text-xs">end|lane</p>
+                    <p className="font-mono ml-2 text-white/50 text-xs">|HOLD_END</p>
+                  </div>
+                  <div className="space-y-1 mt-2">
+                    <p className="text-white/50 text-xs">Lanes:</p>
+                    <p className="ml-2 text-white/40 text-xs">0-3: pads</p>
+                    <p className="ml-2 text-white/40 text-xs">-1: Q (left)</p>
+                    <p className="ml-2 text-white/40 text-xs">-2: P (right)</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
+            {/* Error message */}
             {error && (
               <p className="text-xs text-neon-pink font-rajdhani">{error}</p>
             )}
 
-            <div className="bg-black/50 border border-neon-cyan/20 rounded p-3 text-xs text-white/60 font-rajdhani space-y-2">
-              <p className="font-bold text-neon-cyan">FORMAT:</p>
-              <p>[METADATA] section with: title, artist, bpm, duration, youtube (optional)</p>
-              <p>[EASY/MEDIUM/HARD] sections with notes:</p>
-              <p className="font-mono ml-2 text-neon-cyan">TAP:</p>
-              <p className="font-mono ml-4">time|lane|TAP</p>
-              <p className="font-mono ml-2 text-neon-cyan mt-1">HOLD (start/end format):</p>
-              <p className="font-mono ml-4">startTime|lane|HOLD_START|holdId</p>
-              <p className="font-mono ml-4">endTime|lane|HOLD_END|holdId</p>
-              <p className="font-mono ml-2 text-neon-cyan mt-1 text-white/40">Lanes: 0-3 (pads), -1 (left deck Q), -2 (right deck P)</p>
-              <p className="text-white/30 text-xs mt-2">Duration calculated as: endTime - startTime</p>
-            </div>
-
-            <div className="flex gap-2">
+            {/* Buttons */}
+            <div className="flex gap-2 flex-shrink-0">
               <Button
                 onClick={handleLoadBeatmap}
                 className="flex-1 bg-neon-cyan text-black hover:bg-neon-cyan/80 font-rajdhani font-bold"
