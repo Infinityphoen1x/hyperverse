@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useGameEngine, Difficulty, GameErrors, Note } from "@/lib/gameEngine";
-import { getYouTubeVideoTime, buildYouTubeEmbedUrl, pauseYouTubeVideo, resumeYouTubeVideo, seekYouTubeVideo } from "@/lib/youtubeUtils";
+import { getYouTubeVideoTime, buildYouTubeEmbedUrl } from "@/lib/youtubeUtils";
 import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from "@/lib/gameConstants";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
@@ -200,7 +200,6 @@ export default function Game() {
             <div className="flex flex-col gap-4 mt-8">
               <button 
                 onClick={() => {
-                  resumeYouTubeVideo(youtubeIframeRef.current);
                   resumeGame();
                   setIsPauseMenuOpen(false);
                 }}
@@ -211,8 +210,6 @@ export default function Game() {
               </button>
               <button 
                 onClick={() => {
-                  seekYouTubeVideo(youtubeIframeRef.current, 0);
-                  pauseYouTubeVideo(youtubeIframeRef.current);
                   restartGame();
                   setIsPauseMenuOpen(false);
                 }}
@@ -223,7 +220,6 @@ export default function Game() {
               </button>
               <button 
                 onClick={() => {
-                  pauseYouTubeVideo(youtubeIframeRef.current);
                   window.location.href = '/';
                 }}
                 className="px-12 py-4 bg-neon-pink text-black font-bold font-orbitron text-lg hover:bg-white transition-colors"
@@ -270,11 +266,9 @@ export default function Game() {
           <button
             onClick={() => {
               if (isPaused) {
-                resumeYouTubeVideo(youtubeIframeRef.current);
                 resumeGame();
                 setIsPauseMenuOpen(false);
               } else {
-                pauseYouTubeVideo(youtubeIframeRef.current);
                 pauseGame();
                 setIsPauseMenuOpen(true);
               }
