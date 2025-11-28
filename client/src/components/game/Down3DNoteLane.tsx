@@ -117,9 +117,21 @@ export function Down3DNoteLane({ notes, currentTime, health = 200 }: Down3DNoteL
             }
           }
         } else {
-          // TAP notes: show 2000ms before to 500ms after miss
-          if (timeUntilHit > 2000) continue; // Too early, can skip rest
+          // TAP notes: show 2000ms before to 500ms after miss, or until animation completes for failures
           if (n.hit) continue;
+          
+          // Handle TAP failures separately - show for 1100ms from failureTime for animation
+          if (n.tapMissFailure) {
+            const failureTime = n.failureTime || currentTime;
+            const timeSinceFail = currentTime - failureTime;
+            // Keep visible during animation (0 to 1100ms from failureTime)
+            if (timeSinceFail >= 0 && timeSinceFail <= 1100) {
+              result.push(n);
+            }
+            continue;
+          }
+          
+          // Normal TAP notes: show 2000ms before to 500ms after miss
           if (n.missed && timeUntilHit < -500) continue;
           // Show note 2000ms before or during 500ms glitch window after miss
           if (timeUntilHit <= 2000 && timeUntilHit >= -500) {

@@ -318,7 +318,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     } catch (error) {
       GameErrors.log(`hitNote error: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
-  }, [currentTime]);
+  }, []);
 
   useEffect(() => {
     return () => {
