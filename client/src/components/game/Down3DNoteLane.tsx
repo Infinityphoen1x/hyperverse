@@ -509,60 +509,58 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               const leftRad = (leftRayAngle * Math.PI) / 180;
               const rightRad = (rightRayAngle * Math.PI) / 180;
               
-              // holdProgress goes from 0 to 2 over the full visible window
-              // PHASE 1 (0 to 1.0): Note approaches, trapezoid GROWS from vanishing point to judgement line
-              // PHASE 2 (1.0 to 2.0): Held, trapezoid SHRINKS back: near end stays at judgement, far end moves toward it
+              // Unified geometry: approach phase then collapse phase
+              // APPROACH: Near end grows from vanishing point (1) toward judgement line (187)
+              // COLLAPSE: After player presses, near end locks and far end moves toward it
               
-              const isInPhase2 = holdProgress >= 1.0;
-              
-              // PHASE 1 (0 to 1.0): Near end grows from vanishing point (1) toward judgement line (187)
-              // PHASE 2 (1.0 to 2.0): Far end shrinks back from vanishing point toward judgement line
-              
-              // During Phase 2, trapezoid shrinks: both ends move toward judgement line
-              // But maintain minimum size to stay visible
               let nearDistance, farDistance;
+              let lockedNearDistance: number | null = null;
               
-              if (!isInPhase2) {
-                // Phase 1: Growing - near end moves toward judgement line, far stays at vanishing
-                nearDistance = 1 + (holdProgress * (JUDGEMENT_RADIUS - 1));
-                farDistance = 1;
+              // APPROACH PHASE: Calculate near end position based on approach progress
+              const approachProgress = Math.min(timeUntilHit > 0 ? (LEAD_TIME - timeUntilHit) / LEAD_TIME : 1.0, 1.0);
+              const approachNearDistance = 1 + (approachProgress * (JUDGEMENT_RADIUS - 1));
+              
+              // COLLAPSE PHASE: After player presses, lock near end and calculate collapse
+              if (pressTime && pressTime > 0) {
+                // Calculate where near end was at moment of press
+                const timeUntilHitAtPress = note.time - pressTime;
+                const pressApproachProgress = Math.min(Math.max((LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME, 0), 1.0);
+                lockedNearDistance = 1 + (pressApproachProgress * (JUDGEMENT_RADIUS - 1));
+                
+                // Collapse duration: from press time to (note.time + holdDuration)
+                const holdEndTime = note.time + holdDuration;
+                const collapseStartTime = pressTime;
+                const collapseDuration = holdEndTime - collapseStartTime;
+                
+                // Calculate collapse progress (0 to 1 during hold window)
+                const timeSincePress = currentTime - pressTime;
+                const collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
+                
+                // During collapse: near end locked, far end moves toward it
+                nearDistance = lockedNearDistance;
+                farDistance = 1 + (collapseProgress * (lockedNearDistance - 1));
               } else {
-                // Phase 2: Shrinking - trapezoid collapses with fade over holdDuration
-                // For PRESSED notes: Near end STAYS at position when player pressed (shows press timing)
-                // For UNPRESSED notes: Start from judgement line and shrink to nothing
-                const shrinkProgress = Math.min(holdProgress - 1.0, 1.0); // 0 to 1.0 during phase 2
-                
-                if (pressTime && pressTime > 0) {
-                  // Pressed note: lock to press position
-                  // Calculate where the near end was at moment of press
-                  // Only valid if press was within the activation window (±300ms from note.time)
-                  // If press was too late, cap at judgement line
-                  const timeUntilHitAtPress = note.time - pressTime;
-                  const holdProgressAtPress = (LEAD_TIME - timeUntilHitAtPress) / LEAD_TIME;
-                  
-                  // Lock near end to position at moment of press
-                  // If press was too late (negative timeUntilHitAtPress), this caps at 1.0 (judgement line)
-                  // If press was too early, this stays below 1.0 (early position)
-                  nearDistance = 1 + (Math.min(Math.max(holdProgressAtPress, 0), 1.0) * (JUDGEMENT_RADIUS - 1));
-                } else {
-                  // Unpressed note (never pressed): start from judgement line and shrink
-                  nearDistance = JUDGEMENT_RADIUS;
-                }
-                
-                // Far end moves from vanishing point (1) toward the locked/judgement near end
-                farDistance = 1 + (shrinkProgress * (nearDistance - 1));
+                // No press yet: use approach phase geometry
+                nearDistance = approachNearDistance;
+                farDistance = 1;
               }
               
               // Glow when key is held OR after successful release (while animating)
               const hasActivePress = pressTime > 0 || note.hit;
               
-              // Glow intensity scales with how close to judgement line (capped at Phase 1)
-              const glowScale = hasActivePress ? 0.2 + (Math.min(holdProgress, 1.0) * 0.8) : 0.05;
+              // Glow intensity scales with approach progress
+              const glowScale = hasActivePress ? 0.2 + (Math.min(approachProgress, 1.0) * 0.8) : 0.05;
               
-              // Phase 2 intensity: decrease glow as trapezoid collapses
-              const phase2Progress = Math.max(0, holdProgress - 1.0) / 1.0; // 0 to 1 during Phase 2
-              const phase2Glow = phase2Progress > 0 ? (1 - phase2Progress) * 0.8 : 0;
-              const finalGlowScale = hasActivePress ? Math.max(glowScale - phase2Glow, 0.1) : 0.05;
+              // During collapse: decrease glow as trapezoid collapses
+              let collapseGlowProgress = 0;
+              if (pressTime && pressTime > 0) {
+                const holdEndTime = note.time + holdDuration;
+                const collapseDuration = holdEndTime - pressTime;
+                const timeSincePress = currentTime - pressTime;
+                collapseGlowProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
+              }
+              const collapseGlow = collapseGlowProgress > 0 ? (1 - collapseGlowProgress) * 0.8 : 0;
+              const finalGlowScale = hasActivePress ? Math.max(glowScale - collapseGlow, 0.1) : 0.05;
               
               // Calculate trapezoid corners using helper function
               const corners = getTrapezoidCorners(
@@ -611,16 +609,20 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
                 }
               }
               
-              // Phase 1: Opacity increases from 0.4 to 1.0
-              // Phase 2: Maintain high opacity, fade smoothly at end
-              let opacity = 0.4 + Math.min(holdProgress, 1.0) * 0.6;
-              if (isInPhase2) {
-                const shrinkProgress = Math.min(holdProgress - 1.0, 1.0);
-                // During Phase 2: Start from 1.0 (end of Phase 1), fade to 0.2 over 1000ms
-                opacity = Math.max(1.0 - (shrinkProgress * 0.8), 0.2); // Smooth fade from 1.0 to 0.2
+              // Opacity: increases during approach, fades during collapse
+              let opacity = 0.4 + Math.min(approachProgress, 1.0) * 0.6;
+              
+              // During collapse: fade from 1.0 to 0.2
+              if (pressTime && pressTime > 0) {
+                const holdEndTime = note.time + holdDuration;
+                const collapseDuration = holdEndTime - pressTime;
+                const timeSincePress = currentTime - pressTime;
+                const collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
                 
-                // Mark animations as completed when shrink finishes (1100ms total)
-                if (shrinkProgress >= 0.99 && (note.tooEarlyFailure || note.holdReleaseFailure || note.holdMissFailure)) {
+                opacity = Math.max(1.0 - (collapseProgress * 0.8), 0.2); // Smooth fade from 1.0 to 0.2
+                
+                // Mark animations as completed when collapse finishes
+                if (collapseProgress >= 0.99 && (note.tooEarlyFailure || note.holdReleaseFailure || note.holdMissFailure)) {
                   const failureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
                   if (note.tooEarlyFailure) failureTypes.push('tooEarlyFailure');
                   if (note.holdReleaseFailure) failureTypes.push('holdReleaseFailure');
