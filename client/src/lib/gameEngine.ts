@@ -179,12 +179,23 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   const startTimeRef = useRef<number>(0);
   const currentTimeRef = useRef<number>(0);
   const lastStateUpdateRef = useRef<number>(0);
+  
+  // Refs for game state (updated every frame without re-renders)
+  const notesRef = useRef<Note[]>([]);
+  const comboRef = useRef<number>(0);
+  const healthRef = useRef<number>(200);
+  const scoreRef = useRef<number>(0);
 
   const startGame = useCallback(() => {
+    scoreRef.current = 0;
+    comboRef.current = 0;
+    healthRef.current = 200;
+    notesRef.current = customNotes || generateNotes(difficulty);
+    
     setScore(0);
     setCombo(0);
     setHealth(200);
-    setNotes(customNotes || generateNotes(difficulty));
+    setNotes(notesRef.current);
     setGameState('PLAYING');
     
     startTimeRef.current = Date.now();
@@ -195,73 +206,38 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       if (getVideoTime) {
         const videoTime = getVideoTime();
         if (videoTime !== null && videoTime >= 0) {
-          // Use video time in milliseconds
           time = videoTime * 1000;
         } else {
-          // Video not ready yet, pause game
           requestRef.current = requestAnimationFrame(loop);
           return;
         }
       } else {
-        // No video, use elapsed time from start
         const now = Date.now();
         time = now - startTimeRef.current;
       }
       
-      // Update ref immediately (fast, no re-render)
       currentTimeRef.current = time;
       
-      // Update state periodically (every 50ms) for display purposes
-      if (time - lastStateUpdateRef.current >= 50) {
-        setCurrentTime(time);
-        lastStateUpdateRef.current = time;
-      }
-      
-      // Check for missed notes and cleanup old notes
+      // Check for missed notes - update ref-based state only
       let shouldGameOver = false;
-      setNotes(prev => {
-        if (!Array.isArray(prev)) {
-          GameErrors.log(`Game loop: notes is not an array`);
-          return prev;
-        }
-        
-        let newHealth = 200;
-        const cleaned: Note[] = [];
-        
-        for (let i = 0; i < prev.length; i++) {
-          const n = prev[i];
+      const notes = notesRef.current;
+      if (Array.isArray(notes)) {
+        for (let i = 0; i < notes.length; i++) {
+          const n = notes[i];
           if (!n) continue;
           
-          // Keep notes in array indefinitely to ensure meters always have reference points
-          // They don't affect gameplay once hit/missed/failed, and keeping them allows:
-          // 1. Meters to maintain state even when no active holds are visible
-          // 2. Stats tracking to continue working
-          // 3. Better visual feedback persistence
-          // Notes will naturally stop affecting renders through hit/failed flags
-          
-          // Check for new failures only (skip already-failed notes)
           if (!n.hit && !n.missed && !n.tapMissFailure && !n.holdReleaseFailure && !n.tooEarlyFailure && !n.holdMissFailure) {
             let shouldMarkFailed = false;
             let failureType: keyof Note | '' = '';
             
-            // TAP notes: miss if outside hit window (±300ms from note time)
-            // Must match hitWindow constant (300ms) used in hitNote function
             if (n.type === 'TAP' && time > n.time + 300) {
               shouldMarkFailed = true;
               failureType = 'tapMissFailure';
-            }
-            // HOLD notes: miss if never pressed, OR if pressed but never released
-            else if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
-              // Case 1: Never pressed - fail at fixed time: note.time + 1100ms
+            } else if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
               if (!n.pressTime && time > n.time + 1100) {
                 shouldMarkFailed = true;
                 failureType = 'holdMissFailure';
-              }
-              // Case 2: Pressed but NEVER released - fail after release deadline passes
-              // If pressed at pressTime, expected release is at pressTime + holdDuration
-              // Release window is ±100ms, so valid until pressTime + holdDuration + 100ms
-              // Add 500ms buffer to ensure trackHoldEnd gets priority
-              else if (n.pressTime && n.pressTime > 0 && !n.hit) {
+              } else if (n.pressTime && n.pressTime > 0 && !n.hit) {
                 const noteHoldDuration = n.duration || 1000;
                 if (time > n.pressTime + noteHoldDuration + 600) {
                   shouldMarkFailed = true;
@@ -272,27 +248,31 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
             
             if (shouldMarkFailed && failureType) {
               GameErrors.trackAnimation(n.id, failureType as any, time);
-              setCombo(0);
-              setHealth(h => {
-                newHealth = Math.max(0, h - 2);
-                if (newHealth <= 0) shouldGameOver = true;
-                return newHealth;
-              });
-              cleaned.push({ ...n, [failureType]: true, failureTime: time });
-              continue;
+              comboRef.current = 0;
+              healthRef.current = Math.max(0, healthRef.current - 2);
+              if (healthRef.current <= 0) shouldGameOver = true;
+              notes[i] = { ...n, [failureType]: true, failureTime: time };
             }
           }
-          
-          cleaned.push(n);
         }
-        
-        return cleaned;
-      });
+      }
       
-
+      // Sync refs to state periodically for UI
+      if (time - lastStateUpdateRef.current >= 50) {
+        setCurrentTime(time);
+        setNotes([...notesRef.current]);
+        setCombo(comboRef.current);
+        setHealth(healthRef.current);
+        setScore(scoreRef.current);
+        lastStateUpdateRef.current = time;
+      }
+      
       if (shouldGameOver) {
         setGameState('GAMEOVER');
-        return; // Stop loop
+        setNotes([...notesRef.current]);
+        setCombo(comboRef.current);
+        setHealth(healthRef.current);
+        return;
       }
 
       requestRef.current = requestAnimationFrame(loop);
@@ -308,47 +288,48 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         return;
       }
       
-      const hitWindow = 300; // ms
+      const hitWindow = 300;
       const currentTime = currentTimeRef.current;
+      const notes = notesRef.current;
       
-      setNotes(prev => {
-        if (!Array.isArray(prev)) {
-          GameErrors.log(`hitNote: notes is not an array`);
-          return prev;
-        }
+      if (!Array.isArray(notes)) {
+        GameErrors.log(`hitNote: notes is not an array`);
+        return;
+      }
 
-        const noteIndex = prev.findIndex(n => 
-          n && 
-          !n.hit && 
-          !n.missed && 
-          !n.tapMissFailure &&
-          !n.tooEarlyFailure &&
-          !n.holdMissFailure &&
-          !n.holdReleaseFailure &&
-          n.lane === lane && 
-          Number.isFinite(n.time) &&
-          Number.isFinite(currentTime) &&
-          Math.abs(n.time - currentTime) < hitWindow
-        );
+      const noteIndex = notes.findIndex(n => 
+        n && 
+        !n.hit && 
+        !n.missed && 
+        !n.tapMissFailure &&
+        !n.tooEarlyFailure &&
+        !n.holdMissFailure &&
+        !n.holdReleaseFailure &&
+        n.lane === lane && 
+        Number.isFinite(n.time) &&
+        Number.isFinite(currentTime) &&
+        Math.abs(n.time - currentTime) < hitWindow
+      );
 
-        if (noteIndex !== -1) {
-          const note = prev[noteIndex];
-          const accuracy = Math.abs(note.time - currentTime);
-          let points = 100;
-          if (accuracy < 50) points = 300;
-          else if (accuracy < 100) points = 200;
+      if (noteIndex !== -1) {
+        const note = notes[noteIndex];
+        const accuracy = Math.abs(note.time - currentTime);
+        let points = 100;
+        if (accuracy < 50) points = 300;
+        else if (accuracy < 100) points = 200;
 
-          setScore(s => s + points);
-          setCombo(c => c + 1);
-          setHealth(h => Math.min(200, h + 1));
-          
-          const newNotes = [...prev];
-          newNotes[noteIndex] = { ...note, hit: true, hitTime: currentTime };
-          return newNotes;
-        }
+        scoreRef.current += points;
+        comboRef.current += 1;
+        healthRef.current = Math.min(200, healthRef.current + 1);
         
-        return prev;
-      });
+        notes[noteIndex] = { ...note, hit: true, hitTime: currentTime };
+        
+        // Sync state immediately for visual feedback
+        setScore(scoreRef.current);
+        setCombo(comboRef.current);
+        setHealth(healthRef.current);
+        setNotes([...notes]);
+      }
     } catch (error) {
       GameErrors.log(`hitNote error: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
@@ -364,7 +345,6 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     try {
       const currentTime = currentTimeRef.current;
       
-      // LANE ISOLATION: Only allow deck lanes (-1 for Q, -2 for P)
       if (lane !== -1 && lane !== -2) {
         GameErrors.log(`trackHoldStart: Invalid deck lane=${lane}, must be -1 (Q) or -2 (P)`);
         return;
@@ -374,18 +354,14 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         return;
       }
       
-      // Find hold note ONLY on this specific lane - no cross-lane interference
-      // Once a hold note is marked as any failure type, it can never be activated again
+      const notes = notesRef.current;
       const anyNote = notes.find(n => {
-        // STRICT LANE CHECK: Ensure note belongs to THIS lane only
         if (!n || n.lane !== lane || (n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT') || n.hit || n.missed) {
           return false;
         }
-        // Exclude all failure types - once failed, the note is permanently unavailable
         if (n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
           return false;
         }
-        // Exclude notes that have already been pressed (pressTime set) - they're being held
         if (n.pressTime && n.pressTime > 0) {
           return false;
         }
@@ -393,62 +369,51 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       });
       
       if (!anyNote) {
-        // No active hold note available - this is normal when player presses Q/P at random times
         return;
       }
       
       const timeSinceNoteSpawn = currentTime - anyNote.time;
+      const holdActivationWindow = 300;
       
-      // Accuracy-based hold activation (same as TAP notes)
-      // Press window: ±300ms from note arrival
-      const holdActivationWindow = 300; // ms
-      
-      // Check if press is within accuracy window
       if (Math.abs(timeSinceNoteSpawn) > holdActivationWindow) {
-        // Outside window - mark as failure
         if (timeSinceNoteSpawn < -holdActivationWindow) {
-          // Too early - mark as tooEarlyFailure but still record pressTime for geometry locking
           GameErrors.trackAnimation(anyNote.id, 'tooEarlyFailure', currentTime);
-          setNotes(prev => {
-            return prev.map(n => 
-              n && n.id === anyNote.id ? { ...n, pressTime: currentTime, tooEarlyFailure: true, failureTime: currentTime } : n
-            );
-          });
+          const idx = notes.findIndex(n => n && n.id === anyNote.id);
+          if (idx !== -1) {
+            notes[idx] = { ...notes[idx], pressTime: currentTime, tooEarlyFailure: true, failureTime: currentTime };
+          }
+          comboRef.current = 0;
+          healthRef.current = Math.max(0, healthRef.current - 2);
           setCombo(0);
-          setHealth(h => Math.max(0, h - 2));
+          setHealth(healthRef.current);
+          setNotes([...notes]);
         }
-        // Too late - will be caught by holdMissFailure in main loop
         return;
       }
       
-      // Valid press - now player must hold for 1000ms and release accurately
-      // Store press time for release accuracy calculation (single source of truth)
-      setNotes(prev => {
-        return prev.map(n => 
-          n && n.id === anyNote.id ? { ...n, pressTime: currentTime } : n
-        );
-      });
+      const idx = notes.findIndex(n => n && n.id === anyNote.id);
+      if (idx !== -1) {
+        notes[idx] = { ...notes[idx], pressTime: currentTime };
+        setNotes([...notes]);
+      }
     } catch (error) {
       GameErrors.log(`trackHoldStart error: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
-  }, [notes]);
+  }, []);
 
   const trackHoldEnd = useCallback((lane: number) => {
     try {
       const currentTime = currentTimeRef.current;
       
-      // LANE ISOLATION: Only allow deck lanes (-1 for Q, -2 for P)
       if (lane !== -1 && lane !== -2) {
         GameErrors.log(`trackHoldEnd: Invalid deck lane=${lane}, must be -1 (Q) or -2 (P)`);
         return;
       }
       
-      // Find the active hold note ONLY on this specific lane (pressed but not released yet)
-      // STRICT LANE CHECK: Ensure no cross-lane interference (Q press doesn't affect P notes)
-      // Exclude notes that already have any failure type - they can't fail again
+      const notes = notesRef.current;
       const activeNote = Array.isArray(notes) ? notes.find(n => 
         n && 
-        n.lane === lane &&  // CRITICAL: Match exact lane only
+        n.lane === lane &&
         (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && 
         n.pressTime && 
         n.pressTime > 0 &&
@@ -459,59 +424,55 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         !n.holdReleaseFailure
       ) : null;
       
-      // If there's an active note, check release timing accuracy
       if (activeNote && activeNote.pressTime && activeNote.pressTime > 0) {
-        const holdDuration = activeNote.duration || 1000; // Use note duration from beatmap, fallback to 1000ms
-        const RELEASE_WINDOW = 100; // ms - release accuracy window (tighter timing)
-        
-        // Calculate expected release time - use the note's press time (single source of truth)
+        const holdDuration = activeNote.duration || 1000;
+        const RELEASE_WINDOW = 100;
         const pressTime = activeNote.pressTime;
         const expectedReleaseTime = pressTime + holdDuration;
         const timeSinceExpectedRelease = currentTime - expectedReleaseTime;
+        const idx = notes.findIndex(n => n && n.id === activeNote.id);
         
-        // Check if released too early (before hold duration complete)
         if (currentTime - pressTime < holdDuration) {
           GameErrors.trackAnimation(activeNote.id, 'holdReleaseFailure', currentTime);
-          setNotes(prev => {
-            return prev.map(n => 
-              n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true, failureTime: currentTime } : n
-            );
-          });
+          if (idx !== -1) {
+            notes[idx] = { ...notes[idx], holdReleaseFailure: true, failureTime: currentTime };
+          }
+          comboRef.current = 0;
+          healthRef.current = Math.max(0, healthRef.current - 2);
           setCombo(0);
-          setHealth(h => Math.max(0, h - 2));
-        }
-        // Check if release is within accuracy window (±100ms from expected release)
-        else if (Math.abs(timeSinceExpectedRelease) <= RELEASE_WINDOW) {
-          // Successful hold - calculate accuracy tier
-          let points = 100; // Good (50-100ms)
-          if (Math.abs(timeSinceExpectedRelease) < 50) points = 300; // Perfect (0-50ms)
-          else if (Math.abs(timeSinceExpectedRelease) < 100) points = 200; // Great (50-100ms)
+          setHealth(healthRef.current);
+          setNotes([...notes]);
+        } else if (Math.abs(timeSinceExpectedRelease) <= RELEASE_WINDOW) {
+          let points = 100;
+          if (Math.abs(timeSinceExpectedRelease) < 50) points = 300;
+          else if (Math.abs(timeSinceExpectedRelease) < 100) points = 200;
           
-          setNotes(prev => {
-            return prev.map(n => 
-              n && n.id === activeNote.id ? { ...n, hit: true } : n
-            );
-          });
-          setScore(s => s + points);
-          setCombo(c => c + 1);
-          setHealth(h => Math.min(200, h + 1));
-        }
-        // Released too late (outside release window)
-        else {
+          if (idx !== -1) {
+            notes[idx] = { ...notes[idx], hit: true };
+          }
+          scoreRef.current += points;
+          comboRef.current += 1;
+          healthRef.current = Math.min(200, healthRef.current + 1);
+          setScore(scoreRef.current);
+          setCombo(comboRef.current);
+          setHealth(healthRef.current);
+          setNotes([...notes]);
+        } else {
           GameErrors.trackAnimation(activeNote.id, 'holdReleaseFailure', currentTime);
-          setNotes(prev => {
-            return prev.map(n => 
-              n && n.id === activeNote.id ? { ...n, holdReleaseFailure: true, failureTime: currentTime } : n
-            );
-          });
+          if (idx !== -1) {
+            notes[idx] = { ...notes[idx], holdReleaseFailure: true, failureTime: currentTime };
+          }
+          comboRef.current = 0;
+          healthRef.current = Math.max(0, healthRef.current - 2);
           setCombo(0);
-          setHealth(h => Math.max(0, h - 2));
+          setHealth(healthRef.current);
+          setNotes([...notes]);
         }
       }
     } catch (error) {
       GameErrors.log(`trackHoldEnd error: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
-  }, [notes]);
+  }, []);
 
   const markNoteMissed = useCallback((noteId: string) => {
     try {
@@ -520,39 +481,33 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         return;
       }
       
-      setNotes(prev => {
-        if (!Array.isArray(prev)) {
-          GameErrors.log(`markNoteMissed: notes is not an array`);
-          return prev;
-        }
+      const notes = notesRef.current;
+      if (!Array.isArray(notes)) {
+        GameErrors.log(`markNoteMissed: notes is not an array`);
+        return;
+      }
 
-        const noteIndex = prev.findIndex(n => 
-          n && 
-          n.id === noteId && 
-          !n.hit && 
-          !n.missed &&
-          !n.tapMissFailure &&
-          !n.tooEarlyFailure &&
-          !n.holdMissFailure &&
-          !n.holdReleaseFailure
-        );
+      const noteIndex = notes.findIndex(n => 
+        n && 
+        n.id === noteId && 
+        !n.hit && 
+        !n.missed &&
+        !n.tapMissFailure &&
+        !n.tooEarlyFailure &&
+        !n.holdMissFailure &&
+        !n.holdReleaseFailure
+      );
+      
+      if (noteIndex !== -1) {
+        comboRef.current = 0;
+        healthRef.current = Math.max(0, healthRef.current - 2);
+        notes[noteIndex] = { ...notes[noteIndex], missed: true };
         
-        if (noteIndex !== -1) {
-          const note = prev[noteIndex];
-          setCombo(0);
-          setHealth(h => {
-            const newHealth = Math.max(0, h - 2);
-            if (newHealth <= 0) setGameState('GAMEOVER');
-            return newHealth;
-          });
-          
-          const newNotes = [...prev];
-          newNotes[noteIndex] = { ...note, missed: true };
-          return newNotes;
-        }
-        
-        return prev;
-      });
+        setCombo(0);
+        setHealth(healthRef.current);
+        if (healthRef.current <= 0) setGameState('GAMEOVER');
+        setNotes([...notes]);
+      }
     } catch (error) {
       GameErrors.log(`markNoteMissed error: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
