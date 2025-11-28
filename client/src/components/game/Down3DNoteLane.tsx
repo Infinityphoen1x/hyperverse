@@ -181,6 +181,8 @@ const calculateApproachGeometry = (
 interface TapNoteState {
   isHit: boolean;
   isFailed: boolean;
+  isTooEarlyFailure: boolean;
+  isTapMissFailure: boolean;
   failureTime: number | undefined;
   hitTime: number | undefined;
   timeSinceFail: number;
@@ -189,14 +191,16 @@ interface TapNoteState {
 
 const getTapNoteState = (note: Note, currentTime: number): TapNoteState => {
   const isHit = note.hit || false;
-  const isFailed = note.tapMissFailure || false;
+  const isTooEarlyFailure = note.tooEarlyFailure || false;
+  const isTapMissFailure = note.tapMissFailure || false;
+  const isFailed = isTooEarlyFailure || isTapMissFailure;
   const failureTime = note.failureTime;
   const hitTime = note.hitTime;
   
   const timeSinceFail = failureTime ? Math.max(0, currentTime - failureTime) : 0;
   const timeSinceHit = isHit && hitTime ? Math.max(0, currentTime - hitTime) : 0;
   
-  return { isHit, isFailed, failureTime, hitTime, timeSinceFail, timeSinceHit };
+  return { isHit, isFailed, isTooEarlyFailure, isTapMissFailure, failureTime, hitTime, timeSinceFail, timeSinceHit };
 };
 
 /** Determine if TAP note should still be rendered */
@@ -207,8 +211,9 @@ const shouldRenderTapNote = (state: TapNoteState, progress: number): boolean => 
   // After hit animation finishes (600ms)
   if (state.isHit && state.timeSinceHit >= 600) return false;
   
-  // After failure animation finishes (1100ms)
-  if (state.isFailed && state.timeSinceFail > 1100) return false;
+  // After failure animation finishes - different durations for each failure type
+  if (state.isTooEarlyFailure && state.timeSinceFail > 800) return false;
+  if (state.isTapMissFailure && state.timeSinceFail > 1100) return false;
   
   return true;
 };
@@ -217,18 +222,21 @@ const shouldRenderTapNote = (state: TapNoteState, progress: number): boolean => 
 const trackTapNoteAnimation = (note: Note, state: TapNoteState, currentTime: number): void => {
   if (!state.isFailed) return; // Only track failures
   
-  const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === 'tapMissFailure');
+  const failureType = state.isTooEarlyFailure ? 'tooEarlyFailure' : 'tapMissFailure';
+  const animDuration = state.isTooEarlyFailure ? 800 : 1100;
+  
+  const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
   if (!animEntry) {
     // First render: create tracking entry
-    GameErrors.trackAnimation(note.id, 'tapMissFailure', state.failureTime || currentTime);
+    GameErrors.trackAnimation(note.id, failureType, state.failureTime || currentTime);
   } else if (animEntry.status === 'pending') {
     // Transition from pending to rendering (or skip if already finished)
-    if (state.timeSinceFail >= 1100) {
+    if (state.timeSinceFail >= animDuration) {
       GameErrors.updateAnimation(note.id, { status: 'completed', renderStart: currentTime, renderEnd: currentTime });
     } else {
       GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
     }
-  } else if (animEntry.status === 'rendering' && state.timeSinceFail >= 1100) {
+  } else if (animEntry.status === 'rendering' && state.timeSinceFail >= animDuration) {
     // Mark completed when animation finishes
     GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
   }
@@ -291,9 +299,24 @@ const calculateTapNoteStyle = (
   noteColor: string
 ): TapNoteStyle => {
   let opacity = 0.4 + (progress * 0.6);
-  if (state.isFailed) {
-    const failProgress = Math.min(state.timeSinceFail / 1000, 1.0);
+  let fill = noteColor;
+  let stroke = 'rgba(255,255,255,0.8)';
+  let filter = `drop-shadow(0 0 ${10 * progress}px ${noteColor})`;
+  
+  if (state.isTooEarlyFailure) {
+    // Too early: orange/amber alert, faster fade (800ms)
+    const failProgress = Math.min(state.timeSinceFail / 800, 1.0);
+    opacity = (1 - failProgress) * 0.7;
+    fill = 'rgba(255,165,0,0.4)';
+    stroke = 'rgba(255,165,0,0.8)';
+    filter = `drop-shadow(0 0 12px rgba(255,165,0,0.8)) drop-shadow(0 0 6px rgba(255,165,0,0.5))`;
+  } else if (state.isTapMissFailure) {
+    // Missed: red/grey, standard fade (1100ms)
+    const failProgress = Math.min(state.timeSinceFail / 1100, 1.0);
     opacity = (1 - failProgress) * 0.6;
+    fill = 'rgba(80,80,80,0.3)';
+    stroke = 'rgba(100,100,100,0.6)';
+    filter = 'drop-shadow(0 0 8px rgba(100,100,100,0.6)) grayscale(1)';
   } else if (state.isHit) {
     opacity = (1 - (state.timeSinceHit / 600)) * (0.4 + (progress * 0.6));
   }
@@ -302,14 +325,9 @@ const calculateTapNoteStyle = (
     ? Math.max(0, 1 - (state.timeSinceHit / 600)) 
     : 0;
   
-  const fill = state.isFailed ? 'rgba(80,80,80,0.3)' : noteColor;
-  const stroke = state.isFailed ? 'rgba(100,100,100,0.6)' : 'rgba(255,255,255,0.8)';
-  
-  const filter = state.isFailed
-    ? 'drop-shadow(0 0 8px rgba(100,100,100,0.6)) grayscale(1)'
-    : hitFlashIntensity > 0
-      ? `brightness(1.8) drop-shadow(0 0 20px ${noteColor})`
-      : `drop-shadow(0 0 ${10 * progress}px ${noteColor})`;
+  if (state.isHit && hitFlashIntensity > 0) {
+    filter = `brightness(1.8) drop-shadow(0 0 20px ${noteColor})`;
+  }
   
   return { opacity: Math.max(opacity, 0), fill, stroke, filter, hitFlashIntensity };
 };
