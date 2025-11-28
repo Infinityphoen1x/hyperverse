@@ -478,7 +478,9 @@ export function Down3DNoteLane({ notes, currentTime, health = 200, onPadHit }: D
               
               // APPROACH PHASE: Hold note is a flat rectangular strip moving toward camera
               // Before press: both near and far move together, maintaining constant Z-length (strip width)
-              const approachProgress = Math.min(timeUntilHit > 0 ? (LEAD_TIME - timeUntilHit) / LEAD_TIME : 1.0, 1.0);
+              // Continues past judgement line (187) toward vanishing point (1), then shrinks beyond
+              let approachProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+              // No clamping - allow it to continue past 1.0, shrinking beyond judgement line
               const approachNearDistance = 1 + (approachProgress * (JUDGEMENT_RADIUS - 1));
               
               // Strip width = fixed depth length based on duration
