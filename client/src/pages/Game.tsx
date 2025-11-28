@@ -245,6 +245,8 @@ export default function Game() {
                   console.log('[PAUSE-SYSTEM] REWIND button: restarting game to 0');
                   pausedTimeRef.current = 0;
                   restartGame();
+                  // Immediately pause to prevent game loop from running during YouTube sync
+                  pauseGame();
                   seekYouTubeVideo(0);
                   pauseYouTubeVideo();
                   setIsPauseMenuOpen(false);
