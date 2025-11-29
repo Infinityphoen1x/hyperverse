@@ -182,7 +182,7 @@ export function getYouTubeVideoTime(): number | null {
   if (youtubeIframeElement?.contentWindow) {
     youtubeIframeElement.contentWindow.postMessage(
       JSON.stringify({ event: 'command', func: 'getCurrentTime', args: [] }),
-      'https://www.youtube.com'
+      '*'
     );
     // Listen once for response (handled in listener)
   }
@@ -295,7 +295,7 @@ export async function seekYouTubeVideo(timeSeconds: number, signal?: AbortSignal
           func: 'seekTo',
           args: [clampedTime, true]
         }),
-        'https://www.youtube.com'
+        '*'
       );
       console.log(`[YOUTUBE-SEEK] PostMessage fallback: Seeking to ${minutes}:${seconds} (${clampedTime.toFixed(2)}s total)`);
     } else {
@@ -366,7 +366,7 @@ export async function playYouTubeVideo(): Promise<void> {
           func: 'playVideo',
           args: []
         }),
-        'https://www.youtube.com'
+        '*'
       );
       console.log(`[YOUTUBE-PLAY] PostMessage fallback: Playing from tracked time ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s`);
     } else {
@@ -386,7 +386,7 @@ export async function playYouTubeVideo(): Promise<void> {
           // Fallback: Query state via postMessage (one-shot, response async but approx)
           youtubeIframeElement.contentWindow.postMessage(
             JSON.stringify({ event: 'command', func: 'getPlayerState', args: [] }),
-            'https://www.youtube.com'
+            '*'
           );
           // Note: Actual response handled in listener; use timeout as proxy
           state = 1; // Optimistic for fallback
