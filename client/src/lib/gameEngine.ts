@@ -172,7 +172,7 @@ export const clearReleaseTimes = () => {
 };
 
 export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => number | null, customNotes?: Note[]) => {
-  const [gameState, setGameState] = useState<'MENU' | 'COUNTDOWN' | 'PLAYING' | 'GAMEOVER'>('MENU');
+  const [gameState, setGameState] = useState<'MENU' | 'COUNTDOWN' | 'PLAYING' | 'PAUSED' | 'GAMEOVER'>('MENU');
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [health, setHealth] = useState(MAX_HEALTH);
@@ -188,7 +188,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   const lastStateUpdateRef = useRef<number>(0);
   const lastNotesUpdateRef = useRef<number>(0);
   const lastCountdownUpdateRef = useRef<number>(0);
-  const gameStateRef = useRef<'MENU' | 'COUNTDOWN' | 'PLAYING' | 'GAMEOVER'>('MENU');
+  const gameStateRef = useRef<'MENU' | 'COUNTDOWN' | 'PLAYING' | 'PAUSED' | 'GAMEOVER'>('MENU');
   
   // Refs for game state (updated every frame without re-renders)
   const notesRef = useRef<Note[]>([]);

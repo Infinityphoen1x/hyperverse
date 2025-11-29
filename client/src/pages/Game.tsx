@@ -193,10 +193,10 @@ export default function Game() {
     }
   }, []);
 
-  // ESC key to pause/resume (works in PLAYING and COUNTDOWN states)
+  // ESC key to pause/resume (works in PLAYING, COUNTDOWN, and PAUSED states)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && (gameState === 'PLAYING' || gameState === 'COUNTDOWN')) {
+      if (e.key === 'Escape' && (gameState === 'PLAYING' || gameState === 'COUNTDOWN' || gameState === 'PAUSED')) {
         if (isPaused) {
           const resumeTimeSeconds = pausedTimeRef.current / 1000;
           console.log('[PAUSE-SYSTEM] Resume: seeking YouTube to', resumeTimeSeconds, 'seconds');
@@ -211,6 +211,7 @@ export default function Game() {
           const pauseTimeSeconds = pausedTimeRef.current / 1000;
           console.log('[PAUSE-SYSTEM] Pause: saving time', pausedTimeRef.current, 'ms, seeking YouTube to', pauseTimeSeconds);
           pauseGame();
+          setGameState('PAUSED');
           seekYouTubeVideo(pauseTimeSeconds);
           pauseYouTubeVideo();
           setIsPauseMenuOpen(true);
