@@ -1,10 +1,13 @@
-import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { BeatmapLoader } from "@/components/game/BeatmapLoader";
 
-export default function Home() {
-  const [selectedDifficulty, setSelectedDifficulty] = useState('MEDIUM');
+interface HomeProps {
+  onStartGame: (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => void;
+}
+
+export default function Home({ onStartGame }: HomeProps) {
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const [beatmapLoaded, setBeatmapLoaded] = useState(false);
 
   const handleBeatmapLoad = (youtubeVideoId?: string, notes?: any[]) => {
@@ -40,7 +43,7 @@ export default function Home() {
         </div>
 
         <div className="flex flex-col gap-4 w-64 mx-auto">
-          {['EASY', 'MEDIUM', 'HARD'].map((diff) => (
+          {(['EASY', 'MEDIUM', 'HARD'] as const).map((diff) => (
             <button
               key={diff}
               onClick={() => setSelectedDifficulty(diff)}
@@ -56,19 +59,20 @@ export default function Home() {
           ))}
         </div>
 
-        <Link href={`/game?difficulty=${selectedDifficulty}`}>
-          <motion.button 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className={`mt-8 px-12 py-6 text-black font-bold text-2xl font-orbitron rounded-sm border-2 transition-colors ${
-              beatmapLoaded
-                ? 'bg-neon-pink shadow-[0_0_50px_rgba(255,0,127,0.8)] border-neon-pink'
-                : 'bg-neon-cyan shadow-[0_0_50px_cyan] border-white hover:bg-white'
-            }`}
-          >
-            START SESSION {beatmapLoaded && '● BEATMAP READY'}
-          </motion.button>
-        </Link>
+        <motion.button 
+          onClick={() => onStartGame(selectedDifficulty)}
+          disabled={!beatmapLoaded}
+          whileHover={beatmapLoaded ? { scale: 1.05 } : {}}
+          whileTap={beatmapLoaded ? { scale: 0.95 } : {}}
+          className={`mt-8 px-12 py-6 text-black font-bold text-2xl font-orbitron rounded-sm border-2 transition-colors ${
+            beatmapLoaded
+              ? 'bg-neon-pink shadow-[0_0_50px_rgba(255,0,127,0.8)] border-neon-pink cursor-pointer'
+              : 'bg-neon-cyan shadow-[0_0_50px_cyan] border-white hover:bg-white opacity-50 cursor-not-allowed'
+          }`}
+          data-testid="button-start-session"
+        >
+          START SESSION {beatmapLoaded && '● BEATMAP READY'}
+        </motion.button>
       </motion.div>
       
       {/* Footer */}

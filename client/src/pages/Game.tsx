@@ -10,7 +10,12 @@ import { ErrorLogViewer } from "@/components/game/ErrorLogViewer";
 import { CountdownOverlay } from "@/components/game/CountdownOverlay";
 import { motion } from "framer-motion";
 
-export default function Game() {
+interface GameProps {
+  difficulty: Difficulty;
+  onBackToHome?: () => void;
+}
+
+export default function Game({ difficulty, onBackToHome }: GameProps) {
   const [gameErrors, setGameErrors] = useState<string[]>([]);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
@@ -18,17 +23,6 @@ export default function Game() {
   const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
   const errorCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const resumeStartTimeRef = useRef<number | null>(null);
-  
-  // Parse difficulty from URL with browser context check
-  const difficulty = useMemo(() => {
-    if (typeof window === 'undefined') return 'MEDIUM' as Difficulty;
-    try {
-      const searchParams = new URLSearchParams(window.location.search);
-      return (searchParams.get('difficulty') || 'MEDIUM') as Difficulty;
-    } catch {
-      return 'MEDIUM' as Difficulty;
-    }
-  }, []);
   
   // Function to get current video time from YouTube player
   // Uses utility function with robust error handling
