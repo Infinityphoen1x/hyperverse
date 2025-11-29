@@ -54,8 +54,12 @@ export function buildYouTubeEmbedUrl(videoId: string, options: {
 } = {}): string {
   const params = new URLSearchParams();
   
-  // Never autoplay - game engine controls playback timing
-  params.append('autoplay', '0');
+  // Allow YouTube to autoplay naturally - game engine will control via pause/resume
+  if (options.autoplay === false) {
+    params.append('autoplay', '0');
+  } else {
+    params.append('autoplay', '1');
+  }
   
   if (options.muted) params.append('mute', '1');
   if (options.controls === false) params.append('controls', '0');
