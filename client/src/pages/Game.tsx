@@ -248,7 +248,7 @@ export default function Game() {
                   seekYouTubeVideo(0);
                   setIsPauseMenuOpen(false);
                 }}
-                className="px-12 py-4 bg-neon-yellow text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-neon-yellow"
+                className="px-12 py-4 bg-neon-pink text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-neon-pink"
                 data-testid="button-rewind"
               >
                 REWIND
