@@ -141,6 +141,9 @@ export default function Game() {
         console.log(`[RESUME-COUNTDOWN-EFFECT] Seeking YouTube to pauseTime=${pauseTimeRef.current}ms (${pauseTimeSeconds.toFixed(2)}s)`);
         await seekYouTubeVideo(pauseTimeSeconds).catch(err => console.warn('[RESUME-COUNTDOWN-EFFECT] seekYouTubeVideo failed:', err));
         console.log(`[RESUME-COUNTDOWN-EFFECT] YouTube seek COMPLETE at position ${pauseTimeSeconds.toFixed(2)}s, now resuming playback`);
+        // Read YouTube time to verify seek
+        const youtubeTimeAfterSeek = getYouTubeVideoTime();
+        console.log(`[RESUME-COUNTDOWN-EFFECT] YouTube time after seek: ${youtubeTimeAfterSeek !== null ? (youtubeTimeAfterSeek / 1000).toFixed(2) + 's' : 'null'} (expected ${pauseTimeSeconds.toFixed(2)}s)`);
         // Play YouTube at pauseTime position
         await playYouTubeVideo().catch(err => console.warn('[RESUME-COUNTDOWN-EFFECT] playYouTubeVideo failed:', err));
         console.log('[RESUME-COUNTDOWN-EFFECT] YouTube playVideo() called from paused position');
@@ -290,6 +293,9 @@ export default function Game() {
           setStartupCountdown(0);
           pauseYouTubeVideo().catch(err => console.warn('[PAUSE-SYSTEM] pauseYouTubeVideo failed:', err));
           console.log(`[PAUSE-SYSTEM] YouTube paused`);
+          // Read YouTube time to verify pause
+          const youtubeTimeAtPause = getYouTubeVideoTime();
+          console.log(`[PAUSE-SYSTEM] YouTube time at pause: ${youtubeTimeAtPause !== null ? (youtubeTimeAtPause / 1000).toFixed(2) + 's' : 'null'}`);
           setIsPauseMenuOpen(true);
         }
         // RESUME: PAUSED → PLAYING (handled by pause menu countdown)
@@ -307,6 +313,9 @@ export default function Game() {
         pauseYouTubeVideo().catch(err => console.warn('[REWIND-SYSTEM] pauseYouTubeVideo failed:', err));
         console.log('[REWIND-SYSTEM] Seeking YouTube to 0:00');
         seekYouTubeVideo(0).catch(err => console.warn('[REWIND-SYSTEM] seekYouTubeVideo failed:', err));
+        // Read YouTube time to verify rewind
+        const youtubeTimeAfterRewind = getYouTubeVideoTime();
+        console.log(`[REWIND-SYSTEM] YouTube time after rewind: ${youtubeTimeAfterRewind !== null ? (youtubeTimeAfterRewind / 1000).toFixed(2) + 's' : 'null'} (expected 0.00s)`);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
