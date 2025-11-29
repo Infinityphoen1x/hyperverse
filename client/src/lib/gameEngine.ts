@@ -292,8 +292,8 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       // Sync currentTime every frame for meter calculations
       setCurrentTime(time);
       
-      // Handle countdown during COUNTDOWN state
-      if (gameStateRef.current === 'COUNTDOWN' && time - lastCountdownUpdateRef.current >= 1000) {
+      // Handle countdown during COUNTDOWN state (but not when paused)
+      if (gameStateRef.current === 'COUNTDOWN' && !isPaused && time - lastCountdownUpdateRef.current >= 1000) {
         setCountdownSeconds(prev => {
           const newValue = prev - 1;
           lastCountdownUpdateRef.current = time;

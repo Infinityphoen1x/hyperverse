@@ -76,9 +76,9 @@ export default function Game() {
     currentTimeRef.current = currentTime;
   }, [currentTime]);
 
-  // Startup countdown (when game starts)
+  // Startup countdown (when game starts) - skip if paused
   useEffect(() => {
-    if (gameState !== 'COUNTDOWN') return;
+    if (gameState !== 'COUNTDOWN' || isPaused) return;
     if (engineCountdown <= 0) {
       // Countdown complete - start the game
       console.log('[STARTUP COUNTDOWN] Countdown complete, transitioning to PLAYING');
@@ -97,7 +97,7 @@ export default function Game() {
     if (youtubeVideoId && playerInitializedRef.current) {
       pauseYouTubeVideo();
     }
-  }, [gameState, engineCountdown, youtubeVideoId, setGameState]);
+  }, [gameState, engineCountdown, youtubeVideoId, setGameState, isPaused]);
 
   // Countdown timer for resume preparation
   useEffect(() => {
@@ -214,14 +214,14 @@ export default function Game() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gameState, isPaused, pauseGame, resumeGame]);
 
-  // Start game when beatmap is loaded (customNotes changes) - ONLY on first load
+  // Start game when beatmap is loaded (customNotes changes) - ONLY on first load, NOT during pause
   useEffect(() => {
-    if (customNotes && customNotes.length > 0 && !gameAlreadyStartedRef.current) {
+    if (customNotes && customNotes.length > 0 && !gameAlreadyStartedRef.current && !isPaused) {
       console.log('[BEATMAP-LOAD] New beatmap loaded, starting game');
       gameAlreadyStartedRef.current = true;
       startGame();
     }
-  }, [customNotes, startGame]);
+  }, [customNotes, startGame, isPaused]);
 
   // Reset flag when game ends
   useEffect(() => {
@@ -323,11 +323,12 @@ export default function Game() {
                 onClick={() => {
                   console.log('[PAUSE-SYSTEM] REWIND button: restarting game to 0');
                   pausedTimeRef.current = 0;
-                  gameAlreadyStartedRef.current = false; // Reset flag so startGame() triggers again with countdown
-                  restartGame();
+                  gameAlreadyStartedRef.current = false; // Reset flag so startGame() can be called again
+                  restartGame(); // This resets game state
+                  setCountdownSeconds(3); // Trigger the resume countdown for rewind
                   seekYouTubeVideo(0);
-                  playYouTubeVideo();
-                  setIsPauseMenuOpen(false);
+                  pauseYouTubeVideo(); // Keep paused so countdown shows
+                  // Don't close pause menu, let countdown complete then auto-resume
                 }}
                 className="px-12 py-4 bg-emerald-500 text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-emerald-500"
                 data-testid="button-rewind"
