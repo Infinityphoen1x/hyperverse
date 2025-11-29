@@ -416,7 +416,7 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
   }
 
   return (
-    <div className="h-screen w-screen bg-black overflow-hidden flex flex-col relative">
+    <div className="h-screen w-screen overflow-hidden flex flex-col relative">
       {/* Startup countdown overlay - ONLY for initial startGame() and rewind, NEVER during pause/resume */}
       {gameState === 'COUNTDOWN' && startupCountdown > 0 && !isPaused && <CountdownOverlay seconds={startupCountdown} />}
       
@@ -434,9 +434,9 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
       {/* Visual Effects Layer */}
       <VisualEffects combo={combo} health={health} missCount={missCount} />
 
-      {/* Background Ambience */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black opacity-80" />
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
+      {/* Background Ambience - Semi-transparent to show YouTube video */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black opacity-40" />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
 
 
       {/* Pause Screen Overlay */}
