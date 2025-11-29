@@ -577,20 +577,18 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
           />
         </div>
 
-        {/* Center 3D Notelane with integrated soundpad buttons - show during COUNTDOWN, PLAYING, PAUSED */}
-        {(gameState === 'COUNTDOWN' || gameState === 'PLAYING' || gameState === 'PAUSED') && (
-          <div className="relative flex-1 flex items-center justify-center">
-            <Down3DNoteLane 
-              notes={notes} 
-              currentTime={Math.round(currentTime)}
-              health={health}
-              combo={combo}
-              onPadHit={hitNote}
-              onDeckHoldStart={trackHoldStart}
-              onDeckHoldEnd={trackHoldEnd}
-            />
-          </div>
-        )}
+        {/* Center 3D Notelane with integrated soundpad buttons - always show (GAME_OVER returns early above) */}
+        <div className="relative flex-1 flex items-center justify-center">
+          <Down3DNoteLane 
+            notes={notes} 
+            currentTime={Math.round(currentTime)}
+            health={health}
+            combo={combo}
+            onPadHit={hitNote}
+            onDeckHoldStart={trackHoldStart}
+            onDeckHoldEnd={trackHoldEnd}
+          />
+        </div>
 
         {/* Right Deck */}
         <div className="absolute right-8">
