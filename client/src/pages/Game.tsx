@@ -81,7 +81,7 @@ export default function Game() {
     if (engineCountdown <= 0) {
       // Countdown complete - start the game
       console.log('[STARTUP COUNTDOWN] Countdown complete, transitioning to PLAYING');
-      if (youtubeVideoId) {
+      if (youtubeVideoId && playerInitializedRef.current) {
         console.log('[AUTOPLAY] autoplay=1, YouTube video resuming');
         playYouTubeVideo();
       }
@@ -93,7 +93,7 @@ export default function Game() {
     setStartupCountdown(engineCountdown);
     console.log(`[COUNTDOWN] Displaying ${engineCountdown}s (autoplay paused)`);
 
-    if (youtubeVideoId) {
+    if (youtubeVideoId && playerInitializedRef.current) {
       pauseYouTubeVideo();
     }
   }, [gameState, engineCountdown, youtubeVideoId, setGameState]);
