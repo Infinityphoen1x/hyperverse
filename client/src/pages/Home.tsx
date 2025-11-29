@@ -21,9 +21,9 @@ export default function Home({ onStartGame }: HomeProps) {
     { text: "[NEURAL SYNC: 99%] • QUANTUM ENTANGLEMENT SUCCESSFUL • READY FOR TRANSCENDENCE", color: "#FF0080" },
   ];
 
-  // Create continuous scrolling text with delimiters - duplicate for seamless looping
-  const baseText = bannerMessages.map(m => m.text).join(" • ") + " • ";
-  const continuousText = baseText + baseText;
+  // Create continuous scrolling text - repeat 3x for seamless infinite scroll with no gaps
+  const baseText = bannerMessages.map(m => m.text).join(" • ");
+  const continuousText = baseText + " • " + baseText + " • " + baseText + " • ";
 
   // Cycle through colors
   useEffect(() => {
@@ -89,8 +89,9 @@ export default function Home({ onStartGame }: HomeProps) {
             <motion.div
               className="font-rajdhani text-xl uppercase whitespace-nowrap font-semibold tracking-wider"
               style={{ color: colors[colorIndex] }}
-              animate={{ x: [continuousText.length * 8, 0] }}
-              transition={{ duration: 35, ease: 'linear', repeat: Infinity }}
+              initial={{ x: 0 }}
+              animate={{ x: -baseText.length * 8 - 12 }}
+              transition={{ duration: 35, ease: 'linear', repeat: Infinity, repeatType: 'loop' }}
             >
               {continuousText}
             </motion.div>
