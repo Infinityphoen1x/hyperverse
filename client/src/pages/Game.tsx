@@ -266,7 +266,7 @@ export default function Game() {
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col relative">
       {/* Startup countdown overlay - only show when actively counting down, NOT when paused */}
-      {gameState === 'COUNTDOWN' && !isPaused && <CountdownOverlay seconds={startupCountdown} />}
+      {gameState === 'COUNTDOWN' && !isPaused && startupCountdown > 0 && <CountdownOverlay seconds={startupCountdown} />}
       
       {/* YouTube Background Layer - Auto-plays with audio for time sync */}
       {youtubeVideoId && (
