@@ -745,23 +745,10 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
             }
           }
         } else {
-          // TAP NOTE RENDER WINDOW: Time-based only, no game state filtering
-          // Start: TAP_RENDER_WINDOW_MS before note.time
-          // End: HOLD_ANIMATION_DURATION after failure, or TAP_FALLTHROUGH_WINDOW_MS after miss/glitch
-          
-          // If failed, show for HOLD_ANIMATION_DURATION ms from failureTime
-          if (n.tapMissFailure) {
-            const failureTime = n.failureTime || currentTime;
-            const timeSinceFail = currentTime - failureTime;
-            if (timeSinceFail >= 0 && timeSinceFail <= HOLD_ANIMATION_DURATION) {
-              result.push(n);
-            }
-            continue;
-          }
-          
-          // Otherwise: show TAP_RENDER_WINDOW_MS before to TAP_FALLTHROUGH_WINDOW_MS after miss window
-          // Note: Show in render list even if hit - let rendering logic decide what to draw
-          if (timeUntilHit <= TAP_RENDER_WINDOW_MS && timeUntilHit >= -TAP_FALLTHROUGH_WINDOW_MS) {
+          // TAP NOTE: Add ALL non-terminal TAP notes to render list
+          // Filtering (whether to actually render) happens in shouldRenderTapNote()
+          // This ensures notes are ALWAYS available for rendering their full approach
+          if (!n.hit && !n.missed) {
             result.push(n);
           }
         }
