@@ -81,10 +81,11 @@ export default function Game() {
     if (playerInitializedRef.current) return;
     
     console.log('[YOUTUBE-PLAYER-INIT] YouTube iframe mounted, initializing API player');
+    // Wrap the existing iframe with YouTube API for control methods
     initYouTubePlayer(youtubeIframeRef.current, () => {
-      playerInitializedRef.current = true;
       console.log('[YOUTUBE-PLAYER-INIT] YouTube player API ready');
     });
+    playerInitializedRef.current = true;
   }, [youtubeVideoId]);
 
   // Startup countdown (when game starts) - skip if paused or not in countdown state
