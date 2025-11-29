@@ -352,7 +352,7 @@ export default function Game() {
       {youtubeVideoId && (
         <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
           <iframe
-            key={`youtube-${gameState}`}
+            key={`youtube-${youtubeVideoId}`}
             ref={youtubeIframeRef}
             width="480"
             height="270"
