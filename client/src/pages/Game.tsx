@@ -75,13 +75,16 @@ export default function Game() {
     currentTimeRef.current = currentTime;
   }, [currentTime]);
 
-  // Mark player as ready when iframe is present
+  // Initialize YouTube player when iframe is present
   useEffect(() => {
     if (!youtubeIframeRef.current || !window.YT) return;
     if (playerInitializedRef.current) return;
     
-    console.log('[YOUTUBE-PLAYER-INIT] YouTube iframe ready, player initialized');
-    playerInitializedRef.current = true;
+    console.log('[YOUTUBE-PLAYER-INIT] YouTube iframe mounted, initializing API player');
+    initYouTubePlayer(youtubeIframeRef.current, () => {
+      playerInitializedRef.current = true;
+      console.log('[YOUTUBE-PLAYER-INIT] YouTube player API ready');
+    });
   }, [youtubeVideoId]);
 
   // Startup countdown (when game starts) - skip if paused or not in countdown state
