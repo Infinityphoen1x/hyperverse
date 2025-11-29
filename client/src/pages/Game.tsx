@@ -226,12 +226,15 @@ export default function Game() {
 
   // Start game when beatmap is loaded (customNotes changes) - ONLY on first load, NOT during pause
   useEffect(() => {
-    if (customNotes && customNotes.length > 0 && !gameAlreadyStartedRef.current && !isPaused) {
+    // Prevent startGame from running during pause or after pause
+    if (isPaused || gameState === 'PAUSED') return;
+    
+    if (customNotes && customNotes.length > 0 && !gameAlreadyStartedRef.current) {
       console.log('[BEATMAP-LOAD] New beatmap loaded, starting game');
       gameAlreadyStartedRef.current = true;
       startGame();
     }
-  }, [customNotes, startGame, isPaused]);
+  }, [customNotes, startGame, isPaused, gameState]);
 
   // Reset flag when game ends
   useEffect(() => {
