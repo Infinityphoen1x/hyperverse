@@ -321,13 +321,16 @@ const calculateTapNoteStyle = (
     filter = 'drop-shadow(0 0 8px rgba(100,100,100,0.6)) grayscale(1)';
   } else if (state.isHit) {
     opacity = (1 - (state.timeSinceHit / 600)) * (0.4 + (progress * 0.6));
-    // Strong double glow for successful hits (full duration, fades with opacity)
-    filter = `brightness(2.2) drop-shadow(0 0 30px ${noteColor}) drop-shadow(0 0 15px ${noteColor})`;
   }
   
   const hitFlashIntensity = state.isHit && state.timeSinceHit < 600 
     ? Math.max(0, 1 - (state.timeSinceHit / 600)) 
     : 0;
+  
+  if (state.isHit && hitFlashIntensity > 0) {
+    // Strong enhanced glow for successful hits during flash phase
+    filter = `drop-shadow(0 0 35px ${noteColor}) drop-shadow(0 0 20px ${noteColor}) drop-shadow(0 0 10px ${noteColor})`;
+  }
   
   return { opacity: Math.max(opacity, 0), fill, stroke, filter, hitFlashIntensity };
 };
