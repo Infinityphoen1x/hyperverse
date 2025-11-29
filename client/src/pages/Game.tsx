@@ -75,16 +75,17 @@ export default function Game() {
     currentTimeRef.current = currentTime;
   }, [currentTime]);
 
-  // Initialize YouTube player when div is mounted and API is ready
+  // Initialize YouTube player once when div is mounted and API is ready
   useEffect(() => {
     if (!youtubePlayerRef.current || !window.YT || !youtubeVideoId) return;
+    if (playerInitializedRef.current) return; // Already initialized
     
     console.log('[YOUTUBE-PLAYER-INIT] Initializing YouTube player from div');
-    initYouTubePlayer(youtubePlayerRef.current, youtubeVideoId, gameState === 'PLAYING', () => {
+    initYouTubePlayer(youtubePlayerRef.current, youtubeVideoId, false, () => {
       playerInitializedRef.current = true;
       console.log('[YOUTUBE-PLAYER-INIT] YouTube player ready, flag set');
     });
-  }, [youtubeVideoId, gameState]);
+  }, [youtubeVideoId]);
 
   // Startup countdown (when game starts) - skip if paused or not in countdown state
   useEffect(() => {
