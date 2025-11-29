@@ -47,8 +47,8 @@ export default function Home({ onStartGame }: HomeProps) {
         difficulty={selectedDifficulty as 'EASY' | 'MEDIUM' | 'HARD'}
         onBeatmapLoad={handleBeatmapLoad}
       />
-      {/* Semi-transparent overlay to show video/game behind */}
-      <div className="absolute inset-0 bg-black/20 pointer-events-none z-0" />
+      {/* Semi-transparent overlay to show video behind */}
+      <div className="absolute inset-0 bg-black/40 pointer-events-none z-0" />
       {/* Background FX */}
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none z-1" />
       <div className="absolute top-0 left-0 w-full h-full bg-grid-white/[0.01] pointer-events-none z-1" />
