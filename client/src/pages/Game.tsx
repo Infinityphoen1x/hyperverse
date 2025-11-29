@@ -445,18 +445,20 @@ export default function Game() {
           />
         </div>
 
-        {/* Center 3D Notelane with integrated soundpad buttons */}
-        <div className="relative flex-1 flex items-center justify-center">
-          <Down3DNoteLane 
-            notes={notes} 
-            currentTime={Math.round(currentTime)}
-            health={health}
-            combo={combo}
-            onPadHit={hitNote}
-            onDeckHoldStart={trackHoldStart}
-            onDeckHoldEnd={trackHoldEnd}
-          />
-        </div>
+        {/* Center 3D Notelane with integrated soundpad buttons - only show during PLAYING/PAUSED */}
+        {gameState !== 'COUNTDOWN' && (
+          <div className="relative flex-1 flex items-center justify-center">
+            <Down3DNoteLane 
+              notes={notes} 
+              currentTime={Math.round(currentTime)}
+              health={health}
+              combo={combo}
+              onPadHit={hitNote}
+              onDeckHoldStart={trackHoldStart}
+              onDeckHoldEnd={trackHoldEnd}
+            />
+          </div>
+        )}
 
         {/* Right Deck */}
         <div className="hidden lg:block absolute right-8">

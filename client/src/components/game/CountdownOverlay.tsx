@@ -43,7 +43,7 @@ export function CountdownOverlay({ seconds }: CountdownOverlayProps) {
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 1, repeat: Infinity }}
         >
-          Get Ready
+          GET READY!
         </motion.p>
       </motion.div>
     </motion.div>
