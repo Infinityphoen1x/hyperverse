@@ -15,21 +15,17 @@ export function extractYouTubeId(url: string): string | null {
   if (!url || typeof url !== 'string') {
     return null;
   }
-
   // Trim whitespace
   url = url.trim();
-
   // Validate URL is not empty after trimming
   if (url.length === 0) {
     return null;
   }
-
   const patterns = [
     /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
     /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]{11})/,
     /^([a-zA-Z0-9_-]{11})$/, // Raw ID: must be exactly 11 chars, nothing more
   ];
-
   for (const pattern of patterns) {
     const match = url.match(pattern);
     if (match && match[1]) {
@@ -51,16 +47,14 @@ export function buildYouTubeEmbedUrl(videoId: string, options: {
   modestBranding?: boolean;
   enableJsApi?: boolean;
   start?: number; // Start time in seconds
+  origin?: string; // Security for postMessage
 } = {}): string {
   const params = new URLSearchParams();
-  
-  // Allow YouTube to autoplay naturally - game engine will control via pause/resume
-  if (options.autoplay === false) {
-    params.append('autoplay', '0');
-  } else {
-    params.append('autoplay', '1');
-  }
-  
+
+  // Default to no autoplay for background control
+  params.append('autoplay', '0');
+  if (options.autoplay === true) params.append('autoplay', '1');
+
   if (options.muted) params.append('mute', '1');
   if (options.controls === false) params.append('controls', '0');
   if (options.modestBranding) params.append('modestbranding', '1');
@@ -69,7 +63,10 @@ export function buildYouTubeEmbedUrl(videoId: string, options: {
   if (typeof options.start === 'number' && options.start > 0) {
     params.append('start', Math.floor(options.start).toString());
   }
-  
+  // Origin for postMessage security (default to current domain; set via env in prod)
+  const origin = options.origin || window.location.origin;
+  params.append('origin', origin);
+
   return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
 }
 
@@ -81,42 +78,57 @@ let ytPlayer: any = null;
 let playerReady = false;
 let youtubeCurrentTimeMs: number = 0; // Track time from postMessage events
 let youtubeIframeElement: HTMLIFrameElement | null = null; // Keep reference to iframe for direct control
+let lastTimeUpdate = 0; // Throttle updates to ~1s
 
 export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null, onReady?: () => void): void {
   if (!iframeElement) return;
-  
+
   // Store iframe reference for direct control (postMessage-based seek/play)
   youtubeIframeElement = iframeElement;
-  
+
+  // Dynamic script load if YT API missing
   if (!window.YT) {
-    // YT API not available, fall back to iframe control
-    playerReady = true;
-    if (onReady) onReady();
-    console.log('[YOUTUBE-PLAYER-INIT] Using iframe postMessage control (YT API unavailable)');
+    console.log('[YOUTUBE-PLAYER-INIT] YT API missing, loading script dynamically');
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    const firstScript = document.getElementsByTagName('script')[0];
+    firstScript?.parentNode?.insertBefore(tag, firstScript);
+
+    (window as any).onYouTubeIframeAPIReady = () => {
+      console.log('[YOUTUBE-PLAYER-INIT] Script loaded, initializing player');
+      initPlayer(onReady);
+    };
     return;
   }
-  
-  try {
-    ytPlayer = new window.YT.Player(iframeElement, {
-      events: {
-        onReady: () => {
-          playerReady = true;
-          console.log('[YOUTUBE-PLAYER-INIT] YouTube player ready and initialized');
-          if (onReady) onReady();
-        },
-        onError: (e: any) => console.warn('[YOUTUBE-PLAYER-ERROR] YouTube player error:', e),
-      }
-    });
-  } catch (error) {
-    console.warn('[YOUTUBE-PLAYER-INIT] Failed to initialize YouTube player:', error);
-    // Fallback: use iframe postMessage control
-    playerReady = true;
-    if (onReady) onReady();
+
+  initPlayer(onReady);
+
+  function initPlayer(onReadyCb?: () => void) {
+    try {
+      ytPlayer = new window.YT.Player(iframeElement, {
+        events: {
+          onReady: () => {
+            playerReady = true;
+            console.log('[YOUTUBE-PLAYER-INIT] YouTube player ready and initialized');
+            onReadyCb?.();
+          },
+          onError: (e: any) => console.warn('[YOUTUBE-PLAYER-ERROR] YouTube player error:', e),
+          onStateChange: (e: any) => {
+            console.log('[YOUTUBE-STATE-CHANGE] State:', e.data); // 1=playing, 2=paused
+          }
+        }
+      });
+    } catch (error) {
+      console.warn('[YOUTUBE-PLAYER-INIT] Failed to initialize YouTube player:', error);
+      // Fallback ready
+      playerReady = true;
+      onReadyCb?.();
+    }
   }
 }
 
 export function isPlayerReady(): boolean {
-  return playerReady && ytPlayer !== null;
+  return playerReady && (ytPlayer !== null || youtubeIframeElement !== null);
 }
 
 /**
@@ -126,7 +138,7 @@ export function isPlayerReady(): boolean {
 export async function waitForPlayerReady(maxWaitMs: number = 5000): Promise<boolean> {
   const startTime = performance.now();
   let waitTime = 50; // Start with 50ms
-  
+
   while (performance.now() - startTime < maxWaitMs) {
     if (isPlayerReady()) {
       console.log(`[YOUTUBE-INIT] Player ready after ${(performance.now() - startTime).toFixed(0)}ms`);
@@ -135,7 +147,7 @@ export async function waitForPlayerReady(maxWaitMs: number = 5000): Promise<bool
     await new Promise(resolve => setTimeout(resolve, waitTime));
     waitTime = Math.min(waitTime * 1.5, 200); // Cap at 200ms between checks
   }
-  
+
   console.warn(`[YOUTUBE-INIT] Player not ready after ${maxWaitMs}ms timeout`);
   return false;
 }
@@ -143,7 +155,7 @@ export async function waitForPlayerReady(maxWaitMs: number = 5000): Promise<bool
 /**
  * Get current video time from YouTube player
  * Returns time in milliseconds to match game engine format
- * Tries official API first (getCurrentTime), falls back to postMessage tracking
+ * Tries official API first (getCurrentTime), falls back to postMessage tracking, then query
  */
 export function getYouTubeVideoTime(): number | null {
   // Try official YouTube API method first
@@ -159,13 +171,22 @@ export function getYouTubeVideoTime(): number | null {
       console.warn('[YOUTUBE-TIME-READ] Official API call failed:', error);
     }
   }
-  
-  // Fallback: use postMessage-tracked time
-  if (youtubeCurrentTimeMs >= 0) {
+
+  // Fallback: use postMessage-tracked time (throttled)
+  if (youtubeCurrentTimeMs >= 0 && Date.now() - lastTimeUpdate < 1000) {
     console.log(`[YOUTUBE-TIME-READ] Fallback (postMessage): ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s (${youtubeCurrentTimeMs.toFixed(0)}ms)`);
     return youtubeCurrentTimeMs;
   }
-  
+
+  // Tertiary: Query via postMessage (one-shot)
+  if (youtubeIframeElement?.contentWindow) {
+    youtubeIframeElement.contentWindow.postMessage(
+      JSON.stringify({ event: 'command', func: 'getCurrentTime', args: [] }),
+      'https://www.youtube.com'
+    );
+    // Listen once for response (handled in listener)
+  }
+
   console.log(`[YOUTUBE-TIME-READ] No time available (null)`);
   return null;
 }
@@ -176,39 +197,57 @@ export function getYouTubeVideoTime(): number | null {
  */
 export function initYouTubeTimeListener(): void {
   const handleMessage = (event: MessageEvent) => {
-    // Only process messages from YouTube's iframe
-    if (!event.data || typeof event.data !== 'string') return;
-    
+    // Strict origin check for security
+    if (event.origin !== 'https://www.youtube.com') return;
+
+    let data;
     try {
-      const data = JSON.parse(event.data);
-      
-      // YouTube sends currentTime updates in various message formats
-      // Check for time-related messages
-      if (data.event === 'onStateChange' || data.info?.playerState !== undefined) {
-        // Player state changed - might need time update
-        // Will be followed by time update messages
+      // YT sends objects or strings; try parse if string
+      if (typeof event.data === 'string') {
+        data = JSON.parse(event.data);
+      } else {
+        data = event.data;
       }
-      
-      // Check for currentTime in the message
-      if (typeof data.currentTime === 'number') {
-        youtubeCurrentTimeMs = data.currentTime * 1000;
+    } catch {
+      // Ignore non-JSON (e.g., plain "YT.ready")
+      return;
+    }
+
+    // Handle state changes
+    if (data.event === 'onStateChange') {
+      console.log('[YOUTUBE-MESSAGE] State change:', data.data);
+    }
+
+    // Time updates: Primarily from infoDelivery (fires ~1s during play)
+    if (data.event === 'infoDelivery' && data.info?.currentTime !== undefined) {
+      const newTimeMs = data.info.currentTime * 1000;
+      if (Math.abs(newTimeMs - youtubeCurrentTimeMs) > 50) { // Avoid micro-jitters
+        youtubeCurrentTimeMs = newTimeMs;
+        lastTimeUpdate = Date.now();
+        console.log(`[YOUTUBE-MESSAGE] Time update (infoDelivery): ${(data.info.currentTime).toFixed(2)}s`);
       }
-      
-      // YouTube also sends progress updates with currentTime
-      if (data.info?.currentTime !== undefined) {
-        youtubeCurrentTimeMs = data.info.currentTime * 1000;
-      }
-      
-      // Some versions send time in a different format
-      if (data.time !== undefined && typeof data.time === 'number') {
-        youtubeCurrentTimeMs = data.time * 1000;
-      }
-      
-    } catch (error) {
-      // Silently ignore parse errors - not all messages are JSON
+      return;
+    }
+
+    // Fallback keys for other formats
+    if (typeof data.currentTime === 'number') {
+      youtubeCurrentTimeMs = data.currentTime * 1000;
+      lastTimeUpdate = Date.now();
+    } else if (data.info?.currentTime !== undefined) {
+      youtubeCurrentTimeMs = data.info.currentTime * 1000;
+      lastTimeUpdate = Date.now();
+    } else if (data.time !== undefined && typeof data.time === 'number') {
+      youtubeCurrentTimeMs = data.time * 1000;
+      lastTimeUpdate = Date.now();
+    }
+
+    // Query responses (e.g., getCurrentTime)
+    if (data.event === 'onApiChange' && data.data?.currentTime !== undefined) {
+      youtubeCurrentTimeMs = data.data.currentTime * 1000;
+      lastTimeUpdate = Date.now();
     }
   };
-  
+
   window.addEventListener('message', handleMessage);
   console.log('[YOUTUBE-TIME-LISTENER] postMessage listener initialized for time tracking');
 }
@@ -218,50 +257,68 @@ export function initYouTubeTimeListener(): void {
  */
 export function resetYouTubeTimeTracker(timeSeconds: number = 0): void {
   youtubeCurrentTimeMs = timeSeconds * 1000;
+  lastTimeUpdate = Date.now();
   console.log(`[YOUTUBE-TIME-TRACKER] Reset to ${timeSeconds.toFixed(2)}s (${youtubeCurrentTimeMs.toFixed(0)}ms)`);
 }
 
 /**
- * Seek YouTube video to specific time (in seconds)
+ * Seek YouTube video to specific time (in seconds) with polling confirmation
  * Uses official API if available, falls back to iframe postMessage control
  */
-export async function seekYouTubeVideo(timeSeconds: number): Promise<boolean> {
-  // Set player as ready to proceed with operations
+export async function seekYouTubeVideo(timeSeconds: number): Promise<void> {
+  await waitForPlayerReady(2000); // Short wait for init
   playerReady = true;
-  // Reset time tracker to seek position
+
+  // Reset tracker optimistically, but confirm actual
   resetYouTubeTimeTracker(timeSeconds);
-  
+
   const clampedTime = Math.max(0, timeSeconds);
   const minutes = Math.floor(clampedTime / 60);
   const seconds = (clampedTime % 60).toFixed(2);
-  
+
   try {
     // Try official YouTube API first
     if (ytPlayer && typeof ytPlayer.seekTo === 'function') {
-      ytPlayer.seekTo(clampedTime, true);
+      ytPlayer.pauseVideo(); // Pause for accurate seek
+      ytPlayer.seekTo(clampedTime, true); // allowSeekAhead
       console.log(`[YOUTUBE-SEEK] Official API: Seeking to ${minutes}:${seconds} (${clampedTime.toFixed(2)}s total)`);
-      return true;
-    }
-    
-    // Fallback: use iframe postMessage to send seek command
-    if (youtubeIframeElement && youtubeIframeElement.contentWindow) {
+    } else if (youtubeIframeElement?.contentWindow) {
+      // Fallback postMessage
       youtubeIframeElement.contentWindow.postMessage(
-        JSON.stringify({ 
-          event: 'command', 
-          func: 'seekTo', 
-          args: [clampedTime, true] 
+        JSON.stringify({
+          event: 'command',
+          func: 'seekTo',
+          args: [clampedTime, true]
         }),
-        '*'
+        'https://www.youtube.com'
       );
       console.log(`[YOUTUBE-SEEK] PostMessage fallback: Seeking to ${minutes}:${seconds} (${clampedTime.toFixed(2)}s total)`);
-      return true;
+    } else {
+      throw new Error('No seek method available');
     }
-    
-    console.warn(`[YOUTUBE-SEEK] No seek method available (ytPlayer=${ytPlayer ? 'exists' : 'null'}, iframe=${youtubeIframeElement ? 'exists' : 'null'})`);
-    return false;
+
+    // Poll for confirmation
+    await new Promise<void>((resolve, reject) => {
+      const maxAttempts = 20; // 1s @ 50ms
+      let attempts = 0;
+      const poll = () => {
+        attempts++;
+        const current = getYouTubeVideoTime();
+        if (current !== null && Math.abs(current / 1000 - clampedTime) < 0.05) { // ±50ms
+          console.log(`[YOUTUBE-SEEK] Confirmed: ${ (current / 1000).toFixed(2) }s (target: ${clampedTime.toFixed(2)}s)`);
+          resolve();
+        } else if (attempts >= maxAttempts) {
+          console.warn(`[YOUTUBE-SEEK] Timeout: ${current ? (current / 1000).toFixed(2) + 's' : 'null'} vs ${clampedTime.toFixed(2)}s`);
+          resolve(); // Proceed to avoid deadlock
+        } else {
+          setTimeout(poll, 50);
+        }
+      };
+      setTimeout(poll, 50); // Settle
+    });
   } catch (error) {
-    console.warn('[YOUTUBE-SEEK] seekTo failed:', error);
-    return false;
+    console.error('[YOUTUBE-SEEK] Failed:', error);
+    throw error; // Propagate for Game.tsx handling
   }
 }
 
@@ -269,40 +326,42 @@ export async function seekYouTubeVideo(timeSeconds: number): Promise<boolean> {
  * Play YouTube video
  * Uses official API if available, falls back to iframe postMessage control
  */
-export async function playYouTubeVideo(): Promise<boolean> {
-  // Set player as ready to proceed with operations
+export async function playYouTubeVideo(): Promise<void> {
+  await waitForPlayerReady(1000);
   playerReady = true;
-  
+
   try {
-    // Try official YouTube API first
+    let currentState: number | null = null;
+    if (ytPlayer?.getPlayerState) {
+      currentState = ytPlayer.getPlayerState();
+      if (currentState === 1) { // Already playing
+        console.log('[YOUTUBE-PLAY] Already playing, skipping');
+        return;
+      }
+    }
+
     if (ytPlayer && typeof ytPlayer.playVideo === 'function') {
       const currentTime = ytPlayer.getCurrentTime?.() ?? 0;
       const minutes = Math.floor(currentTime / 60);
       const seconds = (currentTime % 60).toFixed(2);
       ytPlayer.playVideo();
       console.log(`[YOUTUBE-PLAY] Official API: Playing from ${minutes}:${seconds} (${currentTime.toFixed(2)}s total)`);
-      return true;
-    }
-    
-    // Fallback: use iframe postMessage to send play command
-    if (youtubeIframeElement && youtubeIframeElement.contentWindow) {
+    } else if (youtubeIframeElement?.contentWindow) {
       youtubeIframeElement.contentWindow.postMessage(
-        JSON.stringify({ 
-          event: 'command', 
-          func: 'playVideo', 
-          args: [] 
+        JSON.stringify({
+          event: 'command',
+          func: 'playVideo',
+          args: []
         }),
-        '*'
+        'https://www.youtube.com'
       );
       console.log(`[YOUTUBE-PLAY] PostMessage fallback: Playing from tracked time ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s`);
-      return true;
+    } else {
+      throw new Error('No play method available');
     }
-    
-    console.warn(`[YOUTUBE-PLAY] No play method available (ytPlayer=${ytPlayer ? 'exists' : 'null'}, iframe=${youtubeIframeElement ? 'exists' : 'null'})`);
-    return false;
   } catch (error) {
-    console.warn('[YOUTUBE-PLAY] playVideo failed:', error);
-    return false;
+    console.error('[YOUTUBE-PLAY] Failed:', error);
+    throw error;
   }
 }
 
@@ -310,41 +369,41 @@ export async function playYouTubeVideo(): Promise<boolean> {
  * Pause YouTube video
  * Uses official API if available, falls back to iframe postMessage control
  */
-export async function pauseYouTubeVideo(): Promise<boolean> {
-  // Set player as ready to proceed with operations
+export async function pauseYouTubeVideo(): Promise<void> {
+  await waitForPlayerReady(1000);
   playerReady = true;
-  
+
   try {
-    // Try official YouTube API first
+    let currentState: number | null = null;
+    if (ytPlayer?.getPlayerState) {
+      currentState = ytPlayer.getPlayerState();
+      if (currentState === 2) { // Already paused
+        console.log('[YOUTUBE-PAUSE] Already paused, skipping');
+        return;
+      }
+    }
+
     if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
       const currentTime = ytPlayer.getCurrentTime?.() ?? 0;
       const minutes = Math.floor(currentTime / 60);
       const seconds = (currentTime % 60).toFixed(2);
       ytPlayer.pauseVideo();
       console.log(`[YOUTUBE-PAUSE] Official API: Paused at ${minutes}:${seconds} (${currentTime.toFixed(2)}s total)`);
-      return true;
-    }
-    
-    // Fallback: use iframe postMessage to send pause command
-    if (youtubeIframeElement && youtubeIframeElement.contentWindow) {
+    } else if (youtubeIframeElement?.contentWindow) {
       youtubeIframeElement.contentWindow.postMessage(
-        JSON.stringify({ 
-          event: 'command', 
-          func: 'pauseVideo', 
-          args: [] 
+        JSON.stringify({
+          event: 'command',
+          func: 'pauseVideo',
+          args: []
         }),
-        '*'
+        'https://www.youtube.com'
       );
       console.log(`[YOUTUBE-PAUSE] PostMessage fallback: Paused at tracked time ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s`);
-      return true;
+    } else {
+      throw new Error('No pause method available');
     }
-    
-    console.warn(`[YOUTUBE-PAUSE] No pause method available (ytPlayer=${ytPlayer ? 'exists' : 'null'}, iframe=${youtubeIframeElement ? 'exists' : 'null'})`);
-    return false;
   } catch (error) {
-    console.warn('[YOUTUBE-PAUSE] pauseVideo failed:', error);
-    return false;
+    console.error('[YOUTUBE-PAUSE] Failed:', error);
+    throw error;
   }
 }
-
-

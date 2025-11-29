@@ -18,6 +18,15 @@ export default function Game() {
   const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
   const errorCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const resumeStartTimeRef = useRef<number | null>(null);
+  const getIframeStyle = useMemo(() => {
+  const base = { width: '100%', height: '100%', objectFit: 'cover' };
+  const isHidden = gameState === 'COUNTDOWN' || gameState === 'REWINDING';
+    return {
+      ...base,
+      display: isHidden ? 'none' : 'block', // Keeps ref/DOM alive
+      opacity: isHidden ? 0 : 0.05, // No visual during transitions
+    };
+  }, [gameState]);
   
   // Parse difficulty from URL with browser context check
   const difficulty = useMemo(() => {
@@ -77,18 +86,22 @@ export default function Game() {
 
   // Initialize YouTube player when iframe is present
   useEffect(() => {
-    if (!youtubeIframeRef.current || !window.YT) return;
-    if (playerInitializedRef.current) return;
-    
-    console.log('[YOUTUBE-PLAYER-INIT] YouTube iframe mounted, initializing API player');
-    // Wrap the existing iframe with YouTube API for control methods
+    if (!youtubeIframeRef.current || !window.YT || playerInitializedRef.current) return;
+
+    console.log('[YOUTUBE-PLAYER-INIT] Initializing...');
     initYouTubePlayer(youtubeIframeRef.current, () => {
-      console.log('[YOUTUBE-PLAYER-INIT] YouTube player API ready');
+      console.log('[YOUTUBE-PLAYER-INIT] Ready - signaling game engine');
+      playerInitializedRef.current = true;
+      // NEW: If in COUNTDOWN/REWINDING, seek now (post-mount)
+      if (youtubeVideoId && (gameState === 'COUNTDOWN' || gameState === 'REWINDING')) {
+        const targetTime = gameState === 'REWINDING' ? 0 : 0; // Or track rewind target
+        seekYouTubeVideo(targetTime).then(() => {
+          console.log('[YOUTUBE-PLAYER-INIT] Auto-seek complete during hidden state');
+        }).catch(console.warn);
+      }
     });
-    // Initialize postMessage listener for time tracking
     initYouTubeTimeListener();
-    playerInitializedRef.current = true;
-  }, [youtubeVideoId]);
+  }, [youtubeVideoId, gameState]);
 
   // Startup countdown (when game starts) - skip if paused or not in countdown state
   useEffect(() => {
@@ -121,39 +134,38 @@ export default function Game() {
   // Pause menu countdown timer (before resume)
   useEffect(() => {
     if (countdownSeconds <= 0 || gameState !== 'PAUSED') return;
-
     const timer = setTimeout(async () => {
       if (countdownSeconds === 1) {
-        // Countdown complete - transition to RESUMING
-        console.log('[RESUME-COUNTDOWN-EFFECT] Countdown complete, transitioning to RESUMING');
+        console.log('[RESUME-COUNTDOWN-EFFECT] Starting resume sequence');
         setIsPauseMenuOpen(false);
-        console.log('[RESUME-COUNTDOWN-EFFECT] Pause menu closed');
         resumeGame();
-        console.log('[RESUME-COUNTDOWN-EFFECT] Timing recalibrated via resumeGame()');
         setGameState('RESUMING');
         setCountdownSeconds(0);
         setStartupCountdown(0);
         setResumeFadeOpacity(0);
         resumeStartTimeRef.current = performance.now();
-        console.log('[RESUME-COUNTDOWN-EFFECT] Starting 0.5s fade-in overlay, state=RESUMING');
-        // Seek YouTube to pauseTime position BEFORE playing
+
         const pauseTimeSeconds = pauseTimeRef.current / 1000;
-        console.log(`[RESUME-COUNTDOWN-EFFECT] Seeking YouTube to pauseTime=${pauseTimeRef.current}ms (${pauseTimeSeconds.toFixed(2)}s)`);
-        await seekYouTubeVideo(pauseTimeSeconds).catch(err => console.warn('[RESUME-COUNTDOWN-EFFECT] seekYouTubeVideo failed:', err));
-        console.log(`[RESUME-COUNTDOWN-EFFECT] YouTube seek COMPLETE at position ${pauseTimeSeconds.toFixed(2)}s, now resuming playback`);
-        // Read YouTube time to verify seek
-        const youtubeTimeAfterSeek = getYouTubeVideoTime();
-        console.log(`[RESUME-COUNTDOWN-EFFECT] YouTube time after seek: ${youtubeTimeAfterSeek !== null ? (youtubeTimeAfterSeek / 1000).toFixed(2) + 's' : 'null'} (expected ${pauseTimeSeconds.toFixed(2)}s)`);
-        // Play YouTube at pauseTime position
-        await playYouTubeVideo().catch(err => console.warn('[RESUME-COUNTDOWN-EFFECT] playYouTubeVideo failed:', err));
-        console.log('[RESUME-COUNTDOWN-EFFECT] YouTube playVideo() called from paused position');
+        try {
+          await seekYouTubeVideo(pauseTimeSeconds); // Now polls for confirm
+          // NEW: Sync game time post-seek
+          const confirmedTime = getYouTubeVideoTime();
+          if (confirmedTime !== null) {
+            currentTimeRef.current = confirmedTime; // Align engine
+            console.log(`[RESUME-COUNTDOWN-EFFECT] Game time synced to YT: ${ (confirmedTime / 1000).toFixed(2) }s`);
+          }
+          // NEW: 50ms buffer for play start
+          await new Promise(resolve => setTimeout(resolve, 50));
+          await playYouTubeVideo();
+        } catch (err) {
+          console.error('[RESUME-COUNTDOWN-EFFECT] Resume sequence failed:', err);
+        }
       } else {
         setCountdownSeconds(prev => prev - 1);
       }
     }, 1000);
-
     return () => clearTimeout(timer);
-  }, [countdownSeconds, gameState, resumeGame, setGameState]);
+  }, [countdownSeconds, gameState, resumeGame, setGameState, pauseTimeRef]);
 
   // Handle RESUMING fade-in animation (0.5s)
   useEffect(() => {
@@ -282,40 +294,30 @@ export default function Game() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        // PAUSE: PLAYING → PAUSED
         if (gameState === 'PLAYING' && !isPaused) {
           const pauseTimeMs = currentTimeRef.current;
-          const pauseTimeSec = (pauseTimeMs / 1000).toFixed(2);
-          console.log(`[PAUSE-SYSTEM] PAUSE: Freezing at gameTime=${pauseTimeMs}ms (${pauseTimeSec}s)`);
           pauseTimeRef.current = pauseTimeMs;
           pauseGame();
-          setGameState('PAUSED');
-          setStartupCountdown(0);
-          pauseYouTubeVideo().catch(err => console.warn('[PAUSE-SYSTEM] pauseYouTubeVideo failed:', err));
-          console.log(`[PAUSE-SYSTEM] YouTube paused`);
-          // Read YouTube time to verify pause
+          pauseYouTubeVideo().catch(console.warn); // Pause first
           const youtubeTimeAtPause = getYouTubeVideoTime();
-          console.log(`[PAUSE-SYSTEM] YouTube time at pause: ${youtubeTimeAtPause !== null ? (youtubeTimeAtPause / 1000).toFixed(2) + 's' : 'null'}`);
+          console.log(`[PAUSE-SYSTEM] Paused at YT: ${youtubeTimeAtPause ? (youtubeTimeAtPause / 1000).toFixed(2) + 's' : 'null'}`);
+          setGameState('PAUSED'); // State after pause/seek
           setIsPauseMenuOpen(true);
-        }
-        // RESUME: PAUSED → PLAYING (handled by pause menu countdown)
-        else if (gameState === 'PAUSED' && isPaused) {
-          console.log('[PAUSE-SYSTEM] RESUME: Starting 3s pause menu countdown');
+        } else if (gameState === 'PAUSED' && isPaused) {
           setCountdownSeconds(3);
         }
-      }
-      // R key to rewind from any active state
-      else if ((e.key === 'r' || e.key === 'R') && (gameState === 'PLAYING' || gameState === 'PAUSED')) {
-        console.log('[REWIND-SYSTEM] REWIND initiated: Seeking to 0:00, resetting score/combo/notes');
+      } else if ((e.key === 'r' || e.key === 'R') && (gameState === 'PLAYING' || gameState === 'PAUSED')) {
+        console.log('[REWIND-SYSTEM] Initiating rewind');
         restartGame();
-        setGameState('REWINDING');
-        setIsPauseMenuOpen(false);
-        pauseYouTubeVideo().catch(err => console.warn('[REWIND-SYSTEM] pauseYouTubeVideo failed:', err));
-        console.log('[REWIND-SYSTEM] Seeking YouTube to 0:00');
-        seekYouTubeVideo(0).catch(err => console.warn('[REWIND-SYSTEM] seekYouTubeVideo failed:', err));
-        // Read YouTube time to verify rewind
-        const youtubeTimeAfterRewind = getYouTubeVideoTime();
-        console.log(`[REWIND-SYSTEM] YouTube time after rewind: ${youtubeTimeAfterRewind !== null ? (youtubeTimeAfterRewind / 1000).toFixed(2) + 's' : 'null'} (expected 0.00s)`);
+        pauseYouTubeVideo().catch(console.warn);
+        seekYouTubeVideo(0).then(() => { // Seek before state (mount stays)
+          console.log('[REWIND-SYSTEM] Seek confirmed');
+          setGameState('REWINDING'); // Now safe
+          setIsPauseMenuOpen(false);
+        }).catch(err => {
+          console.error('[REWIND-SYSTEM] Seek failed:', err);
+          setGameState('REWINDING'); // Proceed anyway
+        });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -324,18 +326,14 @@ export default function Game() {
 
   // Start game when beatmap is loaded - ONLY on initial load from IDLE state, never after pause/resume
   useEffect(() => {
-    // Only start on initial beatmap load from IDLE state
     if (gameState !== 'IDLE') return;
     if (customNotes && customNotes.length > 0 && !gameAlreadyStartedRef.current) {
-      console.log('[BEATMAP-LOAD] New beatmap loaded from IDLE, starting game via startGame()');
+      console.log('[BEATMAP-LOAD] Starting - seeking first');
       gameAlreadyStartedRef.current = true;
-      startGame();
-      // During COUNTDOWN: seek YouTube to 0:00, pause it
-      // Countdown effect will handle pause/play coordination
       if (youtubeVideoId && playerInitializedRef.current) {
-        seekYouTubeVideo(0).catch(err => console.warn('[GAME-START] seekYouTubeVideo failed:', err));
-        console.log('[GAME-START] Seeking YouTube to 0:00 for countdown');
+        seekYouTubeVideo(0).catch(console.warn); // Seek on mounted player
       }
+      startGame(); // Then countdown - iframe hides but player lives
     }
   }, [customNotes, gameState, startGame, youtubeVideoId]);
 
@@ -388,17 +386,17 @@ export default function Game() {
       {youtubeVideoId && gameState !== 'COUNTDOWN' && gameState !== 'REWINDING' && (
         <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
           <iframe
-            key={`youtube-${youtubeVideoId}`}
+            key={`youtube-${youtubeVideoId}`} // Remount only on ID change
             ref={youtubeIframeRef}
             width="100%"
             height="100%"
             src={buildYouTubeEmbedUrl(youtubeVideoId, {
               ...YOUTUBE_BACKGROUND_EMBED_OPTIONS,
-              autoplay: false
+              autoplay: 0 // Always off
             })}
-            title="YouTube background audio/video sync"
-            allow="autoplay"
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            title="YouTube background"
+            allow="autoplay; encrypted-media"
+            style={getIframeStyle}
             data-testid="iframe-youtube-background"
           />
         </div>
