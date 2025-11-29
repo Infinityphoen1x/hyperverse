@@ -79,7 +79,9 @@ export default function Game() {
   // Startup countdown (when game starts) - skip if paused
   useEffect(() => {
     if (gameState !== 'COUNTDOWN' || isPaused) return;
-    if (engineCountdown <= 0) {
+    
+    // Only handle countdown completion once
+    if (engineCountdown <= 0 && startupCountdown > 0) {
       // Countdown complete - start the game
       console.log('[STARTUP COUNTDOWN] Countdown complete, transitioning to PLAYING');
       if (youtubeVideoId && playerInitializedRef.current) {
@@ -91,13 +93,16 @@ export default function Game() {
       return;
     }
 
-    setStartupCountdown(engineCountdown);
-    console.log(`[COUNTDOWN] Displaying ${engineCountdown}s (autoplay paused)`);
+    // Update display countdown
+    if (engineCountdown > 0) {
+      setStartupCountdown(engineCountdown);
+      console.log(`[COUNTDOWN] Displaying ${engineCountdown}s (autoplay paused)`);
 
-    if (youtubeVideoId && playerInitializedRef.current) {
-      pauseYouTubeVideo();
+      if (youtubeVideoId && playerInitializedRef.current) {
+        pauseYouTubeVideo();
+      }
     }
-  }, [gameState, engineCountdown, youtubeVideoId, setGameState, isPaused]);
+  }, [gameState, engineCountdown, youtubeVideoId, setGameState, isPaused, startupCountdown]);
 
   // Countdown timer for resume preparation
   useEffect(() => {
