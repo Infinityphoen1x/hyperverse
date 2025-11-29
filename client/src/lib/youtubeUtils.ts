@@ -55,6 +55,9 @@ export function buildYouTubeEmbedUrl(videoId: string, options: {
   params.append('autoplay', '0');
   if (options.autoplay === true) params.append('autoplay', '1');
 
+  // Prevent YouTube from showing related videos (game focus)
+  params.append('rel', '0');
+  
   if (options.muted) params.append('mute', '1');
   if (options.controls === false) params.append('controls', '0');
   if (options.modestBranding) params.append('modestbranding', '1');
