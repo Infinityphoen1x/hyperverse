@@ -21,8 +21,9 @@ export default function Home({ onStartGame }: HomeProps) {
     { text: "[NEURAL SYNC: 99%] • QUANTUM ENTANGLEMENT SUCCESSFUL • READY FOR TRANSCENDENCE", color: "#FF0080" },
   ];
 
-  // Create continuous scrolling text with delimiters
-  const continuousText = bannerMessages.map(m => m.text).join(" ◆ ") + " ◆ ";
+  // Create continuous scrolling text with delimiters - duplicate for seamless looping
+  const baseText = bannerMessages.map(m => m.text).join(" • ") + " • ";
+  const continuousText = baseText + baseText;
 
   // Cycle through colors
   useEffect(() => {
