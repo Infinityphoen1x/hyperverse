@@ -344,8 +344,8 @@ export default function Game() {
         />
       )}
       
-      {/* YouTube Background Layer - Only render after COUNTDOWN to prevent audio playback during countdown */}
-      {youtubeVideoId && gameState !== 'COUNTDOWN' && (
+      {/* YouTube Background Layer - Only render after COUNTDOWN/REWINDING to prevent audio playback and ensure fresh init */}
+      {youtubeVideoId && gameState !== 'COUNTDOWN' && gameState !== 'REWINDING' && (
         <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
           <iframe
             key={`youtube-${youtubeVideoId}`}
