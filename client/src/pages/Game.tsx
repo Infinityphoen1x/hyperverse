@@ -323,6 +323,7 @@ export default function Game() {
                 onClick={() => {
                   console.log('[PAUSE-SYSTEM] REWIND button: restarting game to 0');
                   pausedTimeRef.current = 0;
+                  gameAlreadyStartedRef.current = false; // Reset flag so startGame() triggers again with countdown
                   restartGame();
                   seekYouTubeVideo(0);
                   playYouTubeVideo();
