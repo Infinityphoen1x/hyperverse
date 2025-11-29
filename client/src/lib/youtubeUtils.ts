@@ -80,9 +80,21 @@ export function buildYouTubeEmbedUrl(videoId: string, options: {
 let ytPlayer: any = null;
 let playerReady = false;
 let youtubeCurrentTimeMs: number = 0; // Track time from postMessage events
+let youtubeIframeElement: HTMLIFrameElement | null = null; // Keep reference to iframe for direct control
 
 export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null, onReady?: () => void): void {
-  if (!iframeElement || !window.YT) return;
+  if (!iframeElement) return;
+  
+  // Store iframe reference for direct control (postMessage-based seek/play)
+  youtubeIframeElement = iframeElement;
+  
+  if (!window.YT) {
+    // YT API not available, fall back to iframe control
+    playerReady = true;
+    if (onReady) onReady();
+    console.log('[YOUTUBE-PLAYER-INIT] Using iframe postMessage control (YT API unavailable)');
+    return;
+  }
   
   try {
     ytPlayer = new window.YT.Player(iframeElement, {
@@ -97,7 +109,7 @@ export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null, onRea
     });
   } catch (error) {
     console.warn('[YOUTUBE-PLAYER-INIT] Failed to initialize YouTube player:', error);
-    // Fallback: assume ready and use native iframe methods
+    // Fallback: use iframe postMessage control
     playerReady = true;
     if (onReady) onReady();
   }
@@ -211,7 +223,7 @@ export function resetYouTubeTimeTracker(timeSeconds: number = 0): void {
 
 /**
  * Seek YouTube video to specific time (in seconds)
- * Waits for player to be ready before attempting seek
+ * Uses official API if available, falls back to iframe postMessage control
  */
 export async function seekYouTubeVideo(timeSeconds: number): Promise<boolean> {
   // Set player as ready to proceed with operations
@@ -219,15 +231,34 @@ export async function seekYouTubeVideo(timeSeconds: number): Promise<boolean> {
   // Reset time tracker to seek position
   resetYouTubeTimeTracker(timeSeconds);
   
+  const clampedTime = Math.max(0, timeSeconds);
+  const minutes = Math.floor(clampedTime / 60);
+  const seconds = (clampedTime % 60).toFixed(2);
+  
   try {
-    const clampedTime = Math.max(0, timeSeconds);
+    // Try official YouTube API first
     if (ytPlayer && typeof ytPlayer.seekTo === 'function') {
       ytPlayer.seekTo(clampedTime, true);
+      console.log(`[YOUTUBE-SEEK] Official API: Seeking to ${minutes}:${seconds} (${clampedTime.toFixed(2)}s total)`);
+      return true;
     }
-    const minutes = Math.floor(clampedTime / 60);
-    const seconds = (clampedTime % 60).toFixed(2);
-    console.log(`[YOUTUBE-SEEK] Seeking to ${minutes}:${seconds} (${clampedTime.toFixed(2)}s total)`);
-    return true;
+    
+    // Fallback: use iframe postMessage to send seek command
+    if (youtubeIframeElement && youtubeIframeElement.contentWindow) {
+      youtubeIframeElement.contentWindow.postMessage(
+        JSON.stringify({ 
+          event: 'command', 
+          func: 'seekTo', 
+          args: [clampedTime, true] 
+        }),
+        '*'
+      );
+      console.log(`[YOUTUBE-SEEK] PostMessage fallback: Seeking to ${minutes}:${seconds} (${clampedTime.toFixed(2)}s total)`);
+      return true;
+    }
+    
+    console.warn(`[YOUTUBE-SEEK] No seek method available (ytPlayer=${ytPlayer ? 'exists' : 'null'}, iframe=${youtubeIframeElement ? 'exists' : 'null'})`);
+    return false;
   } catch (error) {
     console.warn('[YOUTUBE-SEEK] seekTo failed:', error);
     return false;
@@ -236,21 +267,39 @@ export async function seekYouTubeVideo(timeSeconds: number): Promise<boolean> {
 
 /**
  * Play YouTube video
- * Waits for player to be ready before attempting play
+ * Uses official API if available, falls back to iframe postMessage control
  */
 export async function playYouTubeVideo(): Promise<boolean> {
   // Set player as ready to proceed with operations
   playerReady = true;
   
   try {
+    // Try official YouTube API first
     if (ytPlayer && typeof ytPlayer.playVideo === 'function') {
       const currentTime = ytPlayer.getCurrentTime?.() ?? 0;
       const minutes = Math.floor(currentTime / 60);
       const seconds = (currentTime % 60).toFixed(2);
       ytPlayer.playVideo();
-      console.log(`[YOUTUBE-PLAY] Playing from ${minutes}:${seconds} (${currentTime.toFixed(2)}s total)`);
+      console.log(`[YOUTUBE-PLAY] Official API: Playing from ${minutes}:${seconds} (${currentTime.toFixed(2)}s total)`);
+      return true;
     }
-    return true;
+    
+    // Fallback: use iframe postMessage to send play command
+    if (youtubeIframeElement && youtubeIframeElement.contentWindow) {
+      youtubeIframeElement.contentWindow.postMessage(
+        JSON.stringify({ 
+          event: 'command', 
+          func: 'playVideo', 
+          args: [] 
+        }),
+        '*'
+      );
+      console.log(`[YOUTUBE-PLAY] PostMessage fallback: Playing from tracked time ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s`);
+      return true;
+    }
+    
+    console.warn(`[YOUTUBE-PLAY] No play method available (ytPlayer=${ytPlayer ? 'exists' : 'null'}, iframe=${youtubeIframeElement ? 'exists' : 'null'})`);
+    return false;
   } catch (error) {
     console.warn('[YOUTUBE-PLAY] playVideo failed:', error);
     return false;
@@ -259,21 +308,39 @@ export async function playYouTubeVideo(): Promise<boolean> {
 
 /**
  * Pause YouTube video
- * Waits for player to be ready before attempting pause
+ * Uses official API if available, falls back to iframe postMessage control
  */
 export async function pauseYouTubeVideo(): Promise<boolean> {
   // Set player as ready to proceed with operations
   playerReady = true;
   
   try {
+    // Try official YouTube API first
     if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
       const currentTime = ytPlayer.getCurrentTime?.() ?? 0;
       const minutes = Math.floor(currentTime / 60);
       const seconds = (currentTime % 60).toFixed(2);
       ytPlayer.pauseVideo();
-      console.log(`[YOUTUBE-PAUSE] Paused at ${minutes}:${seconds} (${currentTime.toFixed(2)}s total)`);
+      console.log(`[YOUTUBE-PAUSE] Official API: Paused at ${minutes}:${seconds} (${currentTime.toFixed(2)}s total)`);
+      return true;
     }
-    return true;
+    
+    // Fallback: use iframe postMessage to send pause command
+    if (youtubeIframeElement && youtubeIframeElement.contentWindow) {
+      youtubeIframeElement.contentWindow.postMessage(
+        JSON.stringify({ 
+          event: 'command', 
+          func: 'pauseVideo', 
+          args: [] 
+        }),
+        '*'
+      );
+      console.log(`[YOUTUBE-PAUSE] PostMessage fallback: Paused at tracked time ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s`);
+      return true;
+    }
+    
+    console.warn(`[YOUTUBE-PAUSE] No pause method available (ytPlayer=${ytPlayer ? 'exists' : 'null'}, iframe=${youtubeIframeElement ? 'exists' : 'null'})`);
+    return false;
   } catch (error) {
     console.warn('[YOUTUBE-PAUSE] pauseVideo failed:', error);
     return false;
