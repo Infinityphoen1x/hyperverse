@@ -108,21 +108,20 @@ export default function Game() {
     }
   }, [gameState, engineCountdown, youtubeVideoId, setGameState, isPaused, startupCountdown]);
 
-  // Countdown timer for resume preparation
+  // Pause menu countdown timer (before resume)
   useEffect(() => {
-    if (countdownSeconds <= 0) return;
+    if (countdownSeconds <= 0 || gameState !== 'PAUSED') return;
 
     const timer = setTimeout(() => {
       if (countdownSeconds === 1) {
-        // Countdown complete - actually resume the game
-        const resumeTimeSeconds = pausedTimeRef.current / 1000;
-        console.log('[RESUME-COUNTDOWN-EFFECT] Countdown complete, resuming from', resumeTimeSeconds, 'seconds');
-        seekYouTubeVideo(resumeTimeSeconds);
-        playYouTubeVideo();
+        // Countdown complete - resume the game
+        console.log('[RESUME-COUNTDOWN-EFFECT] Countdown complete, resuming gameplay');
         resumeGame();
-        setGameState('PLAYING'); // Ensure gameState is PLAYING after resume
+        setGameState('PLAYING');
         setCountdownSeconds(0);
-        setStartupCountdown(0); // Clear startup countdown to prevent interference
+        setStartupCountdown(0);
+        // YouTube will automatically start at pauseTimeRef position
+        playYouTubeVideo();
         setIsPauseMenuOpen(false);
       } else {
         setCountdownSeconds(prev => prev - 1);
@@ -130,7 +129,7 @@ export default function Game() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [countdownSeconds, pausedTimeRef, resumeGame, setGameState]);
+  }, [countdownSeconds, gameState, resumeGame, setGameState]);
 
   // Initialize YouTube player when iframe is ready
   useEffect(() => {
@@ -199,35 +198,29 @@ export default function Game() {
     }
   }, []);
 
-  // ESC key to pause/resume (works in PLAYING, COUNTDOWN, and PAUSED states)
+  // ESC key to pause/resume (works in PLAYING and PAUSED states only, NOT during COUNTDOWN)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && (gameState === 'PLAYING' || gameState === 'COUNTDOWN' || gameState === 'PAUSED')) {
-        if (isPaused) {
-          const resumeTimeSeconds = pausedTimeRef.current / 1000;
-          console.log('[PAUSE-SYSTEM] Resume: seeking YouTube to', resumeTimeSeconds, 'seconds');
-          resumeGame();
-          setGameState('PLAYING'); // Ensure we're in PLAYING after resume
-          setCountdownSeconds(0); // Clear any pending countdown
-          seekYouTubeVideo(resumeTimeSeconds);
-          playYouTubeVideo();
-          setIsPauseMenuOpen(false);
-        } else {
-          pausedTimeRef.current = currentTimeRef.current;
-          const pauseTimeSeconds = pausedTimeRef.current / 1000;
-          console.log('[PAUSE-SYSTEM] Pause: saving time', pausedTimeRef.current, 'ms, seeking YouTube to', pauseTimeSeconds);
+      if (e.key === 'Escape') {
+        // PAUSE: PLAYING → PAUSED
+        if (gameState === 'PLAYING' && !isPaused) {
+          console.log('[PAUSE-SYSTEM] PAUSE: state=PAUSED, freezing score/combo/notes, stopping gameTime updates');
           pauseGame();
           setGameState('PAUSED');
-          setStartupCountdown(0); // Clear startup countdown - no countdown during pause
-          seekYouTubeVideo(pauseTimeSeconds);
+          setStartupCountdown(0);
           pauseYouTubeVideo();
           setIsPauseMenuOpen(true);
+        }
+        // RESUME: PAUSED → PLAYING (handled by pause menu countdown)
+        else if (gameState === 'PAUSED' && isPaused) {
+          console.log('[PAUSE-SYSTEM] RESUME: Starting 3s pause menu countdown');
+          setCountdownSeconds(3);
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, isPaused, pauseGame, resumeGame, setGameState]);
+  }, [gameState, isPaused, pauseGame, setGameState]);
 
   // Start game when beatmap is loaded - ONLY on initial load from IDLE state, never after pause/resume
   useEffect(() => {
