@@ -44,6 +44,7 @@ export default function Game() {
   const pauseTimeRef = useRef(0);
   const playerInitializedRef = useRef(false);
   const gameAlreadyStartedRef = useRef(false);
+  const [asyncReady, setAsyncReady] = useState(false); // NEW: Gates fade after async resume
   
   const { 
     gameState, 
@@ -106,39 +107,48 @@ export default function Game() {
   }, [youtubeVideoId, gameState]);
 
   // Startup countdown (when game starts) - skip if paused or not in countdown state
+  // UPDATED: Startup countdown effect - Wrap async play in inner function
   useEffect(() => {
     // Only run during actual COUNTDOWN state, never during PLAYING/PAUSED
     if (gameState !== 'COUNTDOWN' || isPaused) {
       console.log('[STARTUP-COUNTDOWN-EFFECT] Skipped: gameState=' + gameState + ', isPaused=' + isPaused);
       return;
     }
-    
+
     // Only handle countdown completion once - check if we already transitioned
     if (engineCountdown <= 0 && startupCountdown > 0) {
       // Countdown complete - start the game
       console.log('[STARTUP-COUNTDOWN-EFFECT] Countdown complete, transitioning to PLAYING');
-      if (youtubeVideoId && playerInitializedRef.current) {
-        console.log('[STARTUP-COUNTDOWN-EFFECT] YouTube autoplay resuming');
-        playYouTubeVideo().catch(err => console.warn('[STARTUP-COUNTDOWN-EFFECT] playYouTubeVideo failed:', err));
-      }
+      // NEW: Inner async for play (fire-and-forget; state sync immediate)
+      const startPlayback = async () => {
+        if (youtubeVideoId && playerInitializedRef.current) {
+          console.log('[STARTUP-COUNTDOWN-EFFECT] YouTube autoplay resuming');
+          try {
+            await playYouTubeVideo(); // Await poll
+            console.log('[STARTUP-COUNTDOWN-EFFECT] Play confirmed');
+          } catch (err) {
+            console.warn('[STARTUP-COUNTDOWN-EFFECT] playYouTubeVideo failed:', err);
+          }
+        }
+      };
+      startPlayback(); // Call async without await (non-blocking)
       setGameState('PLAYING');
       setStartupCountdown(0);
       return;
     }
-
     // Update display countdown - only if we still have time
     if (engineCountdown > 0 && startupCountdown !== engineCountdown) {
       setStartupCountdown(engineCountdown);
       console.log(`[STARTUP-COUNTDOWN-EFFECT] Displaying ${engineCountdown}s remaining`);
     }
   }, [gameState, engineCountdown, youtubeVideoId, setGameState, isPaused, startupCountdown]);
-
   // Pause menu countdown timer (before resume)
+  // UPDATED: Resume countdown effect - Timeout-wrapped async chain
   useEffect(() => {
     if (countdownSeconds <= 0 || gameState !== 'PAUSED') return;
     const timer = setTimeout(async () => {
       if (countdownSeconds === 1) {
-        console.log('[RESUME-COUNTDOWN-EFFECT] Starting resume sequence');
+        console.log('[RESUME-COUNTDOWN-EFFECT] Starting timed resume sequence');
         setIsPauseMenuOpen(false);
         resumeGame();
         setGameState('RESUMING');
@@ -147,20 +157,33 @@ export default function Game() {
         setResumeFadeOpacity(0);
         resumeStartTimeRef.current = performance.now();
 
-        const pauseTimeSeconds = pauseTimeRef.current / 1000;
+        // NEW: Timeout wrapper (2s total for seek + play)
+        const timeoutPromise = new Promise<null>((_, reject) =>
+          setTimeout(() => reject(new Error('Resume timeout: YT API hung')), 2000)
+        );
         try {
-          await seekYouTubeVideo(pauseTimeSeconds); // Now polls for confirm
-          // NEW: Sync game time post-seek
-          const confirmedTime = getYouTubeVideoTime();
-          if (confirmedTime !== null) {
-            currentTimeRef.current = confirmedTime; // Align engine
-            console.log(`[RESUME-COUNTDOWN-EFFECT] Game time synced to YT: ${ (confirmedTime / 1000).toFixed(2) }s`);
-          }
-          // NEW: 50ms buffer for play start
-          await new Promise(resolve => setTimeout(resolve, 50));
-          await playYouTubeVideo();
+          // Chain with race: Proceeds even if slow
+          await Promise.race([
+            (async () => {
+              const pauseTimeSeconds = pauseTimeRef.current / 1000;
+              await seekYouTubeVideo(pauseTimeSeconds); // Polls internally
+              const confirmedTime = getYouTubeVideoTime();
+              if (confirmedTime !== null) {
+                currentTimeRef.current = confirmedTime; // Sync engine
+                console.log(`[RESUME-COUNTDOWN-EFFECT] Synced to ${ (confirmedTime / 1000).toFixed(2) }s`);
+              }
+              await new Promise(resolve => setTimeout(resolve, 50)); // Buffer
+              await playYouTubeVideo(); // Now polls state
+            })(),
+            timeoutPromise
+          ]);
+          console.log('[RESUME-COUNTDOWN-EFFECT] Async chain complete');
+          setAsyncReady(true); // NEW: Trigger fade
         } catch (err) {
-          console.error('[RESUME-COUNTDOWN-EFFECT] Resume sequence failed:', err);
+          console.error('[RESUME-COUNTDOWN-EFFECT] Chain failed (timeout/fallback):', err);
+          setAsyncReady(true);
+          // Fallback: Force sync from last known (prevents total stall)
+          currentTimeRef.current = pauseTimeRef.current;
         }
       } else {
         setCountdownSeconds(prev => prev - 1);
@@ -168,36 +191,34 @@ export default function Game() {
     }, 1000);
     return () => clearTimeout(timer);
   }, [countdownSeconds, gameState, resumeGame, setGameState, pauseTimeRef]);
-
   // Handle RESUMING fade-in animation (0.5s)
+  // UPDATED: Handle RESUMING fade-in animation (0.5s) - Start only after async
   useEffect(() => {
-    if (gameState !== 'RESUMING') return;
-
-    const fadeInDuration = 500; // 0.5 seconds
+    if (gameState !== 'RESUMING' || !asyncReady) return; // Wait for chain
+    const fadeInDuration = 500;
     let animationFrameId: number;
-
     const animate = () => {
       if (!resumeStartTimeRef.current) return;
-      
       const elapsed = performance.now() - resumeStartTimeRef.current;
-      const progress = Math.min(elapsed / fadeInDuration, 1.0);
-      
+      const progress = Math.min(elapsed / fadeInDuration, 1.0); // Caps at 1.0, no drift from lag
       setResumeFadeOpacity(progress);
-      
       if (progress < 1.0) {
         animationFrameId = requestAnimationFrame(animate);
       } else {
-        // Fade-in complete - transition to PLAYING
-        console.log('[RESUMING-FADE-EFFECT] Fade-in complete, transitioning to PLAYING');
+        console.log('[RESUMING-FADE-EFFECT] Complete, to PLAYING');
         setGameState('PLAYING');
         setResumeFadeOpacity(1.0);
+        setAsyncReady(false); // Reset
         resumeStartTimeRef.current = null;
       }
     };
-
-    animationFrameId = requestAnimationFrame(animate);
+    // NEW: Micro-delay for post-async settle
+    setTimeout(() => {
+      resumeStartTimeRef.current = performance.now();
+      animationFrameId = requestAnimationFrame(animate);
+    }, 100);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [gameState, setGameState]);
+  }, [gameState, setGameState, asyncReady]); // Dep on asyncReady
 
   // Handle REWINDING transition to COUNTDOWN
   useEffect(() => {
@@ -385,8 +406,8 @@ export default function Game() {
       )}
       
       {/* YouTube Background Layer - Only render after COUNTDOWN/REWINDING to prevent audio playback and ensure fresh init */}
-      {youtubeVideoId && gameState !== 'COUNTDOWN' && gameState !== 'REWINDING' && (
-        <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
+      {youtubeVideoId && (
+        <div className="absolute inset-0 pointer-events-none z-0">
           <iframe
             key={`youtube-${youtubeVideoId}`} // Remount only on ID change
             ref={youtubeIframeRef}
@@ -396,9 +417,9 @@ export default function Game() {
               ...YOUTUBE_BACKGROUND_EMBED_OPTIONS,
               autoplay: false // Always off
             })}
-            title="YouTube background"
+            title="YouTube background audio/video sync"
             allow="autoplay; encrypted-media"
-            style={getIframeStyle}
+            style={getIframeStyle} // Now used for hide without unmount
             data-testid="iframe-youtube-background"
           />
         </div>
@@ -445,16 +466,24 @@ export default function Game() {
               >
                 {countdownSeconds > 0 ? 'RESUMING...' : 'RESUME'}
               </button>
-              <button 
-                onClick={() => {
+              <button
+                onClick={async () => { // NEW: async
                   if (!isPaused || gameState !== 'PAUSED') return;
                   console.log('[PAUSE-MENU] REWIND: use R key or press button');
-                  // Trigger rewind via keyboard handler logic
+                  restartGame();
+                  setGameState('REWINDING'); // Flip early for UI
+                  setIsPauseMenuOpen(false);
+                  try {
+                    await pauseYouTubeVideo();
+                    await seekYouTubeVideo(0); // Await + confirm
+                    console.log('[PAUSE-MENU] Rewind confirmed');
+                  } catch (err) {
+                    console.error('[PAUSE-MENU] Rewind failed:', err);
                   restartGame();
                   setGameState('REWINDING');
                   setIsPauseMenuOpen(false);
                   pauseYouTubeVideo();
-                  seekYouTubeVideo(0);
+                  seekYouTubeVideo(0);}
                 }}
                 className="px-12 py-4 bg-emerald-500 text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-emerald-500"
                 data-testid="button-rewind"
