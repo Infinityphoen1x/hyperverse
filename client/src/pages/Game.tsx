@@ -398,12 +398,15 @@ export default function Game() {
                 seekYouTubeVideo(resumeTimeSeconds);
                 playYouTubeVideo();
                 resumeGame();
+                setGameState('PLAYING');
                 setIsPauseMenuOpen(false);
               } else if (currentTimeRef.current > 100) {
                 pausedTimeRef.current = currentTimeRef.current;
                 const pauseTimeSeconds = pausedTimeRef.current / 1000;
                 console.log('[PAUSE-SYSTEM] Pause button: saving time', pausedTimeRef.current, 'ms, seeking YouTube to', pauseTimeSeconds);
                 pauseGame();
+                setGameState('PAUSED');
+                setStartupCountdown(0);
                 seekYouTubeVideo(pauseTimeSeconds);
                 pauseYouTubeVideo();
                 setIsPauseMenuOpen(true);

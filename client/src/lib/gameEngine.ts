@@ -196,6 +196,11 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   const healthRef = useRef<number>(MAX_HEALTH);
   const scoreRef = useRef<number>(0);
 
+  // Sync gameStateRef with gameState whenever it changes
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
+
   const startGame = useCallback(() => {
     scoreRef.current = 0;
     comboRef.current = 0;
