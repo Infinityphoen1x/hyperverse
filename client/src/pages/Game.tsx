@@ -341,38 +341,24 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
         }
       } else if ((e.key === 'r' || e.key === 'R') && (gameState === 'PLAYING' || gameState === 'PAUSED')) {
         console.log('[REWIND-SYSTEM] Initiating rewind');
-        restartGame();
+        restartGame(); // Reset game engine state
         pauseTimeRef.current = 0;
-        setGameState('REWINDING');
         setIsPauseMenuOpen(false);
-        
-        // CRITICAL: Play YouTube immediately within gesture window (like START SESSION)
-        if (youtubeVideoId && playerInitializedRef.current) {
-          playYouTubeVideo()
-            .then(() => console.log('[REWIND-SYSTEM] Play triggered within gesture window'))
-            .catch(err => console.warn('[REWIND-SYSTEM] Play failed:', err));
-        }
         
         // Fire-and-forget: Rewind video in background
         const doRewind = async () => {
-          const timeoutPromise: Promise<null> = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Rewind timeout: YT API hung')), 2000)
-          );
           try {
-            await Promise.race<null>([
-              (async () => {
-                await pauseYouTubeVideo();
-                await seekYouTubeVideo(0);
-                console.log('[REWIND-SYSTEM] Seek confirmed');
-                return null;
-              })(),
-              timeoutPromise
-            ]);
+            await pauseYouTubeVideo();
+            await seekYouTubeVideo(0);
+            console.log('[REWIND-SYSTEM] Seek complete');
           } catch (err) {
             console.error('[REWIND-SYSTEM] Rewind failed:', err);
           }
         };
         doRewind();
+        
+        // Call startGame() just like START SESSION - handles COUNTDOWN → PLAYING flow with YouTube play
+        startGame();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
