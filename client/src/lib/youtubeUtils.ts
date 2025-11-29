@@ -441,27 +441,9 @@ export async function playYouTubeVideo(): Promise<void> {
         }
         if (state === 1) { // Playing confirmed
           console.log(`[YOUTUBE-PLAY] Confirmed playing after ${attempts * 50}ms`);
-          // UNMUTE on gesture success
-          if (ytPlayer && typeof ytPlayer.unMute === 'function') {
-            try {
-              ytPlayer.unMute();
-              console.log('[YOUTUBE-PLAY] Unmuted on gesture success');
-            } catch (err) {
-              console.warn('[YOUTUBE-PLAY] Unmute failed:', err);
-            }
-          }
           resolve();
         } else if (attempts >= maxAttempts) {
           console.warn(`[YOUTUBE-PLAY] Timeout: state=${state}, proceeding`);
-          // UNMUTE even on timeout
-          if (ytPlayer && typeof ytPlayer.unMute === 'function') {
-            try {
-              ytPlayer.unMute();
-              console.log('[YOUTUBE-PLAY] Unmuted on timeout fallback');
-            } catch (err) {
-              console.warn('[YOUTUBE-PLAY] Unmute failed:', err);
-            }
-          }
           resolve(); // Fallback: Assume started
         } else {
           setTimeout(poll, 50);
