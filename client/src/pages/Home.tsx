@@ -22,7 +22,7 @@ export default function Home({ onStartGame }: HomeProps) {
   useEffect(() => {
     const interval = setInterval(() => {
       setMessageIndex((prev) => (prev + 1) % bannerMessages.length);
-    }, 9000); // Change message every 9 seconds (slightly longer than scroll animation)
+    }, 10000); // Change message every 10 seconds (2s buffer after 8s scroll)
     return () => clearInterval(interval);
   }, [bannerMessages.length]);
 
@@ -84,8 +84,8 @@ export default function Home({ onStartGame }: HomeProps) {
               className="font-rajdhani text-xl uppercase whitespace-nowrap font-semibold tracking-wider"
               style={{ color: bannerMessages[messageIndex].color }}
               initial={{ opacity: 0, x: -800 }}
-              animate={{ opacity: 1, x: 500 }}
-              exit={{ opacity: 0, x: 500 }}
+              animate={{ opacity: 1, x: 800 }}
+              exit={{ opacity: 0, x: 1200 }}
               transition={{ duration: 8, ease: 'linear' }}
             >
               {bannerMessages[messageIndex].text}
