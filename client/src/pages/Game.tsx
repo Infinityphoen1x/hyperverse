@@ -562,7 +562,7 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
       <main className="flex-1 relative z-10 flex items-center justify-center px-4">
         
         {/* Left Deck */}
-        <div className="hidden lg:block absolute left-8">
+        <div className="absolute left-8">
            <CamelotWheel 
              side="left" 
              onSpin={handleLeftDeckSpin}
@@ -570,15 +570,15 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
         </div>
 
         {/* Hold Meters Container */}
-        <div className="hidden lg:block absolute left-[200px] right-[200px] top-1/2 -translate-y-1/2 h-48">
+        <div className="absolute left-[200px] right-[200px] top-1/2 -translate-y-1/2 h-48">
           <DeckHoldMeters 
             notes={notes} 
             currentTime={Math.round(currentTime)}
           />
         </div>
 
-        {/* Center 3D Notelane with integrated soundpad buttons - only show during PLAYING/PAUSED */}
-        {gameState !== 'COUNTDOWN' && (
+        {/* Center 3D Notelane with integrated soundpad buttons - show during COUNTDOWN, PLAYING, PAUSED */}
+        {(gameState === 'COUNTDOWN' || gameState === 'PLAYING' || gameState === 'PAUSED') && (
           <div className="relative flex-1 flex items-center justify-center">
             <Down3DNoteLane 
               notes={notes} 
@@ -593,7 +593,7 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
         )}
 
         {/* Right Deck */}
-        <div className="hidden lg:block absolute right-8">
+        <div className="absolute right-8">
            <CamelotWheel 
              side="right" 
              onSpin={handleRightDeckSpin}
