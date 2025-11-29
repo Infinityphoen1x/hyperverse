@@ -165,6 +165,20 @@ export default function Game() {
     return () => cancelAnimationFrame(animationFrameId);
   }, [gameState, setGameState]);
 
+  // Handle REWINDING transition to COUNTDOWN
+  useEffect(() => {
+    if (gameState !== 'REWINDING') return;
+
+    // Small delay to ensure YouTube seek completes before transitioning to countdown
+    const timer = setTimeout(() => {
+      console.log('[REWIND-EFFECT] Rewind complete, transitioning to COUNTDOWN');
+      setGameState('COUNTDOWN');
+      setStartupCountdown(3);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [gameState, setGameState]);
+
   // Initialize YouTube player when iframe is ready
   useEffect(() => {
     if (youtubeVideoId && youtubeIframeRef.current && !playerInitializedRef.current && window.YT) {
@@ -232,7 +246,7 @@ export default function Game() {
     }
   }, []);
 
-  // ESC key to pause/resume (works in PLAYING and PAUSED states only, NOT during COUNTDOWN)
+  // ESC key to pause/resume, R key to rewind
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -251,10 +265,20 @@ export default function Game() {
           setCountdownSeconds(3);
         }
       }
+      // R key to rewind from any active state
+      else if ((e.key === 'r' || e.key === 'R') && (gameState === 'PLAYING' || gameState === 'PAUSED')) {
+        console.log('[REWIND-SYSTEM] REWIND initiated: state=REWINDING, seeking to 0, resetting score/combo');
+        restartGame();
+        setGameState('REWINDING');
+        setIsPauseMenuOpen(false);
+        pauseYouTubeVideo();
+        // Seek to 0 and prepare for countdown
+        seekYouTubeVideo(0);
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, isPaused, pauseGame, setGameState]);
+  }, [gameState, isPaused, pauseGame, restartGame, setGameState]);
 
   // Start game when beatmap is loaded - ONLY on initial load from IDLE state, never after pause/resume
   useEffect(() => {
