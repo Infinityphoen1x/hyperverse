@@ -37,10 +37,10 @@ export default function Home({ onStartGame }: HomeProps) {
       >
         <div className="space-y-4">
           <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-white to-neon-pink neon-text-blue">
-            NEON SYNC
+            HYPERVERSE
           </h1>
           <p className="text-neon-cyan font-rajdhani tracking-[0.5em] text-xl uppercase">
-            Cyberpunk DJ Simulator
+            [ENCRYPTING NEURAL PATHWAYS] // QUANTUM SYNC PROTOCOL
           </p>
         </div>
 
