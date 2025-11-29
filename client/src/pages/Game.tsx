@@ -265,8 +265,8 @@ export default function Game() {
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col relative">
-      {/* Startup countdown overlay - only show when actively counting down, NOT when paused */}
-      {gameState === 'COUNTDOWN' && !isPaused && startupCountdown > 0 && <CountdownOverlay seconds={startupCountdown} />}
+      {/* Startup countdown overlay - ONLY for initial startGame() and rewind, NEVER during pause/resume */}
+      {gameState === 'COUNTDOWN' && startupCountdown > 0 && !isPaused && <CountdownOverlay seconds={startupCountdown} />}
       
       {/* YouTube Background Layer - Auto-plays with audio for time sync */}
       {youtubeVideoId && (
