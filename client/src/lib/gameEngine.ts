@@ -212,7 +212,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     setCombo(0);
     setHealth(MAX_HEALTH);
     setNotes(notesRef.current);
-    GameErrors.log('[COUNTDOWN] Initializing 3-second startup countdown');
+    GameErrors.log('[ENGINE-STARTUP-INIT] Initializing 3-second startup countdown via startGame()');
     setGameState('COUNTDOWN');
     setCountdownSeconds(3);
     

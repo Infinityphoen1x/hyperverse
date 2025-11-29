@@ -76,9 +76,13 @@ export default function Game() {
     currentTimeRef.current = currentTime;
   }, [currentTime]);
 
-  // Startup countdown (when game starts) - skip if paused
+  // Startup countdown (when game starts) - skip if paused or not in countdown state
   useEffect(() => {
-    if (gameState !== 'COUNTDOWN' || isPaused) return;
+    // Only run during actual COUNTDOWN state, never during PLAYING/PAUSED
+    if (gameState !== 'COUNTDOWN' || isPaused) {
+      console.log('[STARTUP-COUNTDOWN-EFFECT] Skipped: gameState=' + gameState + ', isPaused=' + isPaused);
+      return;
+    }
     
     // Only handle countdown completion once - check if we already transitioned
     if (engineCountdown <= 0 && startupCountdown > 0) {
