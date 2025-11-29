@@ -333,12 +333,11 @@ export default function Game() {
                   console.log('[PAUSE-SYSTEM] REWIND button: restarting game to 0');
                   pausedTimeRef.current = 0;
                   gameAlreadyStartedRef.current = false;
-                  restartGame(); // Reset game state
-                  if (isPaused) {
-                    startGame(); // Direct call to trigger startup countdown when paused
-                  }
+                  restartGame(); // Reset game state and sets isPaused = false
+                  startGame(); // Trigger startup countdown
                   seekYouTubeVideo(0);
                   pauseYouTubeVideo();
+                  setIsPauseMenuOpen(false);
                 }}
                 className="px-12 py-4 bg-emerald-500 text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-emerald-500"
                 data-testid="button-rewind"
