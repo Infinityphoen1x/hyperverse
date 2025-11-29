@@ -205,7 +205,10 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     setNotes(notesRef.current);
     setGameState('PLAYING');
     
-    startTimeRef.current = Date.now();
+    // Calibrate startTimeRef based on YouTube's current time if available
+    const now = Date.now();
+    const videoTime = getVideoTime?.() || 0;
+    startTimeRef.current = now - videoTime;
     
     const loop = () => {
       // Skip update if paused
