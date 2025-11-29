@@ -187,6 +187,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   const currentTimeRef = useRef<number>(0);
   const lastStateUpdateRef = useRef<number>(0);
   const lastNotesUpdateRef = useRef<number>(0);
+  const lastCountdownUpdateRef = useRef<number>(0);
   
   // Refs for game state (updated every frame without re-renders)
   const notesRef = useRef<Note[]>([]);
@@ -287,6 +288,15 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       
       // Sync currentTime every frame for meter calculations
       setCurrentTime(time);
+      
+      // Handle countdown during COUNTDOWN state
+      if (gameState === 'COUNTDOWN' && time - lastCountdownUpdateRef.current >= 1000) {
+        setCountdownSeconds(prev => {
+          const newValue = prev - 1;
+          lastCountdownUpdateRef.current = time;
+          return newValue;
+        });
+      }
       
       // Sync notes at regular intervals to let framer-motion animate smoothly without thrashing
       // Too frequent updates break motion animations because the array reference changes constantly
