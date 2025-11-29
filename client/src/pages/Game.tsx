@@ -188,22 +188,27 @@ export default function Game() {
     }
   }, []);
 
-  // ESC key to pause/resume
+  // ESC key to pause/resume (works in PLAYING and COUNTDOWN states)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && gameState === 'PLAYING') {
+      if (e.key === 'Escape' && (gameState === 'PLAYING' || gameState === 'COUNTDOWN')) {
         if (isPaused) {
           const resumeTimeSeconds = pausedTimeRef.current / 1000;
           console.log('[PAUSE-SYSTEM] Resume: seeking YouTube to', resumeTimeSeconds, 'seconds');
           seekYouTubeVideo(resumeTimeSeconds);
           playYouTubeVideo();
           resumeGame();
+          setGameState('PLAYING'); // Ensure we're in PLAYING after resume
           setIsPauseMenuOpen(false);
         } else {
           pausedTimeRef.current = currentTimeRef.current;
           const pauseTimeSeconds = pausedTimeRef.current / 1000;
           console.log('[PAUSE-SYSTEM] Pause: saving time', pausedTimeRef.current, 'ms, seeking YouTube to', pauseTimeSeconds);
           pauseGame();
+          // If pausing during COUNTDOWN, transition to PLAYING so pause menu shows resume countdown
+          if (gameState === 'COUNTDOWN') {
+            setGameState('PLAYING');
+          }
           seekYouTubeVideo(pauseTimeSeconds);
           pauseYouTubeVideo();
           setIsPauseMenuOpen(true);
@@ -212,7 +217,7 @@ export default function Game() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, isPaused, pauseGame, resumeGame]);
+  }, [gameState, isPaused, pauseGame, resumeGame, setGameState]);
 
   // Start game when beatmap is loaded (customNotes changes) - ONLY on first load, NOT during pause
   useEffect(() => {
