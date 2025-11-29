@@ -393,6 +393,7 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
         // Call startGame() with dynamic countdown duration based on beatmapStart
         const countdownDuration = calculateCountdownDuration(customNotes);
         startGame(countdownDuration);
+        // The startup countdown effect will handle playing the video when entering COUNTDOWN state
       }
     };
     window.addEventListener('keydown', handleKeyDown);
