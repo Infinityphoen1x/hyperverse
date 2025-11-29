@@ -99,11 +99,7 @@ export default function Game() {
     // Update display countdown - only if we still have time
     if (engineCountdown > 0 && startupCountdown !== engineCountdown) {
       setStartupCountdown(engineCountdown);
-      console.log(`[STARTUP-COUNTDOWN-EFFECT] Displaying ${engineCountdown}s (pausing YouTube)`);
-
-      if (youtubeVideoId && playerInitializedRef.current) {
-        pauseYouTubeVideo().catch(err => console.warn('[STARTUP-COUNTDOWN-EFFECT] pauseYouTubeVideo failed:', err));
-      }
+      console.log(`[STARTUP-COUNTDOWN-EFFECT] Displaying ${engineCountdown}s remaining`);
     }
   }, [gameState, engineCountdown, youtubeVideoId, setGameState, isPaused, startupCountdown]);
 
