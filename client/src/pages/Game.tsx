@@ -107,7 +107,7 @@ export default function Game() {
   useEffect(() => {
     if (countdownSeconds <= 0 || gameState !== 'PAUSED') return;
 
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       if (countdownSeconds === 1) {
         // Countdown complete - transition to RESUMING
         console.log('[RESUME-COUNTDOWN-EFFECT] Countdown complete, transitioning to RESUMING');
@@ -121,12 +121,13 @@ export default function Game() {
         setResumeFadeOpacity(0);
         resumeStartTimeRef.current = performance.now();
         console.log('[RESUME-COUNTDOWN-EFFECT] Starting 0.5s fade-in overlay, state=RESUMING');
-        // Seek YouTube to pauseTime position before playing
+        // Seek YouTube to pauseTime position BEFORE playing
         const pauseTimeSeconds = pauseTimeRef.current / 1000;
         console.log(`[RESUME-COUNTDOWN-EFFECT] Seeking YouTube to pauseTime=${pauseTimeRef.current}ms (${pauseTimeSeconds.toFixed(2)}s)`);
-        seekYouTubeVideo(pauseTimeSeconds).catch(err => console.warn('[RESUME-COUNTDOWN-EFFECT] seekYouTubeVideo failed:', err));
+        await seekYouTubeVideo(pauseTimeSeconds).catch(err => console.warn('[RESUME-COUNTDOWN-EFFECT] seekYouTubeVideo failed:', err));
+        console.log('[RESUME-COUNTDOWN-EFFECT] YouTube seek complete, now playing');
         // Play YouTube at pauseTime position
-        playYouTubeVideo().catch(err => console.warn('[RESUME-COUNTDOWN-EFFECT] playYouTubeVideo failed:', err));
+        await playYouTubeVideo().catch(err => console.warn('[RESUME-COUNTDOWN-EFFECT] playYouTubeVideo failed:', err));
         console.log('[RESUME-COUNTDOWN-EFFECT] YouTube playVideo() called from paused position');
       } else {
         setCountdownSeconds(prev => prev - 1);
