@@ -79,6 +79,7 @@ export function buildYouTubeEmbedUrl(videoId: string, options: {
  */
 let ytPlayer: any = null;
 let playerReady = false;
+let youtubeCurrentTimeMs: number = 0; // Track time from postMessage events
 
 export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null, onReady?: () => void): void {
   if (!iframeElement || !window.YT) return;
@@ -130,29 +131,64 @@ export async function waitForPlayerReady(maxWaitMs: number = 5000): Promise<bool
 /**
  * Get current video time from YouTube player
  * Returns time in milliseconds to match game engine format
+ * Uses postMessage listener to track time updates
  */
 export function getYouTubeVideoTime(): number | null {
-  if (!ytPlayer) {
-    // Player not initialized yet - return null and let Game.tsx handle initialization
+  if (youtubeCurrentTimeMs < 0) {
     return null;
   }
-  
-  try {
-    if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
-      const timeSeconds = ytPlayer.getCurrentTime();
-      if (typeof timeSeconds === 'number' && !isNaN(timeSeconds) && isFinite(timeSeconds)) {
-        const timeMs = timeSeconds * 1000;
-        const minutes = Math.floor(timeSeconds / 60);
-        const seconds = (timeSeconds % 60).toFixed(2);
-        console.log(`[YOUTUBE-GET-TIME] Current time: ${minutes}:${seconds} (${timeSeconds.toFixed(2)}s total, ${timeMs.toFixed(0)}ms)`);
-        return timeMs; // Convert to milliseconds
+  return youtubeCurrentTimeMs;
+}
+
+/**
+ * Initialize YouTube postMessage listener to track time updates
+ * YouTube IFrame communicates internally via postMessage - we listen for time changes
+ */
+export function initYouTubeTimeListener(): void {
+  const handleMessage = (event: MessageEvent) => {
+    // Only process messages from YouTube's iframe
+    if (!event.data || typeof event.data !== 'string') return;
+    
+    try {
+      const data = JSON.parse(event.data);
+      
+      // YouTube sends currentTime updates in various message formats
+      // Check for time-related messages
+      if (data.event === 'onStateChange' || data.info?.playerState !== undefined) {
+        // Player state changed - might need time update
+        // Will be followed by time update messages
       }
+      
+      // Check for currentTime in the message
+      if (typeof data.currentTime === 'number') {
+        youtubeCurrentTimeMs = data.currentTime * 1000;
+      }
+      
+      // YouTube also sends progress updates with currentTime
+      if (data.info?.currentTime !== undefined) {
+        youtubeCurrentTimeMs = data.info.currentTime * 1000;
+      }
+      
+      // Some versions send time in a different format
+      if (data.time !== undefined && typeof data.time === 'number') {
+        youtubeCurrentTimeMs = data.time * 1000;
+      }
+      
+    } catch (error) {
+      // Silently ignore parse errors - not all messages are JSON
     }
-    return null;
-  } catch (error) {
-    console.warn('[YOUTUBE-GET-TIME] YouTube getCurrentTime failed:', error);
-    return null;
-  }
+  };
+  
+  window.addEventListener('message', handleMessage);
+  console.log('[YOUTUBE-TIME-LISTENER] postMessage listener initialized for time tracking');
+}
+
+/**
+ * Reset YouTube time tracker (useful for seeks and rewinds)
+ */
+export function resetYouTubeTimeTracker(timeSeconds: number = 0): void {
+  youtubeCurrentTimeMs = timeSeconds * 1000;
+  console.log(`[YOUTUBE-TIME-TRACKER] Reset to ${timeSeconds.toFixed(2)}s (${youtubeCurrentTimeMs.toFixed(0)}ms)`);
 }
 
 /**
@@ -162,6 +198,8 @@ export function getYouTubeVideoTime(): number | null {
 export async function seekYouTubeVideo(timeSeconds: number): Promise<boolean> {
   // Set player as ready to proceed with operations
   playerReady = true;
+  // Reset time tracker to seek position
+  resetYouTubeTimeTracker(timeSeconds);
   
   try {
     const clampedTime = Math.max(0, timeSeconds);

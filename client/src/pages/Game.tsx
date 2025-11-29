@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useGameEngine, Difficulty, GameErrors, Note } from "@/lib/gameEngine";
-import { getYouTubeVideoTime, buildYouTubeEmbedUrl, initYouTubePlayer, seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo } from "@/lib/youtubeUtils";
+import { getYouTubeVideoTime, buildYouTubeEmbedUrl, initYouTubePlayer, seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo, initYouTubeTimeListener } from "@/lib/youtubeUtils";
 import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from "@/lib/gameConstants";
 import { CamelotWheel } from "@/components/game/CamelotWheel";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
@@ -85,6 +85,8 @@ export default function Game() {
     initYouTubePlayer(youtubeIframeRef.current, () => {
       console.log('[YOUTUBE-PLAYER-INIT] YouTube player API ready');
     });
+    // Initialize postMessage listener for time tracking
+    initYouTubeTimeListener();
     playerInitializedRef.current = true;
   }, [youtubeVideoId]);
 
