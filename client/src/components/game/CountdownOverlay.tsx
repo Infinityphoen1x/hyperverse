@@ -27,7 +27,6 @@ export function CountdownOverlay({ seconds }: CountdownOverlayProps) {
             backgroundClip: 'text',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
-            textShadow: '0 0 60px rgba(0, 255, 255, 0.8), 0 0 30px rgba(255, 0, 255, 0.6)',
             filter: 'drop-shadow(0 0 30px rgba(0, 255, 255, 0.6))',
           }}
           key={seconds}
