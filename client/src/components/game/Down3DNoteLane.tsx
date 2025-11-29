@@ -262,7 +262,7 @@ const calculateTapNoteGeometry = (
   // Clamp progress to valid range for geometry calculation
   const clampedProgress = Math.max(0, Math.min(1, progress));
   const TRAPEZOID_DEPTH = MIN_DEPTH + (clampedProgress * (MAX_DEPTH - MIN_DEPTH));
-  const nearDist = 1 + (clampedProgress * (TUNNEL_MAX_DISTANCE - 1));
+  const nearDist = 1 + (clampedProgress * (JUDGEMENT_RADIUS - 1));
   const farDist = Math.max(1, nearDist - TRAPEZOID_DEPTH);
   
   // Narrower flanking angles (±8°) for compact appearance
