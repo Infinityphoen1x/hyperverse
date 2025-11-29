@@ -246,7 +246,6 @@ export default function Game() {
                   pausedTimeRef.current = 0;
                   restartGame();
                   seekYouTubeVideo(0);
-                  pauseYouTubeVideo();
                   setIsPauseMenuOpen(false);
                 }}
                 className="px-12 py-4 bg-neon-yellow text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-neon-yellow"
