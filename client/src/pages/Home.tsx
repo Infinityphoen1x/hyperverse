@@ -12,11 +12,11 @@ export default function Home({ onStartGame }: HomeProps) {
   const [messageIndex, setMessageIndex] = useState(0);
 
   const bannerMessages = [
-    "[ENCRYPTING NEURAL PATHWAYS] • QUANTUM SYNC PROTOCOL ACTIVE • SYNCHRONIZING BRAINWAVES",
-    "[NEURAL INTERFACE ONLINE] • FREQUENCY LOCKED • HARMONIC RESONANCE DETECTED",
-    "[DECRYPTION IN PROGRESS] • SYSTEM CALIBRATION COMPLETE • AWAITING INPUT SIGNAL",
-    "[GATEWAY INITIALIZED] • DIMENSIONAL BREACH IMMINENT • CONSCIOUSNESS UPLOADING",
-    "[NEURAL SYNC: 99%] • QUANTUM ENTANGLEMENT SUCCESSFUL • READY FOR TRANSCENDENCE",
+    { text: "[ENCRYPTING NEURAL PATHWAYS] • QUANTUM SYNC PROTOCOL ACTIVE • SYNCHRONIZING BRAINWAVES", color: "#00FFFF" },
+    { text: "[NEURAL INTERFACE ONLINE] • FREQUENCY LOCKED • HARMONIC RESONANCE DETECTED", color: "#FF00FF" },
+    { text: "[DECRYPTION IN PROGRESS] • SYSTEM CALIBRATION COMPLETE • AWAITING INPUT SIGNAL", color: "#00FF00" },
+    { text: "[GATEWAY INITIALIZED] • DIMENSIONAL BREACH IMMINENT • CONSCIOUSNESS UPLOADING", color: "#00CCFF" },
+    { text: "[NEURAL SYNC: 99%] • QUANTUM ENTANGLEMENT SUCCESSFUL • READY FOR TRANSCENDENCE", color: "#FF0080" },
   ];
 
   useEffect(() => {
@@ -65,20 +65,30 @@ export default function Home({ onStartGame }: HomeProps) {
             HYPERVERSE
           </h1>
           {/* Animated scrolling banner */}
-          <div className="w-96 mx-auto border-2 border-neon-cyan px-4 py-3 overflow-hidden bg-black/30 relative">
+          <div 
+            className="w-full max-w-2xl mx-auto border-3 px-6 py-4 overflow-hidden bg-black/30 relative transition-colors duration-1000"
+            style={{ borderColor: bannerMessages[messageIndex].color }}
+          >
             {/* Gradient fade edges for smooth scroll effect */}
-            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/80 to-transparent z-10" />
-            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-black/80 to-transparent z-10" />
+            <div 
+              className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r to-transparent z-10"
+              style={{ backgroundImage: `linear-gradient(to right, rgb(0, 0, 0), transparent)` }}
+            />
+            <div 
+              className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l to-transparent z-10"
+              style={{ backgroundImage: `linear-gradient(to left, rgb(0, 0, 0), transparent)` }}
+            />
             
             <motion.div
               key={messageIndex}
-              className="text-neon-cyan font-rajdhani text-sm uppercase whitespace-nowrap"
-              initial={{ opacity: 0, x: -500 }}
-              animate={{ opacity: 1, x: 450 }}
-              exit={{ opacity: 0, x: 450 }}
+              className="font-rajdhani text-xl uppercase whitespace-nowrap font-semibold tracking-wider"
+              style={{ color: bannerMessages[messageIndex].color }}
+              initial={{ opacity: 0, x: -800 }}
+              animate={{ opacity: 1, x: 500 }}
+              exit={{ opacity: 0, x: 500 }}
               transition={{ duration: 8, ease: 'linear' }}
             >
-              {bannerMessages[messageIndex]}
+              {bannerMessages[messageIndex].text}
             </motion.div>
           </div>
         </div>
