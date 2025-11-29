@@ -114,6 +114,7 @@ export default function Game() {
       if (countdownSeconds === 1) {
         // Countdown complete - transition to RESUMING
         console.log('[RESUME-COUNTDOWN-EFFECT] Countdown complete, transitioning to RESUMING');
+        setIsPauseMenuOpen(false);
         resumeGame();
         setGameState('RESUMING');
         setCountdownSeconds(0);
@@ -122,7 +123,6 @@ export default function Game() {
         resumeStartTimeRef.current = performance.now();
         // YouTube plays at pauseTimeRef position
         playYouTubeVideo();
-        setIsPauseMenuOpen(false);
       } else {
         setCountdownSeconds(prev => prev - 1);
       }
