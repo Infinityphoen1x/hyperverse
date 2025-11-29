@@ -36,7 +36,16 @@ export default function Home({ onStartGame }: HomeProps) {
         className="z-20 text-center space-y-12 relative"
       >
         <div className="space-y-4">
-          <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-white to-neon-pink neon-text-blue">
+          <h1 
+            className="text-6xl md:text-8xl font-black font-orbitron"
+            style={{
+              background: 'linear-gradient(45deg, #00FFFF, #FF00FF)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              filter: 'drop-shadow(0 0 30px rgba(0, 255, 255, 0.6))',
+            }}
+          >
             HYPERVERSE
           </h1>
           <p className="text-neon-cyan font-rajdhani tracking-[0.5em] text-xl uppercase">
