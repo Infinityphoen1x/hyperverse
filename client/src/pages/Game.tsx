@@ -53,6 +53,12 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
       }
     }
     
+    // If no valid beatmapStart found, use default
+    if (minBeatmapStart === Infinity) {
+      console.log(`[COUNTDOWN-CALC] No beatmapStart found, using default 3s`);
+      return 3;
+    }
+    
     // Convert ms to seconds, with minimum of 1 second
     const durationSeconds = Math.max(1, Math.ceil(minBeatmapStart / 1000));
     console.log(`[COUNTDOWN-CALC] beatmapStart: ${minBeatmapStart}ms → countdown: ${durationSeconds}s`);
