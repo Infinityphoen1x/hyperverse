@@ -344,8 +344,17 @@ export default function Game() {
             try {
               await pauseYouTubeVideo();
               await new Promise(resolve => setTimeout(resolve, 50)); // Buffer
-              const youtubeTimeAtPause = getYouTubeVideoTime();
+              let youtubeTimeAtPause = getYouTubeVideoTime();
+              if (youtubeTimeAtPause === null) {
+                // NEW: Quick poll for lag
+                for (let i = 0; i < 3; i++) {
+                  await new Promise(resolve => setTimeout(resolve, 50));
+                  youtubeTimeAtPause = getYouTubeVideoTime();
+                  if (youtubeTimeAtPause !== null) break;
+                }
+              }
               console.log(`[PAUSE-SYSTEM] Paused at YT: ${youtubeTimeAtPause ? (youtubeTimeAtPause / 1000).toFixed(2) + 's' : 'null'}`);
+              pauseTimeRef.current = youtubeTimeAtPause || currentTimeRef.current; // Fallback to game time
             } catch (err) {
               console.warn('[PAUSE-SYSTEM] Pause failed:', err);
             }
