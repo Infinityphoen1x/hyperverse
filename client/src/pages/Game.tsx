@@ -45,18 +45,26 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
   const calculateCountdownDuration = (notesToCheck: Note[] | undefined): number => {
     if (!notesToCheck || notesToCheck.length === 0) return 3; // Default fallback
     
-    // Find the minimum beatmapStart from all notes
-    let minBeatmapStart = Infinity;
+    // Find the minimum beatmapStart from all notes (including 0)
+    let minBeatmapStart: number | undefined = undefined;
     for (const note of notesToCheck) {
-      if (note.beatmapStart !== undefined && note.beatmapStart > 0) {
-        minBeatmapStart = Math.min(minBeatmapStart, note.beatmapStart);
+      if (note.beatmapStart !== undefined) {
+        if (minBeatmapStart === undefined || note.beatmapStart < minBeatmapStart) {
+          minBeatmapStart = note.beatmapStart;
+        }
       }
     }
     
     // If no valid beatmapStart found, use default
-    if (minBeatmapStart === Infinity) {
+    if (minBeatmapStart === undefined) {
       console.log(`[COUNTDOWN-CALC] No beatmapStart found, using default 3s`);
       return 3;
+    }
+    
+    // If beatmapStart is 0 or very small, no countdown needed
+    if (minBeatmapStart <= 0) {
+      console.log(`[COUNTDOWN-CALC] beatmapStart: ${minBeatmapStart}ms → no countdown (start immediately)`);
+      return 0;
     }
     
     // Convert ms to seconds, with minimum of 1 second
