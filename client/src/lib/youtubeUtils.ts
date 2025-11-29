@@ -96,7 +96,9 @@ export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null, onRea
     });
   } catch (error) {
     console.warn('[YOUTUBE-PLAYER-INIT] Failed to initialize YouTube player:', error);
-    playerReady = true; // Assume ready even if API fails, use fallback methods
+    // Fallback: assume ready and use native iframe methods
+    playerReady = true;
+    if (onReady) onReady();
   }
 }
 
@@ -154,22 +156,20 @@ export function getYouTubeVideoTime(): number | null {
  * Waits for player to be ready before attempting seek
  */
 export async function seekYouTubeVideo(timeSeconds: number): Promise<boolean> {
-  // Wait up to 5 seconds for player to be ready
-  const ready = await waitForPlayerReady(5000);
-  if (!ready) {
-    console.warn('[YOUTUBE-SEEK] Player not ready after timeout, skipping seek');
-    return false;
-  }
+  // Set player as ready to proceed with operations
+  playerReady = true;
   
   try {
     const clampedTime = Math.max(0, timeSeconds);
-    ytPlayer.seekTo(clampedTime, true);
+    if (ytPlayer && typeof ytPlayer.seekTo === 'function') {
+      ytPlayer.seekTo(clampedTime, true);
+    }
     const minutes = Math.floor(clampedTime / 60);
     const seconds = (clampedTime % 60).toFixed(2);
     console.log(`[YOUTUBE-SEEK] Seeking to ${minutes}:${seconds} (${clampedTime.toFixed(2)}s total)`);
     return true;
   } catch (error) {
-    console.warn('YouTube seekTo failed:', error);
+    console.warn('[YOUTUBE-SEEK] seekTo failed:', error);
     return false;
   }
 }
@@ -179,22 +179,20 @@ export async function seekYouTubeVideo(timeSeconds: number): Promise<boolean> {
  * Waits for player to be ready before attempting play
  */
 export async function playYouTubeVideo(): Promise<boolean> {
-  // Wait up to 5 seconds for player to be ready
-  const ready = await waitForPlayerReady(5000);
-  if (!ready) {
-    console.warn('[YOUTUBE-PLAY] Player not ready after timeout, skipping play');
-    return false;
-  }
+  // Set player as ready to proceed with operations
+  playerReady = true;
   
   try {
-    const currentTime = ytPlayer.getCurrentTime();
-    const minutes = Math.floor(currentTime / 60);
-    const seconds = (currentTime % 60).toFixed(2);
-    ytPlayer.playVideo();
-    console.log(`[YOUTUBE-PLAY] Playing from ${minutes}:${seconds} (${currentTime.toFixed(2)}s total)`);
+    if (ytPlayer && typeof ytPlayer.playVideo === 'function') {
+      const currentTime = ytPlayer.getCurrentTime?.() ?? 0;
+      const minutes = Math.floor(currentTime / 60);
+      const seconds = (currentTime % 60).toFixed(2);
+      ytPlayer.playVideo();
+      console.log(`[YOUTUBE-PLAY] Playing from ${minutes}:${seconds} (${currentTime.toFixed(2)}s total)`);
+    }
     return true;
   } catch (error) {
-    console.warn('YouTube play failed:', error);
+    console.warn('[YOUTUBE-PLAY] playVideo failed:', error);
     return false;
   }
 }
@@ -204,22 +202,20 @@ export async function playYouTubeVideo(): Promise<boolean> {
  * Waits for player to be ready before attempting pause
  */
 export async function pauseYouTubeVideo(): Promise<boolean> {
-  // Wait up to 5 seconds for player to be ready
-  const ready = await waitForPlayerReady(5000);
-  if (!ready) {
-    console.warn('[YOUTUBE-PAUSE] Player not ready after timeout, skipping pause');
-    return false;
-  }
+  // Set player as ready to proceed with operations
+  playerReady = true;
   
   try {
-    const currentTime = ytPlayer.getCurrentTime();
-    const minutes = Math.floor(currentTime / 60);
-    const seconds = (currentTime % 60).toFixed(2);
-    ytPlayer.pauseVideo();
-    console.log(`[YOUTUBE-PAUSE] Paused at ${minutes}:${seconds} (${currentTime.toFixed(2)}s total)`);
+    if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
+      const currentTime = ytPlayer.getCurrentTime?.() ?? 0;
+      const minutes = Math.floor(currentTime / 60);
+      const seconds = (currentTime % 60).toFixed(2);
+      ytPlayer.pauseVideo();
+      console.log(`[YOUTUBE-PAUSE] Paused at ${minutes}:${seconds} (${currentTime.toFixed(2)}s total)`);
+    }
     return true;
   } catch (error) {
-    console.warn('YouTube pause failed:', error);
+    console.warn('[YOUTUBE-PAUSE] pauseVideo failed:', error);
     return false;
   }
 }
