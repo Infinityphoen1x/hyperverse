@@ -249,6 +249,9 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
             if (n.type === 'TAP' && time > n.time + TAP_HIT_WINDOW) {
               shouldMarkFailed = true;
               failureType = 'tapMissFailure';
+              // Log detailed failure reason for debugging
+              const timeSinceMissWindow = time - (n.time + TAP_HIT_WINDOW);
+              GameErrors.log(`TAP note ${n.id} on lane ${n.lane} auto-failed: ${timeSinceMissWindow}ms past miss window (no user input detected)`);
             } else if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {
               // holdMissFailure: Note expired without being pressed AT ALL (user never pressed)
               if (!n.pressHoldTime && time > n.time + HOLD_MISS_TIMEOUT) {
@@ -386,6 +389,18 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         setCombo(comboRef.current);
         setHealth(healthRef.current);
         setNotes([...notes]);
+      } else {
+        // User input on soundpad with no matching note - log reason
+        const potentialNotes = notes.filter(n => n && n.lane === lane && n.type === 'TAP' && !n.hit && !n.missed);
+        if (potentialNotes.length === 0) {
+          GameErrors.log(`hitNote: Lane ${lane} - NO TAP NOTES ON THIS LANE (user input ignored)`);
+        } else {
+          const closestNote = potentialNotes.reduce((prev, curr) => 
+            Math.abs(curr.time - currentTime) < Math.abs(prev.time - currentTime) ? curr : prev
+          );
+          const timeDiff = currentTime - closestNote.time;
+          GameErrors.log(`hitNote: Lane ${lane} - NO MATCH (tried at ${currentTime}ms, closest note at ${closestNote.time}ms, ${timeDiff > 0 ? timeDiff + 'ms late' : Math.abs(timeDiff) + 'ms early'})`);
+        }
       }
     } catch (error) {
       GameErrors.log(`hitNote error: ${error instanceof Error ? error.message : 'Unknown'}`);
