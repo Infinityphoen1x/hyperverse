@@ -121,6 +121,27 @@ export function isPlayerReady(): boolean {
 }
 
 /**
+ * Wait for YouTube player to be ready with exponential backoff
+ * Returns true if player becomes ready within timeout
+ */
+export async function waitForPlayerReady(maxWaitMs: number = 5000): Promise<boolean> {
+  const startTime = performance.now();
+  let waitTime = 50; // Start with 50ms
+  
+  while (performance.now() - startTime < maxWaitMs) {
+    if (isPlayerReady()) {
+      console.log(`[YOUTUBE-INIT] Player ready after ${(performance.now() - startTime).toFixed(0)}ms`);
+      return true;
+    }
+    await new Promise(resolve => setTimeout(resolve, waitTime));
+    waitTime = Math.min(waitTime * 1.5, 200); // Cap at 200ms between checks
+  }
+  
+  console.warn(`[YOUTUBE-INIT] Player not ready after ${maxWaitMs}ms timeout`);
+  return false;
+}
+
+/**
  * Get current video time from YouTube player
  * Returns time in milliseconds to match game engine format
  */
@@ -146,10 +167,13 @@ export function getYouTubeVideoTime(iframeElement: HTMLIFrameElement | null): nu
 
 /**
  * Seek YouTube video to specific time (in seconds)
+ * Waits for player to be ready before attempting seek
  */
-export function seekYouTubeVideo(timeSeconds: number): boolean {
-  if (!isPlayerReady()) {
-    console.warn('YouTube player not ready for seekTo');
+export async function seekYouTubeVideo(timeSeconds: number): Promise<boolean> {
+  // Wait up to 5 seconds for player to be ready
+  const ready = await waitForPlayerReady(5000);
+  if (!ready) {
+    console.warn('[YOUTUBE-SEEK] Player not ready after timeout, skipping seek');
     return false;
   }
   
@@ -168,10 +192,13 @@ export function seekYouTubeVideo(timeSeconds: number): boolean {
 
 /**
  * Play YouTube video
+ * Waits for player to be ready before attempting play
  */
-export function playYouTubeVideo(): boolean {
-  if (!isPlayerReady()) {
-    console.warn('YouTube player not ready for playVideo');
+export async function playYouTubeVideo(): Promise<boolean> {
+  // Wait up to 5 seconds for player to be ready
+  const ready = await waitForPlayerReady(5000);
+  if (!ready) {
+    console.warn('[YOUTUBE-PLAY] Player not ready after timeout, skipping play');
     return false;
   }
   
@@ -190,10 +217,13 @@ export function playYouTubeVideo(): boolean {
 
 /**
  * Pause YouTube video
+ * Waits for player to be ready before attempting pause
  */
-export function pauseYouTubeVideo(): boolean {
-  if (!isPlayerReady()) {
-    console.warn('YouTube player not ready for pauseVideo');
+export async function pauseYouTubeVideo(): Promise<boolean> {
+  // Wait up to 5 seconds for player to be ready
+  const ready = await waitForPlayerReady(5000);
+  if (!ready) {
+    console.warn('[YOUTUBE-PAUSE] Player not ready after timeout, skipping pause');
     return false;
   }
   

@@ -88,7 +88,7 @@ export default function Game() {
       console.log('[STARTUP-COUNTDOWN-EFFECT] Countdown complete, transitioning to PLAYING');
       if (youtubeVideoId && playerInitializedRef.current) {
         console.log('[STARTUP-COUNTDOWN-EFFECT] YouTube autoplay resuming');
-        playYouTubeVideo();
+        playYouTubeVideo().catch(err => console.warn('[STARTUP-COUNTDOWN-EFFECT] playYouTubeVideo failed:', err));
       }
       setGameState('PLAYING');
       setStartupCountdown(0);
@@ -101,7 +101,7 @@ export default function Game() {
       console.log(`[STARTUP-COUNTDOWN-EFFECT] Displaying ${engineCountdown}s (pausing YouTube)`);
 
       if (youtubeVideoId && playerInitializedRef.current) {
-        pauseYouTubeVideo();
+        pauseYouTubeVideo().catch(err => console.warn('[STARTUP-COUNTDOWN-EFFECT] pauseYouTubeVideo failed:', err));
       }
     }
   }, [gameState, engineCountdown, youtubeVideoId, setGameState, isPaused, startupCountdown]);
@@ -125,7 +125,7 @@ export default function Game() {
         resumeStartTimeRef.current = performance.now();
         console.log('[RESUME-COUNTDOWN-EFFECT] Starting 0.5s fade-in overlay, state=RESUMING');
         // YouTube plays at pauseTime position
-        playYouTubeVideo();
+        playYouTubeVideo().catch(err => console.warn('[RESUME-COUNTDOWN-EFFECT] playYouTubeVideo failed:', err));
         console.log('[RESUME-COUNTDOWN-EFFECT] YouTube playVideo() called, should continue from paused position');
       } else {
         setCountdownSeconds(prev => prev - 1);
@@ -255,7 +255,7 @@ export default function Game() {
           pauseGame();
           setGameState('PAUSED');
           setStartupCountdown(0);
-          pauseYouTubeVideo();
+          pauseYouTubeVideo().catch(err => console.warn('[PAUSE-SYSTEM] pauseYouTubeVideo failed:', err));
           console.log(`[PAUSE-SYSTEM] YouTube paused`);
           setIsPauseMenuOpen(true);
         }
@@ -271,9 +271,9 @@ export default function Game() {
         restartGame();
         setGameState('REWINDING');
         setIsPauseMenuOpen(false);
-        pauseYouTubeVideo();
+        pauseYouTubeVideo().catch(err => console.warn('[REWIND-SYSTEM] pauseYouTubeVideo failed:', err));
         console.log('[REWIND-SYSTEM] Seeking YouTube to 0:00');
-        seekYouTubeVideo(0);
+        seekYouTubeVideo(0).catch(err => console.warn('[REWIND-SYSTEM] seekYouTubeVideo failed:', err));
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -291,7 +291,7 @@ export default function Game() {
       // During COUNTDOWN: seek YouTube to 0:00, pause it
       // Countdown effect will handle pause/play coordination
       if (youtubeVideoId && playerInitializedRef.current) {
-        seekYouTubeVideo(0);
+        seekYouTubeVideo(0).catch(err => console.warn('[GAME-START] seekYouTubeVideo failed:', err));
         console.log('[GAME-START] Seeking YouTube to 0:00 for countdown');
       }
     }
