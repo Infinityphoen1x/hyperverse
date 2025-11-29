@@ -230,6 +230,8 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         time = now - startTimeRef.current - pausedTimeRef.current;
       }
       
+      // Round time to integer milliseconds to ensure consistent calculations
+      time = Math.round(time);
       currentTimeRef.current = time;
       
       // Check for missed notes - update ref-based state only
