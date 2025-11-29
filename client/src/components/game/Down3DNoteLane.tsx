@@ -259,9 +259,10 @@ const calculateTapNoteGeometry = (
 ): TapNoteGeometry => {
   const MIN_DEPTH = 5;
   const MAX_DEPTH = 40;
-  const TRAPEZOID_DEPTH = MIN_DEPTH + (progress * (MAX_DEPTH - MIN_DEPTH));
+  // Inverted: larger depth when far away (progress≈0), smaller depth when near (progress≈1)
+  const TRAPEZOID_DEPTH = MIN_DEPTH + ((1 - progress) * (MAX_DEPTH - MIN_DEPTH));
   const nearDist = 1 + (progress * (JUDGEMENT_RADIUS - 1));
-  const farDist = Math.max(0.1, nearDist - TRAPEZOID_DEPTH);
+  const farDist = Math.max(1, nearDist - TRAPEZOID_DEPTH);
   
   // Narrower flanking angles (±8°) for compact appearance
   const tapLeftRayAngle = tapRayAngle - 8;
