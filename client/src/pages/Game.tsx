@@ -335,31 +335,27 @@ export default function Game() {
       if (e.key === 'Escape') {
         if (gameState === 'PLAYING' && !isPaused) {
           const pauseTimeMs = currentTimeRef.current;
-          pauseTimeRef.current = pauseTimeMs;
+          pauseTimeRef.current = pauseTimeMs; // Temp fallback
           pauseGame();
-          setGameState('PAUSED');
-          setIsPauseMenuOpen(true);
-          // Fire-and-forget: Pause video in background
-          const pausePauseVideo = async () => {
+          // Pause video and update pause time
+          (async () => {
             try {
               await pauseYouTubeVideo();
-              await new Promise(resolve => setTimeout(resolve, 50)); // Buffer
-              let youtubeTimeAtPause = getYouTubeVideoTime();
-              if (youtubeTimeAtPause === null) {
-                // NEW: Quick poll for lag
-                for (let i = 0; i < 3; i++) {
-                  await new Promise(resolve => setTimeout(resolve, 50));
-                  youtubeTimeAtPause = getYouTubeVideoTime();
-                  if (youtubeTimeAtPause !== null) break;
-                }
+              // NEW: Poll for accurate YT time post-pause
+              let youtubeTimeAtPause = null;
+              for (let i = 0; i < 3; i++) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+                youtubeTimeAtPause = getYouTubeVideoTime();
+                if (youtubeTimeAtPause !== null) break;
               }
-              console.log(`[PAUSE-SYSTEM] Paused at YT: ${youtubeTimeAtPause ? (youtubeTimeAtPause / 1000).toFixed(2) + 's' : 'null'}`);
-              pauseTimeRef.current = youtubeTimeAtPause || currentTimeRef.current; // Fallback to game time
+              pauseTimeRef.current = youtubeTimeAtPause || pauseTimeMs; // YT or game fallback
+              console.log(`[PAUSE-SYSTEM] Paused at YT: ${youtubeTimeAtPause ? (youtubeTimeAtPause / 1000).toFixed(2) + 's' : 'game fallback ' + (pauseTimeMs / 1000).toFixed(2) + 's'}`);
             } catch (err) {
               console.warn('[PAUSE-SYSTEM] Pause failed:', err);
             }
-          };
-          pausePauseVideo();
+            setGameState('PAUSED');
+            setIsPauseMenuOpen(true);
+          })();
         } else if (gameState === 'PAUSED' && isPaused) {
           setCountdownSeconds(3);
         }
