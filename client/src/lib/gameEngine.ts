@@ -325,13 +325,17 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     healthRef.current = MAX_HEALTH;
     pausedTimeRef.current = 0;
     
+    // Reset notes to fresh state (no failure markers) - critical for rewind to render correctly
+    notesRef.current = customNotes || [];
+    
     setScore(0);
     setCombo(0);
     setHealth(MAX_HEALTH);
+    setNotes([...notesRef.current]);
     setIsPaused(false);
     
     startTimeRef.current = Date.now();
-  }, []);
+  }, [customNotes]);
 
   const hitNote = useCallback((lane: number) => {
     try {
