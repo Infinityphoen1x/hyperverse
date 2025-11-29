@@ -11,8 +11,6 @@ import { CountdownOverlay } from "@/components/game/CountdownOverlay";
 import { motion } from "framer-motion";
 
 export default function Game() {
-  const [leftDeckRotation, setLeftDeckRotation] = useState(0);
-  const [rightDeckRotation, setRightDeckRotation] = useState(0);
   const [gameErrors, setGameErrors] = useState<string[]>([]);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
@@ -59,7 +57,6 @@ export default function Game() {
     hitNote,
     trackHoldStart,
     trackHoldEnd,
-    markNoteMissed,
     pauseGame,
     resumeGame,
     restartGame,
@@ -217,7 +214,7 @@ export default function Game() {
   }, [notes]);
 
 
-  // Memoize deck callbacks for visual rotation only (gameplay input from keyboard handler only)
+  // Deck hit callbacks (keyboard: Q for left deck, P for right deck)
   const handleLeftDeckSpin = useCallback(() => hitNote(-1), [hitNote]);
   const handleRightDeckSpin = useCallback(() => hitNote(-2), [hitNote]);
 
@@ -480,7 +477,6 @@ export default function Game() {
            <CamelotWheel 
              side="left" 
              onSpin={handleLeftDeckSpin}
-             onRotationChange={setLeftDeckRotation}
            />
         </div>
 
@@ -512,7 +508,6 @@ export default function Game() {
            <CamelotWheel 
              side="right" 
              onSpin={handleRightDeckSpin}
-             onRotationChange={setRightDeckRotation}
            />
         </div>
 
