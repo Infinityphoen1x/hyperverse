@@ -95,12 +95,18 @@ export default function Game() {
     initYouTubePlayer(youtubeIframeRef.current, () => {
       console.log('[YOUTUBE-PLAYER-INIT] Ready - signaling game engine');
       playerInitializedRef.current = true;
-      // NEW: If in COUNTDOWN/REWINDING, seek now (post-mount)
+      // Fire-and-forget: Auto-seek during COUNTDOWN/REWINDING
       if (youtubeVideoId && (gameState === 'COUNTDOWN' || gameState === 'REWINDING')) {
-        const targetTime = gameState === 'REWINDING' ? 0 : 0; // Or track rewind target
-        seekYouTubeVideo(targetTime).then(() => {
-          console.log('[YOUTUBE-PLAYER-INIT] Auto-seek complete during hidden state');
-        }).catch(console.warn);
+        const autoSeek = async () => {
+          try {
+            const targetTime = gameState === 'REWINDING' ? 0 : 0;
+            await seekYouTubeVideo(targetTime);
+            console.log('[YOUTUBE-PLAYER-INIT] Auto-seek complete during hidden state');
+          } catch (err) {
+            console.warn('[YOUTUBE-PLAYER-INIT] Auto-seek failed:', err);
+          }
+        };
+        autoSeek();
       }
     });
     initYouTubeTimeListener();
