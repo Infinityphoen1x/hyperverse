@@ -42,7 +42,6 @@ export default function Game() {
   const [isPauseMenuOpen, setIsPauseMenuOpen] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(0);
   const [startupCountdown, setStartupCountdown] = useState(0);
-  const pausedTimeRef = useRef(0);
   const currentTimeRef = useRef(0);
   const playerInitializedRef = useRef(false);
   const gameAlreadyStartedRef = useRef(false);
@@ -217,9 +216,6 @@ export default function Game() {
     };
   }, [notes]);
 
-  useEffect(() => {
-    startGame();
-  }, [startGame]);
 
   // Memoize deck callbacks for visual rotation only (gameplay input from keyboard handler only)
   const handleLeftDeckSpin = useCallback(() => hitNote(-1), [hitNote]);
@@ -405,26 +401,14 @@ export default function Game() {
               </button>
               <button 
                 onClick={() => {
-                  // Rewind only works when paused
                   if (!isPaused || gameState !== 'PAUSED') return;
-                  
-                  console.log('[PAUSE-SYSTEM] REWIND button: restarting game to 0');
-                  pausedTimeRef.current = 0;
-                  gameAlreadyStartedRef.current = false;
-                  
-                  // Clear any pending resume countdown
-                  setCountdownSeconds(0);
-                  // Clear any leftover startup countdown
-                  setStartupCountdown(0);
-                  
-                  // Restart game - this will trigger new startup countdown via startGame()
-                  restartGame(); // Reset game state and sets isPaused = false
-                  startGame(); // Trigger startup countdown (sets gameState = 'COUNTDOWN', engineCountdown = 3)
-                  
-                  // Reset YouTube to start
-                  seekYouTubeVideo(0);
-                  pauseYouTubeVideo();
+                  console.log('[PAUSE-MENU] REWIND: use R key or press button');
+                  // Trigger rewind via keyboard handler logic
+                  restartGame();
+                  setGameState('REWINDING');
                   setIsPauseMenuOpen(false);
+                  pauseYouTubeVideo();
+                  seekYouTubeVideo(0);
                 }}
                 className="px-12 py-4 bg-emerald-500 text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-emerald-500"
                 data-testid="button-rewind"
@@ -476,33 +460,6 @@ export default function Game() {
         </div>
 
         <div className="text-right flex items-center gap-4">
-          <button
-            onClick={() => {
-              if (isPaused) {
-                const resumeTimeSeconds = pausedTimeRef.current / 1000;
-                console.log('[PAUSE-SYSTEM] Play button: seeking YouTube to', resumeTimeSeconds, 'seconds');
-                seekYouTubeVideo(resumeTimeSeconds);
-                playYouTubeVideo();
-                resumeGame();
-                setGameState('PLAYING');
-                setIsPauseMenuOpen(false);
-              } else if (currentTimeRef.current > 100) {
-                pausedTimeRef.current = currentTimeRef.current;
-                const pauseTimeSeconds = pausedTimeRef.current / 1000;
-                console.log('[PAUSE-SYSTEM] Pause button: saving time', pausedTimeRef.current, 'ms, seeking YouTube to', pauseTimeSeconds);
-                pauseGame();
-                setGameState('PAUSED');
-                setStartupCountdown(0);
-                seekYouTubeVideo(pauseTimeSeconds);
-                pauseYouTubeVideo();
-                setIsPauseMenuOpen(true);
-              }
-            }}
-            className="px-6 py-2 bg-neon-yellow/20 text-neon-yellow font-rajdhani text-sm hover:bg-neon-yellow/40 transition-colors rounded border border-neon-yellow"
-            data-testid="button-pause"
-          >
-            {isPaused ? '▶' : '⏸'}
-          </button>
           <motion.div 
             className="text-3xl font-bold font-orbitron neon-glow"
             style={{ color: combo % 20 === 0 && combo > 0 ? 'hsl(120, 100%, 50%)' : 'hsl(280, 100%, 60%)' }}
