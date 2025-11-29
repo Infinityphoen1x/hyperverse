@@ -303,7 +303,7 @@ const calculateTapNoteStyle = (
   let opacity = 0.4 + (progress * 0.6);
   let fill = noteColor;
   let stroke = 'rgba(255,255,255,0.8)';
-  let filter = `drop-shadow(0 0 ${10 * progress}px ${noteColor})`;
+  let filter = `drop-shadow(0 0 ${15 * progress}px ${noteColor})`;
   
   if (state.isTooEarlyFailure) {
     // Too early: orange/amber alert, faster fade (800ms)
@@ -321,15 +321,13 @@ const calculateTapNoteStyle = (
     filter = 'drop-shadow(0 0 8px rgba(100,100,100,0.6)) grayscale(1)';
   } else if (state.isHit) {
     opacity = (1 - (state.timeSinceHit / 600)) * (0.4 + (progress * 0.6));
+    // Strong double glow for successful hits (full duration, fades with opacity)
+    filter = `brightness(2.2) drop-shadow(0 0 30px ${noteColor}) drop-shadow(0 0 15px ${noteColor})`;
   }
   
   const hitFlashIntensity = state.isHit && state.timeSinceHit < 600 
     ? Math.max(0, 1 - (state.timeSinceHit / 600)) 
     : 0;
-  
-  if (state.isHit && hitFlashIntensity > 0) {
-    filter = `brightness(1.8) drop-shadow(0 0 20px ${noteColor})`;
-  }
   
   return { opacity: Math.max(opacity, 0), fill, stroke, filter, hitFlashIntensity };
 };
