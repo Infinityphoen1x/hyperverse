@@ -211,12 +211,6 @@ export default function Game() {
           const pauseTimeSeconds = pausedTimeRef.current / 1000;
           console.log('[PAUSE-SYSTEM] Pause: saving time', pausedTimeRef.current, 'ms, seeking YouTube to', pauseTimeSeconds);
           pauseGame();
-          // If pausing during COUNTDOWN, ensure we transition to PLAYING to show pause menu properly
-          if (gameState === 'COUNTDOWN') {
-            setGameState('PLAYING');
-            // Reset startup countdown state to show resume countdown in pause menu
-            setStartupCountdown(0);
-          }
           seekYouTubeVideo(pauseTimeSeconds);
           pauseYouTubeVideo();
           setIsPauseMenuOpen(true);
