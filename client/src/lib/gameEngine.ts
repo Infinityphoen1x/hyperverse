@@ -188,6 +188,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   const lastStateUpdateRef = useRef<number>(0);
   const lastNotesUpdateRef = useRef<number>(0);
   const lastCountdownUpdateRef = useRef<number>(0);
+  const gameStateRef = useRef<'MENU' | 'COUNTDOWN' | 'PLAYING' | 'GAMEOVER'>('MENU');
   
   // Refs for game state (updated every frame without re-renders)
   const notesRef = useRef<Note[]>([]);
@@ -246,7 +247,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       // Check for missed notes - update ref-based state only (skip during COUNTDOWN)
       let shouldGameOver = false;
       const notes = notesRef.current;
-      if (gameState === 'PLAYING' && Array.isArray(notes)) {
+      if (gameStateRef.current === 'PLAYING' && Array.isArray(notes)) {
         for (let i = 0; i < notes.length; i++) {
           const n = notes[i];
           if (!n) continue;
@@ -292,7 +293,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       setCurrentTime(time);
       
       // Handle countdown during COUNTDOWN state
-      if (gameState === 'COUNTDOWN' && time - lastCountdownUpdateRef.current >= 1000) {
+      if (gameStateRef.current === 'COUNTDOWN' && time - lastCountdownUpdateRef.current >= 1000) {
         setCountdownSeconds(prev => {
           const newValue = prev - 1;
           lastCountdownUpdateRef.current = time;
@@ -664,6 +665,11 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       GameErrors.log(`markNoteMissed error: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
   }, []);
+
+  // Keep gameStateRef in sync with gameState so the game loop always has current state
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
 
   return {
     gameState,
