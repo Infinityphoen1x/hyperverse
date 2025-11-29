@@ -344,8 +344,8 @@ export default function Game() {
         />
       )}
       
-      {/* YouTube Background Layer - Auto-plays with audio for time sync */}
-      {youtubeVideoId && (
+      {/* YouTube Background Layer - Only render after COUNTDOWN to prevent audio playback during countdown */}
+      {youtubeVideoId && gameState !== 'COUNTDOWN' && (
         <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
           <iframe
             key={`youtube-${youtubeVideoId}`}
