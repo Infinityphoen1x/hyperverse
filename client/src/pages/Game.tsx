@@ -116,6 +116,7 @@ export default function Game() {
         seekYouTubeVideo(resumeTimeSeconds);
         playYouTubeVideo();
         resumeGame();
+        setGameState('PLAYING'); // Ensure gameState is PLAYING after resume
         setCountdownSeconds(0);
         setIsPauseMenuOpen(false);
       } else {
@@ -124,7 +125,7 @@ export default function Game() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [countdownSeconds, pausedTimeRef, resumeGame]);
+  }, [countdownSeconds, pausedTimeRef, resumeGame, setGameState]);
 
   // Initialize YouTube player when iframe is ready
   useEffect(() => {
