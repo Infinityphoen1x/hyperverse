@@ -43,6 +43,7 @@ export default function Game() {
   const pausedTimeRef = useRef(0);
   const currentTimeRef = useRef(0);
   const playerInitializedRef = useRef(false);
+  const gameAlreadyStartedRef = useRef(false);
   
   const { 
     gameState, 
@@ -213,12 +214,21 @@ export default function Game() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gameState, isPaused, pauseGame, resumeGame]);
 
-  // Restart game when beatmap is loaded (customNotes changes)
+  // Start game when beatmap is loaded (customNotes changes) - ONLY on first load
   useEffect(() => {
-    if (customNotes && customNotes.length > 0) {
+    if (customNotes && customNotes.length > 0 && !gameAlreadyStartedRef.current) {
+      console.log('[BEATMAP-LOAD] New beatmap loaded, starting game');
+      gameAlreadyStartedRef.current = true;
       startGame();
     }
   }, [customNotes, startGame]);
+
+  // Reset flag when game ends
+  useEffect(() => {
+    if (gameState === 'GAMEOVER') {
+      gameAlreadyStartedRef.current = false;
+    }
+  }, [gameState]);
 
   if (gameState === 'GAMEOVER') {
     return (
