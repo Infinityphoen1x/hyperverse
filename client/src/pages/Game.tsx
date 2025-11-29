@@ -80,9 +80,9 @@ export default function Game() {
     if (gameState !== 'COUNTDOWN') return;
     if (engineCountdown <= 0) {
       // Countdown complete - start the game
-      console.log('[STARTUP COUNTDOWN] Complete - starting game at 0s');
+      console.log('[STARTUP COUNTDOWN] Countdown complete, transitioning to PLAYING');
       if (youtubeVideoId) {
-        console.log('[AUTOPLAY] Setting autoplay=1, resuming YouTube');
+        console.log('[AUTOPLAY] autoplay=1, YouTube video resuming');
         playYouTubeVideo();
       }
       setGameState('PLAYING');
@@ -91,7 +91,7 @@ export default function Game() {
     }
 
     setStartupCountdown(engineCountdown);
-    console.log(`[COUNTDOWN] Display ${engineCountdown}s, autoplay=0`);
+    console.log(`[COUNTDOWN] Displaying ${engineCountdown}s (autoplay paused)`);
 
     if (youtubeVideoId) {
       pauseYouTubeVideo();

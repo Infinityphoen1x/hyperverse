@@ -1,0 +1,30 @@
+{
+  "timestamp": "2025-11-29T00:56:47.557Z",
+  "errorLog": [
+    "[1764377782666] BeatmapParser: Invalid metadata - title: \"\", artist: \"\", bpm: 120, duration: 0",
+    "[1764377782666] BeatmapLoader: Failed to parse beatmap for MEDIUM difficulty",
+    "[1764377783727] BeatmapConverter: HOLD note hold_0 lane=-1 → type=SPIN_LEFT",
+    "[1764377783727] BeatmapConverter: HOLD note hold_1 lane=-2 → type=SPIN_RIGHT",
+    "[1764377783727] BeatmapConverter: HOLD note hold_2 lane=-1 → type=SPIN_LEFT",
+    "[1764377783727] BeatmapConverter: HOLD note hold_3 lane=-2 → type=SPIN_RIGHT",
+    "[1764377783727] BeatmapConverter: HOLD note hold_4 lane=-1 → type=SPIN_LEFT",
+    "[1764377783727] BeatmapConverter: HOLD note hold_5 lane=-1 → type=SPIN_LEFT",
+    "[1764377783727] BeatmapConverter: HOLD note hold_6 lane=-2 → type=SPIN_RIGHT",
+    "[1764377783727] BeatmapConverter: HOLD note hold_7 lane=-1 → type=SPIN_LEFT",
+    "[1764377783728] BeatmapConverter: HOLD note hold_8 lane=-2 → type=SPIN_RIGHT",
+    "[1764377783728] BeatmapConverter: HOLD note hold_9 lane=-1 → type=SPIN_LEFT",
+    "[1764377783728] BeatmapConverter: HOLD note hold_10 lane=-1 → type=SPIN_LEFT",
+    "[1764377783728] BeatmapConverter: HOLD note hold_11 lane=-2 → type=SPIN_RIGHT",
+    "[1764377784305] [COUNTDOWN] Starting 3-second countdown...",
+    "[1764377784344] [COUNTDOWN] Starting 3-second countdown...",
+    "[1764377784344] [COUNTDOWN] Starting 3-second countdown..."
+  ],
+  "animationStats": {
+    "total": 0,
+    "completed": 0,
+    "failed": 0,
+    "pending": 0,
+    "rendering": 0
+  },
+  "animationDetails": []
+}

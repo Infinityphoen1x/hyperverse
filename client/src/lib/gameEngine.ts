@@ -200,14 +200,15 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     comboRef.current = 0;
     healthRef.current = MAX_HEALTH;
     notesRef.current = customNotes || [];
+    lastCountdownUpdateRef.current = 0; // Reset countdown timer
     
     setScore(0);
     setCombo(0);
     setHealth(MAX_HEALTH);
     setNotes(notesRef.current);
+    GameErrors.log('[COUNTDOWN] Initializing 3-second startup countdown');
     setGameState('COUNTDOWN');
     setCountdownSeconds(3);
-    GameErrors.log('[COUNTDOWN] Starting 3-second countdown...');
     
     // Calibrate startTimeRef based on YouTube's current time if available
     const now = Date.now();
@@ -295,7 +296,11 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         setCountdownSeconds(prev => {
           const newValue = prev - 1;
           lastCountdownUpdateRef.current = time;
-          GameErrors.log(`[COUNTDOWN] ${newValue}s remaining`);
+          if (newValue > 0) {
+            GameErrors.log(`[COUNTDOWN] ${newValue}s remaining (currentTime=${Math.round(time)}ms)`);
+          } else {
+            GameErrors.log(`[COUNTDOWN] Countdown complete (0s) - transitioning to PLAYING`);
+          }
           return newValue;
         });
       }
