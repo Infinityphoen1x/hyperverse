@@ -13,14 +13,15 @@ import { motion } from "framer-motion";
 interface GameProps {
   difficulty: Difficulty;
   onBackToHome?: () => void;
+  youtubeIframeRef: React.RefObject<HTMLIFrameElement>;
+  playerInitializedRef: React.MutableRefObject<boolean>;
 }
 
-export default function Game({ difficulty, onBackToHome }: GameProps) {
+export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playerInitializedRef }: GameProps) {
   const [gameErrors, setGameErrors] = useState<string[]>([]);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
   const [resumeFadeOpacity, setResumeFadeOpacity] = useState(0);
-  const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
   const errorCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const resumeStartTimeRef = useRef<number | null>(null);
   
@@ -36,7 +37,6 @@ export default function Game({ difficulty, onBackToHome }: GameProps) {
   const [startupCountdown, setStartupCountdown] = useState(0);
   const currentTimeRef = useRef(0);
   const pauseTimeRef = useRef(0);
-  const playerInitializedRef = useRef(false);
   const gameAlreadyStartedRef = useRef(false);
   const [asyncReady, setAsyncReady] = useState(false); // NEW: Gates fade after async resume
   
@@ -59,17 +59,6 @@ export default function Game({ difficulty, onBackToHome }: GameProps) {
     setGameState
   } = useGameEngine(difficulty, youtubeVideoId ? getVideoTime : undefined, customNotes);
 
-  // Memoize iframe style based on game state
-  const getIframeStyle = useMemo(() => {
-    const base: Record<string, string | number> = { width: '100%', height: '100%', objectFit: 'cover' as const };
-    const isHidden = gameState === 'COUNTDOWN' || gameState === 'REWINDING';
-    return {
-      ...base,
-      display: isHidden ? 'none' : 'block', // Keeps ref/DOM alive
-      opacity: isHidden ? 0 : 0.05, // No visual during transitions
-    };
-  }, [gameState]);
-
   // Memoize miss count to avoid filtering every render
   const missCount = useMemo(() => notes.filter(n => n.missed).length, [notes]);
   
@@ -81,30 +70,21 @@ export default function Game({ difficulty, onBackToHome }: GameProps) {
     currentTimeRef.current = currentTime;
   }, [currentTime]);
 
-  // Initialize YouTube player when iframe is present
+  // Auto-seek during COUNTDOWN/REWINDING when videoId is set
   useEffect(() => {
-    if (!youtubeIframeRef.current || !window.YT || playerInitializedRef.current) return;
+    if (!youtubeVideoId || !playerInitializedRef.current || (gameState !== 'COUNTDOWN' && gameState !== 'REWINDING')) return;
 
-    console.log('[YOUTUBE-PLAYER-INIT] Initializing...');
-    initYouTubePlayer(youtubeIframeRef.current, () => {
-      console.log('[YOUTUBE-PLAYER-INIT] Ready - signaling game engine');
-      playerInitializedRef.current = true;
-      // Fire-and-forget: Auto-seek during COUNTDOWN/REWINDING
-      if (youtubeVideoId && (gameState === 'COUNTDOWN' || gameState === 'REWINDING')) {
-        const autoSeek = async () => {
-          try {
-            const targetTime = gameState === 'REWINDING' ? 0 : 0;
-            await seekYouTubeVideo(targetTime);
-            console.log('[YOUTUBE-PLAYER-INIT] Auto-seek complete during hidden state');
-          } catch (err) {
-            console.warn('[YOUTUBE-PLAYER-INIT] Auto-seek failed:', err);
-          }
-        };
-        autoSeek();
+    const autoSeek = async () => {
+      try {
+        const targetTime = gameState === 'REWINDING' ? 0 : 0;
+        await seekYouTubeVideo(targetTime);
+        console.log('[YOUTUBE-AUTO-SEEK] Complete during', gameState);
+      } catch (err) {
+        console.warn('[YOUTUBE-AUTO-SEEK] Failed:', err);
       }
-    });
-    initYouTubeTimeListener();
-  }, [youtubeVideoId, gameState]);
+    };
+    autoSeek();
+  }, [youtubeVideoId, gameState, playerInitializedRef]);
 
   // Startup countdown (when game starts) - PLAY ON COUNTDOWN ENTRY (gesture window)
   // UPDATED: Call play immediately on COUNTDOWN entry (synchronous gesture), then display countdown
@@ -449,25 +429,6 @@ export default function Game({ difficulty, onBackToHome }: GameProps) {
         />
       )}
       
-      {/* UPDATED: YouTube Background - Always mount if ID, control style */}
-      {youtubeVideoId && (
-        <div className="absolute inset-0 pointer-events-none z-0">
-          <iframe
-            key={`youtube-${youtubeVideoId}`} // Remount only on ID change
-            ref={youtubeIframeRef}
-            width="100%"
-            height="100%"
-            src={buildYouTubeEmbedUrl(youtubeVideoId, {
-              ...YOUTUBE_BACKGROUND_EMBED_OPTIONS,
-              autoplay: false // Always off
-            })}
-            title="YouTube background audio/video sync"
-            allow="autoplay; encrypted-media"
-            style={getIframeStyle} // Hides without unmount
-            data-testid="iframe-youtube-background"
-          />
-        </div>
-      )}
 
       {/* Visual Effects Layer */}
       <VisualEffects combo={combo} health={health} missCount={missCount} />

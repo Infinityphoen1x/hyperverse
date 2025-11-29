@@ -1,14 +1,19 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { initYouTubePlayer, initYouTubeTimeListener, buildYouTubeEmbedUrl } from "@/lib/youtubeUtils";
+import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from "@/lib/gameConstants";
 import Home from "@/pages/Home";
 import Game from "@/pages/Game";
 
 function App() {
   const [gameActive, setGameActive] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
+  const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
+  const playerInitializedRef = useRef(false);
+  const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
 
   const handleStartGame = (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => {
     setSelectedDifficulty(difficulty);
@@ -19,22 +24,79 @@ function App() {
     setGameActive(false);
   };
 
+  // Initialize YouTube player once (persistent, never remounts)
+  useEffect(() => {
+    if (!youtubeIframeRef.current || !window.YT || playerInitializedRef.current) return;
+
+    console.log('[APP-YOUTUBE-INIT] Initializing persistent YouTube player...');
+    initYouTubePlayer(youtubeIframeRef.current, () => {
+      console.log('[APP-YOUTUBE-INIT] Player ready');
+      playerInitializedRef.current = true;
+    });
+    initYouTubeTimeListener();
+  }, []);
+
+  // Get YouTube video ID from localStorage (set by Game component)
+  useEffect(() => {
+    const loadVideoId = () => {
+      const pending = localStorage.getItem('pendingBeatmap');
+      if (pending) {
+        try {
+          const data = JSON.parse(pending);
+          if (data.youtubeVideoId) {
+            setYoutubeVideoId(data.youtubeVideoId);
+          }
+        } catch (e) {
+          console.warn('[APP-YOUTUBE] Failed to parse beatmap');
+        }
+      }
+    };
+    loadVideoId();
+    const interval = setInterval(loadVideoId, 500);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        {/* YouTube player + geometry background - PERSISTENT (never unmounts) */}
-        <div className="fixed inset-0 w-full h-full bg-black">
-          {!gameActive && (
-            // Home page overlay (difficulty selection, beatmap loader, start button)
-            <div className="absolute inset-0 z-20">
-              <Home onStartGame={handleStartGame} />
+        {/* Persistent background container - never remounts */}
+        <div className="fixed inset-0 w-full h-full bg-black overflow-hidden">
+          
+          {/* YouTube player - PERSISTENT background (z-0) */}
+          {youtubeVideoId && (
+            <div className="absolute inset-0 pointer-events-none z-0">
+              <iframe
+                key={`youtube-${youtubeVideoId}`}
+                ref={youtubeIframeRef}
+                width="100%"
+                height="100%"
+                src={buildYouTubeEmbedUrl(youtubeVideoId, {
+                  ...YOUTUBE_BACKGROUND_EMBED_OPTIONS,
+                  autoplay: false
+                })}
+                title="YouTube background audio/video sync"
+                allow="autoplay; encrypted-media"
+                style={{ display: 'block', opacity: 0.05, width: '100%', height: '100%', objectFit: 'cover' as const }}
+                data-testid="iframe-youtube-background"
+              />
             </div>
           )}
-          {gameActive && (
-            // Game component (replaces home, YouTube/geometry still visible underneath)
-            <Game difficulty={selectedDifficulty} onBackToHome={handleBackToHome} />
-          )}
+
+          {/* UI Layer - Home or Game (z-10+) */}
+          <div className="absolute inset-0 z-10">
+            {!gameActive && (
+              <Home onStartGame={handleStartGame} />
+            )}
+            {gameActive && (
+              <Game 
+                difficulty={selectedDifficulty} 
+                onBackToHome={handleBackToHome}
+                youtubeIframeRef={youtubeIframeRef as React.RefObject<HTMLIFrameElement>}
+                playerInitializedRef={playerInitializedRef}
+              />
+            )}
+          </div>
         </div>
       </TooltipProvider>
     </QueryClientProvider>
