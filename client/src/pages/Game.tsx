@@ -38,7 +38,26 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
   const currentTimeRef = useRef(0);
   const pauseTimeRef = useRef(0);
   const gameAlreadyStartedRef = useRef(false);
-  const [asyncReady, setAsyncReady] = useState(false); // NEW: Gates fade after async resume
+  const [asyncReady, setAsyncReady] = useState(false);
+  const countdownDurationRef = useRef(3); // Dynamic countdown duration based on beatmapStart
+
+  // Calculate countdown duration from first note's beatmapStart
+  const calculateCountdownDuration = (notesToCheck: Note[] | undefined): number => {
+    if (!notesToCheck || notesToCheck.length === 0) return 3; // Default fallback
+    
+    // Find the minimum beatmapStart from all notes
+    let minBeatmapStart = Infinity;
+    for (const note of notesToCheck) {
+      if (note.beatmapStart !== undefined && note.beatmapStart > 0) {
+        minBeatmapStart = Math.min(minBeatmapStart, note.beatmapStart);
+      }
+    }
+    
+    // Convert ms to seconds, with minimum of 1 second
+    const durationSeconds = Math.max(1, Math.ceil(minBeatmapStart / 1000));
+    console.log(`[COUNTDOWN-CALC] beatmapStart: ${minBeatmapStart}ms → countdown: ${durationSeconds}s`);
+    return durationSeconds;
+  };
   
   const { 
     gameState, 
@@ -343,8 +362,9 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
         };
         doRewind();
         
-        // Call startGame() just like START SESSION - handles COUNTDOWN → PLAYING flow with YouTube play
-        startGame();
+        // Call startGame() with dynamic countdown duration based on beatmapStart
+        const countdownDuration = calculateCountdownDuration(customNotes);
+        startGame(countdownDuration);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -360,7 +380,8 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
       if (youtubeVideoId && playerInitializedRef.current) {
         seekYouTubeVideo(0).catch(console.warn); // Seek on mounted player
       }
-      startGame(); // Then countdown - iframe hides but player lives
+      const countdownDuration = calculateCountdownDuration(customNotes);
+      startGame(countdownDuration); // Then countdown with dynamic duration based on beatmapStart
     }
   }, [customNotes, gameState, startGame, youtubeVideoId]);
 
@@ -471,8 +492,9 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
                   };
                   doRewind();
                   
-                  // Call startGame() just like R key - handles COUNTDOWN → PLAYING flow with YouTube play
-                  startGame();
+                  // Call startGame() with dynamic countdown duration based on beatmapStart
+                  const countdownDuration = calculateCountdownDuration(customNotes);
+                  startGame(countdownDuration);
                 }}
                 className="px-12 py-4 bg-emerald-500 text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-emerald-500"
                 data-testid="button-rewind"

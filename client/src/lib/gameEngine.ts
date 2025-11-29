@@ -215,7 +215,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     gameStateRef.current = gameState;
   }, [gameState]);
 
-  const startGame = useCallback(() => {
+  const startGame = useCallback((countdownDurationSeconds: number = 3) => {
     scoreRef.current = 0;
     comboRef.current = 0;
     healthRef.current = MAX_HEALTH;
@@ -226,9 +226,9 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     setCombo(0);
     setHealth(MAX_HEALTH);
     setNotes(notesRef.current);
-    GameErrors.log('[ENGINE-STARTUP-INIT] Initializing 3-second startup countdown via startGame()');
+    GameErrors.log(`[ENGINE-STARTUP-INIT] Initializing ${countdownDurationSeconds}s startup countdown via startGame()`);
     setGameState('COUNTDOWN');
-    setCountdownSeconds(3);
+    setCountdownSeconds(countdownDurationSeconds);
     
     // Calibrate startOffsetRef using performance.now() for precise timing
     // During COUNTDOWN: score=0, combo=0, YouTube paused at 0:00
