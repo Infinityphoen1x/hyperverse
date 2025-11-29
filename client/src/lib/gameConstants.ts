@@ -125,7 +125,7 @@ export const YOUTUBE_PREVIEW_EMBED_OPTIONS = {
 };
 
 export const YOUTUBE_BACKGROUND_EMBED_OPTIONS = {
-  autoplay: true,
+  autoplay: false,
   controls: false,
   modestBranding: true,
   enableJsApi: true

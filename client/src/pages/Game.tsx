@@ -364,10 +364,7 @@ export default function Game() {
             ref={youtubeIframeRef}
             width="480"
             height="270"
-            src={buildYouTubeEmbedUrl(youtubeVideoId, { 
-              ...YOUTUBE_BACKGROUND_EMBED_OPTIONS,
-              autoplay: gameState === 'PLAYING'
-            })}
+            src={buildYouTubeEmbedUrl(youtubeVideoId, YOUTUBE_BACKGROUND_EMBED_OPTIONS)}
             title="YouTube background audio/video sync"
             allow="autoplay"
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
