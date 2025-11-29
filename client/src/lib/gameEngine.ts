@@ -184,19 +184,27 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   const [countdownSeconds, setCountdownSeconds] = useState(0);
   
   const requestRef = useRef<number | undefined>(undefined);
-  const startTimeRef = useRef<number>(0);
-  const pausedTimeRef = useRef<number>(0);
-  const currentTimeRef = useRef<number>(0);
+  const gameStateRef = useRef<GameState>('IDLE');
+  
+  // ============================================================================
+  // 7 CRITICAL TIMING VARIABLES - MUST REMAIN SEPARATE
+  // ============================================================================
+  const musicTimeRef = useRef<number>(0);           // authoritative audio time (from YouTube)
+  const gameTimeRef = useRef<number>(0);            // local visual time (interpolated)
+  const pauseTimeRef = useRef<number>(0);           // music time at which pause occurred
+  const startOffsetRef = useRef<number>(0);         // for countdown (time when game started)
+  const scoreRef = useRef<number>(0);               // game score
+  const comboRef = useRef<number>(0);               // game combo
+  const isFirstStartRef = useRef<boolean>(true);    // flag for first start
+  
+  // Supporting refs
   const lastStateUpdateRef = useRef<number>(0);
   const lastNotesUpdateRef = useRef<number>(0);
   const lastCountdownUpdateRef = useRef<number>(0);
-  const gameStateRef = useRef<GameState>('IDLE');
   
   // Refs for game state (updated every frame without re-renders)
   const notesRef = useRef<Note[]>([]);
-  const comboRef = useRef<number>(0);
   const healthRef = useRef<number>(MAX_HEALTH);
-  const scoreRef = useRef<number>(0);
 
   // Sync gameStateRef with gameState whenever it changes
   useEffect(() => {
@@ -665,7 +673,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         
         setCombo(0);
         setHealth(healthRef.current);
-        if (healthRef.current <= 0) setGameState('GAMEOVER');
+        if (healthRef.current <= 0) setGameState('GAME_OVER');
         setNotes([...notes]);
       }
     } catch (error) {
