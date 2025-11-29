@@ -237,8 +237,14 @@ export default function Game() {
       console.log('[BEATMAP-LOAD] New beatmap loaded from IDLE, starting game via startGame()');
       gameAlreadyStartedRef.current = true;
       startGame();
+      // During COUNTDOWN: seek YouTube to 0:00, pause it
+      // Countdown effect will handle pause/play coordination
+      if (youtubeVideoId && playerInitializedRef.current) {
+        seekYouTubeVideo(0);
+        console.log('[GAME-START] Seeking YouTube to 0:00 for countdown');
+      }
     }
-  }, [customNotes, gameState, startGame]);
+  }, [customNotes, gameState, startGame, youtubeVideoId]);
 
   // Reset flag when game ends
   useEffect(() => {

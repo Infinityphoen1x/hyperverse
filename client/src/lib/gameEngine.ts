@@ -226,12 +226,13 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     setGameState('COUNTDOWN');
     setCountdownSeconds(3);
     
-    // Calibrate startOffsetRef based on YouTube's current time if available
-    const now = Date.now();
-    const videoTime = getVideoTime?.() || 0;
-    startOffsetRef.current = now - videoTime;
+    // Calibrate startOffsetRef using performance.now() for precise timing
+    // During COUNTDOWN: score=0, combo=0, YouTube paused at 0:00
+    // When countdown completes: YouTube plays, state=PLAYING
+    startOffsetRef.current = performance.now();
     pauseTimeRef.current = 0;
     musicTimeRef.current = 0;
+    gameTimeRef.current = 0;
     isFirstStartRef.current = true;
     
     const loop = () => {
@@ -241,21 +242,21 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         return;
       }
       
-      // Check if YouTube video time is available (when a video is loaded)
+      // Calculate game time: elapsed time since startOffsetRef
       let time: number;
       if (getVideoTime) {
         const videoTime = getVideoTime();
-        // videoTime is already in milliseconds from youtubeUtils
+        // videoTime is authoritative audio time from YouTube (milliseconds)
         if (videoTime !== null && videoTime >= 0) {
           time = videoTime;
           musicTimeRef.current = time; // Update authoritative audio time
         } else {
           // YouTube player not ready yet - use game timer as fallback
-          const now = Date.now();
+          const now = performance.now();
           time = now - startOffsetRef.current - pauseTimeRef.current;
         }
       } else {
-        const now = Date.now();
+        const now = performance.now();
         time = now - startOffsetRef.current - pauseTimeRef.current;
       }
       
@@ -361,7 +362,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   
   const resumeGame = useCallback(() => {
     // Recalibrate startOffsetRef so game time continues from pauseTimeRef
-    const now = Date.now();
+    const now = performance.now();
     startOffsetRef.current = now - pauseTimeRef.current;
     setIsPaused(false);
   }, []);
@@ -383,7 +384,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     setNotes([...notesRef.current]);
     setIsPaused(false);
     
-    startOffsetRef.current = Date.now();
+    startOffsetRef.current = performance.now();
     isFirstStartRef.current = true;
   }, [customNotes]);
 
