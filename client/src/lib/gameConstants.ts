@@ -128,7 +128,8 @@ export const YOUTUBE_BACKGROUND_EMBED_OPTIONS = {
   autoplay: false,
   controls: false,
   modestBranding: true,
-  enableJsApi: true
+  enableJsApi: true,
+  muted: true // Start muted for safe autoplay, unmute on gesture
 };
 
 // Down3D Note Lane - tunnel geometry constants

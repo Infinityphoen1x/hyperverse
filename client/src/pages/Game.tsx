@@ -465,7 +465,8 @@ export default function Game() {
             height="100%"
             src={buildYouTubeEmbedUrl(youtubeVideoId, {
               ...YOUTUBE_BACKGROUND_EMBED_OPTIONS,
-              autoplay: false // Always off
+              autoplay: false, // Always off
+              muted: true // Start muted for safety
             })}
             title="YouTube background audio/video sync"
             allow="autoplay; encrypted-media"
