@@ -113,31 +113,37 @@ export default function Game() {
   }, [youtubeVideoId, gameState]);
 
   // Startup countdown (when game starts) - skip if paused or not in countdown state
-  // UPDATED: Startup countdown effect - Wrap async play in inner function
+  // UPDATED: Startup countdown effect - Force play with gesture fallback
   useEffect(() => {
-    // Only run during actual COUNTDOWN state, never during PLAYING/PAUSED
     if (gameState !== 'COUNTDOWN' || isPaused) {
       console.log('[STARTUP-COUNTDOWN-EFFECT] Skipped: gameState=' + gameState + ', isPaused=' + isPaused);
       return;
     }
 
-    // Only handle countdown completion once - check if we already transitioned
     if (engineCountdown <= 0 && startupCountdown > 0) {
-      // Countdown complete - start the game
       console.log('[STARTUP-COUNTDOWN-EFFECT] Countdown complete, transitioning to PLAYING');
-      // NEW: Inner async for play (fire-and-forget; state sync immediate)
-      const startPlayback = async () => {
+      const forcePlay = async () => {
         if (youtubeVideoId && playerInitializedRef.current) {
           console.log('[STARTUP-COUNTDOWN-EFFECT] YouTube autoplay resuming');
           try {
-            await playYouTubeVideo(); // Await poll
+            await playYouTubeVideo();
             console.log('[STARTUP-COUNTDOWN-EFFECT] Play confirmed');
           } catch (err) {
             console.warn('[STARTUP-COUNTDOWN-EFFECT] playYouTubeVideo failed:', err);
+            // NEW: Gesture fallback - simulate click for autoplay unblock
+            const tempButton = document.createElement('button');
+            tempButton.style.position = 'fixed';
+            tempButton.style.opacity = '0';
+            tempButton.style.pointerEvents = 'none';
+            tempButton.addEventListener('click', () => playYouTubeVideo().catch(console.warn));
+            document.body.appendChild(tempButton);
+            tempButton.click();
+            document.body.removeChild(tempButton);
+            console.log('[STARTUP-COUNTDOWN-EFFECT] Gesture fallback triggered');
           }
         }
       };
-      startPlayback(); // Call async without await (non-blocking)
+      forcePlay();
       setGameState('PLAYING');
       setStartupCountdown(0);
       return;
