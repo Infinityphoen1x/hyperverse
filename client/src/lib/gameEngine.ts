@@ -268,7 +268,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
               comboRef.current = 0;
               healthRef.current = Math.max(0, healthRef.current - 2);
               if (healthRef.current <= 0) shouldGameOver = true;
-              notes[i] = { ...n, [failureType]: true, failureTime: time };
+              notes[i] = { ...n, [failureType]: true, failureTime: Math.round(time) };
             }
           }
         }
@@ -454,7 +454,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           GameErrors.trackAnimation(anyNote.id, 'tooEarlyFailure', currentTime);
           const idx = notes.findIndex(n => n && n.id === anyNote.id);
           if (idx !== -1) {
-            notes[idx] = { ...notes[idx], pressHoldTime: currentTime, tooEarlyFailure: true, failureTime: currentTime };
+            notes[idx] = { ...notes[idx], pressHoldTime: currentTime, tooEarlyFailure: true, failureTime: Math.round(currentTime) };
             notesRef.current = notes;
           }
           comboRef.current = 0;
@@ -468,7 +468,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           GameErrors.trackAnimation(anyNote.id, 'holdMissFailure', currentTime);
           const idx = notes.findIndex(n => n && n.id === anyNote.id);
           if (idx !== -1) {
-            notes[idx] = { ...notes[idx], pressHoldTime: currentTime, holdMissFailure: true, failureTime: currentTime };
+            notes[idx] = { ...notes[idx], pressHoldTime: currentTime, holdMissFailure: true, failureTime: Math.round(currentTime) };
             notesRef.current = notes;
           }
           comboRef.current = 0;
@@ -540,7 +540,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           GameErrors.log(`trackHoldEnd: Lane ${laneStr} note ${activeNote.id} - HOLD_RELEASE_FAILURE (released too early: ${elapsedFromNoteTime}ms < ${holdDuration}ms)`);
           GameErrors.trackAnimation(activeNote.id, 'holdReleaseFailure', currentTime);
           if (idx !== -1) {
-            notes[idx] = { ...notes[idx], releaseTime: currentTime, holdReleaseFailure: true, failureTime: currentTime };
+            notes[idx] = { ...notes[idx], releaseTime: currentTime, holdReleaseFailure: true, failureTime: Math.round(currentTime) };
             notesRef.current = notes;
           }
           comboRef.current = 0;
@@ -569,7 +569,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           GameErrors.log(`trackHoldEnd: Lane ${laneStr} note ${activeNote.id} - HOLD_RELEASE_FAILURE (released too late: ${timeSinceExpectedRelease}ms > window ${HOLD_RELEASE_WINDOW}ms)`);
           GameErrors.trackAnimation(activeNote.id, 'holdReleaseFailure', currentTime);
           if (idx !== -1) {
-            notes[idx] = { ...notes[idx], releaseTime: currentTime, holdReleaseFailure: true, failureTime: currentTime };
+            notes[idx] = { ...notes[idx], releaseTime: currentTime, holdReleaseFailure: true, failureTime: Math.round(currentTime) };
             notesRef.current = notes;
           }
           comboRef.current = 0;
