@@ -112,35 +112,38 @@ export default function Game() {
     initYouTubeTimeListener();
   }, [youtubeVideoId, gameState]);
 
-  // Startup countdown (when game starts) - PLAY WHEN COUNTDOWN COMPLETES (within gesture window)
-  // UPDATED: Call play on countdown completion (still within ~30s gesture from startGame click)
+  // Startup countdown (when game starts) - PLAY ON COUNTDOWN ENTRY (gesture window)
+  // UPDATED: Call play immediately on COUNTDOWN entry (synchronous gesture), then display countdown
   useEffect(() => {
     if (gameState !== 'COUNTDOWN' || isPaused) {
       console.log('[STARTUP-COUNTDOWN-EFFECT] Skipped: gameState=' + gameState + ', isPaused=' + isPaused);
       return;
     }
 
-    // Countdown complete → play video and transition to PLAYING (gesture still active)
+    // CRITICAL: Play on COUNTDOWN entry - inherits gesture from startGame() call
+    if (startupCountdown === 0 && youtubeVideoId && playerInitializedRef.current) {
+      console.log('[STARTUP-COUNTDOWN-EFFECT] COUNTDOWN entered - initiating play within gesture window');
+      // Fire-and-forget play (non-blocking)
+      playYouTubeVideo()
+        .then(() => console.log('[STARTUP-COUNTDOWN-EFFECT] Play started within gesture'))
+        .catch(err => {
+          console.warn('[STARTUP-COUNTDOWN-EFFECT] Play failed:', err);
+          // Fallback: Try synthetic gesture
+          const tempBtn = document.createElement('button');
+          tempBtn.style.position = 'fixed';
+          tempBtn.style.opacity = '0';
+          tempBtn.style.pointerEvents = 'none';
+          tempBtn.onclick = () => playYouTubeVideo().catch(console.warn);
+          document.body.appendChild(tempBtn);
+          tempBtn.click();
+          document.body.removeChild(tempBtn);
+          console.log('[STARTUP-COUNTDOWN-EFFECT] Fallback gesture triggered');
+        });
+    }
+
+    // Countdown complete → transition to PLAYING
     if (engineCountdown <= 0 && startupCountdown > 0) {
-      console.log('[STARTUP-COUNTDOWN-EFFECT] Countdown complete - starting playback within gesture window');
-      if (youtubeVideoId && playerInitializedRef.current) {
-        // Fire-and-forget play (non-blocking)
-        playYouTubeVideo()
-          .then(() => console.log('[STARTUP-COUNTDOWN-EFFECT] Audio playback started'))
-          .catch(err => {
-            console.warn('[STARTUP-COUNTDOWN-EFFECT] Play failed:', err);
-            // Fallback: Try synthetic gesture
-            const tempBtn = document.createElement('button');
-            tempBtn.style.position = 'fixed';
-            tempBtn.style.opacity = '0';
-            tempBtn.style.pointerEvents = 'none';
-            tempBtn.onclick = () => playYouTubeVideo().catch(console.warn);
-            document.body.appendChild(tempBtn);
-            tempBtn.click();
-            document.body.removeChild(tempBtn);
-            console.log('[STARTUP-COUNTDOWN-EFFECT] Fallback gesture triggered');
-          });
-      }
+      console.log('[STARTUP-COUNTDOWN-EFFECT] Countdown complete, transitioning to PLAYING');
       setGameState('PLAYING');
       setStartupCountdown(0);
       return;
