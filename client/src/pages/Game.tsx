@@ -16,8 +16,10 @@ export default function Game() {
   const [gameErrors, setGameErrors] = useState<string[]>([]);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
+  const [resumeFadeOpacity, setResumeFadeOpacity] = useState(0);
   const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
   const errorCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const resumeStartTimeRef = useRef<number | null>(null);
   
   // Parse difficulty from URL with browser context check
   const difficulty = useMemo(() => {
@@ -114,13 +116,15 @@ export default function Game() {
 
     const timer = setTimeout(() => {
       if (countdownSeconds === 1) {
-        // Countdown complete - resume the game
-        console.log('[RESUME-COUNTDOWN-EFFECT] Countdown complete, resuming gameplay');
+        // Countdown complete - transition to RESUMING
+        console.log('[RESUME-COUNTDOWN-EFFECT] Countdown complete, transitioning to RESUMING');
         resumeGame();
-        setGameState('PLAYING');
+        setGameState('RESUMING');
         setCountdownSeconds(0);
         setStartupCountdown(0);
-        // YouTube will automatically start at pauseTimeRef position
+        setResumeFadeOpacity(0);
+        resumeStartTimeRef.current = performance.now();
+        // YouTube plays at pauseTimeRef position
         playYouTubeVideo();
         setIsPauseMenuOpen(false);
       } else {
@@ -130,6 +134,36 @@ export default function Game() {
 
     return () => clearTimeout(timer);
   }, [countdownSeconds, gameState, resumeGame, setGameState]);
+
+  // Handle RESUMING fade-in animation (0.5s)
+  useEffect(() => {
+    if (gameState !== 'RESUMING') return;
+
+    const fadeInDuration = 500; // 0.5 seconds
+    let animationFrameId: number;
+
+    const animate = () => {
+      if (!resumeStartTimeRef.current) return;
+      
+      const elapsed = performance.now() - resumeStartTimeRef.current;
+      const progress = Math.min(elapsed / fadeInDuration, 1.0);
+      
+      setResumeFadeOpacity(progress);
+      
+      if (progress < 1.0) {
+        animationFrameId = requestAnimationFrame(animate);
+      } else {
+        // Fade-in complete - transition to PLAYING
+        console.log('[RESUMING-FADE-EFFECT] Fade-in complete, transitioning to PLAYING');
+        setGameState('PLAYING');
+        setResumeFadeOpacity(1.0);
+        resumeStartTimeRef.current = null;
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [gameState, setGameState]);
 
   // Initialize YouTube player when iframe is ready
   useEffect(() => {
@@ -273,6 +307,16 @@ export default function Game() {
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col relative">
       {/* Startup countdown overlay - ONLY for initial startGame() and rewind, NEVER during pause/resume */}
       {gameState === 'COUNTDOWN' && startupCountdown > 0 && !isPaused && <CountdownOverlay seconds={startupCountdown} />}
+      
+      {/* Resume fade-in overlay (0.5s) - NO countdown, smooth transition */}
+      {gameState === 'RESUMING' && (
+        <motion.div
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: resumeFadeOpacity }}
+          transition={{ duration: 0 }}
+        />
+      )}
       
       {/* YouTube Background Layer - Auto-plays with audio for time sync */}
       {youtubeVideoId && (
