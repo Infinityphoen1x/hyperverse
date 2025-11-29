@@ -80,8 +80,9 @@ export default function Game() {
     if (gameState !== 'COUNTDOWN') return;
     if (engineCountdown <= 0) {
       // Countdown complete - start the game
-      console.log('[STARTUP COUNTDOWN] Complete - starting game');
+      console.log('[STARTUP COUNTDOWN] Complete - starting game at 0s');
       if (youtubeVideoId) {
+        console.log('[AUTOPLAY] Setting autoplay=1, resuming YouTube');
         playYouTubeVideo();
       }
       setGameState('PLAYING');
@@ -90,6 +91,7 @@ export default function Game() {
     }
 
     setStartupCountdown(engineCountdown);
+    console.log(`[COUNTDOWN] Display ${engineCountdown}s, autoplay=0`);
 
     if (youtubeVideoId) {
       pauseYouTubeVideo();
@@ -250,10 +252,14 @@ export default function Game() {
       {youtubeVideoId && (
         <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
           <iframe
+            key={`youtube-${gameState}`}
             ref={youtubeIframeRef}
             width="480"
             height="270"
-            src={buildYouTubeEmbedUrl(youtubeVideoId, { ...YOUTUBE_BACKGROUND_EMBED_OPTIONS })}
+            src={buildYouTubeEmbedUrl(youtubeVideoId, { 
+              ...YOUTUBE_BACKGROUND_EMBED_OPTIONS,
+              autoplay: gameState === 'PLAYING'
+            })}
             title="YouTube background audio/video sync"
             allow="autoplay"
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}

@@ -207,6 +207,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     setNotes(notesRef.current);
     setGameState('COUNTDOWN');
     setCountdownSeconds(3);
+    GameErrors.log('[COUNTDOWN] Starting 3-second countdown...');
     
     // Calibrate startTimeRef based on YouTube's current time if available
     const now = Date.now();
@@ -294,6 +295,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         setCountdownSeconds(prev => {
           const newValue = prev - 1;
           lastCountdownUpdateRef.current = time;
+          GameErrors.log(`[COUNTDOWN] ${newValue}s remaining`);
           return newValue;
         });
       }
