@@ -172,13 +172,14 @@ export const clearReleaseTimes = () => {
 };
 
 export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => number | null, customNotes?: Note[]) => {
-  const [gameState, setGameState] = useState<'MENU' | 'PLAYING' | 'GAMEOVER'>('MENU');
+  const [gameState, setGameState] = useState<'MENU' | 'COUNTDOWN' | 'PLAYING' | 'GAMEOVER'>('MENU');
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [health, setHealth] = useState(MAX_HEALTH);
   const [notes, setNotes] = useState<Note[]>([]);
   const [currentTime, setCurrentTime] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [countdownSeconds, setCountdownSeconds] = useState(0);
   
   const requestRef = useRef<number | undefined>(undefined);
   const startTimeRef = useRef<number>(0);
@@ -203,7 +204,8 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     setCombo(0);
     setHealth(MAX_HEALTH);
     setNotes(notesRef.current);
-    setGameState('PLAYING');
+    setGameState('COUNTDOWN');
+    setCountdownSeconds(3);
     
     // Calibrate startTimeRef based on YouTube's current time if available
     const now = Date.now();
@@ -654,6 +656,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     notes,
     currentTime,
     isPaused,
+    countdownSeconds,
     startGame,
     hitNote,
     trackHoldStart,

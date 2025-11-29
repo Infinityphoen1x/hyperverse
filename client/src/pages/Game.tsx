@@ -7,6 +7,7 @@ import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
 import { DeckHoldMeters } from "@/components/game/DeckHoldMeters";
 import { VisualEffects } from "@/components/game/VisualEffects";
 import { ErrorLogViewer } from "@/components/game/ErrorLogViewer";
+import { CountdownOverlay } from "@/components/game/CountdownOverlay";
 import { motion } from "framer-motion";
 
 export default function Game() {
@@ -38,6 +39,7 @@ export default function Game() {
   
   const [isPauseMenuOpen, setIsPauseMenuOpen] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(0);
+  const [startupCountdown, setStartupCountdown] = useState(0);
   const pausedTimeRef = useRef(0);
   const currentTimeRef = useRef(0);
   const playerInitializedRef = useRef(false);
@@ -50,6 +52,7 @@ export default function Game() {
     notes, 
     currentTime, 
     isPaused,
+    countdownSeconds: engineCountdown,
     startGame, 
     hitNote,
     trackHoldStart,
@@ -57,7 +60,8 @@ export default function Game() {
     markNoteMissed,
     pauseGame,
     resumeGame,
-    restartGame
+    restartGame,
+    setGameState
   } = useGameEngine(difficulty, youtubeVideoId ? getVideoTime : undefined, customNotes);
 
   // Memoize miss count to avoid filtering every render
@@ -70,6 +74,32 @@ export default function Game() {
   useEffect(() => {
     currentTimeRef.current = currentTime;
   }, [currentTime]);
+
+  // Startup countdown (when game starts)
+  useEffect(() => {
+    if (gameState !== 'COUNTDOWN') return;
+    if (engineCountdown <= 0) return;
+
+    setStartupCountdown(engineCountdown);
+
+    if (youtubeVideoId) {
+      pauseYouTubeVideo();
+    }
+
+    const timer = setTimeout(() => {
+      if (engineCountdown === 1) {
+        // Countdown complete - start the game
+        console.log('[STARTUP COUNTDOWN] Complete - starting game');
+        if (youtubeVideoId) {
+          playYouTubeVideo();
+        }
+        setGameState('PLAYING');
+        setStartupCountdown(0);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [gameState, engineCountdown, youtubeVideoId, setGameState]);
 
   // Countdown timer for resume preparation
   useEffect(() => {
@@ -218,6 +248,9 @@ export default function Game() {
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col relative">
+      {/* Startup countdown overlay */}
+      {gameState === 'COUNTDOWN' && <CountdownOverlay seconds={startupCountdown} />}
+      
       {/* YouTube Background Layer - Auto-plays with audio for time sync */}
       {youtubeVideoId && (
         <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
