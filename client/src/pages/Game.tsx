@@ -80,7 +80,7 @@ export default function Game() {
   useEffect(() => {
     if (gameState !== 'COUNTDOWN' || isPaused) return;
     
-    // Only handle countdown completion once
+    // Only handle countdown completion once - check if we already transitioned
     if (engineCountdown <= 0 && startupCountdown > 0) {
       // Countdown complete - start the game
       console.log('[STARTUP COUNTDOWN] Countdown complete, transitioning to PLAYING');
@@ -93,8 +93,8 @@ export default function Game() {
       return;
     }
 
-    // Update display countdown
-    if (engineCountdown > 0) {
+    // Update display countdown - only if we still have time
+    if (engineCountdown > 0 && startupCountdown !== engineCountdown) {
       setStartupCountdown(engineCountdown);
       console.log(`[COUNTDOWN] Displaying ${engineCountdown}s (autoplay paused)`);
 
@@ -118,6 +118,7 @@ export default function Game() {
         resumeGame();
         setGameState('PLAYING'); // Ensure gameState is PLAYING after resume
         setCountdownSeconds(0);
+        setStartupCountdown(0); // Clear startup countdown to prevent interference
         setIsPauseMenuOpen(false);
       } else {
         setCountdownSeconds(prev => prev - 1);
