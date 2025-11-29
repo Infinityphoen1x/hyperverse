@@ -41,6 +41,7 @@ export default function Game() {
   const [countdownSeconds, setCountdownSeconds] = useState(0);
   const [startupCountdown, setStartupCountdown] = useState(0);
   const currentTimeRef = useRef(0);
+  const pauseTimeRef = useRef(0);
   const playerInitializedRef = useRef(false);
   const gameAlreadyStartedRef = useRef(false);
   
@@ -124,9 +125,13 @@ export default function Game() {
         setResumeFadeOpacity(0);
         resumeStartTimeRef.current = performance.now();
         console.log('[RESUME-COUNTDOWN-EFFECT] Starting 0.5s fade-in overlay, state=RESUMING');
-        // YouTube plays at pauseTime position
+        // Seek YouTube to pauseTime position before playing
+        const pauseTimeSeconds = pauseTimeRef.current / 1000;
+        console.log(`[RESUME-COUNTDOWN-EFFECT] Seeking YouTube to pauseTime=${pauseTimeRef.current}ms (${pauseTimeSeconds.toFixed(2)}s)`);
+        seekYouTubeVideo(pauseTimeSeconds).catch(err => console.warn('[RESUME-COUNTDOWN-EFFECT] seekYouTubeVideo failed:', err));
+        // Play YouTube at pauseTime position
         playYouTubeVideo().catch(err => console.warn('[RESUME-COUNTDOWN-EFFECT] playYouTubeVideo failed:', err));
-        console.log('[RESUME-COUNTDOWN-EFFECT] YouTube playVideo() called, should continue from paused position');
+        console.log('[RESUME-COUNTDOWN-EFFECT] YouTube playVideo() called from paused position');
       } else {
         setCountdownSeconds(prev => prev - 1);
       }
@@ -252,6 +257,7 @@ export default function Game() {
           const pauseTimeMs = currentTimeRef.current;
           const pauseTimeSec = (pauseTimeMs / 1000).toFixed(2);
           console.log(`[PAUSE-SYSTEM] PAUSE: Freezing at gameTime=${pauseTimeMs}ms (${pauseTimeSec}s)`);
+          pauseTimeRef.current = pauseTimeMs;
           pauseGame();
           setGameState('PAUSED');
           setStartupCountdown(0);
