@@ -48,9 +48,20 @@ export default function Home({ onStartGame }: HomeProps) {
           >
             HYPERVERSE
           </h1>
-          <p className="text-neon-cyan font-rajdhani tracking-[0.5em] text-xl uppercase">
-            [ENCRYPTING NEURAL PATHWAYS] // QUANTUM SYNC PROTOCOL
-          </p>
+          {/* Animated scrolling banner */}
+          <div className="w-80 mx-auto border-2 border-neon-cyan px-4 py-3 overflow-hidden bg-black/30 relative">
+            {/* Gradient fade edges for smooth scroll effect */}
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/80 to-transparent z-10" />
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-black/80 to-transparent z-10" />
+            
+            <motion.div
+              className="text-neon-cyan font-rajdhani text-sm uppercase whitespace-nowrap"
+              animate={{ x: [-500, 400] }}
+              transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+            >
+              [ENCRYPTING NEURAL PATHWAYS] • QUANTUM SYNC PROTOCOL • [DECRYPTION IN PROGRESS]
+            </motion.div>
+          </div>
         </div>
 
         <div className="flex flex-col gap-4 w-64 mx-auto">
