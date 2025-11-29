@@ -24,17 +24,19 @@ function App() {
     setGameActive(false);
   };
 
-  // Initialize YouTube player once (persistent, never remounts)
+  // Initialize YouTube player when iframe mounts or videoId changes
   useEffect(() => {
-    if (!youtubeIframeRef.current || !window.YT || playerInitializedRef.current) return;
+    if (!youtubeIframeRef.current || !window.YT) return;
 
-    console.log('[APP-YOUTUBE-INIT] Initializing persistent YouTube player...');
+    console.log('[APP-YOUTUBE-INIT] Initializing YouTube player for videoId:', youtubeVideoId);
+    playerInitializedRef.current = false; // Reset for new video
+    
     initYouTubePlayer(youtubeIframeRef.current, () => {
-      console.log('[APP-YOUTUBE-INIT] Player ready');
+      console.log('[APP-YOUTUBE-INIT] Player ready for videoId:', youtubeVideoId);
       playerInitializedRef.current = true;
     });
     initYouTubeTimeListener();
-  }, []);
+  }, [youtubeVideoId]);
 
   // Get YouTube video ID from localStorage (set by Game component)
   useEffect(() => {
