@@ -18,20 +18,22 @@ export default function Home({ onStartGame }: HomeProps) {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black flex flex-col items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden">
       {/* Beatmap Loader */}
       <BeatmapLoader 
         difficulty={selectedDifficulty as 'EASY' | 'MEDIUM' | 'HARD'}
         onBeatmapLoad={handleBeatmapLoad}
       />
+      {/* Semi-transparent overlay to show video behind */}
+      <div className="absolute inset-0 bg-black/40 pointer-events-none z-0" />
       {/* Background FX */}
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" />
-      <div className="absolute top-0 left-0 w-full h-full bg-grid-white/[0.02] pointer-events-none" />
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none z-1" />
+      <div className="absolute top-0 left-0 w-full h-full bg-grid-white/[0.01] pointer-events-none z-1" />
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="z-10 text-center space-y-12"
+        className="z-20 text-center space-y-12 relative"
       >
         <div className="space-y-4">
           <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-neon-blue via-white to-neon-pink neon-text-blue">
@@ -76,7 +78,7 @@ export default function Home({ onStartGame }: HomeProps) {
       </motion.div>
       
       {/* Footer */}
-      <div className="absolute bottom-8 text-white/30 text-xs font-mono">
+      <div className="absolute bottom-8 text-white/30 text-xs font-mono z-20">
         SYSTEM_READY // V.1.2.0 // REPLIT_MOCKUP
       </div>
     </div>
