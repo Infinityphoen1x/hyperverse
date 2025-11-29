@@ -15,7 +15,7 @@ export default function Game() {
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
   const [resumeFadeOpacity, setResumeFadeOpacity] = useState(0);
-  const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
+  const youtubePlayerRef = useRef<HTMLDivElement>(null);
   const errorCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const resumeStartTimeRef = useRef<number | null>(null);
   
@@ -30,12 +30,12 @@ export default function Game() {
     }
   }, []);
   
-  // Function to get current video time from YouTube iframe
+  // Function to get current video time from YouTube player
   // Uses utility function with robust error handling
   const getVideoTime = useCallback((): number | null => {
-    const time = getYouTubeVideoTime(youtubeIframeRef.current);
+    const time = getYouTubeVideoTime();
     return time;
-  }, [youtubeIframeRef]);
+  }, []);
   
   const [isPauseMenuOpen, setIsPauseMenuOpen] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(0);
@@ -75,16 +75,16 @@ export default function Game() {
     currentTimeRef.current = currentTime;
   }, [currentTime]);
 
-  // Initialize YouTube player when iframe is mounted and API is ready
+  // Initialize YouTube player when div is mounted and API is ready
   useEffect(() => {
-    if (!youtubeIframeRef.current || !window.YT) return;
+    if (!youtubePlayerRef.current || !window.YT || !youtubeVideoId) return;
     
-    console.log('[YOUTUBE-PLAYER-INIT] Initializing YouTube player from iframe');
-    initYouTubePlayer(youtubeIframeRef.current, () => {
+    console.log('[YOUTUBE-PLAYER-INIT] Initializing YouTube player from div');
+    initYouTubePlayer(youtubePlayerRef.current, youtubeVideoId, gameState === 'PLAYING', () => {
       playerInitializedRef.current = true;
       console.log('[YOUTUBE-PLAYER-INIT] YouTube player ready, flag set');
     });
-  }, [youtubeVideoId]);
+  }, [youtubeVideoId, gameState]);
 
   // Startup countdown (when game starts) - skip if paused or not in countdown state
   useEffect(() => {
@@ -192,15 +192,6 @@ export default function Game() {
     return () => clearTimeout(timer);
   }, [gameState, setGameState]);
 
-  // Initialize YouTube player when iframe is ready
-  useEffect(() => {
-    if (youtubeVideoId && youtubeIframeRef.current && !playerInitializedRef.current && window.YT) {
-      initYouTubePlayer(youtubeIframeRef.current, () => {
-        console.log('[INIT] YouTube player ready and initialized');
-      });
-      playerInitializedRef.current = true;
-    }
-  }, [youtubeVideoId]);
 
   // Clean up error check interval on unmount
   useEffect(() => {
@@ -358,22 +349,12 @@ export default function Game() {
       
       {/* YouTube Background Layer - Only render after COUNTDOWN/REWINDING to prevent audio playback and ensure fresh init */}
       {youtubeVideoId && gameState !== 'COUNTDOWN' && gameState !== 'REWINDING' && (
-        <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
-          <iframe
-            key={`youtube-${youtubeVideoId}`}
-            ref={youtubeIframeRef}
-            width="480"
-            height="270"
-            src={buildYouTubeEmbedUrl(youtubeVideoId, { 
-              ...YOUTUBE_BACKGROUND_EMBED_OPTIONS,
-              autoplay: gameState === 'PLAYING'
-            })}
-            title="YouTube background audio/video sync"
-            allow="autoplay"
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            data-testid="iframe-youtube-background"
-          />
-        </div>
+        <div 
+          ref={youtubePlayerRef}
+          className="absolute inset-0 opacity-5 pointer-events-none z-0"
+          key={`youtube-player-${youtubeVideoId}`}
+          data-testid="div-youtube-player"
+        />
       )}
 
       {/* Visual Effects Layer */}

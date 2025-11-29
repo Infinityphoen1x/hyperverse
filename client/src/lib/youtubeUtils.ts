@@ -81,8 +81,8 @@ let ytPlayer: any = null;
 let playerReady = false;
 let onReadyCallback: (() => void) | null = null;
 
-export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null, onReady?: () => void): void {
-  if (!iframeElement || !window.YT) return;
+export function initYouTubePlayer(playerDiv: HTMLDivElement | null, videoId: string, autoplay: boolean = false, onReady?: () => void): void {
+  if (!playerDiv || !window.YT || !videoId) return;
   if (ytPlayer) {
     // Already initialized - if onReady callback provided and player is ready, call it immediately
     if (onReady && playerReady) {
@@ -97,22 +97,31 @@ export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null, onRea
   }
   
   try {
-    ytPlayer = new window.YT.Player(iframeElement, {
+    ytPlayer = new window.YT.Player(playerDiv, {
+      width: '100%',
+      height: '100%',
+      videoId: videoId,
+      playerVars: {
+        autoplay: autoplay ? 1 : 0,
+        controls: 0,
+        modestbranding: 1,
+        enablejsapi: 1,
+      },
       events: {
         onReady: () => {
           playerReady = true;
-          console.log('YouTube player ready and initialized');
+          console.log('[YOUTUBE-PLAYER-INIT] YouTube player ready and initialized');
           // Call the registered callback if one exists
           if (onReadyCallback) {
             onReadyCallback();
             onReadyCallback = null;
           }
         },
-        onError: (e: any) => console.warn('YouTube player error:', e),
+        onError: (e: any) => console.warn('[YOUTUBE-PLAYER-ERROR] YouTube player error:', e),
       }
     });
   } catch (error) {
-    console.warn('Failed to initialize YouTube player:', error);
+    console.warn('[YOUTUBE-PLAYER-INIT] Failed to initialize YouTube player:', error);
   }
 }
 
@@ -145,7 +154,7 @@ export async function waitForPlayerReady(maxWaitMs: number = 5000): Promise<bool
  * Get current video time from YouTube player
  * Returns time in milliseconds to match game engine format
  */
-export function getYouTubeVideoTime(iframeElement: HTMLIFrameElement | null): number | null {
+export function getYouTubeVideoTime(): number | null {
   if (!ytPlayer) {
     // Player not initialized yet - return null and let Game.tsx handle initialization
     return null;
@@ -160,7 +169,7 @@ export function getYouTubeVideoTime(iframeElement: HTMLIFrameElement | null): nu
     }
     return null;
   } catch (error) {
-    console.warn('YouTube getCurrentTime failed:', error);
+    console.warn('[YOUTUBE-GET-TIME] YouTube getCurrentTime failed:', error);
     return null;
   }
 }
