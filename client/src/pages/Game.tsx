@@ -125,7 +125,7 @@ export default function Game() {
         const pauseTimeSeconds = pauseTimeRef.current / 1000;
         console.log(`[RESUME-COUNTDOWN-EFFECT] Seeking YouTube to pauseTime=${pauseTimeRef.current}ms (${pauseTimeSeconds.toFixed(2)}s)`);
         await seekYouTubeVideo(pauseTimeSeconds).catch(err => console.warn('[RESUME-COUNTDOWN-EFFECT] seekYouTubeVideo failed:', err));
-        console.log('[RESUME-COUNTDOWN-EFFECT] YouTube seek complete, now playing');
+        console.log(`[RESUME-COUNTDOWN-EFFECT] YouTube seek COMPLETE at position ${pauseTimeSeconds.toFixed(2)}s, now resuming playback`);
         // Play YouTube at pauseTime position
         await playYouTubeVideo().catch(err => console.warn('[RESUME-COUNTDOWN-EFFECT] playYouTubeVideo failed:', err));
         console.log('[RESUME-COUNTDOWN-EFFECT] YouTube playVideo() called from paused position');
