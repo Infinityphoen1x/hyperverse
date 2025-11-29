@@ -42,6 +42,10 @@ export interface Note {
   pressReleaseTime?: number; // HOLD note: when player successfully released (within accuracy window)
   
   failureTime?: number; // Timestamp when failure was marked (for animation timing)
+  
+  // Beatmap timing windows (optional)
+  beatmapStart?: number; // ms - notes don't appear/process before this time
+  beatmapEnd?: number; // ms - notes don't appear/process after this time
 }
 
 // Error tracking for debugging
