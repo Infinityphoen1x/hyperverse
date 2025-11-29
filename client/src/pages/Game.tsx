@@ -229,12 +229,12 @@ export default function Game() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gameState, isPaused, pauseGame, resumeGame, setGameState]);
 
-  // Start game when beatmap is loaded - ONLY on initial load from MENU state, never after pause/resume
+  // Start game when beatmap is loaded - ONLY on initial load from IDLE state, never after pause/resume
   useEffect(() => {
-    // Only start on initial beatmap load from MENU state
-    if (gameState !== 'MENU') return;
+    // Only start on initial beatmap load from IDLE state
+    if (gameState !== 'IDLE') return;
     if (customNotes && customNotes.length > 0 && !gameAlreadyStartedRef.current) {
-      console.log('[BEATMAP-LOAD] New beatmap loaded from MENU, starting game via startGame()');
+      console.log('[BEATMAP-LOAD] New beatmap loaded from IDLE, starting game via startGame()');
       gameAlreadyStartedRef.current = true;
       startGame();
     }
@@ -242,12 +242,12 @@ export default function Game() {
 
   // Reset flag when game ends
   useEffect(() => {
-    if (gameState === 'GAMEOVER') {
+    if (gameState === 'GAME_OVER') {
       gameAlreadyStartedRef.current = false;
     }
   }, [gameState]);
 
-  if (gameState === 'GAMEOVER') {
+  if (gameState === 'GAME_OVER') {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center space-y-8">
         <h1 className="text-6xl font-orbitron text-destructive neon-text-pink">SYSTEM CRITICAL</h1>

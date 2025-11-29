@@ -171,8 +171,10 @@ export const clearReleaseTimes = () => {
   releaseTimeMap.clear();
 };
 
+export type GameState = 'IDLE' | 'COUNTDOWN' | 'PLAYING' | 'PAUSED' | 'RESUMING' | 'REWINDING' | 'GAME_OVER';
+
 export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => number | null, customNotes?: Note[]) => {
-  const [gameState, setGameState] = useState<'MENU' | 'COUNTDOWN' | 'PLAYING' | 'PAUSED' | 'GAMEOVER'>('MENU');
+  const [gameState, setGameState] = useState<GameState>('IDLE');
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [health, setHealth] = useState(MAX_HEALTH);
@@ -188,7 +190,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   const lastStateUpdateRef = useRef<number>(0);
   const lastNotesUpdateRef = useRef<number>(0);
   const lastCountdownUpdateRef = useRef<number>(0);
-  const gameStateRef = useRef<'MENU' | 'COUNTDOWN' | 'PLAYING' | 'PAUSED' | 'GAMEOVER'>('MENU');
+  const gameStateRef = useRef<GameState>('IDLE');
   
   // Refs for game state (updated every frame without re-renders)
   const notesRef = useRef<Note[]>([]);
@@ -327,7 +329,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       }
       
       if (shouldGameOver) {
-        setGameState('GAMEOVER');
+        setGameState('GAME_OVER');
         setNotes([...notesRef.current]);
         setCombo(comboRef.current);
         setHealth(healthRef.current);
