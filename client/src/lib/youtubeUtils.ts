@@ -269,8 +269,9 @@ export function resetYouTubeTimeTracker(timeSeconds: number = 0): void {
  * Seek YouTube video to specific time (in seconds) with polling confirmation
  * Uses official API if available, falls back to iframe postMessage control
  */
-export async function seekYouTubeVideo(timeSeconds: number): Promise<void> {
-  await waitForPlayerReady(2000); // Short wait for init
+export async function seekYouTubeVideo(timeSeconds: number, signal?: AbortSignal): Promise<void> {
+  await waitForPlayerReady(2000);
+  if (signal?.aborted) throw new Error('Seek aborted');
   playerReady = true;
 
   // Reset tracker optimistically, but confirm actual
@@ -309,7 +310,7 @@ export async function seekYouTubeVideo(timeSeconds: number): Promise<void> {
         attempts++;
         const current = getYouTubeVideoTime();
         if (current !== null && Math.abs(current / 1000 - clampedTime) < 0.05) { // ±50ms
-          console.log(`[YOUTUBE-SEEK] Confirmed: ${ (current / 1000).toFixed(2) }s (target: ${clampedTime.toFixed(2)}s)`);
+          console.log(`[YOUTUBE-SEEK] Confirmed: ${(current / 1000).toFixed(2)}s (target: ${clampedTime.toFixed(2)}s)`);
           resolve();
         } else if (attempts >= maxAttempts) {
           console.warn(`[YOUTUBE-SEEK] Timeout: ${current ? (current / 1000).toFixed(2) + 's' : 'null'} vs ${clampedTime.toFixed(2)}s`);
@@ -320,10 +321,10 @@ export async function seekYouTubeVideo(timeSeconds: number): Promise<void> {
       };
       setTimeout(poll, 50); // Settle
     });
-  } catch (error) {
+    } catch (error) {
     console.error('[YOUTUBE-SEEK] Failed:', error);
     throw error; // Propagate for Game.tsx handling
-  }
+    }
 }
 
 /**

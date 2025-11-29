@@ -157,33 +157,33 @@ export default function Game() {
         setResumeFadeOpacity(0);
         resumeStartTimeRef.current = performance.now();
 
-        // NEW: Timeout wrapper (2s total for seek + play)
-        const timeoutPromise = new Promise<null>((_, reject) =>
+        const timeoutPromise: Promise<null> = new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Resume timeout: YT API hung')), 2000)
         );
         try {
-          // Chain with race: Proceeds even if slow
-          await Promise.race([
+          // Chain with race: Inner returns null to match
+          await Promise.race<null>([
             (async () => {
               const pauseTimeSeconds = pauseTimeRef.current / 1000;
               await seekYouTubeVideo(pauseTimeSeconds); // Polls internally
               const confirmedTime = getYouTubeVideoTime();
               if (confirmedTime !== null) {
                 currentTimeRef.current = confirmedTime; // Sync engine
-                console.log(`[RESUME-COUNTDOWN-EFFECT] Synced to ${ (confirmedTime / 1000).toFixed(2) }s`);
+                console.log(`[RESUME-COUNTDOWN-EFFECT] Synced to ${(confirmedTime / 1000).toFixed(2)}s`);
               }
               await new Promise(resolve => setTimeout(resolve, 50)); // Buffer
               await playYouTubeVideo(); // Now polls state
+              return null; // NEW: Explicit null return to match type
             })(),
             timeoutPromise
           ]);
           console.log('[RESUME-COUNTDOWN-EFFECT] Async chain complete');
-          setAsyncReady(true); // NEW: Trigger fade
+          setAsyncReady(true); // Trigger fade
         } catch (err) {
           console.error('[RESUME-COUNTDOWN-EFFECT] Chain failed (timeout/fallback):', err);
-          setAsyncReady(true);
           // Fallback: Force sync from last known (prevents total stall)
           currentTimeRef.current = pauseTimeRef.current;
+          setAsyncReady(true); // Proceed with fade
         }
       } else {
         setCountdownSeconds(prev => prev - 1);
@@ -266,27 +266,31 @@ export default function Game() {
   // Compare YouTube time vs game engine time (every 1s during PLAYING)
   useEffect(() => {
     if (gameState !== 'PLAYING') return;
-
     const comparisonInterval = setInterval(() => {
       const youtubeTime = getYouTubeVideoTime();
       const gameTime = currentTimeRef.current;
-      
-      if (youtubeTime !== null && youtubeTime !== null) {
-        const drift = Math.abs(youtubeTime - gameTime);
-        const driftPercent = (drift / gameTime) * 100;
-        console.log(`[TIME-SYNC] YouTube: ${(youtubeTime/1000).toFixed(2)}s | Game: ${(gameTime/1000).toFixed(2)}s | Drift: ${drift.toFixed(0)}ms (${driftPercent.toFixed(1)}%)`);
-        
-        if (drift > 500) {
-          console.warn(`[TIME-SYNC-WARNING] Large drift detected: ${drift.toFixed(0)}ms!`);
-        }
-      } else if (youtubeTime === null) {
+
+      if (youtubeTime === null) {
         console.log(`[TIME-SYNC] YouTube: null (not tracked) | Game: ${(gameTime/1000).toFixed(2)}s`);
+        return;
+      }
+      const drift = Math.abs(youtubeTime - gameTime);
+      const driftPercent = gameTime > 0 ? (drift / gameTime) * 100 : 0; // Guard zero-div
+      console.log(`[TIME-SYNC] YouTube: ${(youtubeTime/1000).toFixed(2)}s | Game: ${(gameTime/1000).toFixed(2)}s | Drift: ${drift.toFixed(0)}ms (${driftPercent.toFixed(1)}%)`);
+
+      if (drift > 500) {
+        console.warn(`[TIME-SYNC-WARNING] Large drift detected: ${drift.toFixed(0)}ms!`);
       }
     }, 1000);
-
     return () => clearInterval(comparisonInterval);
   }, [gameState]);
-
+  
+  useEffect(() => {
+    if (gameState === 'PAUSED') {
+      setAsyncReady(false);
+      console.log('[ASYNC-READY] Reset on PAUSED entry');
+    }
+  }, [gameState]);
 
   // Deck hit callbacks (keyboard: Q for left deck, P for right deck)
   const handleLeftDeckSpin = useCallback(() => hitNote(-1), [hitNote]);
