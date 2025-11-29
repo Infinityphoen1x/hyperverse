@@ -247,7 +247,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
             let shouldMarkFailed = false;
             let failureType: keyof Note | '' = '';
             
-            if (n.type === 'TAP' && time > n.time + TAP_HIT_WINDOW - TAP_FAILURE_BUFFER) {
+            if (n.type === 'TAP' && time > n.time + TAP_HIT_WINDOW) {
               shouldMarkFailed = true;
               failureType = 'tapMissFailure';
               // Log detailed failure reason for debugging
