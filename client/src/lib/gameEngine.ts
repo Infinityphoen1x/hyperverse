@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   TAP_HIT_WINDOW,
+  TAP_FAILURE_BUFFER,
   HOLD_MISS_TIMEOUT,
   HOLD_RELEASE_OFFSET,
   HOLD_RELEASE_WINDOW,
@@ -246,7 +247,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
             let shouldMarkFailed = false;
             let failureType: keyof Note | '' = '';
             
-            if (n.type === 'TAP' && time > n.time + TAP_HIT_WINDOW) {
+            if (n.type === 'TAP' && time > n.time + TAP_HIT_WINDOW + TAP_FAILURE_BUFFER) {
               shouldMarkFailed = true;
               failureType = 'tapMissFailure';
               // Log detailed failure reason for debugging

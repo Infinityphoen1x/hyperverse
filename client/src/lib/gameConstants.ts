@@ -153,6 +153,7 @@ export const SPIN_ALTERNATION = 8; // Alternate left/right spins every N beats
 
 // Game Engine - hit window and accuracy
 export const TAP_HIT_WINDOW = 300; // ms - ±300ms window for TAP note hits
+export const TAP_FAILURE_BUFFER = 100; // ms - buffer for YouTube timing jitter before marking note as failed
 export const HOLD_MISS_TIMEOUT = 1100; // ms - fail hold note if not pressed within this time
 export const HOLD_RELEASE_OFFSET = 600; // ms - additional time before hold release failure
 export const HOLD_RELEASE_WINDOW = 100; // ms - ±100ms accuracy window for hold release
