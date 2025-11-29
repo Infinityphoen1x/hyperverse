@@ -141,7 +141,11 @@ export function getYouTubeVideoTime(): number | null {
     if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
       const timeSeconds = ytPlayer.getCurrentTime();
       if (typeof timeSeconds === 'number' && !isNaN(timeSeconds) && isFinite(timeSeconds)) {
-        return timeSeconds * 1000; // Convert to milliseconds
+        const timeMs = timeSeconds * 1000;
+        const minutes = Math.floor(timeSeconds / 60);
+        const seconds = (timeSeconds % 60).toFixed(2);
+        console.log(`[YOUTUBE-GET-TIME] Current time: ${minutes}:${seconds} (${timeSeconds.toFixed(2)}s total, ${timeMs.toFixed(0)}ms)`);
+        return timeMs; // Convert to milliseconds
       }
     }
     return null;
