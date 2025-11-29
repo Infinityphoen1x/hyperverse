@@ -131,15 +131,31 @@ export async function waitForPlayerReady(maxWaitMs: number = 5000): Promise<bool
 /**
  * Get current video time from YouTube player
  * Returns time in milliseconds to match game engine format
- * Uses postMessage listener to track time updates
+ * Tries official API first (getCurrentTime), falls back to postMessage tracking
  */
 export function getYouTubeVideoTime(): number | null {
-  if (youtubeCurrentTimeMs < 0) {
-    return null;
+  // Try official YouTube API method first
+  if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
+    try {
+      const timeSeconds = ytPlayer.getCurrentTime();
+      if (typeof timeSeconds === 'number' && !isNaN(timeSeconds) && isFinite(timeSeconds) && timeSeconds >= 0) {
+        const timeMs = timeSeconds * 1000;
+        console.log(`[YOUTUBE-TIME-READ] Official API: ${(timeSeconds).toFixed(2)}s (${timeMs.toFixed(0)}ms)`);
+        return timeMs;
+      }
+    } catch (error) {
+      console.warn('[YOUTUBE-TIME-READ] Official API call failed:', error);
+    }
   }
-  // Log every call with current tracked time
-  console.log(`[YOUTUBE-TIME-READ] Current tracked time: ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s (${youtubeCurrentTimeMs.toFixed(0)}ms)`);
-  return youtubeCurrentTimeMs;
+  
+  // Fallback: use postMessage-tracked time
+  if (youtubeCurrentTimeMs >= 0) {
+    console.log(`[YOUTUBE-TIME-READ] Fallback (postMessage): ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s (${youtubeCurrentTimeMs.toFixed(0)}ms)`);
+    return youtubeCurrentTimeMs;
+  }
+  
+  console.log(`[YOUTUBE-TIME-READ] No time available (null)`);
+  return null;
 }
 
 /**
