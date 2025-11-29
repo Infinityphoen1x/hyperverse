@@ -225,6 +225,30 @@ export default function Game() {
     };
   }, [notes]);
 
+  // Compare YouTube time vs game engine time (every 1s during PLAYING)
+  useEffect(() => {
+    if (gameState !== 'PLAYING') return;
+
+    const comparisonInterval = setInterval(() => {
+      const youtubeTime = getYouTubeVideoTime();
+      const gameTime = currentTimeRef.current;
+      
+      if (youtubeTime !== null && youtubeTime !== null) {
+        const drift = Math.abs(youtubeTime - gameTime);
+        const driftPercent = (drift / gameTime) * 100;
+        console.log(`[TIME-SYNC] YouTube: ${(youtubeTime/1000).toFixed(2)}s | Game: ${(gameTime/1000).toFixed(2)}s | Drift: ${drift.toFixed(0)}ms (${driftPercent.toFixed(1)}%)`);
+        
+        if (drift > 500) {
+          console.warn(`[TIME-SYNC-WARNING] Large drift detected: ${drift.toFixed(0)}ms!`);
+        }
+      } else if (youtubeTime === null) {
+        console.log(`[TIME-SYNC] YouTube: null (not tracked) | Game: ${(gameTime/1000).toFixed(2)}s`);
+      }
+    }, 1000);
+
+    return () => clearInterval(comparisonInterval);
+  }, [gameState]);
+
 
   // Deck hit callbacks (keyboard: Q for left deck, P for right deck)
   const handleLeftDeckSpin = useCallback(() => hitNote(-1), [hitNote]);

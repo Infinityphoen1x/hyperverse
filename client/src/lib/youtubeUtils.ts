@@ -137,6 +137,8 @@ export function getYouTubeVideoTime(): number | null {
   if (youtubeCurrentTimeMs < 0) {
     return null;
   }
+  // Log every call with current tracked time
+  console.log(`[YOUTUBE-TIME-READ] Current tracked time: ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s (${youtubeCurrentTimeMs.toFixed(0)}ms)`);
   return youtubeCurrentTimeMs;
 }
 
