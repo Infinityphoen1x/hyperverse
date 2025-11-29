@@ -9,7 +9,6 @@ interface HomeProps {
 export default function Home({ onStartGame }: HomeProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const [beatmapLoaded, setBeatmapLoaded] = useState(false);
-  const [messageIndex, setMessageIndex] = useState(0);
 
   const bannerMessages = [
     { text: "[ENCRYPTING NEURAL PATHWAYS] • QUANTUM SYNC PROTOCOL ACTIVE • SYNCHRONIZING BRAINWAVES", color: "#00FFFF" },
@@ -19,12 +18,8 @@ export default function Home({ onStartGame }: HomeProps) {
     { text: "[NEURAL SYNC: 99%] • QUANTUM ENTANGLEMENT SUCCESSFUL • READY FOR TRANSCENDENCE", color: "#FF0080" },
   ];
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMessageIndex((prev) => (prev + 1) % bannerMessages.length);
-    }, 10000); // Change message every 10 seconds (2s buffer after 8s scroll)
-    return () => clearInterval(interval);
-  }, [bannerMessages.length]);
+  // Create continuous scrolling text with delimiters
+  const continuousText = bannerMessages.map(m => m.text).join(" ◆ ") + " ◆ ";
 
   const handleBeatmapLoad = (youtubeVideoId?: string, notes?: any[]) => {
     // Store beatmap data for the game to use
@@ -66,8 +61,7 @@ export default function Home({ onStartGame }: HomeProps) {
           </h1>
           {/* Animated scrolling banner */}
           <div 
-            className="w-full max-w-2xl mx-auto border-3 px-6 py-4 overflow-hidden bg-black/30 relative transition-colors duration-1000"
-            style={{ borderColor: bannerMessages[messageIndex].color }}
+            className="w-full max-w-2xl mx-auto border-3 border-neon-cyan px-6 py-4 overflow-hidden bg-black/30 relative"
           >
             {/* Gradient fade edges for smooth scroll effect */}
             <div 
@@ -80,15 +74,11 @@ export default function Home({ onStartGame }: HomeProps) {
             />
             
             <motion.div
-              key={messageIndex}
-              className="font-rajdhani text-xl uppercase whitespace-nowrap font-semibold tracking-wider"
-              style={{ color: bannerMessages[messageIndex].color }}
-              initial={{ opacity: 0, x: -800 }}
-              animate={{ opacity: 1, x: 800 }}
-              exit={{ opacity: 0, x: 1200 }}
-              transition={{ duration: 8, ease: 'linear' }}
+              className="font-rajdhani text-xl uppercase whitespace-nowrap font-semibold tracking-wider text-neon-cyan"
+              animate={{ x: [-1000, -continuousText.length * 8] }}
+              transition={{ duration: 50, ease: 'linear', repeat: Infinity }}
             >
-              {bannerMessages[messageIndex].text}
+              {continuousText}
             </motion.div>
           </div>
         </div>
