@@ -115,14 +115,18 @@ export default function Game() {
         // Countdown complete - transition to RESUMING
         console.log('[RESUME-COUNTDOWN-EFFECT] Countdown complete, transitioning to RESUMING');
         setIsPauseMenuOpen(false);
+        console.log('[RESUME-COUNTDOWN-EFFECT] Pause menu closed');
         resumeGame();
+        console.log('[RESUME-COUNTDOWN-EFFECT] Timing recalibrated via resumeGame()');
         setGameState('RESUMING');
         setCountdownSeconds(0);
         setStartupCountdown(0);
         setResumeFadeOpacity(0);
         resumeStartTimeRef.current = performance.now();
-        // YouTube plays at pauseTimeRef position
+        console.log('[RESUME-COUNTDOWN-EFFECT] Starting 0.5s fade-in overlay, state=RESUMING');
+        // YouTube plays at pauseTime position
         playYouTubeVideo();
+        console.log('[RESUME-COUNTDOWN-EFFECT] YouTube playVideo() called, should continue from paused position');
       } else {
         setCountdownSeconds(prev => prev - 1);
       }
@@ -245,11 +249,14 @@ export default function Game() {
       if (e.key === 'Escape') {
         // PAUSE: PLAYING → PAUSED
         if (gameState === 'PLAYING' && !isPaused) {
-          console.log('[PAUSE-SYSTEM] PAUSE: state=PAUSED, freezing score/combo/notes, stopping gameTime updates');
+          const pauseTimeMs = currentTimeRef.current;
+          const pauseTimeSec = (pauseTimeMs / 1000).toFixed(2);
+          console.log(`[PAUSE-SYSTEM] PAUSE: Freezing at gameTime=${pauseTimeMs}ms (${pauseTimeSec}s)`);
           pauseGame();
           setGameState('PAUSED');
           setStartupCountdown(0);
           pauseYouTubeVideo();
+          console.log(`[PAUSE-SYSTEM] YouTube paused`);
           setIsPauseMenuOpen(true);
         }
         // RESUME: PAUSED → PLAYING (handled by pause menu countdown)
@@ -260,12 +267,12 @@ export default function Game() {
       }
       // R key to rewind from any active state
       else if ((e.key === 'r' || e.key === 'R') && (gameState === 'PLAYING' || gameState === 'PAUSED')) {
-        console.log('[REWIND-SYSTEM] REWIND initiated: state=REWINDING, seeking to 0, resetting score/combo');
+        console.log('[REWIND-SYSTEM] REWIND initiated: Seeking to 0:00, resetting score/combo/notes');
         restartGame();
         setGameState('REWINDING');
         setIsPauseMenuOpen(false);
         pauseYouTubeVideo();
-        // Seek to 0 and prepare for countdown
+        console.log('[REWIND-SYSTEM] Seeking YouTube to 0:00');
         seekYouTubeVideo(0);
       }
     };

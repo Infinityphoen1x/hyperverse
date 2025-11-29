@@ -154,8 +154,11 @@ export function seekYouTubeVideo(timeSeconds: number): boolean {
   }
   
   try {
-    ytPlayer.seekTo(Math.max(0, timeSeconds), true);
-    console.log('YouTube seekTo:', timeSeconds, 'seconds - success');
+    const clampedTime = Math.max(0, timeSeconds);
+    ytPlayer.seekTo(clampedTime, true);
+    const minutes = Math.floor(clampedTime / 60);
+    const seconds = (clampedTime % 60).toFixed(2);
+    console.log(`[YOUTUBE-SEEK] Seeking to ${minutes}:${seconds} (${clampedTime.toFixed(2)}s total)`);
     return true;
   } catch (error) {
     console.warn('YouTube seekTo failed:', error);
@@ -173,8 +176,11 @@ export function playYouTubeVideo(): boolean {
   }
   
   try {
+    const currentTime = ytPlayer.getCurrentTime();
+    const minutes = Math.floor(currentTime / 60);
+    const seconds = (currentTime % 60).toFixed(2);
     ytPlayer.playVideo();
-    console.log('YouTube play - success');
+    console.log(`[YOUTUBE-PLAY] Playing from ${minutes}:${seconds} (${currentTime.toFixed(2)}s total)`);
     return true;
   } catch (error) {
     console.warn('YouTube play failed:', error);
@@ -192,8 +198,11 @@ export function pauseYouTubeVideo(): boolean {
   }
   
   try {
+    const currentTime = ytPlayer.getCurrentTime();
+    const minutes = Math.floor(currentTime / 60);
+    const seconds = (currentTime % 60).toFixed(2);
     ytPlayer.pauseVideo();
-    console.log('YouTube pause - success');
+    console.log(`[YOUTUBE-PAUSE] Paused at ${minutes}:${seconds} (${currentTime.toFixed(2)}s total)`);
     return true;
   } catch (error) {
     console.warn('YouTube pause failed:', error);
