@@ -325,10 +325,14 @@ export default function Game() {
           const pauseTimeMs = currentTimeRef.current;
           pauseTimeRef.current = pauseTimeMs;
           pauseGame();
-          pauseYouTubeVideo().catch(console.warn); // Pause first
-          const youtubeTimeAtPause = getYouTubeVideoTime();
-          console.log(`[PAUSE-SYSTEM] Paused at YT: ${youtubeTimeAtPause ? (youtubeTimeAtPause / 1000).toFixed(2) + 's' : 'null'}`);
-          setGameState('PAUSED'); // State after pause/seek
+          pauseYouTubeVideo()
+            .then(() => new Promise(resolve => setTimeout(resolve, 50)))
+            .then(() => {
+              const youtubeTimeAtPause = getYouTubeVideoTime();
+              console.log(`[PAUSE-SYSTEM] Paused at YT: ${youtubeTimeAtPause ? (youtubeTimeAtPause / 1000).toFixed(2) + 's' : 'null'}`);
+            })
+            .catch(err => console.warn('[PAUSE-SYSTEM] Pause failed:', err));
+          setGameState('PAUSED');
           setIsPauseMenuOpen(true);
         } else if (gameState === 'PAUSED' && isPaused) {
           setCountdownSeconds(3);
@@ -337,13 +341,13 @@ export default function Game() {
         console.log('[REWIND-SYSTEM] Initiating rewind');
         restartGame();
         pauseYouTubeVideo().catch(console.warn);
-        seekYouTubeVideo(0).then(() => { // Seek before state (mount stays)
+        seekYouTubeVideo(0).then(() => {
           console.log('[REWIND-SYSTEM] Seek confirmed');
-          setGameState('REWINDING'); // Now safe
+          setGameState('REWINDING');
           setIsPauseMenuOpen(false);
         }).catch(err => {
           console.error('[REWIND-SYSTEM] Seek failed:', err);
-          setGameState('REWINDING'); // Proceed anyway
+          setGameState('REWINDING');
         });
       }
     };
@@ -409,7 +413,7 @@ export default function Game() {
         />
       )}
       
-      {/* YouTube Background Layer - Only render after COUNTDOWN/REWINDING to prevent audio playback and ensure fresh init */}
+      {/* UPDATED: YouTube Background - Always mount if ID, control style */}
       {youtubeVideoId && (
         <div className="absolute inset-0 pointer-events-none z-0">
           <iframe
@@ -423,7 +427,7 @@ export default function Game() {
             })}
             title="YouTube background audio/video sync"
             allow="autoplay; encrypted-media"
-            style={getIframeStyle} // Now used for hide without unmount
+            style={getIframeStyle} // Hides without unmount
             data-testid="iframe-youtube-background"
           />
         </div>
@@ -471,19 +475,23 @@ export default function Game() {
                 {countdownSeconds > 0 ? 'RESUMING...' : 'RESUME'}
               </button>
               <button
-                onClick={async () => {
+                onClick={async () => { // NEW: async
                   if (!isPaused || gameState !== 'PAUSED') return;
                   console.log('[PAUSE-MENU] REWIND: use R key or press button');
                   restartGame();
-                  setGameState('REWINDING');
+                  setGameState('REWINDING'); // Flip early for UI
                   setIsPauseMenuOpen(false);
                   try {
                     await pauseYouTubeVideo();
-                    await seekYouTubeVideo(0);
+                    await seekYouTubeVideo(0); // Await + confirm
                     console.log('[PAUSE-MENU] Rewind confirmed');
                   } catch (err) {
                     console.error('[PAUSE-MENU] Rewind failed:', err);
-                  }
+                  restartGame();
+                  setGameState('REWINDING');
+                  setIsPauseMenuOpen(false);
+                  pauseYouTubeVideo();
+                  seekYouTubeVideo(0);}
                 }}
                 className="px-12 py-4 bg-emerald-500 text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-emerald-500"
                 data-testid="button-rewind"
