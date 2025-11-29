@@ -4,6 +4,8 @@ artist: TheFatRat & Cecilia Gault
 bpm: 128
 duration: 205000
 youtube: xfGrN3ZsPLA
+beatmapStart: 0
+beatmapEnd: 108000
 
 [EASY]
 3000|0|TAP

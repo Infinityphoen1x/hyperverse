@@ -700,6 +700,14 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
           continue; // Skip invalid notes
         }
         
+        // Check beatmap timing windows (notes don't appear outside these bounds)
+        if (n.beatmapStart !== undefined && currentTime < n.beatmapStart) {
+          continue; // Note hasn't started appearing yet
+        }
+        if (n.beatmapEnd !== undefined && currentTime > n.beatmapEnd) {
+          continue; // Note has stopped appearing
+        }
+        
         const timeUntilHit = n.time - currentTime;
         
         if (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') {

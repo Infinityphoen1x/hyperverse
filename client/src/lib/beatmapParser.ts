@@ -6,6 +6,8 @@ export interface BeatmapMetadata {
   bpm: number;
   duration: number;
   youtube?: string;
+  beatmapStart?: number; // ms - when notes start appearing
+  beatmapEnd?: number; // ms - when notes stop appearing
 }
 
 export interface BeatmapData {
@@ -25,6 +27,8 @@ export interface ParsedBeatmap {
     type: 'TAP' | 'HOLD';
     duration?: number;
     holdId?: string;
+    beatmapStart?: number; // Inherited from metadata
+    beatmapEnd?: number; // Inherited from metadata
   }>;
 }
 
@@ -82,6 +86,14 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
           if (!isNaN(dur)) metadata.duration = dur;
         }
         if (key.toLowerCase() === 'youtube') metadata.youtube = value;
+        if (key.toLowerCase() === 'beatmapstart') {
+          const start = parseInt(value);
+          if (!isNaN(start)) metadata.beatmapStart = start;
+        }
+        if (key.toLowerCase() === 'beatmapend') {
+          const end = parseInt(value);
+          if (!isNaN(end)) metadata.beatmapEnd = end;
+        }
       }
     }
     
@@ -103,6 +115,8 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
       type: 'TAP' | 'HOLD';
       duration?: number;
       holdId?: string;
+      beatmapStart?: number;
+      beatmapEnd?: number;
     }> = [];
     
     // First pass: collect all HOLD_START and HOLD_END points
@@ -156,7 +170,7 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
         }
         holdEnds[holdId] = { time, lane };
       } else if (type === 'TAP') {
-        notes.push({ time, lane, type: 'TAP' });
+        notes.push({ time, lane, type: 'TAP', beatmapStart: metadata.beatmapStart, beatmapEnd: metadata.beatmapEnd });
       } else if (type === 'HOLD') {
         // Old single-line HOLD format (backward compatibility)
         if (parts.length < 5) {
@@ -175,7 +189,7 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
           continue;
         }
         
-        notes.push({ time, lane, type: 'HOLD', duration, holdId });
+        notes.push({ time, lane, type: 'HOLD', duration, holdId, beatmapStart: metadata.beatmapStart, beatmapEnd: metadata.beatmapEnd });
       } else if (type !== 'TAP' && type !== 'HOLD' && type !== 'HOLD_START' && type !== 'HOLD_END') {
         GameErrors.log(`BeatmapParser: Line ${lineIdx} unknown note type: "${type}"`);
       }
@@ -206,7 +220,7 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
       }
       
       const duration = end.time - start.time;
-      notes.push({ time: start.time, lane: start.lane, type: 'HOLD', duration, holdId });
+      notes.push({ time: start.time, lane: start.lane, type: 'HOLD', duration, holdId, beatmapStart: metadata.beatmapStart, beatmapEnd: metadata.beatmapEnd });
       processedHoldIds.add(holdId);
     }
     

@@ -6,6 +6,8 @@ export interface BeatmapNote {
   type: 'TAP' | 'HOLD';
   duration?: number;
   holdId?: string;
+  beatmapStart?: number; // ms - when notes start appearing
+  beatmapEnd?: number; // ms - when notes stop appearing
 }
 
 /**
@@ -103,6 +105,14 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
     // Add duration only for HOLD notes from beatmap
     if (note.type === 'HOLD' && note.duration) {
       gameNote.duration = note.duration;
+    }
+    
+    // Add beatmap timing windows if specified
+    if (note.beatmapStart !== undefined) {
+      gameNote.beatmapStart = note.beatmapStart;
+    }
+    if (note.beatmapEnd !== undefined) {
+      gameNote.beatmapEnd = note.beatmapEnd;
     }
     
     gameNotes.push(gameNote);

@@ -142,6 +142,7 @@ youtube:
                     <p className="text-white/80">[METADATA]:</p>
                     <p className="ml-2 text-white/50">title, artist, bpm</p>
                     <p className="ml-2 text-white/50">duration, youtube</p>
+                    <p className="ml-2 text-white/50">beatmapStart, beatmapEnd</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-neon-cyan mt-2">TAP:</p>
