@@ -216,10 +216,17 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
       console.log('[REWIND-EFFECT] Rewind complete, transitioning to COUNTDOWN');
       setGameState('COUNTDOWN');
       setStartupCountdown(3);
+      
+      // CRITICAL: Play YouTube on rewind like START SESSION - within gesture window
+      if (youtubeVideoId && playerInitializedRef.current) {
+        playYouTubeVideo()
+          .then(() => console.log('[REWIND-EFFECT] Play triggered on countdown transition'))
+          .catch(err => console.warn('[REWIND-EFFECT] Play failed:', err));
+      }
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [gameState, setGameState]);
+  }, [gameState, setGameState, youtubeVideoId, playerInitializedRef]);
 
 
   // Clean up error check interval on unmount
