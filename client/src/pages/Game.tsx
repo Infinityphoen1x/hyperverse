@@ -386,7 +386,7 @@ export default function Game() {
         <div className="hidden lg:block absolute left-[200px] right-[200px] top-1/2 -translate-y-1/2 h-48">
           <DeckHoldMeters 
             notes={notes} 
-            currentTime={currentTime}
+            currentTime={Math.round(currentTime)}
           />
         </div>
 
@@ -394,7 +394,7 @@ export default function Game() {
         <div className="relative flex-1 flex items-center justify-center">
           <Down3DNoteLane 
             notes={notes} 
-            currentTime={currentTime}
+            currentTime={Math.round(currentTime)}
             health={health}
             combo={combo}
             onPadHit={hitNote}
