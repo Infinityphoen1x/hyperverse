@@ -298,6 +298,18 @@ export function initYouTubeTimeListener(): void {
 
   window.addEventListener('message', handleMessage);
   console.log('[YOUTUBE-TIME-LISTENER] postMessage listener initialized and attached to window');
+  
+  // CRITICAL: Send "listening" handshake to YouTube iframe to enable two-way communication
+  // YouTube only sends postMessage events (infoDelivery, onReady) after receiving this signal
+  if (youtubeIframeElement?.contentWindow) {
+    youtubeIframeElement.contentWindow.postMessage(
+      JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }),
+      '*'
+    );
+    console.log('[YOUTUBE-TIME-LISTENER] Sent listening handshake to YouTube iframe');
+  } else {
+    console.warn('[YOUTUBE-TIME-LISTENER] No iframe element for listening handshake');
+  }
 }
 
 /**
