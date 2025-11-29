@@ -226,10 +226,13 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     setGameState('COUNTDOWN');
     setCountdownSeconds(3);
     
-    // Calibrate startTimeRef based on YouTube's current time if available
+    // Calibrate startOffsetRef based on YouTube's current time if available
     const now = Date.now();
     const videoTime = getVideoTime?.() || 0;
-    startTimeRef.current = now - videoTime;
+    startOffsetRef.current = now - videoTime;
+    pauseTimeRef.current = 0;
+    musicTimeRef.current = 0;
+    isFirstStartRef.current = true;
     
     const loop = () => {
       // Skip update if paused
@@ -245,19 +248,20 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         // videoTime is already in milliseconds from youtubeUtils
         if (videoTime !== null && videoTime >= 0) {
           time = videoTime;
+          musicTimeRef.current = time; // Update authoritative audio time
         } else {
           // YouTube player not ready yet - use game timer as fallback
           const now = Date.now();
-          time = now - startTimeRef.current - pausedTimeRef.current;
+          time = now - startOffsetRef.current - pauseTimeRef.current;
         }
       } else {
         const now = Date.now();
-        time = now - startTimeRef.current - pausedTimeRef.current;
+        time = now - startOffsetRef.current - pauseTimeRef.current;
       }
       
       // Round time to integer milliseconds to ensure consistent calculations
       time = Math.round(time);
-      currentTimeRef.current = time;
+      gameTimeRef.current = time;
       
       // Check for missed notes - update ref-based state only (skip during COUNTDOWN)
       let shouldGameOver = false;
@@ -351,15 +355,14 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
   }, [difficulty, getVideoTime, customNotes, isPaused]);
   
   const pauseGame = useCallback(() => {
-    pausedTimeRef.current = Date.now() - startTimeRef.current;
+    pauseTimeRef.current = gameTimeRef.current; // Save current game time at pause
     setIsPaused(true);
   }, []);
   
   const resumeGame = useCallback(() => {
-    // Adjust startTimeRef so game time continues from where it paused
-    // Without resetting, time continues naturally
-    startTimeRef.current = Date.now() - pausedTimeRef.current;
-    pausedTimeRef.current = 0;
+    // Recalibrate startOffsetRef so game time continues from pauseTimeRef
+    const now = Date.now();
+    startOffsetRef.current = now - pauseTimeRef.current;
     setIsPaused(false);
   }, []);
   
@@ -367,7 +370,9 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     scoreRef.current = 0;
     comboRef.current = 0;
     healthRef.current = MAX_HEALTH;
-    pausedTimeRef.current = 0;
+    pauseTimeRef.current = 0;
+    gameTimeRef.current = 0;
+    musicTimeRef.current = 0;
     
     // Reset notes to fresh state (no failure markers) - critical for rewind to render correctly
     notesRef.current = customNotes || [];
@@ -378,7 +383,8 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     setNotes([...notesRef.current]);
     setIsPaused(false);
     
-    startTimeRef.current = Date.now();
+    startOffsetRef.current = Date.now();
+    isFirstStartRef.current = true;
   }, [customNotes]);
 
   const hitNote = useCallback((lane: number) => {
@@ -388,7 +394,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         return;
       }
       
-      const currentTime = currentTimeRef.current;
+      const currentTime = gameTimeRef.current;
       const notes = notesRef.current;
       
       if (!Array.isArray(notes)) {
@@ -454,7 +460,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
 
   const trackHoldStart = useCallback((lane: number) => {
     try {
-      const currentTime = currentTimeRef.current;
+      const currentTime = gameTimeRef.current;
       const laneStr = lane === -1 ? 'Q' : 'P';
       GameErrors.log(`trackHoldStart: Lane ${laneStr} (${lane}) at currentTime=${currentTime}`);
       
@@ -550,7 +556,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
 
   const trackHoldEnd = useCallback((lane: number) => {
     try {
-      const currentTime = currentTimeRef.current;
+      const currentTime = gameTimeRef.current;
       
       if (lane !== -1 && lane !== -2) {
         GameErrors.log(`trackHoldEnd: Invalid deck lane=${lane}, must be -1 (Q) or -2 (P)`);
