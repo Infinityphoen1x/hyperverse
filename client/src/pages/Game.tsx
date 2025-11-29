@@ -37,6 +37,7 @@ export default function Game() {
   }, [youtubeIframeRef]);
   
   const [isPauseMenuOpen, setIsPauseMenuOpen] = useState(false);
+  const [countdownSeconds, setCountdownSeconds] = useState(0);
   const pausedTimeRef = useRef(0);
   const currentTimeRef = useRef(0);
   const playerInitializedRef = useRef(false);
@@ -69,6 +70,28 @@ export default function Game() {
   useEffect(() => {
     currentTimeRef.current = currentTime;
   }, [currentTime]);
+
+  // Countdown timer for resume preparation
+  useEffect(() => {
+    if (countdownSeconds <= 0) return;
+
+    const timer = setTimeout(() => {
+      if (countdownSeconds === 1) {
+        // Countdown complete - actually resume the game
+        const resumeTimeSeconds = pausedTimeRef.current / 1000;
+        console.log('[COUNTDOWN] Complete - resuming game from', resumeTimeSeconds, 'seconds');
+        seekYouTubeVideo(resumeTimeSeconds);
+        playYouTubeVideo();
+        resumeGame();
+        setCountdownSeconds(0);
+        setIsPauseMenuOpen(false);
+      } else {
+        setCountdownSeconds(prev => prev - 1);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [countdownSeconds, pausedTimeRef, resumeGame]);
 
   // Initialize YouTube player when iframe is ready
   useEffect(() => {
@@ -223,22 +246,34 @@ export default function Game() {
       {isPauseMenuOpen && isPaused && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="text-center space-y-8">
-            <h1 className="text-6xl font-orbitron text-neon-cyan neon-glow">PAUSED</h1>
-            <p className="text-neon-cyan font-rajdhani text-lg">Press ESC to resume</p>
+            {countdownSeconds > 0 ? (
+              <>
+                <motion.div
+                  className="text-9xl font-orbitron text-neon-cyan neon-glow"
+                  animate={{ scale: [1, 1.2, 1], textShadow: ['0 0 20px hsl(180, 100%, 50%)', '0 0 40px hsl(180, 100%, 50%)', '0 0 20px hsl(180, 100%, 50%)'] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  key={countdownSeconds}
+                >
+                  {countdownSeconds}
+                </motion.div>
+                <p className="text-neon-cyan font-rajdhani text-lg">GET READY!</p>
+              </>
+            ) : (
+              <>
+                <h1 className="text-6xl font-orbitron text-neon-cyan neon-glow">PAUSED</h1>
+                <p className="text-neon-cyan font-rajdhani text-lg">Press ESC to resume</p>
+              </>
+            )}
             <div className="flex flex-col gap-4 mt-8">
               <button 
                 onClick={() => {
-                  const resumeTimeSeconds = pausedTimeRef.current / 1000;
-                  console.log('[PAUSE-SYSTEM] RESUME button: seeking YouTube to', resumeTimeSeconds, 'seconds');
-                  seekYouTubeVideo(resumeTimeSeconds);
-                  playYouTubeVideo();
-                  resumeGame();
-                  setIsPauseMenuOpen(false);
+                  setCountdownSeconds(3);
                 }}
-                className="px-12 py-4 bg-neon-cyan text-black font-bold font-orbitron text-lg hover:bg-white transition-colors"
+                disabled={countdownSeconds > 0}
+                className="px-12 py-4 bg-neon-cyan text-black font-bold font-orbitron text-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 data-testid="button-resume"
               >
-                RESUME
+                {countdownSeconds > 0 ? 'RESUMING...' : 'RESUME'}
               </button>
               <button 
                 onClick={() => {
