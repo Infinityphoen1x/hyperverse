@@ -377,6 +377,7 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
         restartGame(); // Reset game engine state
         pauseTimeRef.current = 0;
         setIsPauseMenuOpen(false);
+        setStartupCountdown(0); // CRITICAL: Reset startup countdown like resume does (line 189)
         
         // Fire-and-forget: Rewind video in background
         const doRewind = async () => {
@@ -393,7 +394,7 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
         // Call startGame() with dynamic countdown duration based on beatmapStart
         const countdownDuration = calculateCountdownDuration(customNotes);
         startGame(countdownDuration);
-        // The startup countdown effect will handle playing the video when entering COUNTDOWN state
+        // Startup countdown effect will now trigger play because startupCountdown = 0
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -508,6 +509,7 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
                   restartGame(); // Reset game engine state
                   pauseTimeRef.current = 0;
                   setIsPauseMenuOpen(false);
+                  setStartupCountdown(0); // CRITICAL: Reset startup countdown like resume does (line 189)
                   
                   // Fire-and-forget: Rewind video in background
                   const doRewind = async () => {
@@ -524,6 +526,7 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
                   // Call startGame() with dynamic countdown duration based on beatmapStart
                   const countdownDuration = calculateCountdownDuration(customNotes);
                   startGame(countdownDuration);
+                  // Startup countdown effect will now trigger play because startupCountdown = 0
                 }}
                 className="px-12 py-4 bg-emerald-500 text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-emerald-500"
                 data-testid="button-rewind"
