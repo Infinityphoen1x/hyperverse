@@ -471,23 +471,19 @@ export default function Game() {
                 {countdownSeconds > 0 ? 'RESUMING...' : 'RESUME'}
               </button>
               <button
-                onClick={async () => { // NEW: async
+                onClick={async () => {
                   if (!isPaused || gameState !== 'PAUSED') return;
                   console.log('[PAUSE-MENU] REWIND: use R key or press button');
                   restartGame();
-                  setGameState('REWINDING'); // Flip early for UI
+                  setGameState('REWINDING');
                   setIsPauseMenuOpen(false);
                   try {
                     await pauseYouTubeVideo();
-                    await seekYouTubeVideo(0); // Await + confirm
+                    await seekYouTubeVideo(0);
                     console.log('[PAUSE-MENU] Rewind confirmed');
                   } catch (err) {
                     console.error('[PAUSE-MENU] Rewind failed:', err);
-                  restartGame();
-                  setGameState('REWINDING');
-                  setIsPauseMenuOpen(false);
-                  pauseYouTubeVideo();
-                  seekYouTubeVideo(0);}
+                  }
                 }}
                 className="px-12 py-4 bg-emerald-500 text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-emerald-500"
                 data-testid="button-rewind"
