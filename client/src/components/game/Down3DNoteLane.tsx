@@ -204,9 +204,9 @@ const getTapNoteState = (note: Note, currentTime: number): TapNoteState => {
 };
 
 /** Determine if TAP note should still be rendered */
-const shouldRenderTapNote = (state: TapNoteState, progress: number): boolean => {
-  // Out of visible progress window
-  if (progress < 0 || progress > 1.25) return false;
+const shouldRenderTapNote = (state: TapNoteState, timeUntilHit: number): boolean => {
+  // Time-based render window: 2000ms before (TAP_RENDER_WINDOW_MS) to 500ms after miss (TAP_FALLTHROUGH_WINDOW_MS)
+  if (timeUntilHit > TAP_RENDER_WINDOW_MS || timeUntilHit < -TAP_FALLTHROUGH_WINDOW_MS) return false;
   
   // After hit animation finishes (600ms)
   if (state.isHit && state.timeSinceHit >= 600) return false;
@@ -259,9 +259,10 @@ const calculateTapNoteGeometry = (
 ): TapNoteGeometry => {
   const MIN_DEPTH = 5;
   const MAX_DEPTH = 40;
-  // Inverted: larger depth when far away (progress≈0), smaller depth when near (progress≈1)
-  const TRAPEZOID_DEPTH = MIN_DEPTH + ((1 - progress) * (MAX_DEPTH - MIN_DEPTH));
-  const nearDist = 1 + (progress * (JUDGEMENT_RADIUS - 1));
+  // Clamp progress to valid range for geometry calculation
+  const clampedProgress = Math.max(0, Math.min(1, progress));
+  const TRAPEZOID_DEPTH = MIN_DEPTH + (clampedProgress * (MAX_DEPTH - MIN_DEPTH));
+  const nearDist = 1 + (clampedProgress * (JUDGEMENT_RADIUS - 1));
   const farDist = Math.max(1, nearDist - TRAPEZOID_DEPTH);
   
   // Narrower flanking angles (±8°) for compact appearance
@@ -1219,7 +1220,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
             .filter(n => n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT')
             .map(note => {
             const timeUntilHit = note.time - currentTime;
-            const progress = 1 - (timeUntilHit / 2000);
+            const progress = Math.max(0, Math.min(1, 1 - (timeUntilHit / 2000)));
             
             // Get TAP note state using helper
             const state = getTapNoteState(note, currentTime);
@@ -1230,8 +1231,8 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
               return null;
             }
             
-            // Check if should render
-            if (!shouldRenderTapNote(state, progress)) {
+            // Check if should render (time-based, not progress-based)
+            if (!shouldRenderTapNote(state, timeUntilHit)) {
               return null;
             }
             
