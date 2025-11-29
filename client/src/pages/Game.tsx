@@ -216,17 +216,10 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
       console.log('[REWIND-EFFECT] Rewind complete, transitioning to COUNTDOWN');
       setGameState('COUNTDOWN');
       setStartupCountdown(3);
-      
-      // CRITICAL: Play YouTube on rewind like START SESSION - within gesture window
-      if (youtubeVideoId && playerInitializedRef.current) {
-        playYouTubeVideo()
-          .then(() => console.log('[REWIND-EFFECT] Play triggered on countdown transition'))
-          .catch(err => console.warn('[REWIND-EFFECT] Play failed:', err));
-      }
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [gameState, setGameState, youtubeVideoId, playerInitializedRef]);
+  }, [gameState, setGameState]);
 
 
   // Clean up error check interval on unmount
@@ -349,9 +342,17 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
       } else if ((e.key === 'r' || e.key === 'R') && (gameState === 'PLAYING' || gameState === 'PAUSED')) {
         console.log('[REWIND-SYSTEM] Initiating rewind');
         restartGame();
-        pauseTimeRef.current = 0; // NEW: Reset pause time to 0
+        pauseTimeRef.current = 0;
         setGameState('REWINDING');
         setIsPauseMenuOpen(false);
+        
+        // CRITICAL: Play YouTube immediately within gesture window (like START SESSION)
+        if (youtubeVideoId && playerInitializedRef.current) {
+          playYouTubeVideo()
+            .then(() => console.log('[REWIND-SYSTEM] Play triggered within gesture window'))
+            .catch(err => console.warn('[REWIND-SYSTEM] Play failed:', err));
+        }
+        
         // Fire-and-forget: Rewind video in background
         const doRewind = async () => {
           const timeoutPromise: Promise<null> = new Promise((_, reject) =>
