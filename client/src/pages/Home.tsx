@@ -10,6 +10,9 @@ export default function Home({ onStartGame }: HomeProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const [beatmapLoaded, setBeatmapLoaded] = useState(false);
 
+  const colors = ["#00FFFF", "#FF00FF", "#00FF00", "#00CCFF", "#FF0080"];
+  const [colorIndex, setColorIndex] = useState(0);
+
   const bannerMessages = [
     { text: "[ENCRYPTING NEURAL PATHWAYS] • QUANTUM SYNC PROTOCOL ACTIVE • SYNCHRONIZING BRAINWAVES", color: "#00FFFF" },
     { text: "[NEURAL INTERFACE ONLINE] • FREQUENCY LOCKED • HARMONIC RESONANCE DETECTED", color: "#FF00FF" },
@@ -20,6 +23,14 @@ export default function Home({ onStartGame }: HomeProps) {
 
   // Create continuous scrolling text with delimiters
   const continuousText = bannerMessages.map(m => m.text).join(" ◆ ") + " ◆ ";
+
+  // Cycle through colors
+  useEffect(() => {
+    const colorInterval = setInterval(() => {
+      setColorIndex((prev) => (prev + 1) % colors.length);
+    }, 2000); // Change color every 2 seconds
+    return () => clearInterval(colorInterval);
+  }, [colors.length]);
 
   const handleBeatmapLoad = (youtubeVideoId?: string, notes?: any[]) => {
     // Store beatmap data for the game to use
@@ -61,7 +72,8 @@ export default function Home({ onStartGame }: HomeProps) {
           </h1>
           {/* Animated scrolling banner */}
           <div 
-            className="w-full max-w-2xl mx-auto border-3 border-neon-cyan px-6 py-4 overflow-hidden bg-black/30 relative"
+            className="w-full max-w-2xl mx-auto border-3 px-6 py-4 overflow-hidden bg-black/30 relative transition-colors duration-300"
+            style={{ borderColor: colors[colorIndex] }}
           >
             {/* Gradient fade edges for smooth scroll effect */}
             <div 
@@ -74,9 +86,10 @@ export default function Home({ onStartGame }: HomeProps) {
             />
             
             <motion.div
-              className="font-rajdhani text-xl uppercase whitespace-nowrap font-semibold tracking-wider text-neon-cyan"
-              animate={{ x: [-1000, -continuousText.length * 8] }}
-              transition={{ duration: 50, ease: 'linear', repeat: Infinity }}
+              className="font-rajdhani text-xl uppercase whitespace-nowrap font-semibold tracking-wider"
+              style={{ color: colors[colorIndex] }}
+              animate={{ x: [continuousText.length * 8, 0] }}
+              transition={{ duration: 35, ease: 'linear', repeat: Infinity }}
             >
               {continuousText}
             </motion.div>
