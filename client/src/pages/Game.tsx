@@ -341,12 +341,17 @@ export default function Game() {
           (async () => {
             try {
               await pauseYouTubeVideo();
-              // NEW: Poll for accurate YT time post-pause
+              // UPDATED: Longer settle time for getCurrentTime to sync
+              await new Promise(resolve => setTimeout(resolve, 150));
+              // Poll for accurate YT time post-pause with more attempts
               let youtubeTimeAtPause = null;
-              for (let i = 0; i < 3; i++) {
-                await new Promise(resolve => setTimeout(resolve, 50));
+              for (let i = 0; i < 5; i++) {
                 youtubeTimeAtPause = getYouTubeVideoTime();
-                if (youtubeTimeAtPause !== null) break;
+                if (youtubeTimeAtPause !== null) {
+                  console.log(`[PAUSE-SYSTEM] Got YT time on attempt ${i + 1}: ${(youtubeTimeAtPause / 1000).toFixed(2)}s`);
+                  break;
+                }
+                await new Promise(resolve => setTimeout(resolve, 50));
               }
               pauseTimeRef.current = youtubeTimeAtPause || pauseTimeMs; // YT or game fallback
               console.log(`[PAUSE-SYSTEM] Paused at YT: ${youtubeTimeAtPause ? (youtubeTimeAtPause / 1000).toFixed(2) + 's' : 'game fallback ' + (pauseTimeMs / 1000).toFixed(2) + 's'}`);
