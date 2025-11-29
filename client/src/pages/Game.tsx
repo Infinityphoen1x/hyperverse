@@ -18,15 +18,6 @@ export default function Game() {
   const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
   const errorCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const resumeStartTimeRef = useRef<number | null>(null);
-  const getIframeStyle = useMemo(() => {
-  const base = { width: '100%', height: '100%', objectFit: 'cover' };
-  const isHidden = gameState === 'COUNTDOWN' || gameState === 'REWINDING';
-    return {
-      ...base,
-      display: isHidden ? 'none' : 'block', // Keeps ref/DOM alive
-      opacity: isHidden ? 0 : 0.05, // No visual during transitions
-    };
-  }, [gameState]);
   
   // Parse difficulty from URL with browser context check
   const difficulty = useMemo(() => {
@@ -72,6 +63,17 @@ export default function Game() {
     restartGame,
     setGameState
   } = useGameEngine(difficulty, youtubeVideoId ? getVideoTime : undefined, customNotes);
+
+  // Memoize iframe style based on game state
+  const getIframeStyle = useMemo(() => {
+    const base: Record<string, string | number> = { width: '100%', height: '100%', objectFit: 'cover' as const };
+    const isHidden = gameState === 'COUNTDOWN' || gameState === 'REWINDING';
+    return {
+      ...base,
+      display: isHidden ? 'none' : 'block', // Keeps ref/DOM alive
+      opacity: isHidden ? 0 : 0.05, // No visual during transitions
+    };
+  }, [gameState]);
 
   // Memoize miss count to avoid filtering every render
   const missCount = useMemo(() => notes.filter(n => n.missed).length, [notes]);
@@ -392,7 +394,7 @@ export default function Game() {
             height="100%"
             src={buildYouTubeEmbedUrl(youtubeVideoId, {
               ...YOUTUBE_BACKGROUND_EMBED_OPTIONS,
-              autoplay: 0 // Always off
+              autoplay: false // Always off
             })}
             title="YouTube background"
             allow="autoplay; encrypted-media"
