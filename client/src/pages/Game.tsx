@@ -334,11 +334,23 @@ export default function Game() {
               </button>
               <button 
                 onClick={() => {
+                  // Rewind only works when paused
+                  if (!isPaused || gameState !== 'PAUSED') return;
+                  
                   console.log('[PAUSE-SYSTEM] REWIND button: restarting game to 0');
                   pausedTimeRef.current = 0;
                   gameAlreadyStartedRef.current = false;
+                  
+                  // Clear any pending resume countdown
+                  setCountdownSeconds(0);
+                  // Clear any leftover startup countdown
+                  setStartupCountdown(0);
+                  
+                  // Restart game - this will trigger new startup countdown via startGame()
                   restartGame(); // Reset game state and sets isPaused = false
-                  startGame(); // Trigger startup countdown
+                  startGame(); // Trigger startup countdown (sets gameState = 'COUNTDOWN', engineCountdown = 3)
+                  
+                  // Reset YouTube to start
                   seekYouTubeVideo(0);
                   pauseYouTubeVideo();
                   setIsPauseMenuOpen(false);
