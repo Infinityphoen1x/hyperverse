@@ -7,7 +7,6 @@ import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
 import { DeckHoldMeters } from "@/components/game/DeckHoldMeters";
 import { VisualEffects } from "@/components/game/VisualEffects";
 import { ErrorLogViewer } from "@/components/game/ErrorLogViewer";
-import { CountdownOverlay } from "@/components/game/CountdownOverlay";
 import { motion } from "framer-motion";
 
 interface GameProps {
@@ -34,44 +33,10 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
   
   const [isPauseMenuOpen, setIsPauseMenuOpen] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(0);
-  const [startupCountdown, setStartupCountdown] = useState(0);
   const currentTimeRef = useRef(0);
   const pauseTimeRef = useRef(0);
   const gameAlreadyStartedRef = useRef(false);
   const [asyncReady, setAsyncReady] = useState(false);
-  const countdownDurationRef = useRef(3); // Dynamic countdown duration based on beatmapStart
-
-  // Calculate countdown duration from first note's beatmapStart
-  const calculateCountdownDuration = (notesToCheck: Note[] | undefined): number => {
-    if (!notesToCheck || notesToCheck.length === 0) return 3; // Default fallback
-    
-    // Find the minimum beatmapStart from all notes (including 0)
-    let minBeatmapStart: number | undefined = undefined;
-    for (const note of notesToCheck) {
-      if (note.beatmapStart !== undefined) {
-        if (minBeatmapStart === undefined || note.beatmapStart < minBeatmapStart) {
-          minBeatmapStart = note.beatmapStart;
-        }
-      }
-    }
-    
-    // If no valid beatmapStart found, use default
-    if (minBeatmapStart === undefined) {
-      console.log(`[COUNTDOWN-CALC] No beatmapStart found, using default 3s`);
-      return 3;
-    }
-    
-    // If beatmapStart is 0 or very small, no countdown needed
-    if (minBeatmapStart <= 0) {
-      console.log(`[COUNTDOWN-CALC] beatmapStart: ${minBeatmapStart}ms → no countdown (start immediately)`);
-      return 0;
-    }
-    
-    // Convert ms to seconds, with minimum of 1 second
-    const durationSeconds = Math.max(1, Math.ceil(minBeatmapStart / 1000));
-    console.log(`[COUNTDOWN-CALC] beatmapStart: ${minBeatmapStart}ms → countdown: ${durationSeconds}s`);
-    return durationSeconds;
-  };
   
   const { 
     gameState, 
@@ -103,78 +68,22 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     currentTimeRef.current = currentTime;
   }, [currentTime]);
 
-  // Auto-seek to 0 during COUNTDOWN when videoId is set
+  // Auto-seek to 0 and play when PLAYING state entered
   useEffect(() => {
-    if (!youtubeVideoId || !playerInitializedRef.current || gameState !== 'COUNTDOWN') return;
+    if (!youtubeVideoId || !playerInitializedRef.current || gameState !== 'PLAYING') return;
 
-    const autoSeek = async () => {
+    const startPlayback = async () => {
       try {
         await seekYouTubeVideo(0);
-        console.log('[YOUTUBE-AUTO-SEEK] Complete during COUNTDOWN');
+        console.log('[YOUTUBE-AUTO-START] Seek complete, initiating play');
+        await playYouTubeVideo();
+        console.log('[YOUTUBE-AUTO-START] Playback started');
       } catch (err) {
-        console.warn('[YOUTUBE-AUTO-SEEK] Failed:', err);
+        console.warn('[YOUTUBE-AUTO-START] Failed:', err);
       }
     };
-    autoSeek();
+    startPlayback();
   }, [youtubeVideoId, gameState, playerInitializedRef]);
-
-  // Startup countdown (when game starts) - PLAY ON COUNTDOWN ENTRY (gesture window)
-  // UPDATED: Call play immediately on COUNTDOWN entry (synchronous gesture), then display countdown
-  useEffect(() => {
-    if (gameState !== 'COUNTDOWN' || isPaused) {
-      console.log('[STARTUP-COUNTDOWN-EFFECT] Skipped: gameState=' + gameState + ', isPaused=' + isPaused);
-      return;
-    }
-
-    // CRITICAL: Play on COUNTDOWN entry - inherits gesture from startGame() call
-    if (startupCountdown === 0 && youtubeVideoId && playerInitializedRef.current) {
-      console.log('[STARTUP-COUNTDOWN-EFFECT] COUNTDOWN entered - initiating play within gesture window');
-      // Fire-and-forget play (non-blocking)
-      playYouTubeVideo()
-        .then(() => console.log('[STARTUP-COUNTDOWN-EFFECT] Play started within gesture'))
-        .catch(err => {
-          console.warn('[STARTUP-COUNTDOWN-EFFECT] Play failed:', err);
-          // Fallback: Try synthetic gesture
-          const tempBtn = document.createElement('button');
-          tempBtn.style.position = 'fixed';
-          tempBtn.style.opacity = '0';
-          tempBtn.style.pointerEvents = 'none';
-          tempBtn.onclick = () => playYouTubeVideo().catch(console.warn);
-          document.body.appendChild(tempBtn);
-          tempBtn.click();
-          document.body.removeChild(tempBtn);
-          console.log('[STARTUP-COUNTDOWN-EFFECT] Fallback gesture triggered');
-        });
-    }
-
-    // Handle countdown: initialize startupCountdown on first update, or transition when complete
-    if (startupCountdown === 0 && engineCountdown >= 0) {
-      // First render in COUNTDOWN: initialize display with engineCountdown
-      setStartupCountdown(engineCountdown);
-      console.log(`[STARTUP-COUNTDOWN-EFFECT] Initial countdown display: ${engineCountdown}s`);
-    }
-    
-    // Special case: immediate transition when engineCountdown = 0 (no countdown needed)
-    if (engineCountdown <= 0 && startupCountdown === 0) {
-      console.log('[STARTUP-COUNTDOWN-EFFECT] Zero countdown, immediate transition to PLAYING');
-      setGameState('PLAYING');
-      return;
-    }
-    
-    // Countdown complete → transition to PLAYING (normal case with countdown > 0)
-    if (engineCountdown <= 0 && startupCountdown > 0) {
-      console.log('[STARTUP-COUNTDOWN-EFFECT] Countdown complete, transitioning to PLAYING');
-      setGameState('PLAYING');
-      setStartupCountdown(0);
-      return;
-    }
-
-    // Update display countdown for remaining time (skip if already initialized)
-    if (engineCountdown > 0 && startupCountdown !== engineCountdown) {
-      setStartupCountdown(engineCountdown);
-      console.log(`[STARTUP-COUNTDOWN-EFFECT] Displaying ${engineCountdown}s remaining`);
-    }
-  }, [gameState, engineCountdown, youtubeVideoId, setGameState, isPaused, startupCountdown]);
   // Pause menu countdown timer (before resume)
   // UPDATED: Resume countdown effect - Timeout-wrapped async chain
   useEffect(() => {
@@ -186,7 +95,6 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
         resumeGame();
         setGameState('RESUMING');
         setCountdownSeconds(0);
-        setStartupCountdown(0);
         setResumeFadeOpacity(0);
         resumeStartTimeRef.current = performance.now();
 
@@ -377,7 +285,6 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
         restartGame(); // Reset game engine state
         pauseTimeRef.current = 0;
         setIsPauseMenuOpen(false);
-        setStartupCountdown(0); // CRITICAL: Reset startup countdown like resume does (line 189)
         
         // Fire-and-forget: Rewind video in background
         const doRewind = async () => {
@@ -391,10 +298,8 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
         };
         doRewind();
         
-        // Call startGame() with dynamic countdown duration based on beatmapStart
-        const countdownDuration = calculateCountdownDuration(customNotes);
-        startGame(countdownDuration);
-        // Startup countdown effect will now trigger play because startupCountdown = 0
+        // Call startGame() - enters PLAYING state directly, effect will play video
+        startGame();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -405,15 +310,11 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
   useEffect(() => {
     if (gameState !== 'IDLE') return;
     if (customNotes && customNotes.length > 0 && !gameAlreadyStartedRef.current) {
-      console.log('[BEATMAP-LOAD] Starting - seeking first');
+      console.log('[BEATMAP-LOAD] Starting game');
       gameAlreadyStartedRef.current = true;
-      if (youtubeVideoId && playerInitializedRef.current) {
-        seekYouTubeVideo(0).catch(console.warn); // Seek on mounted player
-      }
-      const countdownDuration = calculateCountdownDuration(customNotes);
-      startGame(countdownDuration); // Then countdown with dynamic duration based on beatmapStart
+      startGame(); // Enters PLAYING state directly
     }
-  }, [customNotes, gameState, startGame, youtubeVideoId]);
+  }, [customNotes, gameState, startGame]);
 
   // Reset flag when game ends
   useEffect(() => {
@@ -447,9 +348,6 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
 
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col relative">
-      {/* Startup countdown overlay - ONLY for initial startGame() and rewind, NEVER during pause/resume */}
-      {gameState === 'COUNTDOWN' && startupCountdown > 0 && !isPaused && <CountdownOverlay seconds={startupCountdown} />}
-      
       {/* Resume fade-in overlay (0.5s) - NO countdown, smooth transition */}
       {gameState === 'RESUMING' && (
         <motion.div
@@ -505,11 +403,10 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
               <button
                 onClick={() => {
                   if (!isPaused || gameState !== 'PAUSED') return;
-                  console.log('[PAUSE-MENU] REWIND: Restarting game like R key');
+                  console.log('[PAUSE-MENU] REWIND: Restarting game');
                   restartGame(); // Reset game engine state
                   pauseTimeRef.current = 0;
                   setIsPauseMenuOpen(false);
-                  setStartupCountdown(0); // CRITICAL: Reset startup countdown like resume does (line 189)
                   
                   // Fire-and-forget: Rewind video in background
                   const doRewind = async () => {
@@ -523,10 +420,8 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
                   };
                   doRewind();
                   
-                  // Call startGame() with dynamic countdown duration based on beatmapStart
-                  const countdownDuration = calculateCountdownDuration(customNotes);
-                  startGame(countdownDuration);
-                  // Startup countdown effect will now trigger play because startupCountdown = 0
+                  // Call startGame() - enters PLAYING state directly, effect will play video
+                  startGame();
                 }}
                 className="px-12 py-4 bg-emerald-500 text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-emerald-500"
                 data-testid="button-rewind"

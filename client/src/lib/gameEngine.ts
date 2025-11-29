@@ -175,7 +175,7 @@ export const clearReleaseTimes = () => {
   releaseTimeMap.clear();
 };
 
-export type GameState = 'IDLE' | 'COUNTDOWN' | 'PLAYING' | 'PAUSED' | 'RESUMING' | 'REWINDING' | 'GAME_OVER';
+export type GameState = 'IDLE' | 'PLAYING' | 'PAUSED' | 'RESUMING' | 'REWINDING' | 'GAME_OVER';
 
 export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => number | null, customNotes?: Note[]) => {
   const [gameState, setGameState] = useState<GameState>('IDLE');
@@ -215,20 +215,20 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
     gameStateRef.current = gameState;
   }, [gameState]);
 
-  const startGame = useCallback((countdownDurationSeconds: number = 3) => {
+  const startGame = useCallback(() => {
     scoreRef.current = 0;
     comboRef.current = 0;
     healthRef.current = MAX_HEALTH;
     notesRef.current = customNotes || [];
-    lastCountdownUpdateRef.current = 0; // Reset countdown timer
+    lastCountdownUpdateRef.current = 0;
     
     setScore(0);
     setCombo(0);
     setHealth(MAX_HEALTH);
     setNotes(notesRef.current);
-    GameErrors.log(`[ENGINE-STARTUP-INIT] Initializing ${countdownDurationSeconds}s startup countdown via startGame()`);
-    setGameState('COUNTDOWN');
-    setCountdownSeconds(countdownDurationSeconds);
+    GameErrors.log(`[ENGINE-STARTUP-INIT] Starting game directly in PLAYING state`);
+    setGameState('PLAYING');
+    setCountdownSeconds(0);
     
     // Calibrate startOffsetRef using performance.now() for precise timing
     // During COUNTDOWN: score=0, combo=0, YouTube paused at 0:00
@@ -315,20 +315,6 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       
       // Sync currentTime every frame for meter calculations
       setCurrentTime(time);
-      
-      // Handle countdown during COUNTDOWN state (but not when paused)
-      if (gameStateRef.current === 'COUNTDOWN' && !isPaused && time - lastCountdownUpdateRef.current >= 1000) {
-        setCountdownSeconds(prev => {
-          const newValue = prev - 1;
-          lastCountdownUpdateRef.current = time;
-          if (newValue > 0) {
-            GameErrors.log(`[ENGINE-COUNTDOWN-LOOP] ${newValue}s remaining (currentTime=${Math.round(time)}ms)`);
-          } else {
-            GameErrors.log(`[ENGINE-COUNTDOWN-LOOP] Countdown complete (0s) - transitioning to PLAYING`);
-          }
-          return newValue;
-        });
-      }
       
       // Sync notes at regular intervals to let framer-motion animate smoothly without thrashing
       // Too frequent updates break motion animations because the array reference changes constantly
