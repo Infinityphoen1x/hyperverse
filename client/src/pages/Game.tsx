@@ -325,30 +325,48 @@ export default function Game() {
           const pauseTimeMs = currentTimeRef.current;
           pauseTimeRef.current = pauseTimeMs;
           pauseGame();
-          pauseYouTubeVideo()
-            .then(() => new Promise(resolve => setTimeout(resolve, 50)))
-            .then(() => {
-              const youtubeTimeAtPause = getYouTubeVideoTime();
-              console.log(`[PAUSE-SYSTEM] Paused at YT: ${youtubeTimeAtPause ? (youtubeTimeAtPause / 1000).toFixed(2) + 's' : 'null'}`);
-            })
-            .catch(err => console.warn('[PAUSE-SYSTEM] Pause failed:', err));
           setGameState('PAUSED');
           setIsPauseMenuOpen(true);
+          // Fire-and-forget: Pause video in background
+          const pausePauseVideo = async () => {
+            try {
+              await pauseYouTubeVideo();
+              await new Promise(resolve => setTimeout(resolve, 50)); // Buffer
+              const youtubeTimeAtPause = getYouTubeVideoTime();
+              console.log(`[PAUSE-SYSTEM] Paused at YT: ${youtubeTimeAtPause ? (youtubeTimeAtPause / 1000).toFixed(2) + 's' : 'null'}`);
+            } catch (err) {
+              console.warn('[PAUSE-SYSTEM] Pause failed:', err);
+            }
+          };
+          pausePauseVideo();
         } else if (gameState === 'PAUSED' && isPaused) {
           setCountdownSeconds(3);
         }
       } else if ((e.key === 'r' || e.key === 'R') && (gameState === 'PLAYING' || gameState === 'PAUSED')) {
         console.log('[REWIND-SYSTEM] Initiating rewind');
         restartGame();
-        pauseYouTubeVideo().catch(console.warn);
-        seekYouTubeVideo(0).then(() => {
-          console.log('[REWIND-SYSTEM] Seek confirmed');
-          setGameState('REWINDING');
-          setIsPauseMenuOpen(false);
-        }).catch(err => {
-          console.error('[REWIND-SYSTEM] Seek failed:', err);
-          setGameState('REWINDING');
-        });
+        setGameState('REWINDING');
+        setIsPauseMenuOpen(false);
+        // Fire-and-forget: Rewind video in background
+        const doRewind = async () => {
+          const timeoutPromise: Promise<null> = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Rewind timeout: YT API hung')), 2000)
+          );
+          try {
+            await Promise.race<null>([
+              (async () => {
+                await pauseYouTubeVideo();
+                await seekYouTubeVideo(0);
+                console.log('[REWIND-SYSTEM] Seek confirmed');
+                return null;
+              })(),
+              timeoutPromise
+            ]);
+          } catch (err) {
+            console.error('[REWIND-SYSTEM] Rewind failed:', err);
+          }
+        };
+        doRewind();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
