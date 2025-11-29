@@ -70,15 +70,14 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     currentTimeRef.current = currentTime;
   }, [currentTime]);
 
-  // Auto-seek during COUNTDOWN/REWINDING when videoId is set
+  // Auto-seek to 0 during COUNTDOWN when videoId is set
   useEffect(() => {
-    if (!youtubeVideoId || !playerInitializedRef.current || (gameState !== 'COUNTDOWN' && gameState !== 'REWINDING')) return;
+    if (!youtubeVideoId || !playerInitializedRef.current || gameState !== 'COUNTDOWN') return;
 
     const autoSeek = async () => {
       try {
-        const targetTime = gameState === 'REWINDING' ? 0 : 0;
-        await seekYouTubeVideo(targetTime);
-        console.log('[YOUTUBE-AUTO-SEEK] Complete during', gameState);
+        await seekYouTubeVideo(0);
+        console.log('[YOUTUBE-AUTO-SEEK] Complete during COUNTDOWN');
       } catch (err) {
         console.warn('[YOUTUBE-AUTO-SEEK] Failed:', err);
       }
@@ -207,19 +206,6 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     return () => cancelAnimationFrame(animationFrameId);
   }, [gameState, setGameState, asyncReady]); // Dep on asyncReady
 
-  // Handle REWINDING transition to COUNTDOWN
-  useEffect(() => {
-    if (gameState !== 'REWINDING') return;
-
-    // Small delay to ensure YouTube seek completes before transitioning to countdown
-    const timer = setTimeout(() => {
-      console.log('[REWIND-EFFECT] Rewind complete, transitioning to COUNTDOWN');
-      setGameState('COUNTDOWN');
-      setStartupCountdown(3);
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [gameState, setGameState]);
 
 
   // Clean up error check interval on unmount
@@ -468,31 +454,25 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
               <button
                 onClick={() => {
                   if (!isPaused || gameState !== 'PAUSED') return;
-                  console.log('[PAUSE-MENU] REWIND: use R key or press button');
-                  restartGame();
-                  pauseTimeRef.current = 0; // NEW: Reset pause time to 0
-                  setGameState('REWINDING');
+                  console.log('[PAUSE-MENU] REWIND: Restarting game like R key');
+                  restartGame(); // Reset game engine state
+                  pauseTimeRef.current = 0;
                   setIsPauseMenuOpen(false);
+                  
                   // Fire-and-forget: Rewind video in background
                   const doRewind = async () => {
-                    const timeoutPromise: Promise<null> = new Promise((_, reject) =>
-                      setTimeout(() => reject(new Error('Rewind timeout: YT API hung')), 2000)
-                    );
                     try {
-                      await Promise.race<null>([
-                        (async () => {
-                          await pauseYouTubeVideo();
-                          await seekYouTubeVideo(0);
-                          console.log('[PAUSE-MENU] Rewind confirmed');
-                          return null;
-                        })(),
-                        timeoutPromise
-                      ]);
+                      await pauseYouTubeVideo();
+                      await seekYouTubeVideo(0);
+                      console.log('[PAUSE-MENU] Seek complete');
                     } catch (err) {
                       console.error('[PAUSE-MENU] Rewind failed:', err);
                     }
                   };
                   doRewind();
+                  
+                  // Call startGame() just like R key - handles COUNTDOWN → PLAYING flow with YouTube play
+                  startGame();
                 }}
                 className="px-12 py-4 bg-emerald-500 text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-emerald-500"
                 data-testid="button-rewind"
