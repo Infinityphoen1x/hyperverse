@@ -229,17 +229,16 @@ export default function Game() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gameState, isPaused, pauseGame, resumeGame, setGameState]);
 
-  // Start game when beatmap is loaded (customNotes changes) - ONLY on first load, NOT during pause
+  // Start game when beatmap is loaded - ONLY on initial load from MENU state, never after pause/resume
   useEffect(() => {
-    // Prevent startGame from running during pause or after pause
-    if (isPaused || gameState === 'PAUSED') return;
-    
+    // Only start on initial beatmap load from MENU state
+    if (gameState !== 'MENU') return;
     if (customNotes && customNotes.length > 0 && !gameAlreadyStartedRef.current) {
-      console.log('[BEATMAP-LOAD] New beatmap loaded, starting game');
+      console.log('[BEATMAP-LOAD] New beatmap loaded from MENU, starting game via startGame()');
       gameAlreadyStartedRef.current = true;
       startGame();
     }
-  }, [customNotes, startGame, isPaused, gameState]);
+  }, [customNotes, gameState, startGame]);
 
   // Reset flag when game ends
   useEffect(() => {
