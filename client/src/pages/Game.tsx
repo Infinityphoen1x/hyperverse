@@ -195,19 +195,22 @@ export default function Game() {
         if (isPaused) {
           const resumeTimeSeconds = pausedTimeRef.current / 1000;
           console.log('[PAUSE-SYSTEM] Resume: seeking YouTube to', resumeTimeSeconds, 'seconds');
-          seekYouTubeVideo(resumeTimeSeconds);
-          playYouTubeVideo();
           resumeGame();
           setGameState('PLAYING'); // Ensure we're in PLAYING after resume
+          setCountdownSeconds(0); // Clear any pending countdown
+          seekYouTubeVideo(resumeTimeSeconds);
+          playYouTubeVideo();
           setIsPauseMenuOpen(false);
         } else {
           pausedTimeRef.current = currentTimeRef.current;
           const pauseTimeSeconds = pausedTimeRef.current / 1000;
           console.log('[PAUSE-SYSTEM] Pause: saving time', pausedTimeRef.current, 'ms, seeking YouTube to', pauseTimeSeconds);
           pauseGame();
-          // If pausing during COUNTDOWN, transition to PLAYING so pause menu shows resume countdown
+          // If pausing during COUNTDOWN, ensure we transition to PLAYING to show pause menu properly
           if (gameState === 'COUNTDOWN') {
             setGameState('PLAYING');
+            // Reset startup countdown state to show resume countdown in pause menu
+            setStartupCountdown(0);
           }
           seekYouTubeVideo(pauseTimeSeconds);
           pauseYouTubeVideo();
