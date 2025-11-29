@@ -147,7 +147,21 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
         });
     }
 
-    // Countdown complete → transition to PLAYING
+    // Handle countdown: initialize startupCountdown on first update, or transition when complete
+    if (startupCountdown === 0 && engineCountdown >= 0) {
+      // First render in COUNTDOWN: initialize display with engineCountdown
+      setStartupCountdown(engineCountdown);
+      console.log(`[STARTUP-COUNTDOWN-EFFECT] Initial countdown display: ${engineCountdown}s`);
+    }
+    
+    // Special case: immediate transition when engineCountdown = 0 (no countdown needed)
+    if (engineCountdown <= 0 && startupCountdown === 0) {
+      console.log('[STARTUP-COUNTDOWN-EFFECT] Zero countdown, immediate transition to PLAYING');
+      setGameState('PLAYING');
+      return;
+    }
+    
+    // Countdown complete → transition to PLAYING (normal case with countdown > 0)
     if (engineCountdown <= 0 && startupCountdown > 0) {
       console.log('[STARTUP-COUNTDOWN-EFFECT] Countdown complete, transitioning to PLAYING');
       setGameState('PLAYING');
@@ -155,7 +169,7 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
       return;
     }
 
-    // Update display countdown - only if we still have time
+    // Update display countdown for remaining time (skip if already initialized)
     if (engineCountdown > 0 && startupCountdown !== engineCountdown) {
       setStartupCountdown(engineCountdown);
       console.log(`[STARTUP-COUNTDOWN-EFFECT] Displaying ${engineCountdown}s remaining`);
