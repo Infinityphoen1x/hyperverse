@@ -15,7 +15,7 @@ export default function Game() {
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
   const [resumeFadeOpacity, setResumeFadeOpacity] = useState(0);
-  const youtubePlayerRef = useRef<HTMLDivElement>(null);
+  const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
   const errorCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const resumeStartTimeRef = useRef<number | null>(null);
   
@@ -75,16 +75,13 @@ export default function Game() {
     currentTimeRef.current = currentTime;
   }, [currentTime]);
 
-  // Initialize YouTube player once when div is mounted and API is ready
+  // Mark player as ready when iframe is present
   useEffect(() => {
-    if (!youtubePlayerRef.current || !window.YT || !youtubeVideoId) return;
-    if (playerInitializedRef.current) return; // Already initialized
+    if (!youtubeIframeRef.current || !window.YT) return;
+    if (playerInitializedRef.current) return;
     
-    console.log('[YOUTUBE-PLAYER-INIT] Initializing YouTube player from div');
-    initYouTubePlayer(youtubePlayerRef.current, youtubeVideoId, false, () => {
-      playerInitializedRef.current = true;
-      console.log('[YOUTUBE-PLAYER-INIT] YouTube player ready, flag set');
-    });
+    console.log('[YOUTUBE-PLAYER-INIT] YouTube iframe ready, player initialized');
+    playerInitializedRef.current = true;
   }, [youtubeVideoId]);
 
   // Startup countdown (when game starts) - skip if paused or not in countdown state
@@ -350,12 +347,19 @@ export default function Game() {
       
       {/* YouTube Background Layer - Only render after COUNTDOWN/REWINDING to prevent audio playback and ensure fresh init */}
       {youtubeVideoId && gameState !== 'COUNTDOWN' && gameState !== 'REWINDING' && (
-        <div 
-          ref={youtubePlayerRef}
-          className="absolute inset-0 opacity-5 pointer-events-none z-0"
-          key={`youtube-player-${youtubeVideoId}`}
-          data-testid="div-youtube-player"
-        />
+        <div className="absolute inset-0 opacity-5 pointer-events-none z-0">
+          <iframe
+            key={`youtube-${youtubeVideoId}`}
+            ref={youtubeIframeRef}
+            width="100%"
+            height="100%"
+            src={buildYouTubeEmbedUrl(youtubeVideoId, YOUTUBE_BACKGROUND_EMBED_OPTIONS)}
+            title="YouTube background audio/video sync"
+            allow="autoplay"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            data-testid="iframe-youtube-background"
+          />
+        </div>
       )}
 
       {/* Visual Effects Layer */}

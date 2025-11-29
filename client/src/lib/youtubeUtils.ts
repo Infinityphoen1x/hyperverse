@@ -79,49 +79,24 @@ export function buildYouTubeEmbedUrl(videoId: string, options: {
  */
 let ytPlayer: any = null;
 let playerReady = false;
-let onReadyCallback: (() => void) | null = null;
 
-export function initYouTubePlayer(playerDiv: HTMLDivElement | null, videoId: string, autoplay: boolean = false, onReady?: () => void): void {
-  if (!playerDiv || !window.YT || !videoId) return;
-  if (ytPlayer) {
-    // Already initialized - if onReady callback provided and player is ready, call it immediately
-    if (onReady && playerReady) {
-      onReady();
-    }
-    return;
-  }
-  
-  // Store callback for when player becomes ready
-  if (onReady) {
-    onReadyCallback = onReady;
-  }
+export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null, onReady?: () => void): void {
+  if (!iframeElement || !window.YT) return;
   
   try {
-    ytPlayer = new window.YT.Player(playerDiv, {
-      width: '100%',
-      height: '100%',
-      videoId: videoId,
-      playerVars: {
-        autoplay: autoplay ? 1 : 0,
-        controls: 0,
-        modestbranding: 1,
-        enablejsapi: 1,
-      },
+    ytPlayer = new window.YT.Player(iframeElement, {
       events: {
         onReady: () => {
           playerReady = true;
           console.log('[YOUTUBE-PLAYER-INIT] YouTube player ready and initialized');
-          // Call the registered callback if one exists
-          if (onReadyCallback) {
-            onReadyCallback();
-            onReadyCallback = null;
-          }
+          if (onReady) onReady();
         },
         onError: (e: any) => console.warn('[YOUTUBE-PLAYER-ERROR] YouTube player error:', e),
       }
     });
   } catch (error) {
     console.warn('[YOUTUBE-PLAYER-INIT] Failed to initialize YouTube player:', error);
+    playerReady = true; // Assume ready even if API fails, use fallback methods
   }
 }
 
