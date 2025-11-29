@@ -1,0 +1,232 @@
+{
+  "timestamp": "2025-11-29T00:13:34.541Z",
+  "errorLog": [
+    "[1764375183668] BeatmapConverter: HOLD note hold_0 lane=-1 → type=SPIN_LEFT",
+    "[1764375183668] BeatmapConverter: HOLD note hold_1 lane=-2 → type=SPIN_RIGHT",
+    "[1764375183668] BeatmapConverter: HOLD note hold_2 lane=-1 → type=SPIN_LEFT",
+    "[1764375183668] BeatmapConverter: HOLD note hold_3 lane=-2 → type=SPIN_RIGHT",
+    "[1764375183668] BeatmapConverter: HOLD note hold_4 lane=-1 → type=SPIN_LEFT",
+    "[1764375183668] BeatmapConverter: HOLD note hold_5 lane=-1 → type=SPIN_LEFT",
+    "[1764375183668] BeatmapConverter: HOLD note hold_6 lane=-2 → type=SPIN_RIGHT",
+    "[1764375183668] BeatmapConverter: HOLD note hold_7 lane=-1 → type=SPIN_LEFT",
+    "[1764375183668] BeatmapConverter: HOLD note hold_8 lane=-2 → type=SPIN_RIGHT",
+    "[1764375183668] BeatmapConverter: HOLD note hold_9 lane=-1 → type=SPIN_LEFT",
+    "[1764375183668] BeatmapConverter: HOLD note hold_10 lane=-1 → type=SPIN_LEFT",
+    "[1764375183668] BeatmapConverter: HOLD note hold_11 lane=-2 → type=SPIN_RIGHT",
+    "[1764375197280] trackHoldStart: Lane Q (-1) at currentTime=11096.906034332274",
+    "[1764375197281] trackHoldStart: Lane Q - NO HOLD NOTE FOUND at currentTime=11096.906034332274",
+    "[1764375197967] trackHoldEnd: Lane Q (-1), Found 7 HOLD notes on this lane",
+    "[1764375197967] trackHoldEnd: Lane Q - NO ACTIVE NOTE FOUND (currentTime=11780.277984741211)",
+    "[1764375205194] trackHoldStart: Lane P (-2) at currentTime=19013.181093460084",
+    "[1764375205194] trackHoldStart: Lane P - NO HOLD NOTE FOUND at currentTime=19013.181093460084",
+    "[1764375206118] trackHoldEnd: Lane P (-2), Found 5 HOLD notes on this lane",
+    "[1764375206118] trackHoldEnd: Lane P - NO ACTIVE NOTE FOUND (currentTime=19937.689946594237)",
+    "[1764375212261] trackHoldStart: Lane Q (-1) at currentTime=26079.803074386597",
+    "[1764375212261] trackHoldStart: Lane Q - NO HOLD NOTE FOUND at currentTime=26079.803074386597",
+    "[1764375212893] trackHoldEnd: Lane Q (-1), Found 7 HOLD notes on this lane",
+    "[1764375212893] trackHoldEnd: Lane Q - NO ACTIVE NOTE FOUND (currentTime=26713.97)"
+  ],
+  "animationStats": {
+    "total": 28,
+    "completed": 0,
+    "failed": 0,
+    "pending": 2,
+    "rendering": 26
+  },
+  "animationDetails": [
+    {
+      "noteId": "note-2500-0",
+      "type": "tapMissFailure",
+      "failureTime": 2809,
+      "status": "rendering",
+      "renderStart": 2813.1531144409178
+    },
+    {
+      "noteId": "note-3500-1",
+      "type": "tapMissFailure",
+      "failureTime": 3808,
+      "status": "rendering",
+      "renderStart": 3813.375912261963
+    },
+    {
+      "noteId": "note-4500-2",
+      "type": "tapMissFailure",
+      "failureTime": 4801,
+      "status": "rendering",
+      "renderStart": 4804.833217437744
+    },
+    {
+      "noteId": "note-5500-3",
+      "type": "tapMissFailure",
+      "failureTime": 5801,
+      "status": "rendering",
+      "renderStart": 5805.60218119812
+    },
+    {
+      "noteId": "note-6500-4",
+      "type": "tapMissFailure",
+      "failureTime": 6801,
+      "status": "rendering",
+      "renderStart": 6805.758011444092
+    },
+    {
+      "noteId": "note-7500-5",
+      "type": "tapMissFailure",
+      "failureTime": 7801,
+      "status": "rendering",
+      "renderStart": 7805.319120162964
+    },
+    {
+      "noteId": "note-8500-6",
+      "type": "tapMissFailure",
+      "failureTime": 8801,
+      "status": "rendering",
+      "renderStart": 8805.398011444093
+    },
+    {
+      "noteId": "note-9500-7",
+      "type": "tapMissFailure",
+      "failureTime": 9801,
+      "status": "rendering",
+      "renderStart": 9805.520120162964
+    },
+    {
+      "noteId": "hold_0",
+      "type": "holdMissFailure",
+      "failureTime": 12101,
+      "status": "rendering",
+      "renderStart": 10429.072982833863
+    },
+    {
+      "noteId": "note-12000-9",
+      "type": "tapMissFailure",
+      "failureTime": 12301,
+      "status": "rendering",
+      "renderStart": 12305.04701525879
+    },
+    {
+      "noteId": "note-13000-10",
+      "type": "tapMissFailure",
+      "failureTime": 13301,
+      "status": "rendering",
+      "renderStart": 13305.574144958497
+    },
+    {
+      "noteId": "note-14500-11",
+      "type": "tapMissFailure",
+      "failureTime": 14801,
+      "status": "rendering",
+      "renderStart": 14804.617001907349
+    },
+    {
+      "noteId": "note-15500-12",
+      "type": "tapMissFailure",
+      "failureTime": 15801,
+      "status": "rendering",
+      "renderStart": 15805.195049591064
+    },
+    {
+      "noteId": "note-16500-13",
+      "type": "tapMissFailure",
+      "failureTime": 16802,
+      "status": "rendering",
+      "renderStart": 16804.739148773195
+    },
+    {
+      "noteId": "note-17500-14",
+      "type": "tapMissFailure",
+      "failureTime": 17801,
+      "status": "rendering",
+      "renderStart": 17803.970049591066
+    },
+    {
+      "noteId": "note-18500-15",
+      "type": "tapMissFailure",
+      "failureTime": 18801,
+      "status": "rendering",
+      "renderStart": 18805.181148773194
+    },
+    {
+      "noteId": "hold_1",
+      "type": "holdMissFailure",
+      "failureTime": 20101,
+      "status": "rendering",
+      "renderStart": 18421.91305722046
+    },
+    {
+      "noteId": "note-20500-17",
+      "type": "tapMissFailure",
+      "failureTime": 20801,
+      "status": "rendering",
+      "renderStart": 20805.31001525879
+    },
+    {
+      "noteId": "note-21500-18",
+      "type": "tapMissFailure",
+      "failureTime": 21801,
+      "status": "rendering",
+      "renderStart": 21804.964217437744
+    },
+    {
+      "noteId": "note-22000-19",
+      "type": "tapMissFailure",
+      "failureTime": 22301,
+      "status": "rendering",
+      "renderStart": 22304.670080108644
+    },
+    {
+      "noteId": "note-23000-20",
+      "type": "tapMissFailure",
+      "failureTime": 23301,
+      "status": "rendering",
+      "renderStart": 23305.56116784668
+    },
+    {
+      "noteId": "note-24000-21",
+      "type": "tapMissFailure",
+      "failureTime": 24301,
+      "status": "rendering",
+      "renderStart": 24304.685049591066
+    },
+    {
+      "noteId": "note-25000-22",
+      "type": "tapMissFailure",
+      "failureTime": 25301,
+      "status": "rendering",
+      "renderStart": 25304.952148773194
+    },
+    {
+      "noteId": "note-26500-24",
+      "type": "tapMissFailure",
+      "failureTime": 26801,
+      "status": "rendering",
+      "renderStart": 26804.72819264221
+    },
+    {
+      "noteId": "hold_2",
+      "type": "holdMissFailure",
+      "failureTime": 27109,
+      "status": "rendering",
+      "renderStart": 25438.860826431275
+    },
+    {
+      "noteId": "note-27500-25",
+      "type": "tapMissFailure",
+      "failureTime": 27801,
+      "status": "rendering",
+      "renderStart": 27805.628011444092
+    },
+    {
+      "noteId": "note-28500-26",
+      "type": "tapMissFailure",
+      "failureTime": 28802,
+      "status": "pending"
+    },
+    {
+      "noteId": "note-29500-27",
+      "type": "tapMissFailure",
+      "failureTime": 29809,
+      "status": "pending"
+    }
+  ]
+}
