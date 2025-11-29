@@ -241,10 +241,10 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       time = Math.round(time);
       currentTimeRef.current = time;
       
-      // Check for missed notes - update ref-based state only
+      // Check for missed notes - update ref-based state only (skip during COUNTDOWN)
       let shouldGameOver = false;
       const notes = notesRef.current;
-      if (Array.isArray(notes)) {
+      if (gameState === 'PLAYING' && Array.isArray(notes)) {
         for (let i = 0; i < notes.length; i++) {
           const n = notes[i];
           if (!n) continue;

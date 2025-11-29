@@ -78,27 +78,22 @@ export default function Game() {
   // Startup countdown (when game starts)
   useEffect(() => {
     if (gameState !== 'COUNTDOWN') return;
-    if (engineCountdown <= 0) return;
+    if (engineCountdown <= 0) {
+      // Countdown complete - start the game
+      console.log('[STARTUP COUNTDOWN] Complete - starting game');
+      if (youtubeVideoId) {
+        playYouTubeVideo();
+      }
+      setGameState('PLAYING');
+      setStartupCountdown(0);
+      return;
+    }
 
     setStartupCountdown(engineCountdown);
 
     if (youtubeVideoId) {
       pauseYouTubeVideo();
     }
-
-    const timer = setTimeout(() => {
-      if (engineCountdown === 1) {
-        // Countdown complete - start the game
-        console.log('[STARTUP COUNTDOWN] Complete - starting game');
-        if (youtubeVideoId) {
-          playYouTubeVideo();
-        }
-        setGameState('PLAYING');
-        setStartupCountdown(0);
-      }
-    }, 1000);
-
-    return () => clearTimeout(timer);
   }, [gameState, engineCountdown, youtubeVideoId, setGameState]);
 
   // Countdown timer for resume preparation
