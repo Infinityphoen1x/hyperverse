@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BeatmapLoader } from "@/components/game/BeatmapLoader";
 
 interface HomeProps {
@@ -9,6 +9,22 @@ interface HomeProps {
 export default function Home({ onStartGame }: HomeProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const [beatmapLoaded, setBeatmapLoaded] = useState(false);
+  const [messageIndex, setMessageIndex] = useState(0);
+
+  const bannerMessages = [
+    "[ENCRYPTING NEURAL PATHWAYS] • QUANTUM SYNC PROTOCOL ACTIVE • SYNCHRONIZING BRAINWAVES",
+    "[NEURAL INTERFACE ONLINE] • FREQUENCY LOCKED • HARMONIC RESONANCE DETECTED",
+    "[DECRYPTION IN PROGRESS] • SYSTEM CALIBRATION COMPLETE • AWAITING INPUT SIGNAL",
+    "[GATEWAY INITIALIZED] • DIMENSIONAL BREACH IMMINENT • CONSCIOUSNESS UPLOADING",
+    "[NEURAL SYNC: 99%] • QUANTUM ENTANGLEMENT SUCCESSFUL • READY FOR TRANSCENDENCE",
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMessageIndex((prev) => (prev + 1) % bannerMessages.length);
+    }, 9000); // Change message every 9 seconds (slightly longer than scroll animation)
+    return () => clearInterval(interval);
+  }, [bannerMessages.length]);
 
   const handleBeatmapLoad = (youtubeVideoId?: string, notes?: any[]) => {
     // Store beatmap data for the game to use
@@ -49,17 +65,20 @@ export default function Home({ onStartGame }: HomeProps) {
             HYPERVERSE
           </h1>
           {/* Animated scrolling banner */}
-          <div className="w-80 mx-auto border-2 border-neon-cyan px-4 py-3 overflow-hidden bg-black/30 relative">
+          <div className="w-96 mx-auto border-2 border-neon-cyan px-4 py-3 overflow-hidden bg-black/30 relative">
             {/* Gradient fade edges for smooth scroll effect */}
             <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-black/80 to-transparent z-10" />
             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-black/80 to-transparent z-10" />
             
             <motion.div
+              key={messageIndex}
               className="text-neon-cyan font-rajdhani text-sm uppercase whitespace-nowrap"
-              animate={{ x: [-500, 400] }}
-              transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+              initial={{ opacity: 0, x: -500 }}
+              animate={{ opacity: 1, x: 450 }}
+              exit={{ opacity: 0, x: 450 }}
+              transition={{ duration: 8, ease: 'linear' }}
             >
-              [ENCRYPTING NEURAL PATHWAYS] • QUANTUM SYNC PROTOCOL • [DECRYPTION IN PROGRESS]
+              {bannerMessages[messageIndex]}
             </motion.div>
           </div>
         </div>
