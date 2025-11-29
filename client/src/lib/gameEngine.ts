@@ -303,9 +303,9 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           const newValue = prev - 1;
           lastCountdownUpdateRef.current = time;
           if (newValue > 0) {
-            GameErrors.log(`[COUNTDOWN] ${newValue}s remaining (currentTime=${Math.round(time)}ms)`);
+            GameErrors.log(`[ENGINE-COUNTDOWN-LOOP] ${newValue}s remaining (currentTime=${Math.round(time)}ms)`);
           } else {
-            GameErrors.log(`[COUNTDOWN] Countdown complete (0s) - transitioning to PLAYING`);
+            GameErrors.log(`[ENGINE-COUNTDOWN-LOOP] Countdown complete (0s) - transitioning to PLAYING`);
           }
           return newValue;
         });

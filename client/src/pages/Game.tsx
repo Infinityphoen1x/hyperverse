@@ -83,9 +83,9 @@ export default function Game() {
     // Only handle countdown completion once - check if we already transitioned
     if (engineCountdown <= 0 && startupCountdown > 0) {
       // Countdown complete - start the game
-      console.log('[STARTUP COUNTDOWN] Countdown complete, transitioning to PLAYING');
+      console.log('[STARTUP-COUNTDOWN-EFFECT] Countdown complete, transitioning to PLAYING');
       if (youtubeVideoId && playerInitializedRef.current) {
-        console.log('[AUTOPLAY] autoplay=1, YouTube video resuming');
+        console.log('[STARTUP-COUNTDOWN-EFFECT] YouTube autoplay resuming');
         playYouTubeVideo();
       }
       setGameState('PLAYING');
@@ -96,7 +96,7 @@ export default function Game() {
     // Update display countdown - only if we still have time
     if (engineCountdown > 0 && startupCountdown !== engineCountdown) {
       setStartupCountdown(engineCountdown);
-      console.log(`[COUNTDOWN] Displaying ${engineCountdown}s (autoplay paused)`);
+      console.log(`[STARTUP-COUNTDOWN-EFFECT] Displaying ${engineCountdown}s (pausing YouTube)`);
 
       if (youtubeVideoId && playerInitializedRef.current) {
         pauseYouTubeVideo();
@@ -112,7 +112,7 @@ export default function Game() {
       if (countdownSeconds === 1) {
         // Countdown complete - actually resume the game
         const resumeTimeSeconds = pausedTimeRef.current / 1000;
-        console.log('[COUNTDOWN] Complete - resuming game from', resumeTimeSeconds, 'seconds');
+        console.log('[RESUME-COUNTDOWN-EFFECT] Countdown complete, resuming from', resumeTimeSeconds, 'seconds');
         seekYouTubeVideo(resumeTimeSeconds);
         playYouTubeVideo();
         resumeGame();
