@@ -212,6 +212,7 @@ export default function Game() {
           console.log('[PAUSE-SYSTEM] Pause: saving time', pausedTimeRef.current, 'ms, seeking YouTube to', pauseTimeSeconds);
           pauseGame();
           setGameState('PAUSED');
+          setStartupCountdown(0); // Clear startup countdown - no countdown during pause
           seekYouTubeVideo(pauseTimeSeconds);
           pauseYouTubeVideo();
           setIsPauseMenuOpen(true);
@@ -263,8 +264,8 @@ export default function Game() {
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden flex flex-col relative">
-      {/* Startup countdown overlay */}
-      {gameState === 'COUNTDOWN' && <CountdownOverlay seconds={startupCountdown} />}
+      {/* Startup countdown overlay - only show when actively counting down, NOT when paused */}
+      {gameState === 'COUNTDOWN' && !isPaused && <CountdownOverlay seconds={startupCountdown} />}
       
       {/* YouTube Background Layer - Auto-plays with audio for time sync */}
       {youtubeVideoId && (
