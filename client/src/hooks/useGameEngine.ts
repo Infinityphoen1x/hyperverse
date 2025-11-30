@@ -279,11 +279,15 @@ export function useGameEngine({
   }, []);
 
   const resumeGame = useCallback(() => {
+    if (!isPaused) {
+      console.log('[ENGINE] Resume skipped - already unpaused');
+      return;
+    }
     engineRef.current?.resume();
     setIsPaused(false);
     justResumedRef.current = true; // Flag for sync on next frame
-    console.log('[GAME-ENGINE-RESUME] Resume triggered, will sync on next frame');
-  }, []);
+    console.log('[GAME-ENGINE-RESUME] Resume executed - flagged for sync');
+  }, [isPaused]);
 
   const restartGame = useCallback(() => {
     startGame();
