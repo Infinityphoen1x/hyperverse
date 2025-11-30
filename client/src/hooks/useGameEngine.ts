@@ -234,7 +234,6 @@ export function useGameEngine({
       // CRITICAL: Sync engine timing on first frame after resume
       if (justResumedRef.current && videoTime !== null && videoTime > 0) {
         engine.syncToVideoTime(videoTime);
-        justResumedRef.current = false;
         console.log(`[GAME-ENGINE-SYNC] Engine synced to YouTube time: ${videoTime.toFixed(0)}ms`);
         
         // *** NEW: Scrub/forgive actives to dodge critical on re-entry ***
@@ -246,6 +245,12 @@ export function useGameEngine({
             note.hit = false; 
           });
         }
+        
+        // CRITICAL: Skip processFrame on first frame to prevent phantom miss
+        justResumedRef.current = false;
+        setCurrentTime(engine.getCurrentTime(videoTime));
+        console.log(`[RESUME-FIRST-FRAME] Skipped processFrame to prevent phantom miss`);
+        return;
       }
       
       const time = engine.getCurrentTime(videoTime);
