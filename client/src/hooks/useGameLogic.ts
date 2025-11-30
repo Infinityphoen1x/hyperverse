@@ -149,7 +149,9 @@ export function useGameLogic({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        console.log('[ESCAPE-KEY] Pressed - gameState:', gameState, 'isPaused:', isPaused, 'isPauseMenuOpen:', isPauseMenuOpen);
         if (gameState === 'PLAYING' && !isPaused) {
+          console.log('[ESCAPE-KEY] Condition met: PLAYING && !isPaused → Pausing');
           pauseTimeRef.current = currentTime;
           pauseGame();
           (async () => {
@@ -166,11 +168,15 @@ export function useGameLogic({
             } catch (err) {
               console.warn('[PAUSE] Failed:', err);
             }
+            console.log('[ESCAPE-KEY] Setting gameState to PAUSED and opening menu');
             setGameState('PAUSED');
             setPauseMenuOpenHandler(true);
           })();
         } else if (gameState === 'PAUSED' && isPaused) {
+          console.log('[ESCAPE-KEY] Condition met: PAUSED && isPaused → Starting resume countdown');
           setCountdownSeconds(3);
+        } else {
+          console.log('[ESCAPE-KEY] No condition met - gameState:', gameState, 'isPaused:', isPaused);
         }
       } else if ((e.key === 'r' || e.key === 'R') && (gameState === 'PLAYING' || gameState === 'PAUSED')) {
         handleRewind();
@@ -178,7 +184,7 @@ export function useGameLogic({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, isPaused, pauseGame, setGameState, getVideoTime, currentTime, setPauseMenuOpenHandler]);
+  }, [gameState, isPaused, pauseGame, setGameState, getVideoTime, currentTime, setPauseMenuOpenHandler, isPauseMenuOpen]);
 
   // Rewind handler
   const handleRewind = useCallback(async () => {
