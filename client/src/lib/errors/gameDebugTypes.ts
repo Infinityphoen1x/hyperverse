@@ -1,4 +1,4 @@
-import { Note } from '../engine/gameTypes';
+import { Note } from '@/lib/engine/gameTypes';
 
 export type FailureType = 
   | 'tapTooEarlyFailure'

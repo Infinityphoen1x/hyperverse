@@ -1,4 +1,4 @@
-import { Note } from '../engine/gameTypes';
+import { Note } from '@/lib/engine/gameTypes';
 import { HitStatistics, NoteStatistics, RenderStatistics, AnimationStatistics, FailureType, AnimationTrackingEntry } from './gameDebugTypes';
 import { AnimationTracker } from './animationTracker';
 
