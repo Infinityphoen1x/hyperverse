@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { Note } from "@/lib/gameTypes";
-import { GameErrors } from "@/lib/errorLog";
+import { Note } from '@/lib/engine/gameTypes';
+import { GameErrors } from '@/lib/errors/errorLog';
 import {
   DECK_METER_SEGMENTS,
   DECK_METER_SEGMENT_WIDTH,
@@ -10,7 +10,7 @@ import {
   DECK_METER_DEFAULT_HOLD_DURATION,
   COLOR_DECK_LEFT,
   COLOR_DECK_RIGHT,
-} from "@/lib/gameConstants";
+} from '@/lib/utils/gameConstants';
 
 interface DeckHoldMetersProps {
   notes: Note[];

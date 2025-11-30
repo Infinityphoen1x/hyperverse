@@ -5,8 +5,8 @@ import {
   Note,
   Difficulty,
   ScoreState,
-} from './gameTypes';
-import { GameEngineCore } from './gameEngineCore';
+} from '@/lib/engine/gameTypes';
+import { GameEngineCore } from '@/lib/engine/gameEngineCore';
 
 // ============================================================================
 // CONFIGURATION HOOK
@@ -44,8 +44,8 @@ function useGameLoop(
   isActive: boolean,
   callbacks: GameLoopCallbacks
 ): void {
-  const requestRef = useRef<number | undefined>();
-  const callbacksRef = useRef(callbacks);
+  const requestRef = useRef<number | undefined>(undefined);
+  const callbacksRef = useRef<GameLoopCallbacks>(callbacks);
 
   // Keep callbacks fresh without restarting loop
   useEffect(() => {

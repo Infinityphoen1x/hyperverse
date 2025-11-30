@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { GameErrors } from "@/lib/errorLog";
+import { GameErrors } from '@/lib/errors/errorLog';
 import {
   MAX_HEALTH,
   LOW_HEALTH_THRESHOLD,
@@ -24,7 +24,7 @@ import {
   PARTICLE_COLORS,
   COLOR_PARTICLE_GREEN,
   COLOR_PARTICLE_RED,
-} from "@/lib/gameConstants";
+} from '@/lib/utils/gameConstants';
 
 interface Particle {
   id: string;

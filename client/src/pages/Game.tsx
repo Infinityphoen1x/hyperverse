@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef, useMemo } from "react";
-import { useGameEngine } from "@/lib/gameEngineHooks";
-import { Difficulty, Note } from "@/lib/gameTypes";
+import { useGameEngine } from "@/hooks/useGameEngine";
+import { Difficulty, Note } from "@/lib/engine/gameTypes";
 import { motion } from "framer-motion";
 
 import { useYouTubePlayer } from "@/hooks/useYoutubePlayer";
 import { useGameLogic } from "@/hooks/useGameLogic"; // New: Aggregates game hooks
-import { GameOverScreen } from "@/components/ui/HUD/GameOverScreen";
+import { GameOverScreen } from "@/components/screens/GameOverScreen";
 import { PauseMenu } from "@/components/ui/HUD/PauseMenu";
-import { ResumeOverlay } from "@/components/ui/HUD/ResumeOverlay";
+import { ResumeOverlay } from "@/components/screens/ResumeOverlay";
 import { HealthDisplay } from "@/components/ui/HUD/HealthDisplay";
 import { ScoreDisplay } from "@/components/ui/HUD/ScoreDisplay";
 import { ComboDisplay } from "@/components/ui/HUD/ComboDisplay";

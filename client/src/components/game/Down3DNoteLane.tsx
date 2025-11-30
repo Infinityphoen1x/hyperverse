@@ -1,5 +1,5 @@
-import { Note } from "@/lib/gameTypes";
-import { GameErrors } from "@/lib/errorLog";
+import { Note } from '@/lib/engine/gameTypes';
+import { GameErrors } from '@/lib/errors/errorLog';
 import { useEffect, useState, useRef } from "react";
 import { 
   BUTTON_CONFIG, 
@@ -24,7 +24,7 @@ import {
   GREYSCALE_GLOW_COLOR,
   COLOR_DECK_LEFT,
   COLOR_DECK_RIGHT,
-} from "@/lib/gameConstants";
+} from '@/lib/utils/gameConstants';
 import {
   markAnimationCompletedIfDone,
   calculateApproachGeometry,

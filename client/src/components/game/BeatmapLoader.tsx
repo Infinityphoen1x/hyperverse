@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { parseBeatmap } from "@/lib/beatmapParser";
 import { convertBeatmapNotes } from "@/lib/beatmapConverter";
-import { extractYouTubeId } from "@/lib/youtubeUtils";
-import { Note } from "@/lib/gameTypes";
-import { GameErrors } from "@/lib/errorLog";
+import { extractYouTubeId } from '@/lib/utils/youtubeUtils';
+import { Note } from '@/lib/engine/gameTypes';
+import { GameErrors } from '@/lib/errors/errorLog';
 import { Music } from "lucide-react";
 
 interface BeatmapLoaderProps {

@@ -1,4 +1,4 @@
-import { Note, NoteType } from './game_types';
+import { Note, NoteType } from '../engine/gameTypes';
 
 // ============================================================================
 // DEBUG & ERROR TRACKING (Optional, completely decoupled)
@@ -222,7 +222,7 @@ export class GameDebugger {
 import { useRef, useEffect } from 'react';
 
 export function useGameDebugger(enabled: boolean = true): GameDebugger {
-  const debuggerRef = useRef<GameDebugger>();
+  const debuggerRef = useRef<GameDebugger | undefined>();
   
   if (!debuggerRef.current) {
     debuggerRef.current = new GameDebugger(enabled);

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Note, GameState } from "@/lib/gameTypes";
-import { GameErrors } from "@/lib/errorLog";
-import { seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo } from "@/lib/youtubeUtils";
+import { Note, GameState } from '@/lib/engine/gameTypes';
+import { GameErrors } from '@/lib/errors/errorLog';
+import { seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo } from '@/lib/utils/youtubeUtils';
 
 interface UseGameLogicProps {
   gameState: GameState;

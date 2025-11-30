@@ -1,4 +1,4 @@
-import { GameErrors } from '@/lib/errorLog';
+import { GameErrors } from '@/lib/errors/errorLog';
 
 export interface BeatmapMetadata {
   title: string;
