@@ -1,4 +1,4 @@
-import { Note, GameErrors } from "@/lib/gameEngine";
+import { Note, GameErrors, HoldNoteFailureStates } from "@/lib/gameEngine";
 import { useEffect, useState, useRef } from "react";
 import { 
   BUTTON_CONFIG, 
@@ -28,6 +28,29 @@ import {
   COLOR_DECK_LEFT,
   COLOR_DECK_RIGHT,
 } from "@/lib/gameConstants";
+import {
+  markAnimationCompletedIfDone,
+  calculateApproachGeometry,
+  getTapNoteState,
+  shouldRenderTapNote,
+  trackTapNoteAnimation,
+  calculateTapNoteGeometry,
+  calculateTapNoteStyle,
+  calculateCollapseGeometry,
+  calculateLockedNearDistance,
+  calculateHoldNoteGlow,
+  calculateHoldNoteColors,
+  trackHoldNoteAnimationLifecycle,
+  getHoldNoteFailureStates,
+  type ApproachGeometry,
+  type TapNoteState,
+  type TapNoteGeometry,
+  type TapNoteStyle,
+  type CollapseGeometry,
+  type GlowCalculation,
+  type HoldNoteColors,
+  type HoldNoteFailureStates,
+} from "./noteHelpers";
 
 // Extract health-based color calculation for tunnel effects
 const getHealthBasedRayColor = (health: number): string => {
@@ -79,27 +102,6 @@ const getTrapezoidCorners = (
 // HELPER FUNCTIONS FOR HOLD NOTE STATE MANAGEMENT
 // ============================================================================
 
-/** Extract all failure states from a note */
-interface HoldNoteFailureStates {
-  isTooEarlyFailure: boolean;
-  isHoldReleaseFailure: boolean;
-  isHoldMissFailure: boolean;
-  hasAnyFailure: boolean;
-}
-
-const getHoldNoteFailureStates = (note: Note): HoldNoteFailureStates => {
-  const isTooEarlyFailure = note.tooEarlyFailure || false;
-  const isHoldReleaseFailure = note.holdReleaseFailure || false;
-  const isHoldMissFailure = note.holdMissFailure || false;
-  
-  return {
-    isTooEarlyFailure,
-    isHoldReleaseFailure,
-    isHoldMissFailure,
-    hasAnyFailure: isTooEarlyFailure || isHoldReleaseFailure || isHoldMissFailure,
-  };
-};
-
 /** Determine if note should render in greyscale based on failure type and timing */
 interface GreyscaleState {
   isGreyed: boolean;
@@ -125,415 +127,6 @@ const determineGreyscaleState = (
   }
   
   return { isGreyed: false, reason: 'none' };
-};
-
-/** Mark animation as completed if it's done failing */
-const markAnimationCompletedIfDone = (
-  note: Note,
-  failures: HoldNoteFailureStates,
-  timeSinceFail: number,
-  currentTime: number
-): void => {
-  if (timeSinceFail > HOLD_ANIMATION_DURATION) {
-    const failureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
-    if (failures.isTooEarlyFailure) failureTypes.push('tooEarlyFailure');
-    if (failures.isHoldReleaseFailure) failureTypes.push('holdReleaseFailure');
-    if (failures.isHoldMissFailure) failureTypes.push('holdMissFailure');
-    
-    for (const failureType of failureTypes) {
-      const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
-      if (animEntry && animEntry.status !== 'completed') {
-        GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
-      }
-    }
-  }
-};
-
-/** Calculate geometry for approach phase (before press) */
-interface ApproachGeometry {
-  nearDistance: number;
-  farDistance: number;
-}
-
-const calculateApproachGeometry = (
-  timeUntilHit: number,
-  pressHoldTime: number,
-  isTooEarlyFailure: boolean,
-  holdDuration: number
-): ApproachGeometry => {
-  const stripWidth = (holdDuration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
-  
-  const rawApproachProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-  const isSuccessfulPress = pressHoldTime > 0 && !isTooEarlyFailure;
-  const approachProgress = isSuccessfulPress ? Math.min(rawApproachProgress, 1.0) : rawApproachProgress;
-  
-  const nearDistance = Math.max(1, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
-  const farDistance = Math.max(1, nearDistance - stripWidth);
-  
-  return { nearDistance, farDistance };
-};
-
-// ============================================================================
-// HELPER FUNCTIONS FOR TAP NOTE RENDERING
-// ============================================================================
-
-/** TAP note state tracking */
-interface TapNoteState {
-  isHit: boolean;
-  isFailed: boolean;
-  isTapTooEarlyFailure: boolean;
-  isTapMissFailure: boolean;
-  failureTime: number | undefined;
-  hitTime: number | undefined;
-  timeSinceFail: number;
-  timeSinceHit: number;
-}
-
-const getTapNoteState = (note: Note, currentTime: number): TapNoteState => {
-  const isHit = note.hit || false;
-  const isTapTooEarlyFailure = note.tapTooEarlyFailure || false;
-  const isTapMissFailure = note.tapMissFailure || false;
-  const isFailed = isTapTooEarlyFailure || isTapMissFailure;
-  const failureTime = note.failureTime;
-  const hitTime = note.hitTime;
-  
-  const timeSinceFail = failureTime ? Math.max(0, currentTime - failureTime) : 0;
-  const timeSinceHit = isHit && hitTime ? Math.max(0, currentTime - hitTime) : 0;
-  
-  return { isHit, isFailed, isTapTooEarlyFailure, isTapMissFailure, failureTime, hitTime, timeSinceFail, timeSinceHit };
-};
-
-/** Determine if TAP note should still be rendered */
-const shouldRenderTapNote = (state: TapNoteState, timeUntilHit: number): boolean => {
-  // Time-based render window: 2000ms before (TAP_RENDER_WINDOW_MS) to 500ms after miss (TAP_FALLTHROUGH_WINDOW_MS)
-  if (timeUntilHit > TAP_RENDER_WINDOW_MS || timeUntilHit < -TAP_FALLTHROUGH_WINDOW_MS) return false;
-  
-  // After hit hold duration finishes (700ms)
-  if (state.isHit && state.timeSinceHit >= TAP_HIT_HOLD_DURATION) return false;
-  
-  // After failure animation finishes - different durations for each failure type
-  if (state.isTapTooEarlyFailure && state.timeSinceFail > 800) return false;
-  if (state.isTapMissFailure && state.timeSinceFail > 1100) return false;
-  
-  return true;
-};
-
-/** Track TAP note animation lifecycle in error log */
-const trackTapNoteAnimation = (note: Note, state: TapNoteState, currentTime: number): void => {
-  if (!state.isFailed) return; // Only track failures
-  
-  const failureType = state.isTapTooEarlyFailure ? 'tapTooEarlyFailure' : 'tapMissFailure';
-  const animDuration = state.isTapTooEarlyFailure ? 800 : 1100;
-  
-  const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
-  if (!animEntry) {
-    // First render: create tracking entry
-    GameErrors.trackAnimation(note.id, failureType, state.failureTime || currentTime);
-  } else if (animEntry.status === 'pending') {
-    // Transition from pending to rendering (or skip if already finished)
-    if (state.timeSinceFail >= animDuration) {
-      GameErrors.updateAnimation(note.id, { status: 'completed', renderStart: currentTime, renderEnd: currentTime });
-    } else {
-      GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
-    }
-  } else if (animEntry.status === 'rendering' && state.timeSinceFail >= animDuration) {
-    // Mark completed when animation finishes
-    GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
-  }
-};
-
-/** Calculate geometry for TAP note trapezoid */
-interface TapNoteGeometry {
-  x1: number; y1: number;
-  x2: number; y2: number;
-  x3: number; y3: number;
-  x4: number; y4: number;
-  points: string;
-}
-
-const calculateTapNoteGeometry = (
-  progress: number,
-  tapRayAngle: number,
-  vpX: number,
-  vpY: number,
-  isSuccessfulHit: boolean = false,
-  pressHoldTime: number = 0,
-  currentTime: number = 0,
-  isFailed: boolean = false,
-  noteTime: number = 0
-): TapNoteGeometry => {
-  const MIN_DEPTH = 5;
-  const MAX_DEPTH = 40;
-  
-  // All TAP notes flow through tunnel with approach geometry (successful hits don't lock)
-  let effectiveProgress = progress;
-  if ((isFailed || isSuccessfulHit) && Number.isFinite(noteTime) && Number.isFinite(currentTime)) {
-    // Unclamped progress allows notes to continue past the judgement line
-    effectiveProgress = Math.max(0, 1 - ((noteTime - currentTime) / 2000));
-  } else {
-    effectiveProgress = Math.max(0, Math.min(1, progress));
-  }
-  
-  const TRAPEZOID_DEPTH = MIN_DEPTH + (Math.min(effectiveProgress, 1) * (MAX_DEPTH - MIN_DEPTH));
-  const nearDist = 1 + (effectiveProgress * (JUDGEMENT_RADIUS - 1));
-  const farDist = Math.max(1, nearDist - TRAPEZOID_DEPTH);
-  
-  // Narrower flanking angles (±8°) for compact appearance
-  const tapLeftRayAngle = tapRayAngle - 8;
-  const tapRightRayAngle = tapRayAngle + 8;
-  const tapLeftRad = (tapLeftRayAngle * Math.PI) / 180;
-  const tapRightRad = (tapRightRayAngle * Math.PI) / 180;
-  
-  const x1 = vpX + Math.cos(tapLeftRad) * farDist;
-  const y1 = vpY + Math.sin(tapLeftRad) * farDist;
-  const x2 = vpX + Math.cos(tapRightRad) * farDist;
-  const y2 = vpY + Math.sin(tapRightRad) * farDist;
-  const x3 = vpX + Math.cos(tapRightRad) * nearDist;
-  const y3 = vpY + Math.sin(tapRightRad) * nearDist;
-  const x4 = vpX + Math.cos(tapLeftRad) * nearDist;
-  const y4 = vpY + Math.sin(tapLeftRad) * nearDist;
-  
-  return {
-    x1, y1, x2, y2, x3, y3, x4, y4,
-    points: `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`,
-  };
-};
-
-/** Calculate opacity and visual styling for TAP note */
-interface TapNoteStyle {
-  opacity: number;
-  fill: string;
-  stroke: string;
-  filter: string;
-  hitFlashIntensity: number;
-}
-
-const calculateTapNoteStyle = (
-  progress: number,
-  state: TapNoteState,
-  noteColor: string,
-  rawProgress: number = 0
-): TapNoteStyle => {
-  let opacity: number;
-  let fill = noteColor;
-  let stroke = 'rgba(255,255,255,0.8)';
-  let filter = '';
-  
-  if (state.isTapTooEarlyFailure || state.isTapMissFailure) {
-    // Failed notes: use dynamic (unclamped) progress for smooth visual transition
-    // Opacity follows note position through tunnel, not static at judgement line
-    opacity = 0.4 + (rawProgress * 0.6);
-    // Apply greyscale fade after animation timeout
-    const animDuration = state.isTapTooEarlyFailure ? 800 : 1100;
-    const failProgress = Math.min(state.timeSinceFail / animDuration, 1.0);
-    opacity = opacity * (1.0 - failProgress);
-    fill = GREYSCALE_FILL_COLOR;
-    stroke = 'rgba(120, 120, 120, 1)';
-    filter = `drop-shadow(0 0 8px ${GREYSCALE_GLOW_COLOR}) grayscale(1)`;
-  } else if (state.isHit) {
-    // For successful hits: stay visible for TAP_HIT_HOLD_DURATION (700ms), flash for first 600ms
-    if (state.timeSinceHit < 600) {
-      opacity = 0.4 + (progress * 0.6); // Full opacity during flash
-    } else {
-      // Fade out over remaining time (600ms to 700ms = 100ms fade)
-      const fadeProgress = (state.timeSinceHit - 600) / 100;
-      opacity = Math.max(0.1, (1 - fadeProgress) * (0.4 + (progress * 0.6)));
-    }
-  } else {
-    // Approaching: use clamped progress to prevent haze buildup at judgement line
-    const clampedProgress = Math.min(progress, 1.0);
-    opacity = 0.4 + (clampedProgress * 0.6);
-    filter = `drop-shadow(0 0 ${15 * clampedProgress}px ${noteColor})`;
-  }
-  
-  const hitFlashIntensity = state.isHit && state.timeSinceHit < 600 
-    ? Math.max(0, 1 - (state.timeSinceHit / 600)) 
-    : 0;
-  
-  if (state.isHit && hitFlashIntensity > 0) {
-    // Strong enhanced glow for successful hits during flash phase
-    filter = `drop-shadow(0 0 35px ${noteColor}) drop-shadow(0 0 20px ${noteColor}) drop-shadow(0 0 10px ${noteColor})`;
-  }
-  
-  return { opacity: Math.max(opacity, 0), fill, stroke, filter, hitFlashIntensity };
-};
-
-// ============================================================================
-// HELPER FUNCTIONS FOR HOLD NOTE RENDERING
-// ============================================================================
-
-/** Calculate collapse phase geometry (after press) */
-interface CollapseGeometry {
-  nearDistance: number;
-  farDistance: number;
-  collapseProgress: number;
-}
-
-const calculateCollapseGeometry = (
-  pressHoldTime: number,
-  collapseDuration: number,
-  currentTime: number,
-  lockedNearDistance: number,
-  farDistanceAtPress: number,
-  approachNearDistance: number,
-  approachFarDistance: number,
-  isSuccessfulHit: boolean = false
-): CollapseGeometry => {
-  // For unpressed notes (holdMissFailure): use approach geometry, no collapse
-  if (!pressHoldTime || pressHoldTime === 0) {
-    // Exception: successful hits should collapse from locked position even with pressHoldTime=0
-    if (!isSuccessfulHit) {
-      return { nearDistance: approachNearDistance, farDistance: approachFarDistance, collapseProgress: 0 };
-    }
-    // For successful hits: start collapse immediately from locked position
-    pressHoldTime = currentTime;
-  }
-  
-  const timeSincePress = currentTime - pressHoldTime;
-  const collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
-  
-  // During collapse: near end locked, far end contracts toward it
-  const nearDistance = lockedNearDistance;
-  const farDistance = farDistanceAtPress * (1 - collapseProgress) + lockedNearDistance * collapseProgress;
-  
-  return { nearDistance, farDistance, collapseProgress };
-};
-
-/** Calculate locked near distance (where note "grabs" on press) */
-const calculateLockedNearDistance = (
-  note: Note,
-  pressHoldTime: number,
-  isTooEarlyFailure: boolean,
-  approachNearDistance: number,
-  failureTime: number | null
-): number | null => {
-  // ISOLATED: Successful hits - lock at judgement line (187px) - CHECK FIRST before pressHoldTime
-  if (note.hit) {
-    return JUDGEMENT_RADIUS;
-  }
-  
-  // No press: includes holdMissFailure (never pressed)
-  if (!pressHoldTime || pressHoldTime === 0) return null;
-  
-  // ISOLATED: tooEarlyFailure - DON'T lock, use approach geometry
-  if (isTooEarlyFailure) return null;
-  
-  // ISOLATED: holdReleaseFailure - lock at position where failure occurred (at failureTime)
-  if (note.holdReleaseFailure) {
-    if (!failureTime) return null;
-    const timeUntilHitAtFailure = note.time - failureTime;
-    const approachProgressAtFailure = Math.max((LEAD_TIME - timeUntilHitAtFailure) / LEAD_TIME, 0);
-    return Math.max(1, 1 + (approachProgressAtFailure * (JUDGEMENT_RADIUS - 1)));
-  }
-  
-  // Safety fallback (should not reach here)
-  return approachNearDistance;
-};
-
-/** Calculate glow intensity based on press state and collapse */
-interface GlowCalculation {
-  glowScale: number;
-  collapseGlow: number;
-  finalGlowScale: number;
-}
-
-const calculateHoldNoteGlow = (
-  pressHoldTime: number,
-  currentTime: number,
-  collapseDuration: number,
-  approachProgress: number,
-  note: Note
-): GlowCalculation => {
-  const hasActivePress = pressHoldTime > 0 || note.hit;
-  
-  // Base glow intensity scales with approach
-  const glowScale = hasActivePress ? 0.2 + (Math.min(approachProgress, 1.0) * 0.8) : 0.05;
-  
-  // During collapse: decrease glow as trapezoid collapses
-  let collapseGlow = 0;
-  if (pressHoldTime && pressHoldTime > 0) {
-    const timeSincePress = currentTime - pressHoldTime;
-    const collapseGlowProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
-    collapseGlow = collapseGlowProgress > 0 ? (1 - collapseGlowProgress) * 0.8 : 0;
-  }
-  
-  const finalGlowScale = hasActivePress ? Math.max(glowScale - collapseGlow, 0.1) : 0.05;
-  
-  return { glowScale, collapseGlow, finalGlowScale };
-};
-
-/** Calculate colors and styling for HOLD note */
-interface HoldNoteColors {
-  fillColor: string;
-  glowColor: string;
-  strokeColor: string;
-}
-
-const calculateHoldNoteColors = (
-  isGreyed: boolean,
-  lane: number,
-  baseColor: string
-): HoldNoteColors => {
-  if (isGreyed) {
-    return {
-      fillColor: GREYSCALE_FILL_COLOR,
-      glowColor: GREYSCALE_GLOW_COLOR,
-      strokeColor: 'rgba(120, 120, 120, 1)',
-    };
-  }
-  
-  // Use deck colors (fully opaque) or pad colors
-  const fillColor = lane === -1 
-    ? COLOR_DECK_LEFT 
-    : lane === -2 
-    ? COLOR_DECK_RIGHT 
-    : baseColor;
-  
-  return {
-    fillColor,
-    glowColor: fillColor,
-    strokeColor: 'rgba(255,255,255,1)',
-  };
-};
-
-/** Track HOLD note animation lifecycle for all failure types */
-const trackHoldNoteAnimationLifecycle = (
-  note: Note,
-  failures: HoldNoteFailureStates,
-  currentTime: number
-): void => {
-  if (!failures.hasAnyFailure) return; // Only track failures
-  
-  const failureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
-  if (failures.isTooEarlyFailure) failureTypes.push('tooEarlyFailure');
-  if (failures.isHoldReleaseFailure) failureTypes.push('holdReleaseFailure');
-  if (failures.isHoldMissFailure) failureTypes.push('holdMissFailure');
-  
-  for (const failureType of failureTypes) {
-    let animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
-    const failureTime = animEntry?.failureTime || note.failureTime || currentTime;
-    const timeSinceFailure = Math.max(0, currentTime - failureTime);
-    
-    if (!animEntry) {
-      // Create tracking entry for this failure type
-      GameErrors.trackAnimation(note.id, failureType, note.failureTime || currentTime);
-      animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
-    }
-    
-    if (animEntry) {
-      if (animEntry.status === 'pending') {
-        // Transition to rendering or completed based on time elapsed
-        if (timeSinceFailure >= HOLD_ANIMATION_DURATION) {
-          GameErrors.updateAnimation(note.id, { status: 'completed', renderStart: currentTime, renderEnd: currentTime });
-        } else {
-          GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
-        }
-      } else if (animEntry.status === 'rendering' && timeSinceFailure >= HOLD_ANIMATION_DURATION) {
-        // Complete when animation duration expires
-        GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
-      }
-    }
-  }
 };
 
 interface Down3DNoteLaneProps {
