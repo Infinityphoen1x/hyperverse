@@ -3,6 +3,11 @@ import { TimingManager } from '../managers/timingManager';
 import { ScoringManager } from '../managers/scoringManager';
 import { NoteValidator } from '../notes/noteValidator';
 import { NoteProcessor } from '../notes/noteProcessor';
+import { GameErrors } from '../errors/errorLog';
+
+type InputHandler = () => Note | null;
+type Processor = (note: Note, time: number) => { updatedNote: Note; success?: boolean };
+type PostProcessor = (note: Note, time: number) => void;
 
 // ============================================================================
 // GAME ENGINE CORE - Lightweight orchestrator that delegates to specialists
@@ -48,9 +53,8 @@ export class GameEngineCore {
   // ==========================================================================
 
   start(): void {
+    this.reset();
     this.timingManager.start();
-    this.scoringManager.reset();
-    this.releaseTimeMap.clear();
   }
 
   pause(): void {
@@ -83,15 +87,15 @@ export class GameEngineCore {
   }
 
   getNotes(): Note[] {
-    return this.notes;
+    return [...this.notes];
   }
 
   getReleaseTime(noteId: string): number | undefined {
     return this.releaseTimeMap.get(noteId);
   }
 
-  getConfig(): GameConfig {
-    return this.config;
+  getConfig(): Readonly<GameConfig> {
+    return Object.freeze({ ...this.config });
   }
 
   // ==========================================================================
@@ -117,13 +121,12 @@ export class GameEngineCore {
    * @returns true if hit was successful, false otherwise
    */
   handleTap(lane: number, currentTime: number): boolean {
-    const note = this.validator.findClosestActiveNote(this.notes, lane, 'TAP', currentTime);
-    if (!note) return false;
-
-    const result = this.processor.processTapHit(note, currentTime);
-    this.updateNote(note.id, result.updatedNote);
-    
-    return result.success || false;
+    return this.executeInputHandler(
+      () => this.validator.findClosestActiveNote(this.notes, lane, 'TAP', currentTime),
+      (note) => this.processor.processTapHit(note, currentTime),
+      undefined,
+      `TAP on lane ${lane}`
+    );
   }
 
   /**
@@ -131,13 +134,12 @@ export class GameEngineCore {
    * @returns true if press was successful, false otherwise
    */
   handleHoldStart(lane: number, currentTime: number): boolean {
-    const note = this.validator.findPressableHoldNote(this.notes, lane, currentTime);
-    if (!note) return false;
-
-    const result = this.processor.processHoldStart(note, currentTime);
-    this.updateNote(note.id, result.updatedNote);
-    
-    return result.success || false;
+    return this.executeInputHandler(
+      () => this.validator.findPressableHoldNote(this.notes, lane, currentTime),
+      (note) => this.processor.processHoldStart(note, currentTime),
+      undefined,
+      `HOLD_START on lane ${lane}`
+    );
   }
 
   /**
@@ -146,12 +148,13 @@ export class GameEngineCore {
    */
   handleHoldEnd(lane: number, currentTime: number): boolean {
     const note = this.validator.findActiveHoldNote(this.notes, lane, currentTime);
-    if (!note || !note.pressHoldTime) return false;
+    if (!note || !note.pressHoldTime) {
+      GameErrors.log(`GameEngineCore: No active HOLD to release on lane ${lane}`);
+      return false;
+    }
 
     const result = this.processor.processHoldEnd(note, currentTime);
     this.updateNote(note.id, result.updatedNote);
-    
-    // Track release time for animations
     this.releaseTimeMap.set(note.id, Math.round(currentTime));
     
     return result.success || false;
@@ -160,6 +163,29 @@ export class GameEngineCore {
   // ==========================================================================
   // PRIVATE HELPERS
   // ==========================================================================
+
+  /**
+   * Common pattern for input handling: find → process → update
+   * Reduces DRY violations across handleTap, handleHoldStart
+   */
+  private executeInputHandler(
+    finder: InputHandler,
+    processor: Processor,
+    postProcessor?: PostProcessor,
+    context?: string
+  ): boolean {
+    const note = finder();
+    if (!note) {
+      if (context) GameErrors.log(`GameEngineCore: No note found for ${context}`);
+      return false;
+    }
+
+    const result = processor(note, this.getCurrentTime());
+    this.updateNote(note.id, result.updatedNote);
+    postProcessor?.(note, this.getCurrentTime());
+    
+    return result.success || false;
+  }
 
   private updateNote(noteId: string, updatedNote: Note): void {
     const index = this.notes.findIndex(n => n.id === noteId);
