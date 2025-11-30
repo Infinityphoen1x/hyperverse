@@ -236,6 +236,16 @@ export function useGameEngine({
         engine.syncToVideoTime(videoTime);
         justResumedRef.current = false;
         console.log(`[GAME-ENGINE-SYNC] Engine synced to YouTube time: ${videoTime.toFixed(0)}ms`);
+        
+        // *** NEW: Scrub/forgive actives to dodge critical on re-entry ***
+        const activeNotes = engine.getActiveNotes();
+        if (activeNotes.length > 0) {
+          console.log(`[SYNC-SAFETY] Forgave ${activeNotes.length} pending notes to avoid resume miss`);
+          activeNotes.forEach(note => { 
+            note.missed = false; 
+            note.hit = false; 
+          });
+        }
       }
       
       const time = engine.getCurrentTime(videoTime);
