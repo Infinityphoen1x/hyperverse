@@ -216,20 +216,10 @@ export function useGameEngine({
   // Notes always sync - engine maintains all state (combo, score, hit/missed status)
   // This ensures notes update properly through pause/resume cycle
   const notes = useStateSynchronizer(
-    () => {
-      const fetchedNotes = engineRef.current?.getNotes() || [];
-      if (fetchedNotes.length > 0) {
-        console.log(`[NOTE-SYNC] Fetched ${fetchedNotes.length} notes from engine`, fetchedNotes.map(n => `${n.id}(${n.type}@${n.time.toFixed(2)})`).join(', '));
-      }
-      return fetchedNotes;
-    },
+    () => engineRef.current?.getNotes() || [],
     intervals.notesInterval,
     gameState === 'PLAYING' || gameState === 'PAUSED'
   );
-
-  useEffect(() => {
-    console.log(`[GAME-ENGINE] gameState=${gameState}, isPaused=${isPaused}, notes=${notes.length}, currentTime=${currentTime.toFixed(2)}`);
-  }, [gameState, isPaused, notes.length, currentTime]);
 
   // Game loop
   useGameLoop(gameState === 'PLAYING' && !isPaused, {
