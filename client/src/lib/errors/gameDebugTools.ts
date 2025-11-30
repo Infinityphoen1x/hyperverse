@@ -1,5 +1,5 @@
 import { Note } from '../engine/gameTypes';
-import { HitStatistics, NoteStatistics, RenderStatistics, AnimationStatistics, FailureType } from './gameDebugTypes';
+import { HitStatistics, NoteStatistics, RenderStatistics, AnimationStatistics, FailureType, AnimationTrackingEntry } from './gameDebugTypes';
 import { AnimationTracker } from './animationTracker';
 
 const EMPTY_NOTE_STATS: NoteStatistics = {
@@ -82,6 +82,10 @@ export class GameDebugger {
 
   getAnimationStats(): AnimationStatistics {
     return this.animationTracker.getStats();
+  }
+
+  getAnimationTracking(): AnimationTrackingEntry[] {
+    return this.animationTracker.getEntries();
   }
 
   getErrorLog(): string[] {
