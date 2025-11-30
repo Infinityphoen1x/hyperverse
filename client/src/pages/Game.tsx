@@ -31,10 +31,20 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
 
-  // Direct YouTube time getter (no circular dependency)
-  const directGetVideoTimeRef = useRef(() => getYouTubeVideoTime());
+  // Store startGame in ref for use in callbacks
+  const startGameRef = useRef<(() => void) | null>(null);
 
-  // Game engine - receives direct YouTube time reference
+  // YouTube hook first – provides getVideoTime with caching
+  const {
+    getVideoTime,
+    isReady: playerReady
+  } = useYouTubePlayer({
+    videoId: youtubeVideoId,
+    playerInitializedRef,
+    onPlaying: () => startGameRef.current?.()
+  });
+
+  // Game engine - receives YouTube time via hook (with caching)
   const { 
     gameState, 
     score, 
@@ -54,17 +64,13 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
   } = useGameEngine({ 
     difficulty, 
     customNotes, 
-    getVideoTime: directGetVideoTimeRef.current
+    getVideoTime
   });
 
-  // YouTube hook – handles play/pause/seek, auto-start on PLAYING
-  const {
-    isReady: playerReady
-  } = useYouTubePlayer({
-    videoId: youtubeVideoId,
-    playerInitializedRef,
-    onPlaying: () => startGame() // Auto-start game when video plays
-  });
+  // Store startGame in ref for onPlaying callback
+  useEffect(() => {
+    startGameRef.current = startGame;
+  }, [startGame]);
 
   // Game logic hooks (pause, keys, sync, errors)
   const {
@@ -81,7 +87,7 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     currentTime,
     isPaused,
     notes,
-    getVideoTime: directGetVideoTimeRef.current,
+    getVideoTime,
     pauseGame,
     resumeGame,
     restartGame,
