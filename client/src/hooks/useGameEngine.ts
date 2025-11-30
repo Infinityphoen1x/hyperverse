@@ -199,7 +199,7 @@ export function useGameEngine({
   const notes = useStateSynchronizer(
     () => engineRef.current?.getNotes() || [],
     intervals.notesInterval,
-    gameState === 'PLAYING'
+    gameState === 'PLAYING' && !isPaused
   );
 
   // Game loop
