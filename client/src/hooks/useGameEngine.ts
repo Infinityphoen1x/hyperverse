@@ -93,14 +93,29 @@ function useStateSynchronizer<T>(
   const [value, setValue] = useState<T>(getValue);
   const lastUpdateRef = useRef<number>(0);
   const valueRef = useRef<T>(getValue());
+  const getValueRef = useRef(getValue);
 
+  useEffect(() => {
+    getValueRef.current = getValue;
+  }, [getValue]);
+
+  // Immediate sync when activated
+  useEffect(() => {
+    if (!isActive) return;
+    const newValue = getValueRef.current();
+    valueRef.current = newValue;
+    setValue(newValue);
+    lastUpdateRef.current = performance.now();
+  }, [isActive]);
+
+  // Continuous sync while active
   useEffect(() => {
     if (!isActive) return;
 
     const checkUpdate = () => {
       const now = performance.now();
       if (now - lastUpdateRef.current >= interval) {
-        const newValue = getValue();
+        const newValue = getValueRef.current();
         valueRef.current = newValue;
         setValue(newValue);
         lastUpdateRef.current = now;
@@ -109,7 +124,7 @@ function useStateSynchronizer<T>(
 
     const intervalId = setInterval(checkUpdate, interval);
     return () => clearInterval(intervalId);
-  }, [getValue, interval, isActive]);
+  }, [interval, isActive]);
 
   return value;
 }
