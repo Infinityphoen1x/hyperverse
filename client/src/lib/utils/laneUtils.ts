@@ -1,4 +1,4 @@
-import { MAX_HEALTH } from '@/lib/utils/gameConstants';
+import { MAX_HEALTH } from '@/lib/config/gameConstants';
 import { GameErrors } from '@/lib/errors/errorLog';
 
 // Lane to ray angle mapping

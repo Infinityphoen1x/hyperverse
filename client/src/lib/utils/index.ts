@@ -1,3 +1,3 @@
 export { cn } from './utils';
-export * from './gameConstants';
+export * from '../config/gameConstants';
 export * from './laneUtils';

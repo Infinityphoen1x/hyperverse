@@ -3,7 +3,7 @@ import { queryClient } from "./lib/config/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { initYouTubePlayer, initYouTubeTimeListener, buildYouTubeEmbedUrl } from "@/lib/youtube/youtubeUtils";
+import { initYouTubePlayer, initYouTubeTimeListener, buildYouTubeEmbedUrl } from "@/lib/youtube";
 import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from "@/lib/config/gameConstants";
 import Home from "@/pages/Home";
 import Game from "@/pages/Game";
