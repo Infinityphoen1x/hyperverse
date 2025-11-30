@@ -11,7 +11,7 @@ import { GameEngineCore } from '@/lib/engine/gameEngineCore';
 // CONFIGURATION HOOK
 // ============================================================================
 
-export function useGameConfig(difficulty: Difficulty): GameConfig {
+export function useGameConfig(_difficulty: Difficulty): GameConfig {
   // In real implementation, load these from constants file
   return {
     TAP_HIT_WINDOW: 150,
