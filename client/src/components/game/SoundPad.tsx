@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState, useCallback } from "react";
 import { Note, GameErrors } from "@/lib/gameEngine";
-import { ACTIVATION_WINDOW, HIT_SUCCESS_DURATION, SOUNDPAD_COLORS, SOUNDPAD_STYLES, VANISHING_POINT_X, VANISHING_POINT_Y, JUDGEMENT_RADIUS, BUTTON_CONFIG } from "@/lib/gameConstants";
+import { ACTIVATION_WINDOW, HIT_SUCCESS_DURATION, SOUNDPAD_COLORS, SOUNDPAD_STYLES, VANISHING_POINT_X, VANISHING_POINT_Y, HEXAGON_RADII, BUTTON_CONFIG } from "@/lib/gameConstants";
 
 interface SoundPadProps {
   onPadHit: (index: number) => void;
@@ -10,6 +10,7 @@ interface SoundPadProps {
 }
 
 // Calculate fixed hexagon corner positions for all lanes (soundpad + deck)
+// Uses outermost hexagon radius (248px) to match the tunnel's fixed outer boundary
 const getPadPosition = (laneIndex: number): { x: number; y: number } => {
   let config;
   if (laneIndex === -1) {
@@ -21,8 +22,9 @@ const getPadPosition = (laneIndex: number): { x: number; y: number } => {
   }
   if (!config) return { x: 0, y: 0 };
   const rad = (config.angle * Math.PI) / 180;
-  const x = VANISHING_POINT_X + Math.cos(rad) * JUDGEMENT_RADIUS;
-  const y = VANISHING_POINT_Y + Math.sin(rad) * JUDGEMENT_RADIUS;
+  const outerHexagonRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1]; // 248px - outermost hexagon
+  const x = VANISHING_POINT_X + Math.cos(rad) * outerHexagonRadius;
+  const y = VANISHING_POINT_Y + Math.sin(rad) * outerHexagonRadius;
   return { x, y };
 };
 
