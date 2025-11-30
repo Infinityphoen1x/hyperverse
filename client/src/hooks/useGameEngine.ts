@@ -211,12 +211,12 @@ export function useGameEngine({
     isGameActive
   );
   
-  // Notes always sync - engine maintains all state (combo, score, hit/missed status)
-  // This ensures notes update properly through pause/resume cycle
+  // Notes sync only during PLAYING - frozen during PAUSED to prevent stale state rendering
+  // During pause, the note array is locked; no render updates occur
   const notes = useStateSynchronizer(
     () => engineRef.current?.getNotes() || [],
     intervals.notesInterval,
-    gameState === 'PLAYING' || gameState === 'PAUSED'
+    gameState === 'PLAYING'
   );
 
   // Logging for debugging
