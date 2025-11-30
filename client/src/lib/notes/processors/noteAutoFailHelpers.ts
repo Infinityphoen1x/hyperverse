@@ -1,7 +1,7 @@
-import { Note, GameConfig } from '../engine/gameTypes';
-import { ScoringManager } from '../managers/scoringManager';
-import type { NoteUpdateResult } from './types';
+import { Note, GameConfig } from '@/lib/engine/gameTypes';
+import { ScoringManager } from '@/lib/managers/scoringManager';
 import { roundTime } from './noteUpdateHelpers';
+import type { NoteUpdateResult } from './noteUpdateHelpers';
 
 export const checkTapAutoFail = (
   note: Note,
@@ -19,7 +19,7 @@ export const checkTapAutoFail = (
       failureTime: roundTime(currentTime),
     },
     scoreChange: scorer.recordMiss(),
-    shouldGameOver: scorer.isDead(),
+    success: false,
   };
 };
 
@@ -38,7 +38,7 @@ export const checkHoldAutoFail = (
         failureTime: roundTime(currentTime),
       },
       scoreChange: scorer.recordMiss(),
-      shouldGameOver: scorer.isDead(),
+      success: false,
     };
   }
 
@@ -54,7 +54,7 @@ export const checkHoldAutoFail = (
           failureTime: roundTime(currentTime),
         },
         scoreChange: scorer.recordMiss(),
-        shouldGameOver: scorer.isDead(),
+        success: false,
       };
     }
   }
