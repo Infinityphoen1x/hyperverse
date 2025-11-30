@@ -876,14 +876,6 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
 
   const MAX_DISTANCE = TUNNEL_MAX_DISTANCE;
 
-  // 6 soundpad buttons positioned at tunnel lanes
-  const soundpadButtons = BUTTON_CONFIG.map(({ lane, key, angle, color }) => {
-    const rad = (angle * Math.PI) / 180;
-    const xPosition = vpX + Math.cos(rad) * MAX_DISTANCE;
-    const yPosition = vpY + Math.sin(rad) * MAX_DISTANCE;
-    return { lane, key, angle, color, xPosition, yPosition };
-  });
-
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
       {/* Star tunnel container - centered */}
@@ -1298,7 +1290,8 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
             .filter(n => n.type !== 'SPIN_LEFT' && n.type !== 'SPIN_RIGHT')
             .map(note => {
             const timeUntilHit = note.time - currentTime;
-            const progress = Math.max(0, Math.min(1, 1 - (timeUntilHit / 2000)));
+            const rawProgress = 1 - (timeUntilHit / 2000); // Unclamped
+            const clampedProgress = Math.max(0, Math.min(1, rawProgress));
             
             // Get TAP note state using helper
             const state = getTapNoteState(note, currentTime);
@@ -1317,11 +1310,12 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
             // Track animation lifecycle
             trackTapNoteAnimation(note, state, currentTime);
             
-            // Get rendering data
+            // Get rendering data - use unclamped progress for failed notes, clamped for others
             const tapRayAngle = getLaneAngle(note.lane);
             const noteColor = getColorForLane(note.lane);
-            const geometry = calculateTapNoteGeometry(progress, tapRayAngle, vpX, vpY, state.isHit, note.pressHoldTime || 0, currentTime, state.isFailed, note.time);
-            const style = calculateTapNoteStyle(progress, state, noteColor, state.isFailed);
+            const progressForGeometry = state.isFailed ? rawProgress : clampedProgress;
+            const geometry = calculateTapNoteGeometry(progressForGeometry, tapRayAngle, vpX, vpY, state.isHit, note.pressHoldTime || 0, currentTime, state.isFailed, note.time);
+            const style = calculateTapNoteStyle(clampedProgress, state, noteColor, state.isFailed);
             
             return (
               <polygon
