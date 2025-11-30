@@ -14,6 +14,10 @@ interface TapNotesProps {
 export function TapNotes({ visibleNotes, currentTime, vpX, vpY }: TapNotesProps) {
   const processedNotes = useTapNotes(visibleNotes, currentTime);
 
+  React.useEffect(() => {
+    console.log(`[TAP-NOTES] rendering ${processedNotes.length} tap notes (visible=${visibleNotes.length}, time=${currentTime.toFixed(2)})`);
+  }, [processedNotes.length, visibleNotes.length, currentTime]);
+
   return (
     <svg className="absolute inset-0" style={{ width: `${TUNNEL_CONTAINER_WIDTH}px`, height: `${TUNNEL_CONTAINER_HEIGHT}px`, opacity: 1, pointerEvents: 'none', margin: '0 auto' }}>
       {processedNotes.map((noteData) => (

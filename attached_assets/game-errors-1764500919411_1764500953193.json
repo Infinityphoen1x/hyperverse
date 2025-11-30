@@ -1,0 +1,58 @@
+{
+  "timestamp": "2025-11-30T11:08:39.406Z",
+  "errorLog": [
+    "[1764500857333] BeatmapConverter: HOLD note hold_0 lane=-1 → type=SPIN_LEFT",
+    "[1764500857334] BeatmapConverter: HOLD note hold_1 lane=-2 → type=SPIN_RIGHT",
+    "[1764500857334] BeatmapConverter: HOLD note hold_2 lane=-1 → type=SPIN_LEFT",
+    "[1764500857334] BeatmapConverter: HOLD note hold_3 lane=-2 → type=SPIN_RIGHT",
+    "[1764500857334] BeatmapConverter: HOLD note hold_4 lane=-1 → type=SPIN_LEFT",
+    "[1764500857334] BeatmapConverter: HOLD note hold_5 lane=-1 → type=SPIN_LEFT",
+    "[1764500857334] BeatmapConverter: HOLD note hold_6 lane=-2 → type=SPIN_RIGHT",
+    "[1764500857334] BeatmapConverter: HOLD note hold_7 lane=-1 → type=SPIN_LEFT",
+    "[1764500857334] BeatmapConverter: HOLD note hold_8 lane=-2 → type=SPIN_RIGHT",
+    "[1764500857334] BeatmapConverter: HOLD note hold_9 lane=-1 → type=SPIN_LEFT",
+    "[1764500857334] BeatmapConverter: HOLD note hold_10 lane=-1 → type=SPIN_LEFT",
+    "[1764500857334] BeatmapConverter: HOLD note hold_11 lane=-2 → type=SPIN_RIGHT",
+    "[1764500871209] GameEngineCore: No note found for TAP on lane -1",
+    "[1764500871518] GameEngineCore: No note found for TAP on lane -1",
+    "[1764500871742] GameEngineCore: No note found for TAP on lane -1",
+    "[1764500871997] GameEngineCore: No note found for TAP on lane -1"
+  ],
+  "animationStats": {
+    "total": 4,
+    "completed": 0,
+    "failed": 0,
+    "pending": 0,
+    "rendering": 4
+  },
+  "animationDetails": [
+    {
+      "noteId": "note-8500-6",
+      "type": "tapMissFailure",
+      "failureTime": 8758,
+      "status": "rendering",
+      "renderStart": 8787
+    },
+    {
+      "noteId": "note-9500-7",
+      "type": "tapMissFailure",
+      "failureTime": 9758,
+      "status": "rendering",
+      "renderStart": 9779
+    },
+    {
+      "noteId": "note-12000-9",
+      "type": "tapMissFailure",
+      "failureTime": 12256,
+      "status": "rendering",
+      "renderStart": 12331
+    },
+    {
+      "noteId": "note-13000-10",
+      "type": "tapMissFailure",
+      "failureTime": 13297,
+      "status": "rendering",
+      "renderStart": 13345
+    }
+  ]
+}
