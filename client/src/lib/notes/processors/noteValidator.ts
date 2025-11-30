@@ -87,4 +87,37 @@ export class NoteValidator {
   getActiveNotesOnLane(notes: Note[], lane: number): Note[] {
     return notes.filter(n => n.lane === lane && this.isNoteActive(n));
   }
+
+  /**
+   * Get notes that are visible within the current time window
+   * @param notes All notes
+   * @param currentTime Current playback time in ms
+   * @returns Notes that should be visible on screen
+   */
+  getVisibleNotes(notes: Note[], currentTime: number): Note[] {
+    const leadTime = this.config.LEAD_TIME;
+    return notes.filter(n => 
+      this.isNoteActive(n) &&
+      n.time >= currentTime - leadTime &&
+      n.time <= currentTime + 1000 // Show notes up to 1 second ahead
+    );
+  }
+
+  /**
+   * Update note timings after time jump (e.g., on resume)
+   * This ensures notes are in correct state relative to new current time
+   * @param notes All notes
+   * @param currentTime New current time in ms
+   * @returns Notes updated for new time context (clears temporary state if needed)
+   */
+  updateNoteTimes(notes: Note[], currentTime: number): Note[] {
+    return notes.map(n => {
+      // If note was marked as too early relative to old time,
+      // but is now within valid window at new time, reset early flag
+      if (n.tooEarlyFailure && currentTime >= n.time - this.config.HOLD_ACTIVATION_WINDOW) {
+        return { ...n, tooEarlyFailure: false };
+      }
+      return n;
+    });
+  }
 }

@@ -106,9 +106,20 @@ export class GameEngineCore {
 
   /**
    * Set current time directly (convenience method for resume)
+   * - Syncs internal timing to the given time
+   * - Updates note timings to reflect the new context
+   * - Ensures notes resume from the correct playback point
    */
   setCurrentTime(videoTimeMs: number): void {
-    this.syncToVideoTime(videoTimeMs);
+    console.log(`[ENGINE-TIME-SET] Setting engine time to ${videoTimeMs.toFixed(0)}ms`);
+    
+    // Sync the timing manager to this time
+    this.timingManager.syncToVideoTime(videoTimeMs);
+    
+    // Update note timings for the new context
+    this.notes = this.validator.updateNoteTimes(this.notes, videoTimeMs);
+    
+    console.log(`[ENGINE-TIME-SET] Engine synced - active notes: ${this.validator.getActiveNotes(this.notes).length}`);
   }
 
   // ==========================================================================
