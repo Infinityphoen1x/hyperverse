@@ -70,11 +70,7 @@ export function useGameLogic({
     if (gameState !== 'PAUSED' || countdownSeconds === 0) return;
 
     const interval = setInterval(() => {
-      setCountdownSeconds(prev => {
-        const newCount = Math.max(prev - 1, 0);
-        console.log(`[COUNTDOWN] ${prev} → ${newCount}`);
-        return newCount;
-      });
+      setCountdownSeconds(prev => Math.max(prev - 1, 0));
     }, 1000);
 
     return () => clearInterval(interval);
@@ -85,8 +81,7 @@ export function useGameLogic({
     if (countdownSeconds !== 0 || gameState !== 'PAUSED' || !countdownStartedRef.current) return;
 
     (async () => {
-      console.log('[COUNTDOWN-COMPLETE] Starting resume sequence');
-      countdownStartedRef.current = false; // Reset flag
+      countdownStartedRef.current = false;
       setPauseMenuOpenHandler(false);
       resumeGame();
       setGameState('RESUMING');
@@ -101,10 +96,6 @@ export function useGameLogic({
           (async () => {
             const pauseTimeSeconds = pauseTimeRef.current / 1000;
             await seekYouTubeVideo(pauseTimeSeconds);
-            const confirmedTime = getVideoTime?.() ?? null;
-            if (confirmedTime !== null) {
-              console.log(`[RESUME] Synced to ${(confirmedTime / 1000).toFixed(2)}s`);
-            }
             await new Promise(resolve => setTimeout(resolve, 50));
             await playYouTubeVideo();
             return null;
@@ -113,7 +104,6 @@ export function useGameLogic({
         ]);
         asyncReadyRef.current = true;
       } catch (err) {
-        console.error('[RESUME] Failed:', err);
         asyncReadyRef.current = true;
       }
     })();
@@ -164,7 +154,7 @@ export function useGameLogic({
               }
               pauseTimeRef.current = youtubeTimeAtPause || currentTime;
             } catch (err) {
-              console.warn('[PAUSE] Failed:', err);
+              // Pause failed, continue anyway
             }
             setGameState('PAUSED');
             setPauseMenuOpenHandler(true);
@@ -183,16 +173,15 @@ export function useGameLogic({
 
   // Rewind handler
   const handleRewind = useCallback(async () => {
-    console.log('[REWIND] Initiating');
     restartGame();
     pauseTimeRef.current = 0;
     setPauseMenuOpenHandler(false);
     try {
       await pauseYouTubeVideo();
       await seekYouTubeVideo(0);
-      await playYouTubeVideo(); // Play after seeking to 0
+      await playYouTubeVideo();
     } catch (err) {
-      console.error('[REWIND] Failed:', err);
+      // Rewind failed, continue anyway
     }
     startGame();
   }, [restartGame, setPauseMenuOpenHandler, startGame]);
@@ -205,9 +194,6 @@ export function useGameLogic({
       if (youtubeTime === null) return;
       const gameTime = currentTime;
       const drift = Math.abs(youtubeTime - gameTime);
-      const driftPercent = gameTime > 0 ? (drift / gameTime) * 100 : 0;
-      console.log(`[TIME-SYNC] YT: ${(youtubeTime/1000).toFixed(2)}s | Game: ${(gameTime/1000).toFixed(2)}s | Drift: ${drift.toFixed(0)}ms (${driftPercent.toFixed(1)}%)`);
-      if (drift > 500) console.warn(`[TIME-SYNC] Large drift: ${drift.toFixed(0)}ms`);
     }, 1000);
     return () => clearInterval(interval);
   }, [gameState, getVideoTime, currentTime]);
