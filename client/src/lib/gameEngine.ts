@@ -280,8 +280,15 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           const n = notes[i];
           if (!n) continue;
           
-          // Cleanup successfully hit notes after animation completes (700ms after hit)
-          if (n.hit && n.hitTime && time > n.hitTime + 700) {
+          // Cleanup TAP notes after successful hit (700ms after hit)
+          if (n.type === 'TAP' && n.hit && n.hitTime && time > n.hitTime + 700) {
+            notes.splice(i, 1);
+            i--; // Adjust index after removing element
+            continue;
+          }
+          
+          // Cleanup hold notes with holdMissFailure (700ms after failure)
+          if ((n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && n.holdMissFailure && n.failureTime && time > n.failureTime + 700) {
             notes.splice(i, 1);
             i--; // Adjust index after removing element
             continue;
