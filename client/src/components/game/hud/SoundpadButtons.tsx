@@ -1,5 +1,5 @@
 import React from 'react';
-import { BUTTON_CONFIG, HEXAGON_RADII } from '@/lib/config/gameConstants';
+import { BUTTON_CONFIG, HEXAGON_RADII, VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config/gameConstants';
 
 interface SoundpadButtonsProps {
   vpX: number;
