@@ -20,20 +20,53 @@ export class NoteProcessor {
     private scorer: ScoringManager
   ) {}
 
+  private roundTime(time: number): number {
+    return Math.round(time);
+  }
+
+  private createFailureUpdate(
+    note: Note,
+    currentTime: number,
+    failureType: keyof Omit<Note, 'id' | 'type' | 'time' | 'lane' | 'duration' | 'hit' | 'missed'>
+  ): NoteUpdateResult {
+    const scoreChange = this.scorer.recordMiss();
+    return {
+      updatedNote: {
+        ...note,
+        [failureType]: true,
+        failureTime: this.roundTime(currentTime),
+      },
+      scoreChange,
+      success: false,
+    };
+  }
+
+  private createSuccessUpdate(note: Note, currentTime: number, scoreChange: ScoreState): NoteUpdateResult {
+    return {
+      updatedNote: {
+        ...note,
+        hit: true,
+        hitTime: this.roundTime(currentTime),
+        pressReleaseTime: this.roundTime(currentTime),
+      },
+      scoreChange,
+      success: true,
+    };
+  }
+
   processTapHit(note: Note, currentTime: number): NoteUpdateResult {
     const timeSinceNote = currentTime - note.time;
 
     // Too early
     if (timeSinceNote < -this.config.TAP_HIT_WINDOW) {
-      const scoreChange = this.scorer.recordMiss();
       return {
         updatedNote: {
           ...note,
-          pressTime: Math.round(currentTime),
+          pressTime: this.roundTime(currentTime),
           tapTooEarlyFailure: true,
-          failureTime: Math.round(currentTime),
+          failureTime: this.roundTime(currentTime),
         },
-        scoreChange,
+        scoreChange: this.scorer.recordMiss(),
         success: false,
       };
     }
@@ -45,8 +78,8 @@ export class NoteProcessor {
         updatedNote: {
           ...note,
           hit: true,
-          hitTime: Math.round(currentTime),
-          pressTime: Math.round(currentTime),
+          hitTime: this.roundTime(currentTime),
+          pressTime: this.roundTime(currentTime),
         },
         scoreChange,
         success: true,
@@ -62,30 +95,28 @@ export class NoteProcessor {
 
     // Too early
     if (timeSinceNote < -this.config.HOLD_ACTIVATION_WINDOW) {
-      const scoreChange = this.scorer.recordMiss();
       return {
         updatedNote: {
           ...note,
-          pressHoldTime: Math.round(currentTime),
+          pressHoldTime: this.roundTime(currentTime),
           tooEarlyFailure: true,
-          failureTime: Math.round(currentTime),
+          failureTime: this.roundTime(currentTime),
         },
-        scoreChange,
+        scoreChange: this.scorer.recordMiss(),
         success: false,
       };
     }
 
     // Too late
     if (timeSinceNote > this.config.HOLD_ACTIVATION_WINDOW) {
-      const scoreChange = this.scorer.recordMiss();
       return {
         updatedNote: {
           ...note,
-          pressHoldTime: Math.round(currentTime),
+          pressHoldTime: this.roundTime(currentTime),
           holdMissFailure: true,
-          failureTime: Math.round(currentTime),
+          failureTime: this.roundTime(currentTime),
         },
-        scoreChange,
+        scoreChange: this.scorer.recordMiss(),
         success: false,
       };
     }
@@ -94,7 +125,7 @@ export class NoteProcessor {
     return {
       updatedNote: {
         ...note,
-        pressHoldTime: Math.round(currentTime),
+        pressHoldTime: this.roundTime(currentTime),
       },
       success: true,
     };
@@ -104,18 +135,18 @@ export class NoteProcessor {
     const holdDuration = note.duration || 1000;
     const expectedReleaseTime = note.time + holdDuration;
     const timeSinceExpectedRelease = currentTime - expectedReleaseTime;
+    const totalHoldTime = currentTime - note.time;
 
     // Released too early
-    if (currentTime - note.time < holdDuration) {
-      const scoreChange = this.scorer.recordMiss();
+    if (totalHoldTime < holdDuration) {
       return {
         updatedNote: {
           ...note,
-          releaseTime: Math.round(currentTime),
+          releaseTime: this.roundTime(currentTime),
           holdReleaseFailure: true,
-          failureTime: Math.round(currentTime),
+          failureTime: this.roundTime(currentTime),
         },
-        scoreChange,
+        scoreChange: this.scorer.recordMiss(),
         success: false,
       };
     }
@@ -127,8 +158,8 @@ export class NoteProcessor {
         updatedNote: {
           ...note,
           hit: true,
-          releaseTime: Math.round(currentTime),
-          pressReleaseTime: Math.round(currentTime),
+          releaseTime: this.roundTime(currentTime),
+          pressReleaseTime: this.roundTime(currentTime),
         },
         scoreChange,
         success: true,
@@ -136,70 +167,76 @@ export class NoteProcessor {
     }
 
     // Released too late
-    const scoreChange = this.scorer.recordMiss();
     return {
       updatedNote: {
         ...note,
-        releaseTime: Math.round(currentTime),
+        releaseTime: this.roundTime(currentTime),
         holdReleaseFailure: true,
-        failureTime: Math.round(currentTime),
+        failureTime: this.roundTime(currentTime),
       },
-      scoreChange,
+      scoreChange: this.scorer.recordMiss(),
       success: false,
     };
   }
 
-  checkAutoFail(note: Note, currentTime: number): NoteUpdateResult | null {
-    if (!this.validator.isNoteActive(note)) return null;
+  private checkTapAutoFail(note: Note, currentTime: number): NoteUpdateResult | null {
+    const autoFailThreshold = note.time + this.config.TAP_HIT_WINDOW + this.config.TAP_FAILURE_BUFFER;
+    if (currentTime <= autoFailThreshold) return null;
 
-    // TAP auto-fail
-    if (note.type === 'TAP') {
-      if (currentTime > note.time + this.config.TAP_HIT_WINDOW + this.config.TAP_FAILURE_BUFFER) {
-        const scoreChange = this.scorer.recordMiss();
+    return {
+      updatedNote: {
+        ...note,
+        tapMissFailure: true,
+        failureTime: this.roundTime(currentTime),
+      },
+      scoreChange: this.scorer.recordMiss(),
+      shouldGameOver: this.scorer.isDead(),
+    };
+  }
+
+  private checkHoldAutoFail(note: Note, currentTime: number): NoteUpdateResult | null {
+    // Never pressed
+    if (!note.pressHoldTime && currentTime > note.time + this.config.HOLD_MISS_TIMEOUT) {
+      return {
+        updatedNote: {
+          ...note,
+          holdMissFailure: true,
+          failureTime: this.roundTime(currentTime),
+        },
+        scoreChange: this.scorer.recordMiss(),
+        shouldGameOver: this.scorer.isDead(),
+      };
+    }
+
+    // Pressed but never released (timeout)
+    if (note.pressHoldTime && note.pressHoldTime > 0 && !note.hit) {
+      const noteHoldDuration = note.duration || 1000;
+      const releaseFailThreshold = note.pressHoldTime + noteHoldDuration + this.config.HOLD_RELEASE_OFFSET;
+      if (currentTime > releaseFailThreshold) {
         return {
           updatedNote: {
             ...note,
-            tapMissFailure: true,
-            failureTime: Math.round(currentTime),
+            holdReleaseFailure: true,
+            failureTime: this.roundTime(currentTime),
           },
-          scoreChange,
+          scoreChange: this.scorer.recordMiss(),
           shouldGameOver: this.scorer.isDead(),
         };
       }
     }
 
-    // HOLD auto-fail
-    if (note.type === 'SPIN_LEFT' || note.type === 'SPIN_RIGHT') {
-      // Never pressed
-      if (!note.pressHoldTime && currentTime > note.time + this.config.HOLD_MISS_TIMEOUT) {
-        const scoreChange = this.scorer.recordMiss();
-        return {
-          updatedNote: {
-            ...note,
-            holdMissFailure: true,
-            failureTime: Math.round(currentTime),
-          },
-          scoreChange,
-          shouldGameOver: this.scorer.isDead(),
-        };
-      }
+    return null;
+  }
 
-      // Pressed but never released (timeout)
-      if (note.pressHoldTime && note.pressHoldTime > 0 && !note.hit) {
-        const noteHoldDuration = note.duration || 1000;
-        if (currentTime > note.pressHoldTime + noteHoldDuration + this.config.HOLD_RELEASE_OFFSET) {
-          const scoreChange = this.scorer.recordMiss();
-          return {
-            updatedNote: {
-              ...note,
-              holdReleaseFailure: true,
-              failureTime: Math.round(currentTime),
-            },
-            scoreChange,
-            shouldGameOver: this.scorer.isDead(),
-          };
-        }
-      }
+  checkAutoFail(note: Note, currentTime: number): NoteUpdateResult | null {
+    if (!this.validator.isNoteActive(note)) return null;
+
+    if (note.type === 'TAP') {
+      return this.checkTapAutoFail(note, currentTime);
+    }
+
+    if (note.type === 'SPIN_LEFT' || note.type === 'SPIN_RIGHT') {
+      return this.checkHoldAutoFail(note, currentTime);
     }
 
     return null;
