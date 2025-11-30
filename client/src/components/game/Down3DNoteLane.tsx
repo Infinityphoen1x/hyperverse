@@ -979,29 +979,6 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
                   opacity="1"
                   strokeLinecap="round"
                 />
-                {/* Key indicator circle */}
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r="16"
-                  fill={`${lane.color}33`}
-                  stroke={lane.color}
-                  strokeWidth="2"
-                  opacity="0.8"
-                />
-                <text
-                  x={cx}
-                  y={cy}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fill={lane.color}
-                  fontSize="14"
-                  fontWeight="bold"
-                  fontFamily="Orbitron, monospace"
-                  opacity="1"
-                >
-                  {lane.key}
-                </text>
               </g>
             );
           })}
