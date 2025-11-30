@@ -109,8 +109,6 @@ export function useGameLogic({
         setCurrentTime(videoTimeMs);
 
         setGameState('RESUMING');
-        console.log('[RESUME DEBUG] About to unpause engine? Calling resumeGame()');
-        resumeGame();
         console.log('[RESUME-ANIM] Starting fade animation...');
         resumeStartTimeRef.current = performance.now();
         asyncReadyRef.current = true;
@@ -123,8 +121,6 @@ export function useGameLogic({
         engineRef?.current?.setCurrentTime?.(videoTimeMs);
         setCurrentTime(videoTimeMs);
         setGameState('RESUMING');
-        console.log('[RESUME DEBUG] About to unpause engine? Calling resumeGame()');
-        resumeGame();
         console.log('[RESUME-ANIM] Starting fade animation (fallback)...');
         resumeStartTimeRef.current = performance.now();
         asyncReadyRef.current = true;
@@ -132,7 +128,7 @@ export function useGameLogic({
     })();
   }, [countdownSeconds, gameState]);
 
-  // Fade animation
+  // Fade animation - engine stays frozen until animation completes
   useEffect(() => {
     if (gameState !== 'RESUMING' || !asyncReadyRef.current) return;
     const fadeInDuration = 500;
@@ -145,6 +141,9 @@ export function useGameLogic({
       if (progress < 1.0) {
         animationFrameId = requestAnimationFrame(animate);
       } else {
+        // Fade complete - NOW unpause the engine
+        console.log('[RESUME-ANIM] Fade complete, unfreezing engine...');
+        resumeGame();
         setGameState('PLAYING');
         setResumeFadeOpacity(1.0);
         asyncReadyRef.current = false;
@@ -156,7 +155,7 @@ export function useGameLogic({
       animationFrameId = requestAnimationFrame(animate);
     }, 100);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [gameState, setGameState]);
+  }, [gameState, setGameState, resumeGame]);
 
   // Key Controls (useKeyControls equivalent)
   useEffect(() => {
