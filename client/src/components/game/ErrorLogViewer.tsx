@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { GameErrors } from '@/lib/gameEngine';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
+import { StatBox, StatGrid, StatSection, countErrorsByCategory, formatLaneStats, resetHitStats, resetRenderStats } from './ErrorLogViewerHelpers';
 
 export function ErrorLogViewer() {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,27 +23,7 @@ export function ErrorLogViewer() {
       setNoteStats({ ...GameErrors.noteStats });
       setRenderStats({ ...GameErrors.renderStats });
       setHitStats({ ...GameErrors.hitStats });
-      
-      // Count errors by category
-      const counts = {
-        beatmapLoader: 0,
-        parser: 0,
-        converter: 0,
-        meter: 0,
-        trapezoid: 0,
-        game: 0,
-      };
-      
-      GameErrors.notes.forEach(err => {
-        if (err.includes('BeatmapLoader')) counts.beatmapLoader++;
-        else if (err.includes('BeatmapParser')) counts.parser++;
-        else if (err.includes('BeatmapConverter')) counts.converter++;
-        else if (err.includes('DeckMeter')) counts.meter++;
-        else if (err.includes('Trapezoid')) counts.trapezoid++;
-        else counts.game++;
-      });
-      
-      setErrorCounts(counts);
+      setErrorCounts(countErrorsByCategory(GameErrors.notes));
     }, 500);
 
     return () => clearInterval(updateInterval);
@@ -69,14 +50,16 @@ export function ErrorLogViewer() {
   };
 
   const clearLogs = () => {
+    const emptyHitStats = resetHitStats();
+    const emptyRenderStats = resetRenderStats();
     GameErrors.notes = [];
     GameErrors.animations = [];
-    GameErrors.renderStats = { rendered: 0, preMissed: 0 };
-    GameErrors.hitStats = { successfulHits: 0, tapTooEarlyFailures: 0, tapMissFailures: 0, tooEarlyFailures: 0, holdMissFailures: 0, holdReleaseFailures: 0 };
+    GameErrors.renderStats = emptyRenderStats;
+    GameErrors.hitStats = emptyHitStats;
     setErrors([]);
     setAnimations([]);
-    setRenderStats({ rendered: 0, preMissed: 0 });
-    setHitStats({ successfulHits: 0, tapTooEarlyFailures: 0, tapMissFailures: 0, tooEarlyFailures: 0, holdMissFailures: 0, holdReleaseFailures: 0 });
+    setRenderStats(emptyRenderStats);
+    setHitStats(emptyHitStats);
   };
 
   return (
@@ -114,108 +97,58 @@ export function ErrorLogViewer() {
             >
             {/* Loaded Notes Stats */}
             {noteStats.total > 0 && (
-              <div className="bg-gray-900 rounded p-2 text-xs text-purple-300 font-mono space-y-2">
-                <div className="font-bold text-purple-400 mb-1">BEATMAP LOADED</div>
-                <div className="grid grid-cols-3 gap-1">
-                  <div className="bg-gray-800 p-1 rounded">
-                    <div className="text-gray-500 text-xs">Total</div>
-                    <div className="text-lg font-bold">{noteStats.total}</div>
-                  </div>
-                  <div className="bg-gray-800 p-1 rounded">
-                    <div className="text-gray-500 text-xs">TAP</div>
-                    <div className="text-lg font-bold text-blue-300">{noteStats.tap}</div>
-                  </div>
-                  <div className="bg-gray-800 p-1 rounded">
-                    <div className="text-gray-500 text-xs">HOLD</div>
-                    <div className="text-lg font-bold text-pink-300">{noteStats.hold}</div>
-                  </div>
-                </div>
+              <StatSection title="BEATMAP LOADED" titleColor="purple" textColor="purple">
+                <StatGrid cols={3}>
+                  <StatBox label="Total" value={noteStats.total} color="gray" />
+                  <StatBox label="TAP" value={noteStats.tap} color="blue" />
+                  <StatBox label="HOLD" value={noteStats.hold} color="pink" />
+                </StatGrid>
                 <div className="grid grid-cols-3 gap-1 pt-1 border-t border-gray-700">
-                  <div className="bg-gray-800 p-1 rounded">
-                    <div className="text-gray-500 text-xs">✓ Hit</div>
-                    <div className="text-lg font-bold text-green-300">{noteStats.hit}</div>
-                  </div>
-                  <div className="bg-gray-800 p-1 rounded">
-                    <div className="text-gray-500 text-xs">✗ Failed</div>
-                    <div className="text-lg font-bold text-red-300">{noteStats.failed}</div>
-                  </div>
-                  <div className="bg-gray-800 p-1 rounded">
-                    <div className="text-gray-500 text-xs">Pending</div>
-                    <div className="text-lg font-bold text-yellow-300">{noteStats.total - noteStats.hit - noteStats.failed - noteStats.missed}</div>
-                  </div>
+                  <StatBox label="✓ Hit" value={noteStats.hit} color="green" />
+                  <StatBox label="✗ Failed" value={noteStats.failed} color="red" />
+                  <StatBox label="Pending" value={noteStats.total - noteStats.hit - noteStats.failed - noteStats.missed} color="yellow" />
                 </div>
                 {Object.keys(noteStats.byLane).length > 0 && (
                   <div className="text-xs text-gray-400 pt-1 border-t border-gray-700">
-                    <div className="font-mono">Lanes: {Object.entries(noteStats.byLane).map(([lane, count]) => {
-                      const laneNames: Record<string, string> = { '0': 'W', '1': 'O', '2': 'I', '3': 'E', '-1': 'Q', '-2': 'P' };
-                      return `${laneNames[lane] || lane}=${count}`;
-                    }).join(' ')}</div>
+                    <div className="font-mono">Lanes: {formatLaneStats(noteStats.byLane)}</div>
                   </div>
                 )}
-              </div>
+              </StatSection>
             )}
 
             {/* Render & Hit Tracking */}
             <div className="grid grid-cols-2 gap-2">
-              <div className="bg-gray-900 rounded p-2 text-xs text-green-300 font-mono space-y-1">
-                <div className="font-bold text-green-400">RENDER TRACKING</div>
-                <div className="bg-gray-800 p-1 rounded">
-                  <div className="text-gray-500">Rendered</div>
-                  <div className="text-lg font-bold">{renderStats.rendered}</div>
-                </div>
-                <div className="bg-gray-800 p-1 rounded">
-                  <div className="text-gray-500">Pre-Missed</div>
-                  <div className="text-lg font-bold text-yellow-300">{renderStats.preMissed}</div>
-                </div>
-              </div>
+              <StatSection title="RENDER TRACKING" titleColor="green" textColor="green">
+                <StatBox label="Rendered" value={renderStats.rendered} color="gray" />
+                <StatBox label="Pre-Missed" value={renderStats.preMissed} color="yellow" />
+              </StatSection>
 
-              <div className="bg-gray-900 rounded p-2 text-xs text-blue-300 font-mono space-y-1">
-                <div className="font-bold text-blue-400">HIT RESULTS</div>
-                <div className="bg-gray-800 p-1 rounded">
-                  <div className="text-green-400">✓ Successful</div>
-                  <div className="text-lg font-bold text-green-300">{hitStats.successfulHits}</div>
-                </div>
-                <div className="bg-gray-800 p-1 rounded">
-                  <div className="text-red-400">✗ Failed</div>
-                  <div className="text-lg font-bold text-red-300">{hitStats.tapMissFailures + hitStats.tooEarlyFailures + hitStats.holdMissFailures + hitStats.holdReleaseFailures}</div>
-                </div>
-              </div>
+              <StatSection title="HIT RESULTS" titleColor="blue" textColor="blue">
+                <StatBox label="✓ Successful" value={hitStats.successfulHits} color="green" />
+                <StatBox label="✗ Failed" value={hitStats.tapMissFailures + hitStats.tooEarlyFailures + hitStats.holdMissFailures + hitStats.holdReleaseFailures} color="red" />
+              </StatSection>
             </div>
 
             {/* Failure Breakdown */}
             {(hitStats.tapMissFailures > 0 || hitStats.tooEarlyFailures > 0 || hitStats.holdMissFailures > 0 || hitStats.holdReleaseFailures > 0) && (
-              <div className="bg-gray-900 rounded p-2 text-xs text-red-300 font-mono space-y-1">
-                <div className="font-bold text-red-400 mb-1">FAILURE BREAKDOWN</div>
+              <StatSection title="FAILURE BREAKDOWN" titleColor="red" textColor="red">
                 <div className="grid grid-cols-2 gap-1">
                   {hitStats.tapMissFailures > 0 && <div><span className="text-gray-500">TAP Miss</span>: {hitStats.tapMissFailures}</div>}
                   {hitStats.tooEarlyFailures > 0 && <div><span className="text-gray-500">Too Early</span>: {hitStats.tooEarlyFailures}</div>}
                   {hitStats.holdMissFailures > 0 && <div><span className="text-gray-500">Hold Miss</span>: {hitStats.holdMissFailures}</div>}
                   {hitStats.holdReleaseFailures > 0 && <div><span className="text-gray-500">Release Fail</span>: {hitStats.holdReleaseFailures}</div>}
                 </div>
-              </div>
+              </StatSection>
             )}
 
             {/* Animation Stats */}
-            <div className="bg-gray-900 rounded p-2 text-xs text-cyan-300 font-mono space-y-2">
-              <div className="font-bold text-cyan-400 mb-1">ANIMATION LIFECYCLE</div>
-              <div className="grid grid-cols-4 gap-1">
-                <div className="bg-gray-800 p-1 rounded">
-                  <div className="text-gray-400 text-xs">Total</div>
-                  <div className="text-lg font-bold">{animationStats.total}</div>
-                </div>
-                <div className="bg-gray-800 p-1 rounded">
-                  <div className="text-yellow-400 text-xs">Pending</div>
-                  <div className="text-lg font-bold text-yellow-300">{animationStats.pending}</div>
-                </div>
-                <div className="bg-gray-800 p-1 rounded">
-                  <div className="text-blue-400 text-xs">Rendering</div>
-                  <div className="text-lg font-bold text-blue-300">{animationStats.rendering}</div>
-                </div>
-                <div className="bg-gray-800 p-1 rounded">
-                  <div className="text-green-400 text-xs">✓ Completed</div>
-                  <div className="text-lg font-bold text-green-300">{animationStats.completed}</div>
-                </div>
-              </div>
+            <StatSection title="ANIMATION LIFECYCLE" titleColor="cyan" textColor="cyan">
+              <StatGrid cols={4}>
+                <StatBox label="Total" value={animationStats.total} color="gray" />
+                <StatBox label="Pending" value={animationStats.pending} color="yellow" />
+                <StatBox label="Rendering" value={animationStats.rendering} color="blue" />
+                <StatBox label="✓ Completed" value={animationStats.completed} color="green" />
+              </StatGrid>
               {animationStats.failed > 0 && (
                 <div className="bg-red-900/30 border border-red-600 p-1 rounded">
                   <div className="text-red-400 text-xs">✗ Animation Errors</div>
@@ -225,7 +158,7 @@ export function ErrorLogViewer() {
               <div className="text-xs text-gray-500 italic pt-1 border-t border-gray-700">
                 Lifecycle: pending → rendering → completed
               </div>
-            </div>
+            </StatSection>
 
             {/* Error Category Breakdown */}
             {Object.values(errorCounts).some(v => v > 0) && (
