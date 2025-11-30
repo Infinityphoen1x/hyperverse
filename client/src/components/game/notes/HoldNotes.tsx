@@ -2,6 +2,7 @@ import React from 'react';
 import { Note } from '@/lib/engine/gameTypes';
 import { HoldNote } from './HoldNote';
 import { useHoldNotes } from '@/hooks/useHoldNotes';
+import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';
 
 interface HoldNotesProps {
   visibleNotes: Note[];
@@ -14,7 +15,7 @@ export function HoldNotes({ visibleNotes, currentTime, vpX, vpY }: HoldNotesProp
   const processedNotes = useHoldNotes(visibleNotes, currentTime);
 
   return (
-    <svg className="absolute inset-0 w-full h-full" style={{ opacity: 1, pointerEvents: 'none' }}>
+    <svg className="absolute inset-0" style={{ width: `${TUNNEL_CONTAINER_WIDTH}px`, height: `${TUNNEL_CONTAINER_HEIGHT}px`, opacity: 1, pointerEvents: 'none', margin: '0 auto' }}>
       {processedNotes.map((noteData) => (
         <HoldNote key={noteData.note.id} noteData={noteData} vpX={vpX} vpY={vpY} />
       ))}

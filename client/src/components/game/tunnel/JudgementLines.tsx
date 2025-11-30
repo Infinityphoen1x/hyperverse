@@ -1,5 +1,5 @@
 import React from 'react';
-import { JUDGEMENT_RADIUS, TAP_JUDGEMENT_LINE_WIDTH, HOLD_JUDGEMENT_LINE_WIDTH, COLOR_DECK_LEFT, COLOR_DECK_RIGHT } from '@/lib/config/gameConstants';
+import { JUDGEMENT_RADIUS, TAP_JUDGEMENT_LINE_WIDTH, HOLD_JUDGEMENT_LINE_WIDTH, COLOR_DECK_LEFT, COLOR_DECK_RIGHT, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';
 
 interface JudgementLinesProps {
   vpX: number;
@@ -10,7 +10,7 @@ interface JudgementLinesProps {
 export function JudgementLines({ vpX, vpY, type }: JudgementLinesProps) {
   if (type === 'tap') {
     return (
-      <svg className="absolute inset-0 w-full h-full" style={{ opacity: 1, pointerEvents: 'none' }}>
+      <svg className="absolute inset-0" style={{ width: `${TUNNEL_CONTAINER_WIDTH}px`, height: `${TUNNEL_CONTAINER_HEIGHT}px`, opacity: 1, pointerEvents: 'none', margin: '0 auto' }}>
         {[
           { angle: 120, color: '#FF007F', key: 'W' },
           { angle: 60, color: '#0096FF', key: 'O' },
@@ -38,7 +38,7 @@ export function JudgementLines({ vpX, vpY, type }: JudgementLinesProps) {
   }
 
   return (
-    <svg className="absolute inset-0 w-full h-full" style={{ opacity: 1, pointerEvents: 'none' }}>
+    <svg className="absolute inset-0" style={{ width: `${TUNNEL_CONTAINER_WIDTH}px`, height: `${TUNNEL_CONTAINER_HEIGHT}px`, opacity: 1, pointerEvents: 'none', margin: '0 auto' }}>
       {[
         { angle: 180, color: COLOR_DECK_LEFT },
         { angle: 0, color: COLOR_DECK_RIGHT },

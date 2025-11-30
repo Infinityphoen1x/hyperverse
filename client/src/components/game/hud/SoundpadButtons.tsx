@@ -1,5 +1,5 @@
 import React from 'react';
-import { BUTTON_CONFIG, HEXAGON_RADII, VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config/gameConstants';
+import { BUTTON_CONFIG, HEXAGON_RADII, VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';
 
 interface SoundpadButtonsProps {
   vpX: number;
@@ -11,7 +11,7 @@ export function SoundpadButtons({ vpX, vpY, onPadHit }: SoundpadButtonsProps) {
   const outerHexagonRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1];
   
   return (
-    <svg className="absolute inset-0 w-full h-full" style={{ opacity: 1 }}>
+    <svg className="absolute inset-0" style={{ width: `${TUNNEL_CONTAINER_WIDTH}px`, height: `${TUNNEL_CONTAINER_HEIGHT}px`, opacity: 1, margin: '0 auto' }}>
       {BUTTON_CONFIG.map(({ lane, key, angle, color }) => {
         const rad = (angle * Math.PI) / 180;
         const cx = vpX + Math.cos(rad) * outerHexagonRadius;
