@@ -15,11 +15,11 @@ interface UseGameLogicProps {
   startGame: () => void;
   setGameState: (state: GameState) => void;
   hitNote: (noteId: number) => void;
-  _trackHoldStart?: (noteId: number) => void;
-  _trackHoldEnd?: (noteId: number) => void;
+  trackHoldStart?: (noteId: number) => void;
+  trackHoldEnd?: (noteId: number) => void;
   customNotes?: Note[];
   setPauseMenuOpen?: (open: boolean) => void;
-  _onHome?: () => void;
+  onHome?: () => void;
 }
 
 export function useGameLogic({
@@ -34,11 +34,8 @@ export function useGameLogic({
   startGame,
   setGameState,
   hitNote,
-  _trackHoldStart,
-  _trackHoldEnd,
   customNotes,
   setPauseMenuOpen,
-  _onHome
 }: UseGameLogicProps) {
   const [isPauseMenuOpen, setIsPauseMenuOpenLocal] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(0);
