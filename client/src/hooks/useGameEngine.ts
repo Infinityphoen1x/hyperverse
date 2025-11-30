@@ -180,6 +180,7 @@ export function useGameEngine({
   // Initialize engine
   if (!engineRef.current) {
     engineRef.current = new GameEngineCore(config, customNotes);
+    console.log(`[GAME-ENGINE] Initialized with ${customNotes.length} notes`);
   }
 
   const [gameState, setGameState] = useState<GameState>('IDLE');
@@ -221,6 +222,11 @@ export function useGameEngine({
     gameState === 'PLAYING' || gameState === 'PAUSED'
   );
 
+  // Logging for debugging
+  useEffect(() => {
+    console.log(`[GAME-ENGINE-STATE] gameState=${gameState}, isPaused=${isPaused}, currentTime=${currentTime.toFixed(2)}, notes=${engineRef.current?.getNotes().length || 0}`);
+  }, [gameState, isPaused, currentTime]);
+
   // Game loop
   useGameLoop(gameState === 'PLAYING' && !isPaused, {
     onFrame: () => {
@@ -245,12 +251,14 @@ export function useGameEngine({
     const engine = engineRef.current;
     if (!engine) return;
 
+    console.log(`[GAME-ENGINE-START] Starting game with ${customNotes.length} notes`);
     engine.reset(customNotes);
     engine.start();
     
     setGameState('PLAYING');
     setIsPaused(false);
     setCurrentTime(0);
+    console.log(`[GAME-ENGINE-START] Game started, engine notes=${engine.getNotes().length}`);
   }, [customNotes]);
 
   const pauseGame = useCallback(() => {
