@@ -30,9 +30,11 @@ interface GameProps {
 export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playerInitializedRef }: GameProps) {
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
+  const [currentTimeState, setCurrentTimeState] = useState(0);
 
   // Store startGame in ref for use in callbacks
   const startGameRef = useRef<(() => void) | null>(null);
+  const engineRefForLogic = useRef<any>(null);
 
   // YouTube hook first – provides getVideoTime with caching
   const {
@@ -67,10 +69,17 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     getVideoTime
   });
 
-  // Store startGame in ref for onPlaying callback
+  // Store refs for callbacks
   useEffect(() => {
     startGameRef.current = startGame;
   }, [startGame]);
+
+  useEffect(() => {
+    engineRefForLogic.current = { 
+      setCurrentTime: setCurrentTimeState, 
+      getCurrentTime: () => currentTime 
+    };
+  }, [currentTime]);
 
   // Game logic hooks (pause, keys, sync, errors)
   const {
@@ -93,10 +102,12 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     restartGame,
     startGame,
     setGameState,
+    setCurrentTime: (time) => setCurrentTimeState(time),
     hitNote,
     trackHoldStart,
     trackHoldEnd,
     customNotes,
+    engineRef: engineRefForLogic,
     onHome: onBackToHome
   });
 

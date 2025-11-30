@@ -14,10 +14,12 @@ interface UseGameLogicProps {
   restartGame: () => void;
   startGame: () => void;
   setGameState: (state: GameState) => void;
+  setCurrentTime: (time: number) => void;
   hitNote: (noteId: number) => void;
   trackHoldStart?: (noteId: number) => void;
   trackHoldEnd?: (noteId: number) => void;
   customNotes?: Note[];
+  engineRef?: React.RefObject<any>;
   setPauseMenuOpen?: (open: boolean) => void;
   onHome?: () => void;
 }
@@ -33,8 +35,10 @@ export function useGameLogic({
   restartGame,
   startGame,
   setGameState,
+  setCurrentTime,
   hitNote,
   customNotes,
+  engineRef,
   setPauseMenuOpen,
 }: UseGameLogicProps) {
   const [isPauseMenuOpen, setIsPauseMenuOpenLocal] = useState(false);
@@ -83,50 +87,37 @@ export function useGameLogic({
     (async () => {
       countdownStartedRef.current = false;
       setPauseMenuOpenHandler(false);
-      resumeGame();
-      setGameState('RESUMING');
-      setResumeFadeOpacity(0);
-      resumeStartTimeRef.current = performance.now();
 
-      const timeoutPromise = new Promise<null>((_, reject) =>
-        setTimeout(() => reject(new Error('Resume timeout')), 3000)
-      );
       try {
-        await Promise.race([
-          (async () => {
-            // CRITICAL: Wait for YouTube player to be fully ready before resuming
-            console.log('[RESUME] Waiting for YouTube player to be ready...');
-            try {
-              await waitForYouTubeReady(2000);
-            } catch (err) {
-              console.warn('[RESUME] YouTube readiness timeout:', err);
-              // Continue anyway - might work with cached time
-            }
-            
-            // pauseTimeRef.current is in milliseconds (from getYouTubeVideoTime or currentTime)
-            // seekYouTubeVideo expects seconds, so divide by 1000
-            const pauseTimeSeconds = pauseTimeRef.current / 1000;
-            console.log(`[RESUME] Seeking to ${pauseTimeSeconds.toFixed(2)}s`);
-            await seekYouTubeVideo(pauseTimeSeconds);
-            await new Promise(resolve => setTimeout(resolve, 50));
-            await playYouTubeVideo();
-            console.log('[RESUME] Video playback resumed');
-            
-            // CRITICAL: Sync engine time to YouTube time after play starts
-            const syncedTime = getVideoTime?.() ?? pauseTimeRef.current;
-            console.log(`[RESUME] Syncing engine time to ${syncedTime.toFixed(0)}ms`);
-            
-            return null;
-          })(),
-          timeoutPromise
-        ]);
+        // Wait for player readiness
+        console.log('[RESUME] Waiting for YouTube player to be ready...');
+        await waitForYouTubeReady();
+
+        // Seek to correct time
+        const targetTime = pauseTimeRef.current / 1000; // seconds
+        console.log(`[RESUME] Seeking to ${targetTime.toFixed(2)}s`);
+        await seekYouTubeVideo(targetTime);
+
+        // Play video
+        console.log('[RESUME] Playing video...');
+        await playYouTubeVideo();
+
+        // Sync engine currentTime
+        const videoTimeMs = getVideoTime?.() ?? pauseTimeRef.current ?? 0;
+        console.log(`[RESUME] Syncing engine to ${videoTimeMs.toFixed(0)}ms`);
+        engineRef?.current?.setCurrentTime?.(videoTimeMs);
+        setCurrentTime(videoTimeMs);
+
+        setGameState('RESUMING');
+        resumeStartTimeRef.current = performance.now();
         asyncReadyRef.current = true;
+
       } catch (err) {
-        console.warn('[RESUME] Resume sequence error:', err);
+        console.error('[RESUME DEBUG] Failed to resume properly:', err);
         asyncReadyRef.current = true;
       }
     })();
-  }, [countdownSeconds, gameState, resumeGame, setGameState, getVideoTime, setPauseMenuOpenHandler]);
+  }, [countdownSeconds, gameState]);
 
   // Fade animation
   useEffect(() => {

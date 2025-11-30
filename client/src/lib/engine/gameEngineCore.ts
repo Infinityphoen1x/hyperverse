@@ -104,6 +104,13 @@ export class GameEngineCore {
     this.timingManager.syncToVideoTime(videoTimeMs);
   }
 
+  /**
+   * Set current time directly (convenience method for resume)
+   */
+  setCurrentTime(videoTimeMs: number): void {
+    this.syncToVideoTime(videoTimeMs);
+  }
+
   // ==========================================================================
   // FRAME PROCESSING - Called each animation frame
   // ==========================================================================
