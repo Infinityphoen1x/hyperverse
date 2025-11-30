@@ -113,22 +113,29 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     }
   }, []);
 
-  // Auto-play YouTube when game PLAYING state reached (first time only)
-  const hasAutoPlayedRef = useRef(false);
+  // Auto-play YouTube when game starts for first time
+  const autoPlayOnceRef = useRef(true);
   useEffect(() => {
-    if (gameState === 'PLAYING' && !hasAutoPlayedRef.current) {
-      hasAutoPlayedRef.current = true;
+    if (gameState === 'IDLE') {
+      autoPlayOnceRef.current = true; // Reset on game over/reload
+    }
+  }, [gameState]);
+
+  useEffect(() => {
+    if (gameState === 'PLAYING' && autoPlayOnceRef.current && youtubeVideoId) {
+      autoPlayOnceRef.current = false;
       const playVideo = async () => {
         try {
           const { playYouTubeVideo } = await import('@/lib/youtube');
           await playYouTubeVideo();
+          console.log('[START-SESSION] Video playing');
         } catch (err) {
           console.error('[START-SESSION] Play failed:', err);
         }
       };
       playVideo();
     }
-  }, [gameState]);
+  }, [gameState, youtubeVideoId]);
 
   if (gameState === 'GAME_OVER') {
     return <GameOverScreen score={score} combo={combo} errors={gameErrors.length} onRestart={() => window.location.reload()} />;

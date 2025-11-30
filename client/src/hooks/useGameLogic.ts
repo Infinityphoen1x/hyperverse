@@ -58,16 +58,17 @@ export function useGameLogic({
 
   // Resume handler - triggers 3-second countdown
   const handleResume = useCallback(() => {
-    if (gameState === 'PAUSED' && countdownSeconds === 0) {
+    if (gameState === 'PAUSED') {
       setCountdownSeconds(3);
     }
-  }, [gameState, countdownSeconds]);
+  }, [gameState]);
 
   // Pause/Resume Logic (usePauseResume equivalent)
   useEffect(() => {
     if (countdownSeconds <= 0 || gameState !== 'PAUSED') return;
+    const currentCount = countdownSeconds; // Capture current count
     const timer = setTimeout(async () => {
-      if (countdownSeconds === 1) {
+      if (currentCount === 1) {
         setPauseMenuOpenHandler(false);
         resumeGame();
         setGameState('RESUMING');
@@ -104,7 +105,7 @@ export function useGameLogic({
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [countdownSeconds, gameState, resumeGame, setGameState, getVideoTime, pauseGame, pauseTimeRef, setPauseMenuOpenHandler]);
+  }, [countdownSeconds, gameState, resumeGame, setGameState, getVideoTime, pauseGame, resumeStartTimeRef, setPauseMenuOpenHandler]);
 
   // Fade animation
   useEffect(() => {
