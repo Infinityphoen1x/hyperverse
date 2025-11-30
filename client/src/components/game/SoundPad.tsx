@@ -1,13 +1,23 @@
 import { motion } from "framer-motion";
 import { useEffect, useState, useCallback } from "react";
 import { Note, GameErrors } from "@/lib/gameEngine";
-import { ACTIVATION_WINDOW, HIT_SUCCESS_DURATION, SOUNDPAD_COLORS, SOUNDPAD_STYLES } from "@/lib/gameConstants";
+import { ACTIVATION_WINDOW, HIT_SUCCESS_DURATION, SOUNDPAD_COLORS, SOUNDPAD_STYLES, VANISHING_POINT_X, VANISHING_POINT_Y, JUDGEMENT_RADIUS, BUTTON_CONFIG } from "@/lib/gameConstants";
 
 interface SoundPadProps {
   onPadHit: (index: number) => void;
   notes: Note[];
   currentTime: number;
 }
+
+// Calculate fixed hexagon corner positions (4 soundpad lanes only)
+const getPadPosition = (laneIndex: number): { x: number; y: number } => {
+  const config = BUTTON_CONFIG[laneIndex];
+  if (!config) return { x: 0, y: 0 };
+  const rad = (config.angle * Math.PI) / 180;
+  const x = VANISHING_POINT_X + Math.cos(rad) * JUDGEMENT_RADIUS;
+  const y = VANISHING_POINT_Y + Math.sin(rad) * JUDGEMENT_RADIUS;
+  return { x, y };
+};
 
 export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
   const [hitFeedback, setHitFeedback] = useState<Record<number, boolean>>({ 0: false, 1: false, 2: false, 3: false });
@@ -87,26 +97,40 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
   }, [hitFeedback]);
 
   return (
-    <div className="p-6 glass-panel rounded-xl border border-neon-pink/30 relative bg-black/40">
-      {/* Decorative wires */}
-      <div className="absolute -top-4 left-10 w-1 h-10 bg-neon-purple/50" />
-      <div className="absolute -top-4 right-10 w-1 h-10 bg-neon-purple/50" />
-
-      {/* Grid Container - Smaller gap, no overlaps */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="flex flex-col items-center gap-2">
-            <PadButton 
-              index={i} 
-              onClick={() => checkHitAndTriggerFeedback(i)} 
-              isHitSuccess={hitFeedback[i]}
-            />
-            <div className="text-xs text-muted-foreground font-rajdhani font-bold tracking-wider">
-              KEY: {['W', 'O', 'I', 'E'][i]}
-            </div>
-          </div>
-        ))}
-      </div>
+    <div className="absolute inset-0 pointer-events-none">
+      {[0, 1, 2, 3].map((i) => {
+        const pos = getPadPosition(i);
+        const config = BUTTON_CONFIG[i];
+        if (!config) return null;
+        
+        return (
+          <motion.button
+            key={`soundpad-${i}`}
+            className="absolute w-14 h-14 rounded-lg font-bold font-rajdhani text-white text-sm focus:outline-none pointer-events-auto transition-all duration-150"
+            style={{
+              left: `${pos.x}px`,
+              top: `${pos.y}px`,
+              transform: 'translate(-50%, -50%)',
+              backgroundColor: hitFeedback[i] ? config.color : `${config.color}40`,
+              border: `2px solid ${config.color}`,
+              boxShadow: hitFeedback[i] 
+                ? `0 0 30px ${config.color}, 0 0 60px ${config.color}, inset 0 0 15px ${config.color}`
+                : `0 0 15px ${config.color}66`,
+            }}
+            whileTap={{ scale: 0.9 }}
+            onMouseDown={() => checkHitAndTriggerFeedback(i)}
+            onMouseUp={() => {}}
+            onMouseLeave={() => {}}
+            data-testid={`soundpad-${i}`}
+            onClick={(e) => {
+              e.preventDefault();
+              checkHitAndTriggerFeedback(i);
+            }}
+          >
+            {config.key}
+          </motion.button>
+        );
+      })}
     </div>
   );
 }
