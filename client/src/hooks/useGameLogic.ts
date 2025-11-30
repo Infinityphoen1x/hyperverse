@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Note, GameState } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo } from '@/lib/youtube';
+import { seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo, waitForYouTubeReady } from '@/lib/youtube';
 
 interface UseGameLogicProps {
   gameState: GameState;
@@ -89,23 +89,40 @@ export function useGameLogic({
       resumeStartTimeRef.current = performance.now();
 
       const timeoutPromise = new Promise<null>((_, reject) =>
-        setTimeout(() => reject(new Error('Resume timeout')), 2000)
+        setTimeout(() => reject(new Error('Resume timeout')), 3000)
       );
       try {
         await Promise.race([
           (async () => {
+            // CRITICAL: Wait for YouTube player to be fully ready before resuming
+            console.log('[RESUME] Waiting for YouTube player to be ready...');
+            try {
+              await waitForYouTubeReady(2000);
+            } catch (err) {
+              console.warn('[RESUME] YouTube readiness timeout:', err);
+              // Continue anyway - might work with cached time
+            }
+            
             // pauseTimeRef.current is in milliseconds (from getYouTubeVideoTime or currentTime)
             // seekYouTubeVideo expects seconds, so divide by 1000
             const pauseTimeSeconds = pauseTimeRef.current / 1000;
+            console.log(`[RESUME] Seeking to ${pauseTimeSeconds.toFixed(2)}s`);
             await seekYouTubeVideo(pauseTimeSeconds);
             await new Promise(resolve => setTimeout(resolve, 50));
             await playYouTubeVideo();
+            console.log('[RESUME] Video playback resumed');
+            
+            // CRITICAL: Sync engine time to YouTube time after play starts
+            const syncedTime = getVideoTime?.() ?? pauseTimeRef.current;
+            console.log(`[RESUME] Syncing engine time to ${syncedTime.toFixed(0)}ms`);
+            
             return null;
           })(),
           timeoutPromise
         ]);
         asyncReadyRef.current = true;
       } catch (err) {
+        console.warn('[RESUME] Resume sequence error:', err);
         asyncReadyRef.current = true;
       }
     })();

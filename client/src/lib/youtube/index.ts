@@ -10,3 +10,4 @@ export { resetYouTubeTimeTracker } from './youtubeTimeReset';
 export { seekYouTubeVideo } from './youtubeSeek';
 export { playYouTubeVideo } from './youtubePlay';
 export { pauseYouTubeVideo } from './youtubePause';
+export { waitForYouTubeReady, hasValidYouTubeTime } from './youtubeReadiness';

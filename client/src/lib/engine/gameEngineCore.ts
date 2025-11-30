@@ -97,6 +97,13 @@ export class GameEngineCore {
     return Object.freeze({ ...this.config });
   }
 
+  /**
+   * Sync timing to a known video time (used after resume)
+   */
+  syncToVideoTime(videoTimeMs: number): void {
+    this.timingManager.syncToVideoTime(videoTimeMs);
+  }
+
   // ==========================================================================
   // FRAME PROCESSING - Called each animation frame
   // ==========================================================================

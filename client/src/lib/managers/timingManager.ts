@@ -30,6 +30,16 @@ export class TimingManager {
     }
   }
 
+  /**
+   * Sync timing to a known video time (used after resume to align with YouTube)
+   * @param videoTimeMs The current video time in milliseconds
+   */
+  syncToVideoTime(videoTimeMs: number): void {
+    console.log(`[TIMING-SYNC] Syncing to video time: ${videoTimeMs.toFixed(0)}ms`);
+    // Reset start time so that getCurrentTime returns the video time
+    this.startTime = performance.now() - videoTimeMs;
+  }
+
   getCurrentTime(videoTime?: number | null): number {
     // Prefer authoritative video time if available
     if (videoTime !== undefined && videoTime !== null && videoTime >= 0) {
