@@ -109,6 +109,7 @@ export function useGameLogic({
         setCurrentTime(videoTimeMs);
 
         setGameState('RESUMING');
+        console.log('[RESUME-ANIM] Starting fade animation...');
         resumeStartTimeRef.current = performance.now();
         asyncReadyRef.current = true;
 
@@ -120,6 +121,7 @@ export function useGameLogic({
         engineRef?.current?.setCurrentTime?.(videoTimeMs);
         setCurrentTime(videoTimeMs);
         setGameState('RESUMING');
+        console.log('[RESUME-ANIM] Starting fade animation (fallback)...');
         resumeStartTimeRef.current = performance.now();
         asyncReadyRef.current = true;
       }
