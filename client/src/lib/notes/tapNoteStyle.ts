@@ -1,6 +1,5 @@
-import { GREYSCALE_FILL_COLOR, GREYSCALE_GLOW_COLOR } from '@/lib/utils/gameConstants';
+import { GREYSCALE_FILL_COLOR, GREYSCALE_GLOW_COLOR, TAP_FAILURE_ANIMATIONS, TAP_HIT_FLASH, TAP_COLORS, TAP_OPACITY } from './constants';
 import { TapNoteState } from './tapNoteHelpers';
-import { TAP_FAILURE_ANIMATIONS, TAP_HIT_FLASH, TAP_COLORS, TAP_OPACITY } from './tapNoteConstants';
 
 export interface TapNoteStyle {
   opacity: number;

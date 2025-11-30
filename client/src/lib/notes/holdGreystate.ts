@@ -4,7 +4,7 @@ import {
   COLOR_DECK_LEFT,
   COLOR_DECK_RIGHT,
   JUDGEMENT_RADIUS,
-} from '@/lib/utils/gameConstants';
+} from './constants';
 import { HoldNoteFailureStates } from './holdNoteHelpers';
 
 export interface HoldNoteColors {

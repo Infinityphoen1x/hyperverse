@@ -4,7 +4,7 @@ import {
   HOLD_NOTE_STRIP_WIDTH_MULTIPLIER,
   LEAD_TIME,
   JUDGEMENT_RADIUS,
-} from '@/lib/utils/gameConstants';
+} from './constants';
 
 export interface ApproachGeometry {
   nearDistance: number;
