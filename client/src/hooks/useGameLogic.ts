@@ -240,14 +240,16 @@ export function useGameLogic({
     if (gameState === 'GAME_OVER') {
       gameAlreadyStartedRef.current = false;
       countdownStartedRef.current = false;
+      setPauseMenuOpenHandler(false);
     } else if (gameState === 'PLAYING') {
-      // Reset countdown flag when resuming from pause
+      // Reset countdown flag and close menu when resuming from pause
       countdownStartedRef.current = false;
       setCountdownSeconds(0);
+      setPauseMenuOpenHandler(false);
     } else if (gameState === 'PAUSED') {
       asyncReadyRef.current = false;
     }
-  }, [gameState]);
+  }, [gameState, setPauseMenuOpenHandler]);
 
   return {
     isPauseMenuOpen,
