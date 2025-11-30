@@ -897,11 +897,12 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
             
             return (
               <g key={`soundpad-button-${lane}`}>
-                {/* Circular button with fill and glow */}
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r="20"
+                {/* Square button with fill and glow */}
+                <rect
+                  x={cx - 20}
+                  y={cy - 20}
+                  width="40"
+                  height="40"
                   fill={`${color}40`}
                   stroke={color}
                   strokeWidth="2"
@@ -910,13 +911,14 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
                   onMouseDown={() => onPadHit?.(lane)}
                   onMouseUp={() => {}}
                   onMouseLeave={() => {}}
-                  data-testid={`soundpad-circle-${lane}`}
+                  data-testid={`soundpad-square-${lane}`}
                 />
                 {/* Glow effect */}
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r="20"
+                <rect
+                  x={cx - 20}
+                  y={cy - 20}
+                  width="40"
+                  height="40"
                   fill="none"
                   stroke={color}
                   strokeWidth="1"
