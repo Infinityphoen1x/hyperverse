@@ -272,13 +272,20 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
       time = Math.round(time);
       gameTimeRef.current = time;
       
-      // Check for missed notes - update ref-based state only (skip during COUNTDOWN)
+      // Check for missed notes and cleanup completed animations - update ref-based state only (skip during COUNTDOWN)
       let shouldGameOver = false;
       const notes = notesRef.current;
       if (gameStateRef.current === 'PLAYING' && Array.isArray(notes)) {
         for (let i = 0; i < notes.length; i++) {
           const n = notes[i];
           if (!n) continue;
+          
+          // Cleanup successfully hit notes after animation completes (1100ms after hit)
+          if (n.hit && n.hitTime && time > n.hitTime + 1100) {
+            notes.splice(i, 1);
+            i--; // Adjust index after removing element
+            continue;
+          }
           
           if (!n.hit && !n.missed && !n.tapTooEarlyFailure && !n.tapMissFailure && !n.holdReleaseFailure && !n.tooEarlyFailure && !n.holdMissFailure) {
             let shouldMarkFailed = false;
