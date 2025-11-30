@@ -18,6 +18,7 @@ import {
   MAX_HEALTH,
   TAP_RENDER_WINDOW_MS,
   TAP_FALLTHROUGH_WINDOW_MS,
+  TAP_HIT_HOLD_DURATION,
   HOLD_RENDER_WINDOW_MS,
   TAP_JUDGEMENT_LINE_WIDTH,
   HOLD_JUDGEMENT_LINE_WIDTH,
@@ -208,8 +209,8 @@ const shouldRenderTapNote = (state: TapNoteState, timeUntilHit: number): boolean
   // Time-based render window: 2000ms before (TAP_RENDER_WINDOW_MS) to 500ms after miss (TAP_FALLTHROUGH_WINDOW_MS)
   if (timeUntilHit > TAP_RENDER_WINDOW_MS || timeUntilHit < -TAP_FALLTHROUGH_WINDOW_MS) return false;
   
-  // After hit animation finishes (600ms)
-  if (state.isHit && state.timeSinceHit >= 600) return false;
+  // After hit hold duration finishes (extended to 1100ms to match hold notes)
+  if (state.isHit && state.timeSinceHit >= TAP_HIT_HOLD_DURATION) return false;
   
   // After failure animation finishes - different durations for each failure type
   if (state.isTapTooEarlyFailure && state.timeSinceFail > 800) return false;
@@ -255,11 +256,41 @@ const calculateTapNoteGeometry = (
   progress: number,
   tapRayAngle: number,
   vpX: number,
-  vpY: number
+  vpY: number,
+  isSuccessfulHit: boolean = false,
+  pressHoldTime: number = 0,
+  currentTime: number = 0
 ): TapNoteGeometry => {
   const MIN_DEPTH = 5;
   const MAX_DEPTH = 40;
-  // Clamp progress to valid range for geometry calculation
+  
+  // For successful hits: lock at tap position (judgement line) instead of approaching
+  if (isSuccessfulHit && pressHoldTime > 0) {
+    const lockedNearDist = JUDGEMENT_RADIUS;
+    const TRAPEZOID_DEPTH = MIN_DEPTH + 0.5 * (MAX_DEPTH - MIN_DEPTH); // Half depth when locked
+    const lockedFarDist = Math.max(1, lockedNearDist - TRAPEZOID_DEPTH);
+    
+    const tapLeftRayAngle = tapRayAngle - 8;
+    const tapRightRayAngle = tapRayAngle + 8;
+    const tapLeftRad = (tapLeftRayAngle * Math.PI) / 180;
+    const tapRightRad = (tapRightRayAngle * Math.PI) / 180;
+    
+    const x1 = vpX + Math.cos(tapLeftRad) * lockedFarDist;
+    const y1 = vpY + Math.sin(tapLeftRad) * lockedFarDist;
+    const x2 = vpX + Math.cos(tapRightRad) * lockedFarDist;
+    const y2 = vpY + Math.sin(tapRightRad) * lockedFarDist;
+    const x3 = vpX + Math.cos(tapRightRad) * lockedNearDist;
+    const y3 = vpY + Math.sin(tapRightRad) * lockedNearDist;
+    const x4 = vpX + Math.cos(tapLeftRad) * lockedNearDist;
+    const y4 = vpY + Math.sin(tapLeftRad) * lockedNearDist;
+    
+    return {
+      x1, y1, x2, y2, x3, y3, x4, y4,
+      points: `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`,
+    };
+  }
+  
+  // Normal approach for unapproached/failed notes
   const clampedProgress = Math.max(0, Math.min(1, progress));
   const TRAPEZOID_DEPTH = MIN_DEPTH + (clampedProgress * (MAX_DEPTH - MIN_DEPTH));
   const nearDist = 1 + (clampedProgress * (JUDGEMENT_RADIUS - 1));
@@ -320,7 +351,14 @@ const calculateTapNoteStyle = (
     stroke = 'rgba(100,100,100,0.6)';
     filter = 'grayscale(1)';
   } else if (state.isHit) {
-    opacity = (1 - (state.timeSinceHit / 600)) * (0.4 + (progress * 0.6));
+    // For successful hits: stay visible for TAP_HIT_HOLD_DURATION (1100ms), flash for first 600ms
+    if (state.timeSinceHit < 600) {
+      opacity = 0.4 + (progress * 0.6); // Full opacity during flash
+    } else {
+      // Fade out over remaining time (600ms to 1100ms)
+      const fadeProgress = (state.timeSinceHit - 600) / 500;
+      opacity = Math.max(0.1, (1 - fadeProgress) * (0.4 + (progress * 0.6)));
+    }
   }
   
   const hitFlashIntensity = state.isHit && state.timeSinceHit < 600 
@@ -1270,7 +1308,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
             // Get rendering data
             const tapRayAngle = getLaneAngle(note.lane);
             const noteColor = getColorForLane(note.lane);
-            const geometry = calculateTapNoteGeometry(progress, tapRayAngle, vpX, vpY);
+            const geometry = calculateTapNoteGeometry(progress, tapRayAngle, vpX, vpY, state.isHit, note.pressHoldTime || 0, currentTime);
             const style = calculateTapNoteStyle(progress, state, noteColor);
             
             return (
