@@ -4,7 +4,6 @@ import {
   GameState,
   Note,
   Difficulty,
-  ScoreState,
 } from '@/lib/engine/gameTypes';
 import { GameEngineCore } from '@/lib/engine/gameEngineCore';
 
@@ -273,7 +272,7 @@ export function useGameEngine({
     engine.handleHoldEnd(lane, time);
   }, [getVideoTime]);
 
-  const markNoteMissed = useCallback((noteId: string) => {
+  const markNoteMissed = useCallback((_noteId: string) => {
     // Legacy compatibility - could be implemented if needed
     console.warn('markNoteMissed is deprecated - auto-fail handles this');
   }, []);
