@@ -72,7 +72,8 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     gameErrors,
     handleLeftDeckSpin,
     handleRightDeckSpin,
-    handleRewind
+    handleRewind,
+    handleResume
   } = useGameLogic({
     gameState,
     currentTime,
@@ -112,6 +113,21 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     }
   }, []);
 
+  // Auto-play YouTube when game PLAYING state reached
+  useEffect(() => {
+    if (gameState === 'PLAYING') {
+      const playVideo = async () => {
+        try {
+          const { playYouTubeVideo } = await import('@/lib/youtube');
+          await playYouTubeVideo();
+        } catch (err) {
+          console.error('[START-SESSION] Play failed:', err);
+        }
+      };
+      playVideo();
+    }
+  }, [gameState]);
+
   if (gameState === 'GAME_OVER') {
     return <GameOverScreen score={score} combo={combo} errors={gameErrors.length} onRestart={() => window.location.reload()} />;
   }
@@ -132,7 +148,7 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
       {isPauseMenuOpen && isPaused && (
         <PauseMenu
           countdownSeconds={countdownSeconds}
-          onResume={() => { /* Handled in hook */ }}
+          onResume={handleResume}
           onRewind={handleRewind}
           onHome={onBackToHome}
         />
