@@ -157,8 +157,13 @@ export function useGameLogic({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if ((gameState === 'PLAYING' || gameState === 'RESUMING') && !isPaused) {
+          // IMMEDIATELY set pause state before async YouTube operations
           pauseTimeRef.current = currentTime;
           pauseGame();
+          setGameState('PAUSED');
+          setPauseMenuOpenHandler(true);
+          
+          // Then do YouTube pause asynchronously
           (async () => {
             try {
               await pauseYouTubeVideo();
@@ -173,8 +178,6 @@ export function useGameLogic({
             } catch (err) {
               // Pause failed, continue anyway
             }
-            setGameState('PAUSED');
-            setPauseMenuOpenHandler(true);
           })();
         } else if (gameState === 'PAUSED' && isPaused) {
           countdownStartedRef.current = true;
