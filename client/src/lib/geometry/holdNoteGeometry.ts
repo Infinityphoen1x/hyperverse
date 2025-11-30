@@ -1,10 +1,7 @@
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import {
-  HOLD_NOTE_STRIP_WIDTH_MULTIPLIER,
-  LEAD_TIME,
-  JUDGEMENT_RADIUS,
-} from '../notes/config/constants';
+import { LEAD_TIME, JUDGEMENT_RADIUS } from '@/lib/config/gameConstants';
+import { HOLD_NOTE_STRIP_WIDTH_MULTIPLIER } from '../notes/config/constants';
 
 export interface ApproachGeometry {
   nearDistance: number;
