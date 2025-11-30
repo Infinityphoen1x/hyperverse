@@ -889,11 +889,11 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
           {/* Vanishing point - nearly invisible */}
           <circle cx={vpX} cy={vpY} r="6" fill="rgba(0,255,255,0.05)" />
           
-          {/* Soundpad buttons - 6 circular interactive elements at hexagon corners */}
+          {/* Soundpad buttons - 6 square interactive elements at hexagon corners (fixed constant VP) */}
           {BUTTON_CONFIG.map(({ lane, key, angle, color }) => {
             const rad = (angle * Math.PI) / 180;
-            const cx = vpX + Math.cos(rad) * MAX_DISTANCE;
-            const cy = vpY + Math.sin(rad) * MAX_DISTANCE;
+            const cx = VANISHING_POINT_X + Math.cos(rad) * MAX_DISTANCE;
+            const cy = VANISHING_POINT_Y + Math.sin(rad) * MAX_DISTANCE;
             
             return (
               <g key={`soundpad-button-${lane}`}>
