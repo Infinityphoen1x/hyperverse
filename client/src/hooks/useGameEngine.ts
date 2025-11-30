@@ -6,6 +6,7 @@ import {
   Difficulty,
 } from '@/lib/engine/gameTypes';
 import { GameEngineCore } from '@/lib/engine/gameEngineCore';
+import { MAX_HEALTH } from '@/lib/config/gameConstants';
 
 // ============================================================================
 // CONFIGURATION HOOK
@@ -26,7 +27,7 @@ export function useGameConfig(_difficulty: Difficulty): GameConfig {
     ACCURACY_PERFECT_POINTS: 100,
     ACCURACY_GREAT_POINTS: 75,
     ACCURACY_NORMAL_POINTS: 50,
-    MAX_HEALTH: 100,
+    MAX_HEALTH: MAX_HEALTH,
   };
 }
 

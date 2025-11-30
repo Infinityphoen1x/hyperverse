@@ -35,7 +35,7 @@ export function TunnelBackground({ vpX, vpY, hexCenterX, hexCenterY, health }: T
             return `${x},${y}`;
           }).join(' ');
           const strokeWidth = 0.3 + progress * 3.5;
-          const opacity = 0.3 + progress * 0.6;
+          const opacity = 0.08 + progress * 0.22;
 
           return (
             <polygon key={`tunnel-hexagon-${idx}`} points={points} fill="none" stroke={rayColor} strokeWidth={strokeWidth} opacity={opacity} />
@@ -58,7 +58,7 @@ export function TunnelBackground({ vpX, vpY, hexCenterX, hexCenterY, health }: T
                 const x2 = vpX + (cornerX - vpX) * segProgress;
                 const y2 = vpY + (cornerY - vpY) * segProgress;
                 const strokeWidth = 0.3 + segProgress * 3.5;
-                const opacity = 0.4 + segProgress * 0.5;
+                const opacity = 0.1 + segProgress * 0.4;
 
                 return (
                   <line key={`segment-${angle}-${segIdx}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={rayColor} strokeWidth={strokeWidth} opacity={opacity} strokeLinecap="round" />
