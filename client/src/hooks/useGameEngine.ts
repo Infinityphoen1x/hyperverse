@@ -234,6 +234,14 @@ export function useGameEngine({
       setCurrentTime(time);
       
       const { shouldGameOver } = engine.processFrame(time);
+
+      console.log(
+        `[RESUME DEBUG] currentTime=${time.toFixed(0)}ms`,
+        'First note:',
+        engine.getNotes()[0]?.time,
+        'Active notes:',
+        engine.getActiveNotes().length
+      );
       
       if (shouldGameOver) {
         setGameState('GAME_OVER');
