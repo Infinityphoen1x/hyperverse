@@ -198,19 +198,13 @@ export function useGameEngine({
     isGameActive
   );
   
+  // Notes always sync - engine maintains all state (combo, score, hit/missed status)
+  // This ensures notes update properly through pause/resume cycle
   const notes = useStateSynchronizer(
     () => engineRef.current?.getNotes() || [],
     intervals.notesInterval,
-    isGameActive
+    gameState === 'PLAYING' || gameState === 'PAUSED'
   );
-
-  // Force notes refresh when resuming from pause
-  useEffect(() => {
-    if (!isPaused && gameState === 'PLAYING') {
-      // Trigger a manual sync by creating a dependency on resume
-      engineRef.current?.getNotes();
-    }
-  }, [isPaused, gameState]);
 
   // Game loop
   useGameLoop(gameState === 'PLAYING' && !isPaused, {
