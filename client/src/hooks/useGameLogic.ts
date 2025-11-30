@@ -194,8 +194,6 @@ export function useGameLogic({
     const interval = setInterval(() => {
       const youtubeTime = getVideoTime();
       if (youtubeTime === null) return;
-      const gameTime = currentTime;
-      const drift = Math.abs(youtubeTime - gameTime);
     }, 1000);
     return () => clearInterval(interval);
   }, [gameState, getVideoTime, currentTime]);
