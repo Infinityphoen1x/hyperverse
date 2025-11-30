@@ -175,7 +175,6 @@ export function DeckHoldMeters({ notes, currentTime }: DeckHoldMetersProps) {
       // Example: If note.time=1000, duration=1000, and player presses at 950 (early):
       // - Meter should measure from 1000 to 2000 (1000ms window)
       // - Not from 950 to 2000 (1050ms)
-      const holdEndTime = activeNote.time + beatmapHoldDuration;
       const elapsedFromNoteTime = currentTime - activeNote.time;
       
       // No negative progress (before note.time)
