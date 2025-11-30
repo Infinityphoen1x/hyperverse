@@ -79,5 +79,5 @@ export const trackHoldNoteAnimationLifecycle = (
   }
 };
 
-export { calculateApproachGeometry, calculateCollapseGeometry, calculateLockedNearDistance, calculateHoldNoteGlow, getTrapezoidCorners, type ApproachGeometry, type CollapseGeometry, type GlowCalculation } from '../geometry/holdNoteGeometry';
-export { calculateHoldNoteColors, determineGreyscaleState, type HoldNoteColors, type GreyscaleState } from './hold/holdGreystate';
+export { calculateApproachGeometry, calculateCollapseGeometry, calculateLockedNearDistance, calculateHoldNoteGlow, getTrapezoidCorners, type ApproachGeometry, type CollapseGeometry, type GlowCalculation } from '../../geometry/holdNoteGeometry';
+export { calculateHoldNoteColors, determineGreyscaleState, type HoldNoteColors, type GreyscaleState } from './holdGreystate';
