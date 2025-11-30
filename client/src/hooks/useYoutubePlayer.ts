@@ -12,7 +12,7 @@ import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from '@/lib/utils/gameConstants';
 interface UseYouTubePlayerProps {
   videoId: string | null;
   iframeRef: React.RefObject<HTMLIFrameElement>;
-  playerInitializedRef: React.MutableRefObject<boolean>;
+  playerInitializedRef: React.RefObject<boolean>;
   onPlaying?: () => void;
 }
 
@@ -45,11 +45,11 @@ export function useYouTubePlayer({ videoId, iframeRef, playerInitializedRef, onP
   useEffect(() => {
     if (!videoId || !iframeRef.current || initRef.current) return;
 
-    const initPlayer = async () => {
+    const initPlayer = () => {
       try {
         const embedUrl = buildYouTubeEmbedUrl(videoId, YOUTUBE_BACKGROUND_EMBED_OPTIONS);
         iframeRef.current!.src = embedUrl;
-        await initYouTubePlayer(iframeRef.current!);
+        initYouTubePlayer(iframeRef.current!);
         playerInitializedRef.current = true;
         setIsReady(true);
         initRef.current = true;
