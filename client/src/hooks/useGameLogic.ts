@@ -63,55 +63,57 @@ export function useGameLogic({
     }
   }, [gameState]);
 
-  // Pause/Resume Logic (usePauseResume equivalent)
+  // Countdown timer - fires once per second when paused
   useEffect(() => {
-    if (countdownSeconds <= 0 || gameState !== 'PAUSED') return;
-    
-    const timer = setTimeout(async () => {
-      // Decrement first, check will happen on next render
-      setCountdownSeconds(prev => {
-        const newCount = prev - 1;
-        
-        // If this is the final second, execute resume
-        if (newCount === 0) {
-          (async () => {
-            setPauseMenuOpenHandler(false);
-            resumeGame();
-            setGameState('RESUMING');
-            setResumeFadeOpacity(0);
-            resumeStartTimeRef.current = performance.now();
+    if (gameState !== 'PAUSED' || countdownSeconds === 0) return;
 
-            const timeoutPromise = new Promise<null>((_, reject) =>
-              setTimeout(() => reject(new Error('Resume timeout')), 2000)
-            );
-            try {
-              await Promise.race([
-                (async () => {
-                  const pauseTimeSeconds = pauseTimeRef.current / 1000;
-                  await seekYouTubeVideo(pauseTimeSeconds);
-                  const confirmedTime = getVideoTime?.() ?? null;
-                  if (confirmedTime !== null) {
-                    console.log(`[RESUME] Synced to ${(confirmedTime / 1000).toFixed(2)}s`);
-                  }
-                  await new Promise(resolve => setTimeout(resolve, 50));
-                  await playYouTubeVideo();
-                  return null;
-                })(),
-                timeoutPromise
-              ]);
-              asyncReadyRef.current = true;
-            } catch (err) {
-              console.error('[RESUME] Failed:', err);
-              asyncReadyRef.current = true;
-            }
-          })();
-        }
-        
+    const interval = setInterval(() => {
+      setCountdownSeconds(prev => {
+        const newCount = Math.max(prev - 1, 0);
+        console.log(`[COUNTDOWN] ${prev} → ${newCount}`);
         return newCount;
       });
     }, 1000);
-    
-    return () => clearTimeout(timer);
+
+    return () => clearInterval(interval);
+  }, [gameState, countdownSeconds]); // Re-run when either changes
+
+  // Execute resume when countdown reaches 0
+  useEffect(() => {
+    if (countdownSeconds !== 0 || gameState !== 'PAUSED') return;
+
+    (async () => {
+      console.log('[COUNTDOWN-COMPLETE] Starting resume sequence');
+      setPauseMenuOpenHandler(false);
+      resumeGame();
+      setGameState('RESUMING');
+      setResumeFadeOpacity(0);
+      resumeStartTimeRef.current = performance.now();
+
+      const timeoutPromise = new Promise<null>((_, reject) =>
+        setTimeout(() => reject(new Error('Resume timeout')), 2000)
+      );
+      try {
+        await Promise.race([
+          (async () => {
+            const pauseTimeSeconds = pauseTimeRef.current / 1000;
+            await seekYouTubeVideo(pauseTimeSeconds);
+            const confirmedTime = getVideoTime?.() ?? null;
+            if (confirmedTime !== null) {
+              console.log(`[RESUME] Synced to ${(confirmedTime / 1000).toFixed(2)}s`);
+            }
+            await new Promise(resolve => setTimeout(resolve, 50));
+            await playYouTubeVideo();
+            return null;
+          })(),
+          timeoutPromise
+        ]);
+        asyncReadyRef.current = true;
+      } catch (err) {
+        console.error('[RESUME] Failed:', err);
+        asyncReadyRef.current = true;
+      }
+    })();
   }, [countdownSeconds, gameState, resumeGame, setGameState, getVideoTime, setPauseMenuOpenHandler]);
 
   // Fade animation
