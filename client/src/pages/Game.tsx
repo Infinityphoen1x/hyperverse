@@ -53,12 +53,9 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     getVideoTime: undefined // Provided by useYouTubePlayer
   });
 
-  // YouTube hook – provides getVideoTime, play, pause, seek functions
+  // YouTube hook – provides getVideoTime, auto-start on PLAYING
   const {
     getVideoTime,
-    play: playYouTube,
-    pause: pauseYouTube,
-    seek: seekYouTube,
     isReady: playerReady
   } = useYouTubePlayer({
     videoId: youtubeVideoId,
@@ -92,10 +89,7 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     trackHoldEnd,
     customNotes,
     setPauseMenuOpen: (open) => {}, // Internal state managed in hook
-    onHome: onBackToHome,
-    playYouTube,
-    pauseYouTube,
-    seekYouTube
+    onHome: onBackToHome
   });
 
   // Memoized values

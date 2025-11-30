@@ -20,9 +20,6 @@ interface UseGameLogicProps {
   customNotes?: Note[];
   setPauseMenuOpen?: (open: boolean) => void;
   onHome?: () => void;
-  playYouTube?: () => Promise<void>;
-  pauseYouTube?: () => Promise<void>;
-  seekYouTube?: (time: number) => Promise<void>;
 }
 
 export function useGameLogic({
@@ -39,9 +36,6 @@ export function useGameLogic({
   hitNote,
   customNotes,
   setPauseMenuOpen,
-  playYouTube,
-  pauseYouTube,
-  seekYouTube,
 }: UseGameLogicProps) {
   const [isPauseMenuOpen, setIsPauseMenuOpenLocal] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(0);
@@ -81,22 +75,14 @@ export function useGameLogic({
           await Promise.race([
             (async () => {
               const pauseTimeSeconds = pauseTimeRef.current / 1000;
-              if (seekYouTube) {
-                await seekYouTube(pauseTimeSeconds);
-              } else {
-                await seekYouTubeVideo(pauseTimeSeconds);
-              }
+              await seekYouTubeVideo(pauseTimeSeconds);
               const confirmedTime = getVideoTime?.() ?? null;
               if (confirmedTime !== null) {
                 // Sync currentTime if needed
                 console.log(`[RESUME] Synced to ${(confirmedTime / 1000).toFixed(2)}s`);
               }
               await new Promise(resolve => setTimeout(resolve, 50));
-              if (playYouTube) {
-                await playYouTube();
-              } else {
-                await playYouTubeVideo();
-              }
+              await playYouTubeVideo();
               return null;
             })(),
             timeoutPromise
@@ -111,7 +97,7 @@ export function useGameLogic({
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [countdownSeconds, gameState, resumeGame, setGameState, getVideoTime, pauseGame, pauseTimeRef, setPauseMenuOpenHandler, playYouTube, seekYouTube]);
+  }, [countdownSeconds, gameState, resumeGame, setGameState, getVideoTime, pauseGame, pauseTimeRef, setPauseMenuOpenHandler]);
 
   // Fade animation
   useEffect(() => {
@@ -165,20 +151,6 @@ export function useGameLogic({
           })();
         } else if (gameState === 'PAUSED' && isPaused) {
           setCountdownSeconds(3);
-        } else if (gameState === 'PLAYING' && !isPaused && !isPauseMenuOpen) {
-          // START SESSION button was clicked - trigger video play
-          console.log('[START-SESSION] User triggered play');
-          (async () => {
-            try {
-              if (playYouTube) {
-                await playYouTube();
-              } else {
-                await playYouTubeVideo();
-              }
-            } catch (err) {
-              console.error('[START-SESSION] Play failed:', err);
-            }
-          })();
         }
       } else if ((e.key === 'r' || e.key === 'R') && (gameState === 'PLAYING' || gameState === 'PAUSED')) {
         handleRewind();
@@ -186,7 +158,7 @@ export function useGameLogic({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, isPaused, pauseGame, pauseYouTube, setGameState, getVideoTime, currentTime, setPauseMenuOpenHandler, playYouTube]);
+  }, [gameState, isPaused, pauseGame, setGameState, getVideoTime, currentTime, setPauseMenuOpenHandler]);
 
   // Rewind handler
   const handleRewind = useCallback(async () => {
@@ -195,19 +167,13 @@ export function useGameLogic({
     pauseTimeRef.current = 0;
     setPauseMenuOpenHandler(false);
     try {
-      if (pauseYouTube) await pauseYouTube();
-      else await pauseYouTubeVideo();
-      
-      if (seekYouTube) await seekYouTube(0);
-      else await seekYouTubeVideo(0);
-      
-      if (playYouTube) await playYouTube(); // Play after seeking
-      else await playYouTubeVideo();
+      await pauseYouTubeVideo();
+      await seekYouTubeVideo(0);
     } catch (err) {
       console.error('[REWIND] Failed:', err);
     }
     startGame();
-  }, [restartGame, setPauseMenuOpenHandler, startGame, playYouTube, pauseYouTube, seekYouTube]);
+  }, [restartGame, setPauseMenuOpenHandler, startGame]);
 
   // Time Sync (useTimeSync equivalent)
   useEffect(() => {
