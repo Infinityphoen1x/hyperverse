@@ -1,0 +1,25 @@
+{
+  "timestamp": "2025-11-30T10:25:23.871Z",
+  "errorLog": [
+    "[1764498305346] BeatmapConverter: HOLD note hold_0 lane=-1 → type=SPIN_LEFT",
+    "[1764498305347] BeatmapConverter: HOLD note hold_1 lane=-2 → type=SPIN_RIGHT",
+    "[1764498305347] BeatmapConverter: HOLD note hold_2 lane=-1 → type=SPIN_LEFT",
+    "[1764498305347] BeatmapConverter: HOLD note hold_3 lane=-2 → type=SPIN_RIGHT",
+    "[1764498305347] BeatmapConverter: HOLD note hold_4 lane=-1 → type=SPIN_LEFT",
+    "[1764498305347] BeatmapConverter: HOLD note hold_5 lane=-1 → type=SPIN_LEFT",
+    "[1764498305347] BeatmapConverter: HOLD note hold_6 lane=-2 → type=SPIN_RIGHT",
+    "[1764498305347] BeatmapConverter: HOLD note hold_7 lane=-1 → type=SPIN_LEFT",
+    "[1764498305347] BeatmapConverter: HOLD note hold_8 lane=-2 → type=SPIN_RIGHT",
+    "[1764498305347] BeatmapConverter: HOLD note hold_9 lane=-1 → type=SPIN_LEFT",
+    "[1764498305347] BeatmapConverter: HOLD note hold_10 lane=-1 → type=SPIN_LEFT",
+    "[1764498305347] BeatmapConverter: HOLD note hold_11 lane=-2 → type=SPIN_RIGHT"
+  ],
+  "animationStats": {
+    "total": 0,
+    "completed": 0,
+    "failed": 0,
+    "pending": 0,
+    "rendering": 0
+  },
+  "animationDetails": []
+}
