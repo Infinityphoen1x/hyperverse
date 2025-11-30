@@ -181,7 +181,7 @@ const calculateApproachGeometry = (
 interface TapNoteState {
   isHit: boolean;
   isFailed: boolean;
-  isTooEarlyFailure: boolean;
+  isTapTooEarlyFailure: boolean;
   isTapMissFailure: boolean;
   failureTime: number | undefined;
   hitTime: number | undefined;
@@ -191,16 +191,16 @@ interface TapNoteState {
 
 const getTapNoteState = (note: Note, currentTime: number): TapNoteState => {
   const isHit = note.hit || false;
-  const isTooEarlyFailure = note.tooEarlyFailure || false;
+  const isTapTooEarlyFailure = note.tapTooEarlyFailure || false;
   const isTapMissFailure = note.tapMissFailure || false;
-  const isFailed = isTooEarlyFailure || isTapMissFailure;
+  const isFailed = isTapTooEarlyFailure || isTapMissFailure;
   const failureTime = note.failureTime;
   const hitTime = note.hitTime;
   
   const timeSinceFail = failureTime ? Math.max(0, currentTime - failureTime) : 0;
   const timeSinceHit = isHit && hitTime ? Math.max(0, currentTime - hitTime) : 0;
   
-  return { isHit, isFailed, isTooEarlyFailure, isTapMissFailure, failureTime, hitTime, timeSinceFail, timeSinceHit };
+  return { isHit, isFailed, isTapTooEarlyFailure, isTapMissFailure, failureTime, hitTime, timeSinceFail, timeSinceHit };
 };
 
 /** Determine if TAP note should still be rendered */
@@ -212,7 +212,7 @@ const shouldRenderTapNote = (state: TapNoteState, timeUntilHit: number): boolean
   if (state.isHit && state.timeSinceHit >= 600) return false;
   
   // After failure animation finishes - different durations for each failure type
-  if (state.isTooEarlyFailure && state.timeSinceFail > 800) return false;
+  if (state.isTapTooEarlyFailure && state.timeSinceFail > 800) return false;
   if (state.isTapMissFailure && state.timeSinceFail > 1100) return false;
   
   return true;
@@ -222,8 +222,8 @@ const shouldRenderTapNote = (state: TapNoteState, timeUntilHit: number): boolean
 const trackTapNoteAnimation = (note: Note, state: TapNoteState, currentTime: number): void => {
   if (!state.isFailed) return; // Only track failures
   
-  const failureType = state.isTooEarlyFailure ? 'tooEarlyFailure' : 'tapMissFailure';
-  const animDuration = state.isTooEarlyFailure ? 800 : 1100;
+  const failureType = state.isTapTooEarlyFailure ? 'tapTooEarlyFailure' : 'tapMissFailure';
+  const animDuration = state.isTapTooEarlyFailure ? 800 : 1100;
   
   const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
   if (!animEntry) {
@@ -305,7 +305,7 @@ const calculateTapNoteStyle = (
   let stroke = 'rgba(255,255,255,0.8)';
   let filter = `drop-shadow(0 0 ${15 * progress}px ${noteColor})`;
   
-  if (state.isTooEarlyFailure) {
+  if (state.isTapTooEarlyFailure) {
     // Too early: orange/amber alert, faster fade (800ms)
     const failProgress = Math.min(state.timeSinceFail / 800, 1.0);
     opacity = (1 - failProgress) * 0.7;

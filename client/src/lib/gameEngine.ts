@@ -27,7 +27,8 @@ export interface Note {
   duration?: number; // HOLD note: how long player must hold (from beatmap)
   hit: boolean;
   missed: boolean;
-  tapMissFailure?: boolean; // TAP note failed (>300ms past note time)
+  tapTooEarlyFailure?: boolean; // TAP note pressed BEFORE hit window (too early)
+  tapMissFailure?: boolean; // TAP note pressed AFTER hit window (too late / missed)
   tooEarlyFailure?: boolean; // HOLD note pressed outside ±300ms window (too early)
   holdMissFailure?: boolean; // HOLD note pressed too LATE - note expired before activation window
   holdReleaseFailure?: boolean; // HOLD note was pressed in time but released too EARLY (failed release accuracy)
@@ -51,7 +52,7 @@ export interface Note {
 // Error tracking for debugging
 interface AnimationErrorEntry {
   noteId: string;
-  type: 'tapMissFailure' | 'tooEarlyFailure' | 'holdMissFailure' | 'holdReleaseFailure' | 'successful';
+  type: 'tapTooEarlyFailure' | 'tapMissFailure' | 'tooEarlyFailure' | 'holdMissFailure' | 'holdReleaseFailure' | 'successful';
   failureTime?: number;
   renderStart?: number;
   renderEnd?: number;
@@ -77,6 +78,7 @@ const GameErrors = {
   },
   hitStats: {
     successfulHits: 0,
+    tapTooEarlyFailures: 0,
     tapMissFailures: 0,
     tooEarlyFailures: 0,
     holdMissFailures: 0,
@@ -119,6 +121,7 @@ const GameErrors = {
     
     const hitStats = {
       successfulHits: 0,
+      tapTooEarlyFailures: 0,
       tapMissFailures: 0,
       tooEarlyFailures: 0,
       holdMissFailures: 0,
@@ -134,8 +137,9 @@ const GameErrors = {
         hitStats.successfulHits++;
       }
       if (n.missed) stats.missed++;
-      if (n.tapMissFailure || n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
+      if (n.tapTooEarlyFailure || n.tapMissFailure || n.tooEarlyFailure || n.holdMissFailure || n.holdReleaseFailure) {
         stats.failed++;
+        if (n.tapTooEarlyFailure) hitStats.tapTooEarlyFailures++;
         if (n.tapMissFailure) hitStats.tapMissFailures++;
         if (n.tooEarlyFailure) hitStats.tooEarlyFailures++;
         if (n.holdMissFailure) hitStats.holdMissFailures++;
@@ -276,7 +280,7 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           const n = notes[i];
           if (!n) continue;
           
-          if (!n.hit && !n.missed && !n.tapMissFailure && !n.holdReleaseFailure && !n.tooEarlyFailure && !n.holdMissFailure) {
+          if (!n.hit && !n.missed && !n.tapTooEarlyFailure && !n.tapMissFailure && !n.holdReleaseFailure && !n.tooEarlyFailure && !n.holdMissFailure) {
             let shouldMarkFailed = false;
             let failureType: keyof Note | '' = '';
             
@@ -393,23 +397,55 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         return;
       }
 
-      const noteIndex = notes.findIndex(n => 
+      // CRITICAL: Find closest TAP note on this lane (regardless of timing) to classify failure
+      const potentialNotes = notes.filter(n => 
         n && 
         !n.hit && 
         !n.missed && 
+        !n.tapTooEarlyFailure &&
         !n.tapMissFailure &&
         !n.tooEarlyFailure &&
         !n.holdMissFailure &&
         !n.holdReleaseFailure &&
         n.lane === lane && 
-        Number.isFinite(n.time) &&
-        Number.isFinite(currentTime) &&
-        Math.abs(n.time - currentTime) < TAP_HIT_WINDOW
+        n.type === 'TAP' &&
+        Number.isFinite(n.time)
       );
 
-      if (noteIndex !== -1) {
-        const note = notes[noteIndex];
-        const accuracy = Math.abs(note.time - currentTime);
+      if (potentialNotes.length === 0) {
+        GameErrors.log(`hitNote: Lane ${lane} - NO TAP NOTES ON THIS LANE (user input ignored)`);
+        return;
+      }
+
+      // Find closest note to current time
+      const closestNote = potentialNotes.reduce((prev, curr) => 
+        Math.abs(curr.time - currentTime) < Math.abs(prev.time - currentTime) ? curr : prev
+      );
+      
+      const timeSinceNote = currentTime - closestNote.time;
+      const noteIndex = notes.findIndex(n => n && n.id === closestNote.id);
+
+      // tapTooEarlyFailure: Pressed BEFORE hit window (too early)
+      if (timeSinceNote < -TAP_HIT_WINDOW) {
+        GameErrors.trackAnimation(closestNote.id, 'tapTooEarlyFailure', currentTime);
+        notes[noteIndex] = { 
+          ...notes[noteIndex], 
+          pressTime: Math.round(currentTime), 
+          tapTooEarlyFailure: true, 
+          failureTime: Math.round(currentTime) 
+        };
+        comboRef.current = 0;
+        healthRef.current = Math.max(0, healthRef.current - 2);
+        GameErrors.log(`hitNote: Lane ${lane} - TAP_TOO_EARLY (${Math.abs(timeSinceNote)}ms early)`);
+        setCombo(0);
+        setHealth(healthRef.current);
+        setNotes([...notes]);
+        return;
+      }
+
+      // Valid hit: within ±TAP_HIT_WINDOW
+      if (Math.abs(timeSinceNote) < TAP_HIT_WINDOW) {
+        const accuracy = Math.abs(timeSinceNote);
         let points = ACCURACY_NORMAL_POINTS;
         if (accuracy < ACCURACY_PERFECT_MS) points = ACCURACY_PERFECT_POINTS;
         else if (accuracy < ACCURACY_GREAT_MS) points = ACCURACY_GREAT_POINTS;
@@ -418,26 +454,20 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
         comboRef.current += 1;
         healthRef.current = Math.min(MAX_HEALTH, healthRef.current + 1);
         
-        notes[noteIndex] = { ...note, hit: true, hitTime: Math.round(currentTime) };
+        notes[noteIndex] = { ...closestNote, hit: true, hitTime: Math.round(currentTime) };
         
-        // Sync state immediately for visual feedback
+        GameErrors.log(`hitNote: Lane ${lane} - HIT (accuracy ${accuracy}ms, +${points} points)`);
         setScore(scoreRef.current);
         setCombo(comboRef.current);
         setHealth(healthRef.current);
         setNotes([...notes]);
-      } else {
-        // User input on soundpad with no matching note - log reason
-        const potentialNotes = notes.filter(n => n && n.lane === lane && n.type === 'TAP' && !n.hit && !n.missed);
-        if (potentialNotes.length === 0) {
-          GameErrors.log(`hitNote: Lane ${lane} - NO TAP NOTES ON THIS LANE (user input ignored)`);
-        } else {
-          const closestNote = potentialNotes.reduce((prev, curr) => 
-            Math.abs(curr.time - currentTime) < Math.abs(prev.time - currentTime) ? curr : prev
-          );
-          const timeDiff = currentTime - closestNote.time;
-          GameErrors.log(`hitNote: Lane ${lane} - NO MATCH (tried at ${currentTime}ms, closest note at ${closestNote.time}ms, ${timeDiff > 0 ? timeDiff + 'ms late' : Math.abs(timeDiff) + 'ms early'})`);
-        }
+        return;
       }
+
+      // tapMissFailure: Pressed AFTER hit window (too late)
+      GameErrors.log(`hitNote: Lane ${lane} - NO MATCH (tried at ${currentTime}ms, note at ${closestNote.time}ms, ${timeSinceNote}ms late)`);
+      // Don't mark as failure here - let auto-fail logic in game loop handle it
+      return;
     } catch (error) {
       GameErrors.log(`hitNote error: ${error instanceof Error ? error.message : 'Unknown'}`);
     }
