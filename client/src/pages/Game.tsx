@@ -4,7 +4,8 @@ import { Difficulty, Note } from "@/lib/engine/gameTypes";
 import { motion } from "framer-motion";
 
 import { useYouTubePlayer } from "@/hooks/useYoutubePlayer";
-import { useGameLogic } from "@/hooks/useGameLogic"; // New: Aggregates game hooks
+import { useGameLogic } from "@/hooks/useGameLogic";
+import { getYouTubeVideoTime } from "@/lib/youtube";
 import { GameOverScreen } from "@/components/screens/GameOverScreen";
 import { PauseMenu } from "@/components/ui/HUD/PauseMenu";
 import { ResumeOverlay } from "@/components/screens/ResumeOverlay";
@@ -30,7 +31,10 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
 
-  // Game engine
+  // Direct YouTube time getter (no circular dependency)
+  const directGetVideoTimeRef = useRef(() => getYouTubeVideoTime());
+
+  // Game engine - receives direct YouTube time reference
   const { 
     gameState, 
     score, 
@@ -50,12 +54,11 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
   } = useGameEngine({ 
     difficulty, 
     customNotes, 
-    getVideoTime: undefined // Provided by useYouTubePlayer
+    getVideoTime: directGetVideoTimeRef.current
   });
 
-  // YouTube hook – provides getVideoTime, auto-start on PLAYING
+  // YouTube hook – handles play/pause/seek, auto-start on PLAYING
   const {
-    getVideoTime,
     isReady: playerReady
   } = useYouTubePlayer({
     videoId: youtubeVideoId,
@@ -78,7 +81,7 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     currentTime,
     isPaused,
     notes,
-    getVideoTime,
+    getVideoTime: directGetVideoTimeRef.current,
     pauseGame,
     resumeGame,
     restartGame,
@@ -88,7 +91,6 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     trackHoldStart,
     trackHoldEnd,
     customNotes,
-    setPauseMenuOpen: (open) => {}, // Internal state managed in hook
     onHome: onBackToHome
   });
 
