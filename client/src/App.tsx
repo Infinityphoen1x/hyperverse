@@ -15,6 +15,43 @@ function App() {
   const playerInitializedRef = useRef(false);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
 
+  // Capture console logs for diagnostic download
+  useEffect(() => {
+    const logs: string[] = [];
+    (window as any).__consoleLogs = logs;
+
+    const originalLog = console.log;
+    const originalWarn = console.warn;
+    const originalError = console.error;
+
+    const captureLog = (...args: any[]) => {
+      const timestamp = new Date().toISOString();
+      const message = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+      ).join(' ');
+      logs.push(`[${timestamp}] ${message}`);
+    };
+
+    console.log = (...args) => {
+      originalLog(...args);
+      captureLog(...args);
+    };
+    console.warn = (...args) => {
+      originalWarn(...args);
+      captureLog('[WARN]', ...args);
+    };
+    console.error = (...args) => {
+      originalError(...args);
+      captureLog('[ERROR]', ...args);
+    };
+
+    return () => {
+      console.log = originalLog;
+      console.warn = originalWarn;
+      console.error = originalError;
+    };
+  }, []);
+
   const handleStartGame = (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => {
     setSelectedDifficulty(difficulty);
     setGameActive(true);
