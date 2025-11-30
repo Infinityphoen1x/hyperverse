@@ -11,7 +11,7 @@ export function ErrorLogViewer() {
   const [errorCounts, setErrorCounts] = useState({ beatmapLoader: 0, parser: 0, converter: 0, meter: 0, trapezoid: 0, game: 0 });
   const [noteStats, setNoteStats] = useState({ total: 0, tap: 0, hold: 0, hit: 0, missed: 0, failed: 0, byLane: {} as Record<number, number> });
   const [renderStats, setRenderStats] = useState({ rendered: 0, preMissed: 0 });
-  const [hitStats, setHitStats] = useState({ successfulHits: 0, tapMissFailures: 0, tooEarlyFailures: 0, holdMissFailures: 0, holdReleaseFailures: 0 });
+  const [hitStats, setHitStats] = useState({ successfulHits: 0, tapTooEarlyFailures: 0, tapMissFailures: 0, tooEarlyFailures: 0, holdMissFailures: 0, holdReleaseFailures: 0 });
 
   // Update logs in real-time
   useEffect(() => {
@@ -72,11 +72,11 @@ export function ErrorLogViewer() {
     GameErrors.notes = [];
     GameErrors.animations = [];
     GameErrors.renderStats = { rendered: 0, preMissed: 0 };
-    GameErrors.hitStats = { successfulHits: 0, tapMissFailures: 0, tooEarlyFailures: 0, holdMissFailures: 0, holdReleaseFailures: 0 };
+    GameErrors.hitStats = { successfulHits: 0, tapTooEarlyFailures: 0, tapMissFailures: 0, tooEarlyFailures: 0, holdMissFailures: 0, holdReleaseFailures: 0 };
     setErrors([]);
     setAnimations([]);
     setRenderStats({ rendered: 0, preMissed: 0 });
-    setHitStats({ successfulHits: 0, tapMissFailures: 0, tooEarlyFailures: 0, holdMissFailures: 0, holdReleaseFailures: 0 });
+    setHitStats({ successfulHits: 0, tapTooEarlyFailures: 0, tapMissFailures: 0, tooEarlyFailures: 0, holdMissFailures: 0, holdReleaseFailures: 0 });
   };
 
   return (
