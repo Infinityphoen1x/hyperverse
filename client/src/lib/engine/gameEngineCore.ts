@@ -1,8 +1,8 @@
 import { Note, GameConfig, ScoreState, InputHandler, Processor, PostProcessor } from './gameTypes';
 import { TimingManager } from '../managers/timingManager';
 import { ScoringManager } from '../managers/scoringManager';
-import { NoteValidator } from '../notes/noteValidator';
-import { NoteProcessor } from '../notes/noteProcessor';
+import { NoteValidator } from '../notes/processors/noteValidator';
+import { NoteProcessor } from '../notes/processors/noteProcessor';
 import { GameEngineQueries } from './gameEngineQueries';
 import { GameErrors } from '../errors/errorLog';
 
