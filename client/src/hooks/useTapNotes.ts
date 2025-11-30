@@ -1,6 +1,6 @@
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { getTapNoteState, shouldRenderTapNote, trackTapNoteAnimation } from "@/lib/notes/tapNoteHelpers";
+import { getTapNoteState, shouldRenderTapNote, trackTapNoteAnimation } from "@/lib/notes/tap/tapNoteHelpers";
 
 export interface ProcessedTapNote {
   note: Note;

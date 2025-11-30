@@ -1,6 +1,6 @@
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { TAP_RENDER_WINDOW_MS, TAP_FALLTHROUGH_WINDOW_MS, TAP_HIT_HOLD_DURATION, TAP_FAILURE_ANIMATIONS } from './constants';
+import { TAP_RENDER_WINDOW_MS, TAP_FALLTHROUGH_WINDOW_MS, TAP_HIT_HOLD_DURATION, TAP_FAILURE_ANIMATIONS } from '../config/constants';
 
 export interface TapNoteState {
   isHit: boolean;
@@ -63,4 +63,4 @@ export const trackTapNoteAnimation = (note: Note, state: TapNoteState, currentTi
 };
 
 export { calculateTapNoteGeometry, type TapNoteGeometry } from '../geometry/tapNoteGeometry';
-export { calculateTapNoteStyle, type TapNoteStyle } from './tapNoteStyle';
+export { calculateTapNoteStyle, type TapNoteStyle } from './tap/tapNoteStyle';

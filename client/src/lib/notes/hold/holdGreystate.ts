@@ -4,8 +4,8 @@ import {
   COLOR_DECK_LEFT,
   COLOR_DECK_RIGHT,
   JUDGEMENT_RADIUS,
-} from './constants';
-import { HoldNoteFailureStates } from './holdNoteHelpers';
+} from '../config/constants';
+import { HoldNoteFailureStates } from './hold/holdNoteHelpers';
 
 export interface HoldNoteColors {
   fillColor: string;

@@ -1,4 +1,4 @@
-import { JUDGEMENT_RADIUS, TAP_DEPTH, TAP_RAY } from '../notes/constants';
+import { JUDGEMENT_RADIUS, TAP_DEPTH, TAP_RAY } from '../notes/config/constants';
 
 export interface TapNoteGeometry {
   x1: number; y1: number;

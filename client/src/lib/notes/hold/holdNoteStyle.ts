@@ -1,6 +1,6 @@
-import { GREYSCALE_GLOW_COLOR, HOLD_ANIMATION_DURATION, HOLD_OPACITY, HOLD_STROKE, HOLD_GLOW } from './constants';
-import { HoldNoteFailureStates } from './holdNoteHelpers';
-import { HoldNoteColors, GreyscaleState } from './holdGreystate';
+import { GREYSCALE_GLOW_COLOR, HOLD_ANIMATION_DURATION, HOLD_OPACITY, HOLD_STROKE, HOLD_GLOW } from '../config/constants';
+import { HoldNoteFailureStates } from './hold/holdNoteHelpers';
+import { HoldNoteColors, GreyscaleState } from './hold/holdGreystate';
 
 export interface HoldNoteStyle {
   opacity: number;
