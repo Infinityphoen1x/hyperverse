@@ -875,11 +875,13 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
             // Track animation lifecycle
             trackTapNoteAnimation(note, state, currentTime);
             
-            // Get rendering data - use unclamped progress for failed/hit notes, clamped for approaching
+            // Get rendering data
             const tapRayAngle = getLaneAngle(note.lane);
             const noteColor = getColorForLane(note.lane);
+            // Use unclamped progress for geometry (failed/hit notes continue past judgement line)
             const progressForGeometry = (state.isFailed || state.isHit) ? rawProgress : clampedProgress;
             const geometry = calculateTapNoteGeometry(progressForGeometry, tapRayAngle, vpX, vpY, state.isHit, note.pressHoldTime || 0, currentTime, state.isFailed, note.time);
+            // Pass both raw and clamped - calculateTapNoteStyle selects the appropriate one based on state
             const style = calculateTapNoteStyle(clampedProgress, state, noteColor, rawProgress);
             
             return (
