@@ -327,9 +327,9 @@ const calculateTapNoteStyle = (
     const animDuration = state.isTapTooEarlyFailure ? 800 : 1100;
     const failProgress = Math.min(state.timeSinceFail / animDuration, 1.0);
     opacity = opacity * (1.0 - failProgress);
-    fill = 'rgba(80,80,80,0.3)';
-    stroke = 'rgba(100,100,100,0.6)';
-    filter = `grayscale(1)`;
+    fill = GREYSCALE_FILL_COLOR;
+    stroke = 'rgba(120, 120, 120, 1)';
+    filter = `drop-shadow(0 0 8px ${GREYSCALE_GLOW_COLOR}) grayscale(1)`;
   } else if (state.isHit) {
     // For successful hits: stay visible for TAP_HIT_HOLD_DURATION (700ms), flash for first 600ms
     if (state.timeSinceHit < 600) {
