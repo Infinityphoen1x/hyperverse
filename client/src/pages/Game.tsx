@@ -7,7 +7,6 @@ import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
 import { DeckHoldMeters } from "@/components/game/DeckHoldMeters";
 import { VisualEffects } from "@/components/game/VisualEffects";
 import { ErrorLogViewer } from "@/components/game/ErrorLogViewer";
-import { SoundPad } from "@/components/game/SoundPad";
 import { motion } from "framer-motion";
 
 interface GameProps {
@@ -515,11 +514,6 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
             onPadHit={hitNote}
             onDeckHoldStart={trackHoldStart}
             onDeckHoldEnd={trackHoldEnd}
-          />
-          <SoundPad 
-            onPadHit={hitNote}
-            notes={notes}
-            currentTime={Math.round(currentTime)}
           />
         </div>
 

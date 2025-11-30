@@ -889,7 +889,60 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
           {/* Vanishing point - nearly invisible */}
           <circle cx={vpX} cy={vpY} r="6" fill="rgba(0,255,255,0.05)" />
           
-          {/* Judgement line indicators - perpendicular to rays */}
+          {/* Soundpad buttons - 6 circular interactive elements at hexagon corners */}
+          {BUTTON_CONFIG.map(({ lane, key, angle, color }) => {
+            const rad = (angle * Math.PI) / 180;
+            const cx = vpX + Math.cos(rad) * MAX_DISTANCE;
+            const cy = vpY + Math.sin(rad) * MAX_DISTANCE;
+            
+            return (
+              <g key={`soundpad-button-${lane}`}>
+                {/* Circular button with fill and glow */}
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r="20"
+                  fill={`${color}40`}
+                  stroke={color}
+                  strokeWidth="2"
+                  opacity="0.8"
+                  style={{ cursor: 'pointer' }}
+                  onMouseDown={() => onPadHit?.(lane)}
+                  onMouseUp={() => {}}
+                  onMouseLeave={() => {}}
+                  data-testid={`soundpad-circle-${lane}`}
+                />
+                {/* Glow effect */}
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r="20"
+                  fill="none"
+                  stroke={color}
+                  strokeWidth="1"
+                  opacity="0.3"
+                  style={{ pointerEvents: 'none' }}
+                />
+                {/* Key label */}
+                <text
+                  x={cx}
+                  y={cy}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill={color}
+                  fontSize="12"
+                  fontWeight="bold"
+                  fontFamily="Rajdhani, monospace"
+                  opacity="1"
+                  style={{ pointerEvents: 'none' }}
+                >
+                  {key}
+                </text>
+              </g>
+            );
+          })}
+          
+          {/* Judgement line indicators - perpendicular to rays (TAP notes only) */}
           {/* Uses dynamic VP for perspective shift */}
           {[
             { angle: 120, color: '#FF007F', key: 'W' },   // W (lane 0) - top-left pink
