@@ -184,9 +184,10 @@ export function useGameEngine({
   const [currentTime, setCurrentTime] = useState(0);
   
   // Sync intervals with defaults
+  // Health must sync frequently (16ms = per-frame) to show depletion visually
   const intervals = {
     notesInterval: syncIntervals.notesInterval || 50,
-    stateInterval: syncIntervals.stateInterval || 100,
+    stateInterval: syncIntervals.stateInterval || 16,  // Changed from 100ms → 16ms for real-time health visibility
   };
 
   // Batch-synced state
