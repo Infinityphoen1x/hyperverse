@@ -29,9 +29,9 @@ import {
   getTapNoteState,
   shouldRenderTapNote,
   trackTapNoteAnimation,
-  calculateTapNoteGeometry,
-  calculateTapNoteStyle,
 } from "@/lib/notes/tapNoteHelpers";
+import { calculateTapNoteGeometry } from "@/lib/notes/tapNoteGeometry";
+import { calculateTapNoteStyle } from "@/lib/notes/tapNoteStyle";
 import {
   markAnimationCompletedIfDone,
   trackHoldNoteAnimationLifecycle,
