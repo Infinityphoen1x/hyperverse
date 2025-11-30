@@ -1,15 +1,18 @@
-import { Note, GameConfig } from '../engine/gameTypes';
+import { Note, GameConfig, ScoreState } from '@/lib/engine/gameTypes';
 import { NoteValidator } from './noteValidator';
-import { ScoringManager } from '../managers/scoringManager';
-import type { NoteUpdateResult } from './types';
+import { ScoringManager } from '@/lib/managers/scoringManager';
 import { roundTime } from './noteUpdateHelpers';
 import { checkTapAutoFail, checkHoldAutoFail } from './noteAutoFailHelpers';
+
+export type NoteUpdateResult = {
+  updatedNote: Note;
+  scoreChange?: ScoreState;
+  success: boolean;
+};
 
 // ============================================================================
 // NOTE PROCESSOR - Orchestrates note hit detection and state updates
 // ============================================================================
-
-export type { NoteUpdateResult } from './types';
 
 export class NoteProcessor {
   constructor(
@@ -162,10 +165,8 @@ export class NoteProcessor {
     const updatedNotes = notes.map(note => {
       // Auto-fail check
       const autoFailResult = this.checkAutoFail(note, currentTime);
-      if (autoFailResult) {
-        if (autoFailResult.shouldGameOver) {
-          shouldGameOver = true;
-        }
+      if (autoFailResult && !autoFailResult.success) {
+        shouldGameOver = true;
         return autoFailResult.updatedNote;
       }
 
