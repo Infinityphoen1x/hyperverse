@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import wheelImg from "@assets/generated_images/neon_glowing_cyber_turntable_interface.png";
-import { GameErrors } from "@/lib/gameEngine";
+import { GameErrors } from "@/lib/errorLog";
 import { ROTATION_SPEED, SPIN_THRESHOLD, STATE_UPDATE_INTERVAL, DRAG_VELOCITY_THRESHOLD } from "@/lib/gameConstants";
 
 interface CamelotWheelProps {

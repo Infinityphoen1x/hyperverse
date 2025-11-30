@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { GameErrors } from "@/lib/gameEngine";
+import { GameErrors } from "@/lib/errorLog";
 import {
   MAX_HEALTH,
   LOW_HEALTH_THRESHOLD,

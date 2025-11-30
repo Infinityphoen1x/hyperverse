@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { useGameEngine, Difficulty, GameErrors, Note } from "@/lib/gameEngine";
+import { useGameEngine } from "@/lib/gameEngineHooks";
+import { Difficulty, Note } from "@/lib/gameTypes";
+import { GameErrors } from "@/lib/errorLog";
 import { getYouTubeVideoTime, buildYouTubeEmbedUrl, initYouTubePlayer, seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo, initYouTubeTimeListener } from "@/lib/youtubeUtils";
 import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from "@/lib/gameConstants";
 import { CamelotWheel } from "@/components/game/CamelotWheel";

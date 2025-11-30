@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState, useCallback } from "react";
-import { Note, GameErrors } from "@/lib/gameEngine";
+import { Note } from "@/lib/gameTypes";
+import { GameErrors } from "@/lib/errorLog";
 import { ACTIVATION_WINDOW, HIT_SUCCESS_DURATION, SOUNDPAD_COLORS, SOUNDPAD_STYLES, VANISHING_POINT_X, VANISHING_POINT_Y, HEXAGON_RADII, BUTTON_CONFIG } from "@/lib/gameConstants";
 
 interface SoundPadProps {

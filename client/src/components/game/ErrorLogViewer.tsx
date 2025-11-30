@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { GameErrors } from '@/lib/gameEngine';
+import { GameErrors } from '@/lib/errorLog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { StatBox, StatGrid, StatSection, countErrorsByCategory, formatLaneStats, resetHitStats, resetRenderStats } from './ErrorLogViewerHelpers';

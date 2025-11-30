@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { extractYouTubeId, buildYouTubeEmbedUrl } from "@/lib/youtubeUtils";
-import { GameErrors } from "@/lib/gameEngine";
+import { GameErrors } from "@/lib/errorLog";
 import {
   YOUTUBE_LABEL_BUTTON,
   YOUTUBE_DIALOG_TITLE,

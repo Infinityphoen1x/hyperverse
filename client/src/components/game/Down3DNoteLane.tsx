@@ -1,4 +1,5 @@
-import { Note, GameErrors } from "@/lib/gameEngine";
+import { Note } from "@/lib/gameTypes";
+import { GameErrors } from "@/lib/errorLog";
 import { useEffect, useState, useRef } from "react";
 import { 
   BUTTON_CONFIG, 

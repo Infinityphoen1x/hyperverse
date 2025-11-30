@@ -5,7 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { parseBeatmap } from "@/lib/beatmapParser";
 import { convertBeatmapNotes } from "@/lib/beatmapConverter";
 import { extractYouTubeId } from "@/lib/youtubeUtils";
-import { GameErrors, Note } from "@/lib/gameEngine";
+import { Note } from "@/lib/gameTypes";
+import { GameErrors } from "@/lib/errorLog";
 import { Music } from "lucide-react";
 
 interface BeatmapLoaderProps {

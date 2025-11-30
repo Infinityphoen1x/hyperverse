@@ -1,4 +1,5 @@
-import { Note, GameErrors } from '@/lib/gameEngine';
+import { Note } from '@/lib/gameTypes';
+import { GameErrors } from '@/lib/errorLog';
 
 export interface BeatmapNote {
   time: number;

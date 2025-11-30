@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { Note, GameErrors } from "@/lib/gameEngine";
+import { Note } from "@/lib/gameTypes";
+import { GameErrors } from "@/lib/errorLog";
 import {
   DECK_METER_SEGMENTS,
   DECK_METER_SEGMENT_WIDTH,
