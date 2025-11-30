@@ -50,7 +50,7 @@ import {
   type GlowCalculation,
   type HoldNoteColors,
   type HoldNoteFailureStates,
-} from "./noteHelpers";
+} from "@/lib/noteHelpers";
 
 // Extract health-based color calculation for tunnel effects
 const getHealthBasedRayColor = (health: number): string => {
