@@ -228,8 +228,7 @@ export const calculateTapNoteStyle = (
   } else {
     // Approaching: use unclamped progress to flow smoothly through tunnel
     opacity = 0.4 + (progress * 0.6);
-    // Glow grows as note approaches (no cap - greyscale triggers earlier to prevent haze)
-    filter = `drop-shadow(0 0 ${15 * progress}px ${noteColor})`;
+    // No glow for approaching notes - glow is indicative of successfully hit notes only
   }
   
   const hitFlashIntensity = state.isHit && state.timeSinceHit < 600 
