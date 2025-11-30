@@ -171,6 +171,7 @@ export function useGameEngine({
   
   const config = useGameConfig(difficulty);
   const engineRef = useRef<GameEngineCore | null>(null);
+  const justResumedRef = useRef(false);
   
   // Initialize engine
   if (!engineRef.current) {
@@ -229,6 +230,14 @@ export function useGameEngine({
       if (!engine) return;
 
       const videoTime = getVideoTime?.() ?? null;
+      
+      // CRITICAL: Sync engine timing on first frame after resume
+      if (justResumedRef.current && videoTime !== null && videoTime > 0) {
+        engine.syncToVideoTime(videoTime);
+        justResumedRef.current = false;
+        console.log(`[GAME-ENGINE-SYNC] Engine synced to YouTube time: ${videoTime.toFixed(0)}ms`);
+      }
+      
       const time = engine.getCurrentTime(videoTime);
       
       setCurrentTime(time);
@@ -236,7 +245,7 @@ export function useGameEngine({
       const { shouldGameOver } = engine.processFrame(time);
 
       console.log(
-        `[RESUME DEBUG] currentTime=${time.toFixed(0)}ms`,
+        `[GAME-DEBUG] currentTime=${time.toFixed(0)}ms`,
         'First note:',
         engine.getNotes()[0]?.time,
         'Active notes:',
@@ -272,6 +281,8 @@ export function useGameEngine({
   const resumeGame = useCallback(() => {
     engineRef.current?.resume();
     setIsPaused(false);
+    justResumedRef.current = true; // Flag for sync on next frame
+    console.log('[GAME-ENGINE-RESUME] Resume triggered, will sync on next frame');
   }, []);
 
   const restartGame = useCallback(() => {
