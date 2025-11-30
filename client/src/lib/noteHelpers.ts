@@ -399,3 +399,67 @@ export const trackHoldNoteAnimationLifecycle = (
     }
   }
 };
+
+// ============================================================================
+// HOLD NOTE GREYSCALE STATE & GEOMETRY
+// ============================================================================
+
+export interface GreyscaleState {
+  isGreyed: boolean;
+  reason: 'none' | 'tooEarlyImmediate' | 'holdMissAtJudgement' | 'holdReleaseFailure';
+}
+
+export const determineGreyscaleState = (
+  failures: HoldNoteFailureStates,
+  pressHoldTime: number,
+  approachNearDistance: number
+): GreyscaleState => {
+  if (failures.isHoldReleaseFailure) {
+    return { isGreyed: true, reason: 'holdReleaseFailure' };
+  }
+  
+  if (failures.isTooEarlyFailure && pressHoldTime > 0) {
+    return { isGreyed: true, reason: 'tooEarlyImmediate' };
+  }
+  
+  if (failures.isHoldMissFailure && approachNearDistance >= JUDGEMENT_RADIUS * 0.7) {
+    return { isGreyed: true, reason: 'holdMissAtJudgement' };
+  }
+  
+  return { isGreyed: false, reason: 'none' };
+};
+
+export const getTrapezoidCorners = (
+  rayAngle: number,
+  nearDistance: number,
+  farDistance: number,
+  vanishingPointX: number,
+  vanishingPointY: number,
+  noteId?: string
+): { x1: number; y1: number; x2: number; y2: number; x3: number; y3: number; x4: number; y4: number } | null => {
+  const leftRayAngle = rayAngle - 15;
+  const rightRayAngle = rayAngle + 15;
+  const leftRad = (leftRayAngle * Math.PI) / 180;
+  const rightRad = (rightRayAngle * Math.PI) / 180;
+  
+  const corners = {
+    x1: vanishingPointX + Math.cos(leftRad) * farDistance,
+    y1: vanishingPointY + Math.sin(leftRad) * farDistance,
+    x2: vanishingPointX + Math.cos(rightRad) * farDistance,
+    y2: vanishingPointY + Math.sin(rightRad) * farDistance,
+    x3: vanishingPointX + Math.cos(rightRad) * nearDistance,
+    y3: vanishingPointY + Math.sin(rightRad) * nearDistance,
+    x4: vanishingPointX + Math.cos(leftRad) * nearDistance,
+    y4: vanishingPointY + Math.sin(leftRad) * nearDistance,
+  };
+  
+  const allFinite = Object.values(corners).every(v => Number.isFinite(v));
+  if (!allFinite) {
+    if (noteId) {
+      GameErrors.log(`getTrapezoidCorners: Invalid coordinates for note ${noteId}: ${JSON.stringify(corners)}`);
+    }
+    return null;
+  }
+  
+  return corners;
+};

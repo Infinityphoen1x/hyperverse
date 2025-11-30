@@ -42,6 +42,8 @@ import {
   calculateHoldNoteColors,
   trackHoldNoteAnimationLifecycle,
   getHoldNoteFailureStates,
+  determineGreyscaleState,
+  getTrapezoidCorners,
   type ApproachGeometry,
   type TapNoteState,
   type TapNoteGeometry,
@@ -50,84 +52,16 @@ import {
   type GlowCalculation,
   type HoldNoteColors,
   type HoldNoteFailureStates,
+  type GreyscaleState,
 } from "@/lib/noteHelpers";
 
-// Extract health-based color calculation for tunnel effects
+// Tunnel-specific: health-based ray color gradient
 const getHealthBasedRayColor = (health: number): string => {
-  const healthFactor = Math.max(0, MAX_HEALTH - health) / MAX_HEALTH; // 0 at full health, 1 at 0 health
+  const healthFactor = Math.max(0, MAX_HEALTH - health) / MAX_HEALTH;
   const r = Math.round(0 + (255 - 0) * healthFactor);
   const g = Math.round(255 * (1 - healthFactor));
   const b = Math.round(255 * (1 - healthFactor));
   return `rgba(${r},${g},${b},1)`;
-};
-
-// Extract trapezoid corner calculation for cleaner geometry
-const getTrapezoidCorners = (
-  rayAngle: number,
-  nearDistance: number,
-  farDistance: number,
-  vanishingPointX: number,
-  vanishingPointY: number,
-  noteId?: string
-): { x1: number; y1: number; x2: number; y2: number; x3: number; y3: number; x4: number; y4: number } | null => {
-  const leftRayAngle = rayAngle - 15;
-  const rightRayAngle = rayAngle + 15;
-  const leftRad = (leftRayAngle * Math.PI) / 180;
-  const rightRad = (rightRayAngle * Math.PI) / 180;
-  
-  const corners = {
-    x1: vanishingPointX + Math.cos(leftRad) * farDistance,
-    y1: vanishingPointY + Math.sin(leftRad) * farDistance,
-    x2: vanishingPointX + Math.cos(rightRad) * farDistance,
-    y2: vanishingPointY + Math.sin(rightRad) * farDistance,
-    x3: vanishingPointX + Math.cos(rightRad) * nearDistance,
-    y3: vanishingPointY + Math.sin(rightRad) * nearDistance,
-    x4: vanishingPointX + Math.cos(leftRad) * nearDistance,
-    y4: vanishingPointY + Math.sin(leftRad) * nearDistance,
-  };
-  
-  // Validate all coordinates are finite
-  const allFinite = Object.values(corners).every(v => Number.isFinite(v));
-  if (!allFinite) {
-    if (noteId) {
-      GameErrors.log(`getTrapezoidCorners: Invalid coordinates for note ${noteId}: ${JSON.stringify(corners)}`);
-    }
-    return null;
-  }
-  
-  return corners;
-};
-
-// ============================================================================
-// HELPER FUNCTIONS FOR HOLD NOTE STATE MANAGEMENT
-// ============================================================================
-
-/** Determine if note should render in greyscale based on failure type and timing */
-interface GreyscaleState {
-  isGreyed: boolean;
-  reason: 'none' | 'tooEarlyImmediate' | 'holdMissAtJudgement' | 'holdReleaseFailure';
-}
-
-const determineGreyscaleState = (
-  failures: HoldNoteFailureStates,
-  pressHoldTime: number,
-  approachNearDistance: number
-): GreyscaleState => {
-  // holdReleaseFailure: Always greyscale immediately
-  if (failures.isHoldReleaseFailure) {
-    return { isGreyed: true, reason: 'holdReleaseFailure' };
-  }
-  
-  if (failures.isTooEarlyFailure && pressHoldTime > 0) {
-    return { isGreyed: true, reason: 'tooEarlyImmediate' };
-  }
-  
-  // holdMissFailure: Greyscale sooner (before reaching judgement line) to prevent glow buildup
-  if (failures.isHoldMissFailure && approachNearDistance >= JUDGEMENT_RADIUS * 0.7) {
-    return { isGreyed: true, reason: 'holdMissAtJudgement' };
-  }
-  
-  return { isGreyed: false, reason: 'none' };
 };
 
 interface Down3DNoteLaneProps {
