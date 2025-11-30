@@ -306,19 +306,19 @@ const calculateTapNoteStyle = (
   let filter = `drop-shadow(0 0 ${15 * progress}px ${noteColor})`;
   
   if (state.isTapTooEarlyFailure) {
-    // Too early: greyscale fade (800ms) - matches hold note tooEarlyFailure
+    // Too early: greyscale fade (800ms) - NO GLOW
     const failProgress = Math.min(state.timeSinceFail / 800, 1.0);
     opacity = (1 - failProgress) * 0.7;
     fill = 'rgba(80,80,80,0.8)';
     stroke = 'rgba(100,100,100,0.6)';
-    filter = `drop-shadow(0 0 8px rgba(100,100,100,0.4)) grayscale(1)`;
+    filter = 'grayscale(1)';
   } else if (state.isTapMissFailure) {
-    // Missed: red/grey, standard fade (1100ms)
+    // Missed: greyscale fade (1100ms) - NO GLOW
     const failProgress = Math.min(state.timeSinceFail / 1100, 1.0);
     opacity = (1 - failProgress) * 0.6;
     fill = 'rgba(80,80,80,0.3)';
     stroke = 'rgba(100,100,100,0.6)';
-    filter = 'drop-shadow(0 0 8px rgba(100,100,100,0.6)) grayscale(1)';
+    filter = 'grayscale(1)';
   } else if (state.isHit) {
     opacity = (1 - (state.timeSinceHit / 600)) * (0.4 + (progress * 0.6));
   }
@@ -1291,37 +1291,6 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
           })}
         </svg>
 
-        {/* 6 Soundpad Buttons as circles - absolutely positioned */}
-        {soundpadButtons.map(({ lane, key, color, xPosition, yPosition }) => (
-          <motion.button
-            key={`pad-${lane}`}
-            className="absolute rounded-full font-bold font-rajdhani text-white focus:outline-none pointer-events-auto"
-            style={{
-              width: '40px',
-              height: '40px',
-              left: `${xPosition}px`,
-              top: `${yPosition}px`,
-              transform: 'translate(-50%, -50%)',
-              backgroundColor: color,
-              opacity: 0.25,
-              border: `2px solid ${color}`,
-              boxShadow: `0 0 20px ${color}, 0 0 30px ${color}99`,
-              zIndex: 50,
-              fontSize: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            whileTap={{ scale: 0.9 }}
-            onMouseDown={() => {
-              onPadHit?.(lane);
-              window.dispatchEvent(new CustomEvent(`pad-hit-${lane}`));
-            }}
-            data-testid={`pad-button-${lane}`}
-          >
-            {key}
-          </motion.button>
-        ))}
       </div>
     </div>
   );
