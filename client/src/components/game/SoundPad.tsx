@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState, useCallback } from "react";
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { ACTIVATION_WINDOW, HIT_SUCCESS_DURATION, SOUNDPAD_COLORS, SOUNDPAD_STYLES, VANISHING_POINT_X, VANISHING_POINT_Y, HEXAGON_RADII, BUTTON_CONFIG } from '@/lib/utils/gameConstants';
+import { ACTIVATION_WINDOW, HIT_SUCCESS_DURATION, SOUNDPAD_COLORS, SOUNDPAD_STYLES, VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_MAX_DISTANCE, BUTTON_CONFIG } from '@/lib/config/gameConstants';
 
 interface SoundPadProps {
   onPadHit: (index: number) => void;
@@ -23,9 +23,8 @@ const getPadPosition = (laneIndex: number): { x: number; y: number } => {
   }
   if (!config) return { x: 0, y: 0 };
   const rad = (config.angle * Math.PI) / 180;
-  const outerHexagonRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1]; // 248px - outermost hexagon
-  const x = VANISHING_POINT_X + Math.cos(rad) * outerHexagonRadius;
-  const y = VANISHING_POINT_Y + Math.sin(rad) * outerHexagonRadius;
+  const x = VANISHING_POINT_X + Math.cos(rad) * TUNNEL_MAX_DISTANCE;
+  const y = VANISHING_POINT_Y + Math.sin(rad) * TUNNEL_MAX_DISTANCE;
   return { x, y };
 };
 
