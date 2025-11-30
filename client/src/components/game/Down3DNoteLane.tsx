@@ -49,7 +49,6 @@ import {
   type TapNoteGeometry,
   type TapNoteStyle,
   type CollapseGeometry,
-  type GlowCalculation,
   type HoldNoteColors,
   type HoldNoteFailureStates,
   type GreyscaleState,
