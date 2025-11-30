@@ -62,5 +62,5 @@ export const trackTapNoteAnimation = (note: Note, state: TapNoteState, currentTi
   }
 };
 
-export { calculateTapNoteGeometry, type TapNoteGeometry } from './tapNoteGeometry';
+export { calculateTapNoteGeometry, type TapNoteGeometry } from '../geometry/tapNoteGeometry';
 export { calculateTapNoteStyle, type TapNoteStyle } from './tapNoteStyle';

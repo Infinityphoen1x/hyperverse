@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { queryClient } from "./lib/queryClient";
+import { queryClient } from "./lib/config/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { initYouTubePlayer, initYouTubeTimeListener, buildYouTubeEmbedUrl } from "@/lib/utils/youtubeUtils";
-import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from "@/lib/utils/gameConstants";
+import { initYouTubePlayer, initYouTubeTimeListener, buildYouTubeEmbedUrl } from "@/lib/youtube/youtubeUtils";
+import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from "@/lib/config/gameConstants";
 import Home from "@/pages/Home";
 import Game from "@/pages/Game";
 

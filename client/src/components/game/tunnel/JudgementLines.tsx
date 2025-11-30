@@ -1,5 +1,5 @@
 import React from 'react';
-import { JUDGEMENT_RADIUS, TAP_JUDGEMENT_LINE_WIDTH, HOLD_JUDGEMENT_LINE_WIDTH, COLOR_DECK_LEFT, COLOR_DECK_RIGHT } from '@/lib/utils/gameConstants';
+import { JUDGEMENT_RADIUS, TAP_JUDGEMENT_LINE_WIDTH, HOLD_JUDGEMENT_LINE_WIDTH, COLOR_DECK_LEFT, COLOR_DECK_RIGHT } from '@/lib/config/gameConstants';
 
 interface JudgementLinesProps {
   vpX: number;

@@ -10,7 +10,7 @@ import {
   DECK_METER_DEFAULT_HOLD_DURATION,
   COLOR_DECK_LEFT,
   COLOR_DECK_RIGHT,
-} from '@/lib/utils/gameConstants';
+} from '@/lib/config/gameConstants';
 
 interface DeckHoldMetersProps {
   notes: Note[];

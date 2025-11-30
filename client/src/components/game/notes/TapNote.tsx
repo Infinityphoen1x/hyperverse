@@ -1,7 +1,7 @@
 import React from 'react';
 import { Note } from '@/lib/engine/gameTypes';
 import { getLaneAngle, getColorForLane } from '@/lib/utils/laneUtils';
-import { calculateTapNoteGeometry } from "@/lib/notes/tapNoteGeometry";
+import { calculateTapNoteGeometry } from "@/lib/geometry/tapNoteGeometry";
 import { calculateTapNoteStyle } from "@/lib/notes/tapNoteStyle";
 import { TapNoteState } from '@/lib/notes/tapNoteHelpers';
 

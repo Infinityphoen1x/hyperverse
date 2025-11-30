@@ -1,6 +1,6 @@
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { HOLD_ANIMATION_DURATION } from '@/lib/utils/gameConstants';
+import { HOLD_ANIMATION_DURATION } from '@/lib/config/gameConstants';
 
 export interface HoldNoteFailureStates {
   isTooEarlyFailure: boolean;
@@ -79,5 +79,5 @@ export const trackHoldNoteAnimationLifecycle = (
   }
 };
 
-export { calculateApproachGeometry, calculateCollapseGeometry, calculateLockedNearDistance, calculateHoldNoteGlow, getTrapezoidCorners, type ApproachGeometry, type CollapseGeometry, type GlowCalculation } from './holdNoteGeometry';
+export { calculateApproachGeometry, calculateCollapseGeometry, calculateLockedNearDistance, calculateHoldNoteGlow, getTrapezoidCorners, type ApproachGeometry, type CollapseGeometry, type GlowCalculation } from '../geometry/holdNoteGeometry';
 export { calculateHoldNoteColors, determineGreyscaleState, type HoldNoteColors, type GreyscaleState } from './holdGreystate';

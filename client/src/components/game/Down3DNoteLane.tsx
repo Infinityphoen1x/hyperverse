@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Note } from '@/lib/engine/gameTypes';
-import { VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/utils/gameConstants';
+import { VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config/gameConstants';
 import { useVanishingPointOffset } from '@/hooks/useVanishingPointOffset';
 import { useKeyboardControls } from '@/hooks/useKeyboardControls';
 import { useVisibleNotes } from '@/hooks/useVisibleNotes';

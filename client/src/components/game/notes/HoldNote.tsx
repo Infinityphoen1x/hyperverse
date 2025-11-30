@@ -1,5 +1,5 @@
 import React from 'react';
-import { getTrapezoidCorners } from "@/lib/notes/holdNoteGeometry";
+import { getTrapezoidCorners } from "@/lib/geometry/holdNoteGeometry";
 import { calculateHoldNoteStyle } from "@/lib/notes/holdNoteStyle";
 import { HoldNoteProcessedData } from '@/hooks/useHoldNotes';
 

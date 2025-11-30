@@ -1,6 +1,6 @@
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { HOLD_ANIMATION_DURATION, HOLD_RENDER_WINDOW_MS, LEAD_TIME } from '@/lib/utils/gameConstants';
+import { HOLD_ANIMATION_DURATION, HOLD_RENDER_WINDOW_MS, LEAD_TIME } from '@/lib/config/gameConstants';
 import { getHoldNoteFailureStates } from "@/lib/notes/holdNoteHelpers";
 
 export function useVisibleNotes(notes: Note[], currentTime: number) {

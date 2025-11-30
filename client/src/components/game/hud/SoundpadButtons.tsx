@@ -1,5 +1,5 @@
 import React from 'react';
-import { BUTTON_CONFIG, VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_MAX_DISTANCE } from '@/lib/utils/gameConstants';
+import { BUTTON_CONFIG, VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_MAX_DISTANCE } from '@/lib/config/gameConstants';
 
 interface SoundpadButtonsProps {
   onPadHit?: (lane: number) => void;

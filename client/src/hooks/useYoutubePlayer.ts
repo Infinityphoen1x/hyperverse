@@ -6,8 +6,8 @@ import {
   seekYouTubeVideo, 
   playYouTubeVideo, 
   pauseYouTubeVideo 
-} from '@/lib/utils/youtubeUtils';
-import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from '@/lib/utils/gameConstants';
+} from '@/lib/youtube/youtubeUtils';
+import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from '@/lib/config/gameConstants';
 
 interface UseYouTubePlayerProps {
   videoId: string | null;

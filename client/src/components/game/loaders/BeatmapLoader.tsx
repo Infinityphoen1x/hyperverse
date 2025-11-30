@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { parseBeatmap } from "@/lib/beatmap/beatmapParser";
 import { convertBeatmapNotes } from "@/lib/beatmap/beatmapConverter";
-import { extractYouTubeId } from '@/lib/utils/youtubeUtils';
+import { extractYouTubeId } from '@/lib/youtube/youtubeUtils';
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
 import { Music } from "lucide-react";

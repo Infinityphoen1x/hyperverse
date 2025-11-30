@@ -24,7 +24,7 @@ import {
   PARTICLE_COLORS,
   COLOR_PARTICLE_GREEN,
   COLOR_PARTICLE_RED,
-} from '@/lib/utils/gameConstants';
+} from '@/lib/config/gameConstants';
 
 interface Particle {
   id: string;

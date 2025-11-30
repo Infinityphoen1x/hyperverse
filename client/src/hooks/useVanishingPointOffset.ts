@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { ANGLE_SHIFT_DISTANCE, ANGLE_SHIFT_DURATION } from '@/lib/utils/gameConstants';
+import { ANGLE_SHIFT_DISTANCE, ANGLE_SHIFT_DURATION } from '@/lib/config/gameConstants';
 
 interface Offset {
   x: number;

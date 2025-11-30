@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { BUTTON_CONFIG } from '@/lib/utils/gameConstants';
+import { BUTTON_CONFIG } from '@/lib/config/gameConstants';
 
 interface UseKeyboardControlsProps {
   onPadHit?: (lane: number) => void;
