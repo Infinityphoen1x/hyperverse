@@ -15,34 +15,58 @@ function App() {
   const playerInitializedRef = useRef(false);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
 
-  // Capture console logs for diagnostic download
+  // Capture filtered console logs for diagnostic download (optimized format)
   useEffect(() => {
-    const logs: string[] = [];
-    (window as any).__consoleLogs = logs;
+    const logEntries: any[] = [];
+    const startTime = Date.now();
+    (window as any).__consoleLogs = logEntries;
 
     const originalLog = console.log;
     const originalWarn = console.warn;
     const originalError = console.error;
 
-    const captureLog = (...args: any[]) => {
-      const timestamp = new Date().toISOString();
+    // Filter to only capture important logs, not spam
+    const shouldCapture = (message: string): boolean => {
+      // Always capture errors and warnings
+      // Only capture logs with important tags
+      return (
+        message.includes('[CRITICAL]') ||
+        message.includes('[ERROR]') ||
+        message.includes('[WARN]') ||
+        message.includes('[ENGINE]') ||
+        message.includes('[RESUME]') ||
+        message.includes('[SYNC]') ||
+        message.includes('[FRAME]') ||
+        message.includes('[GAME-OVER]') ||
+        message.includes('[SYSTEM]')
+      );
+    };
+
+    const captureLog = (level: string, ...args: any[]) => {
       const message = args.map(arg => 
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
       ).join(' ');
-      logs.push(`[${timestamp}] ${message}`);
+      
+      if (level === 'error' || level === 'warn' || shouldCapture(message)) {
+        logEntries.push({
+          t: Date.now() - startTime,
+          l: level,
+          m: message
+        });
+      }
     };
 
     console.log = (...args) => {
       originalLog(...args);
-      captureLog(...args);
+      captureLog('log', ...args);
     };
     console.warn = (...args) => {
       originalWarn(...args);
-      captureLog('[WARN]', ...args);
+      captureLog('warn', ...args);
     };
     console.error = (...args) => {
       originalError(...args);
-      captureLog('[ERROR]', ...args);
+      captureLog('error', ...args);
     };
 
     return () => {

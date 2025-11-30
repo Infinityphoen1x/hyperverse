@@ -29,12 +29,27 @@ export function ErrorLogViewer() {
     return () => clearInterval(updateInterval);
   }, []);
 
-  const downloadGameErrors = () => {
+  const downloadUnifiedLogs = () => {
+    const consoleLogs = (window as any).__consoleLogs || [];
+    
+    // Unified JSON format
     const logData = {
       timestamp: new Date().toISOString(),
-      errorLog: GameErrors.notes,
-      animationStats: GameErrors.getAnimationStats(),
-      animationDetails: GameErrors.animations,
+      gameErrors: {
+        errors: GameErrors.notes,
+        animations: GameErrors.animations,
+        stats: {
+          notes: GameErrors.noteStats,
+          render: GameErrors.renderStats,
+          hits: GameErrors.hitStats,
+          animation: GameErrors.getAnimationStats(),
+        },
+      },
+      consoleLogs: consoleLogs.map((entry: any) => ({
+        t: entry.t,
+        level: entry.l,
+        message: entry.m,
+      })),
     };
 
     const jsonStr = JSON.stringify(logData, null, 2);
@@ -42,22 +57,7 @@ export function ErrorLogViewer() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `game-errors-${Date.now()}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  const downloadConsoleLogs = () => {
-    const consoleLogs = (window as any).__consoleLogs || [];
-    const logText = consoleLogs.join('\n');
-    
-    const blob = new Blob([logText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `console-logs-${Date.now()}.txt`;
+    link.download = `hyperverse-logs-${Date.now()}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -238,20 +238,12 @@ export function ErrorLogViewer() {
             <div className="border-t border-cyan-500/30 p-4 bg-gray-950 space-y-2 flex-shrink-0">
               <div className="flex gap-2 text-xs">
                 <button
-                  onClick={downloadGameErrors}
+                  onClick={downloadUnifiedLogs}
                   className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white px-2 py-1 rounded transition"
-                  data-testid="button-download-game-errors"
-                  title="Download game error log (JSON)"
+                  data-testid="button-download-logs"
+                  title="Download unified diagnostic logs (JSON)"
                 >
-                  Game Errors
-                </button>
-                <button
-                  onClick={downloadConsoleLogs}
-                  className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white px-2 py-1 rounded transition"
-                  data-testid="button-download-console-logs"
-                  title="Download console logs (TXT)"
-                >
-                  Console Logs
+                  Download All Logs
                 </button>
                 <button
                   onClick={clearLogs}
