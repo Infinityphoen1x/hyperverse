@@ -178,28 +178,30 @@ export function useGameEngine({
   };
 
   // Batch-synced state
+  const isGameActive = gameState === 'PLAYING';
+  
   const score = useStateSynchronizer(
     () => engineRef.current?.getScore().score || 0,
     intervals.stateInterval,
-    gameState === 'PLAYING'
+    isGameActive
   );
   
   const combo = useStateSynchronizer(
     () => engineRef.current?.getScore().combo || 0,
     intervals.stateInterval,
-    gameState === 'PLAYING'
+    isGameActive
   );
   
   const health = useStateSynchronizer(
     () => engineRef.current?.getScore().health || config.MAX_HEALTH,
     intervals.stateInterval,
-    gameState === 'PLAYING'
+    isGameActive
   );
   
   const notes = useStateSynchronizer(
     () => engineRef.current?.getNotes() || [],
     intervals.notesInterval,
-    gameState === 'PLAYING'
+    isGameActive
   );
 
   // Game loop
