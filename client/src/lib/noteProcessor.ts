@@ -1,6 +1,6 @@
 import { Note, GameConfig, ScoreState } from './game_types';
-import { NoteValidator } from './note_validator';
-import { ScoringManager } from './scoring_manager';
+import { NoteValidator } from './noteValidator';
+import { ScoringManager } from './scoringManager';
 
 // ============================================================================
 // NOTE PROCESSOR - Handles note hit detection and state updates

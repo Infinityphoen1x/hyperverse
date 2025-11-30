@@ -1,8 +1,8 @@
 import { Note, GameConfig, ScoreState } from './game_types';
-import { TimingManager } from './timing_manager';
-import { ScoringManager } from './scoring_manager';
-import { NoteValidator } from './note_validator';
-import { NoteProcessor } from './note_processor';
+import { TimingManager } from './timingManager';
+import { ScoringManager } from './scoringManager';
+import { NoteValidator } from './noteValidator';
+import { NoteProcessor } from './noteProcessor';
 
 // ============================================================================
 // GAME ENGINE CORE - Lightweight orchestrator that delegates to specialists
