@@ -15,10 +15,16 @@ interface UseYouTubePlayerProps {
 export function useYouTubePlayer({ videoId, playerInitializedRef, onPlaying }: UseYouTubePlayerProps) {
   const [isReady, setIsReady] = useState(false);
   const initRef = useRef(false);
+  const lastValidTime = useRef<number | null>(null);
 
-  // Get current time with polling fallback
+  // Get current time with fallback to last valid time (prevents null gaps during transitions)
   const getVideoTime = useCallback((): number | null => {
-    return getYouTubeVideoTime();
+    const t = getYouTubeVideoTime();
+    if (t != null) {
+      lastValidTime.current = t;
+      return t;
+    }
+    return lastValidTime.current;
   }, []);
 
   // Seek to time
