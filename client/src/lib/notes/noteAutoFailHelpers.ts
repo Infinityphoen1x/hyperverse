@@ -1,6 +1,7 @@
 import { Note, GameConfig } from '../engine/gameTypes';
 import { ScoringManager } from '../managers/scoringManager';
-import { NoteUpdateResult, roundTime } from './noteUpdateHelpers';
+import type { NoteUpdateResult } from './types';
+import { roundTime } from './noteUpdateHelpers';
 
 export const checkTapAutoFail = (
   note: Note,

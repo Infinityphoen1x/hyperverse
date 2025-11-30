@@ -1,11 +1,7 @@
 import { Note, ScoreState } from '../engine/gameTypes';
+import type { NoteUpdateResult } from './types';
 
-export interface NoteUpdateResult {
-  updatedNote: Note;
-  scoreChange?: ScoreState;
-  shouldGameOver?: boolean;
-  success?: boolean;
-}
+export type { NoteUpdateResult } from './types';
 
 export const roundTime = (time: number): number => Math.round(time);
 

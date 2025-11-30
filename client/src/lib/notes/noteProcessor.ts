@@ -1,14 +1,15 @@
 import { Note, GameConfig } from '../engine/gameTypes';
 import { NoteValidator } from './noteValidator';
 import { ScoringManager } from '../managers/scoringManager';
-import { NoteUpdateResult, roundTime } from './noteUpdateHelpers';
+import type { NoteUpdateResult } from './types';
+import { roundTime } from './noteUpdateHelpers';
 import { checkTapAutoFail, checkHoldAutoFail } from './noteAutoFailHelpers';
 
 // ============================================================================
 // NOTE PROCESSOR - Orchestrates note hit detection and state updates
 // ============================================================================
 
-export { NoteUpdateResult } from './noteUpdateHelpers';
+export type { NoteUpdateResult } from './types';
 
 export class NoteProcessor {
   constructor(
