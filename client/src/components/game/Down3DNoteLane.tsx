@@ -48,6 +48,7 @@ import {
   calculateHoldNoteColors,
   determineGreyscaleState,
 } from "@/lib/notes/holdGreystate";
+import { calculateHoldNoteStyle } from "@/lib/notes/holdNoteStyle";
 
 // Tunnel-specific: health-based ray color gradient
 const getHealthBasedRayColor = (health: number): string => {
@@ -698,28 +699,27 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
               // Track hold note animation lifecycle
               trackHoldNoteAnimationLifecycle(note, failures, currentTime);
               
-              // Calculate opacity (fade during collapse for failures)
+              // Calculate approach progress for styling
               const approachProgress = (approachGeometry.nearDistance - 1) / (JUDGEMENT_RADIUS - 1);
-              let opacity = 0.4 + Math.min(approachProgress, 1.0) * 0.6;
-              
-              // Fade out for ALL failures based on time since failure
-              if (failures.hasAnyFailure && failureTime) {
-                const timeSinceFailure = Math.max(0, currentTime - failureTime);
-                const failFadeProgress = Math.min(timeSinceFailure / HOLD_ANIMATION_DURATION, 1.0);
-                opacity = opacity * (1.0 - failFadeProgress);
-              }
-              
-              // Override with collapse fade if note was successfully pressed
-              if (collapseProgress > 0 && note.pressHoldTime && note.pressHoldTime > 0) {
-                opacity = Math.max(1.0 - collapseProgress, 0.0);
-              }
               
               // Calculate colors using helper
               const baseColor = getColorForLane(note.lane);
               const colors = calculateHoldNoteColors(greyscaleState.isGreyed, note.lane, baseColor);
               
-              // Calculate stroke width
-              const strokeWidth = 2 + (collapseProgress > 0 ? (1 - collapseProgress) * 2 : approachProgress * 2);
+              // Calculate all styling using helper
+              const holdStyle = calculateHoldNoteStyle(
+                approachProgress,
+                collapseProgress,
+                pressHoldTime,
+                failures,
+                failureTime,
+                currentTime,
+                greyscaleState,
+                colors,
+                finalGlowScale
+              );
+              
+              const { opacity, strokeWidth, filter } = holdStyle;
               
               return (
                 <polygon
@@ -730,9 +730,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
                   stroke={colors.strokeColor}
                   strokeWidth={strokeWidth}
                   style={{
-                    filter: greyscaleState.isGreyed 
-                      ? `drop-shadow(0 0 8px ${GREYSCALE_GLOW_COLOR}) grayscale(1)`
-                      : `drop-shadow(0 0 ${Math.max(20, 25 * finalGlowScale)}px ${colors.glowColor}) drop-shadow(0 0 ${Math.max(12, 15 * finalGlowScale)}px ${colors.glowColor})`,
+                    filter,
                     transition: 'all 0.05s linear',
                     mixBlendMode: 'screen',
                   }}
