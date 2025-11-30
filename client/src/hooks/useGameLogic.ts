@@ -235,15 +235,16 @@ export function useGameLogic({
     startGame(); // Assuming passed or global
   }, [customNotes, gameState]);
 
-  // Reset on game over
+  // Reset on game state changes
   useEffect(() => {
     if (gameState === 'GAME_OVER') {
       gameAlreadyStartedRef.current = false;
-    }
-  }, [gameState]);
-
-  useEffect(() => {
-    if (gameState === 'PAUSED') {
+      countdownStartedRef.current = false;
+    } else if (gameState === 'PLAYING') {
+      // Reset countdown flag when resuming from pause
+      countdownStartedRef.current = false;
+      setCountdownSeconds(0);
+    } else if (gameState === 'PAUSED') {
       asyncReadyRef.current = false;
     }
   }, [gameState]);
