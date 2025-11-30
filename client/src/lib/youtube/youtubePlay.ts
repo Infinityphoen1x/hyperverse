@@ -7,11 +7,10 @@ import { getYtPlayer, getYoutubeIframeElement, getYoutubeCurrentTimeMs } from '.
  */
 export async function playYouTubeVideo(): Promise<void> {
   await waitForPlayerReady(1000);
-  const ytPlayer = getYtPlayer();
-  const youtubeIframeElement = getYoutubeIframeElement();
-  const youtubeCurrentTimeMs = getYoutubeCurrentTimeMs();
 
   try {
+    // Get fresh player reference right before using it
+    let ytPlayer = getYtPlayer();
     let currentState: number | null = null;
     if (ytPlayer?.getPlayerState) {
       currentState = ytPlayer.getPlayerState();
@@ -20,6 +19,11 @@ export async function playYouTubeVideo(): Promise<void> {
         return;
       }
     }
+
+    // Get fresh references right before calling methods
+    ytPlayer = getYtPlayer();
+    const youtubeIframeElement = getYoutubeIframeElement();
+    const youtubeCurrentTimeMs = getYoutubeCurrentTimeMs();
 
     if (ytPlayer && typeof ytPlayer.playVideo === 'function') {
       const currentTime = ytPlayer.getCurrentTime?.() ?? 0;
@@ -38,6 +42,7 @@ export async function playYouTubeVideo(): Promise<void> {
       );
       console.log(`[YOUTUBE-PLAY] PostMessage fallback: Playing from tracked time ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s`);
     } else {
+      console.error('[YOUTUBE-PLAY] No play method available - ytPlayer:', ytPlayer ? 'exists' : 'null', 'iframe:', youtubeIframeElement ? 'exists' : 'null');
       throw new Error('No play method available');
     }
 

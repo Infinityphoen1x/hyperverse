@@ -19,8 +19,9 @@ export async function seekYouTubeVideo(timeSeconds: number, signal?: AbortSignal
   const seconds = (clampedTime % 60).toFixed(2);
 
   try {
-    const ytPlayer = getYtPlayer();
-    const youtubeIframeElement = getYoutubeIframeElement();
+    // Get fresh player reference right before using it
+    let ytPlayer = getYtPlayer();
+    let youtubeIframeElement = getYoutubeIframeElement();
     
     // Try official YouTube API first
     if (ytPlayer && typeof ytPlayer.seekTo === 'function') {
@@ -39,6 +40,7 @@ export async function seekYouTubeVideo(timeSeconds: number, signal?: AbortSignal
       );
       console.log(`[YOUTUBE-SEEK] PostMessage fallback: Seeking to ${minutes}:${seconds} (${clampedTime.toFixed(2)}s total)`);
     } else {
+      console.error('[YOUTUBE-SEEK] No seek method available - ytPlayer:', ytPlayer ? 'exists' : 'null', 'iframe:', youtubeIframeElement ? 'exists' : 'null');
       throw new Error('No seek method available');
     }
 
