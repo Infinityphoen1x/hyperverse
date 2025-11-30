@@ -48,7 +48,6 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     notes, 
     currentTime, 
     isPaused,
-    countdownSeconds: engineCountdown,
     startGame, 
     hitNote,
     trackHoldStart,
@@ -57,7 +56,11 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     resumeGame,
     restartGame,
     setGameState
-  } = useGameEngine(difficulty, youtubeVideoId ? getVideoTime : undefined, customNotes);
+  } = useGameEngine({ 
+    difficulty, 
+    customNotes, 
+    getVideoTime: youtubeVideoId ? getVideoTime : undefined 
+  });
 
   // Memoize miss count to avoid filtering every render
   const missCount = useMemo(() => notes.filter(n => n.missed).length, [notes]);
