@@ -89,9 +89,9 @@ export function useGameLogic({
       setPauseMenuOpenHandler(false);
 
       try {
-        // Wait for player readiness
+        // Wait for player readiness (returns null if API not available)
         console.log('[RESUME] Waiting for YouTube player to be ready...');
-        await waitForYouTubeReady();
+        await waitForYouTubeReady(2000);
 
         // Seek to correct time
         const targetTime = pauseTimeRef.current / 1000; // seconds
@@ -113,7 +113,14 @@ export function useGameLogic({
         asyncReadyRef.current = true;
 
       } catch (err) {
-        console.error('[RESUME DEBUG] Failed to resume properly:', err);
+        console.error('[RESUME DEBUG] Resume error:', err);
+        // Still try to continue even if something failed
+        const videoTimeMs = pauseTimeRef.current ?? 0;
+        console.log(`[RESUME DEBUG] Continuing with fallback time: ${videoTimeMs.toFixed(0)}ms`);
+        engineRef?.current?.setCurrentTime?.(videoTimeMs);
+        setCurrentTime(videoTimeMs);
+        setGameState('RESUMING');
+        resumeStartTimeRef.current = performance.now();
         asyncReadyRef.current = true;
       }
     })();

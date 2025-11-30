@@ -2,9 +2,9 @@ import { getYtPlayer, getYoutubeCurrentTimeMs } from './youtubeSharedState';
 
 /**
  * Wait for YouTube player to be fully ready and reporting valid time
+ * If player API unavailable, continues anyway (postMessage fallback will be used)
  * @param timeout Max milliseconds to wait (default 3000ms)
- * @returns YouTube player instance when ready
- * @throws Error if player not ready after timeout
+ * @returns YouTube player instance if ready, null if using fallback
  */
 export async function waitForYouTubeReady(timeout = 3000): Promise<any> {
   const start = performance.now();
@@ -30,7 +30,9 @@ export async function waitForYouTubeReady(timeout = 3000): Promise<any> {
     await new Promise(resolve => setTimeout(resolve, 50));
   }
   
-  throw new Error(`YouTube player not ready after ${timeout}ms timeout`);
+  // Player API not available - that's okay, postMessage fallback will handle it
+  console.log(`[YOUTUBE-READY] Player API not available after ${timeout}ms, continuing with postMessage fallback`);
+  return null;
 }
 
 /**
