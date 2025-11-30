@@ -1,4 +1,4 @@
-import { Note, NoteType } from './game_engine_core';
+import { Note, NoteType } from './game_types';
 
 // ============================================================================
 // DEBUG & ERROR TRACKING (Optional, completely decoupled)

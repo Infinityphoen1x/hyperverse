@@ -1,57 +1,17 @@
 // ============================================================================
-// TYPES & CONSTANTS
+// IMPORTS
 // ============================================================================
 
-export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
-export type GameState = 'IDLE' | 'PLAYING' | 'PAUSED' | 'RESUMING' | 'REWINDING' | 'GAME_OVER';
-export type NoteType = 'TAP' | 'SPIN_LEFT' | 'SPIN_RIGHT';
-
-export interface Note {
-  id: string;
-  lane: number;
-  time: number;
-  type: NoteType;
-  duration?: number;
-  
-  // State flags
-  hit: boolean;
-  missed: boolean;
-  
-  // Failure types
-  tapTooEarlyFailure?: boolean;
-  tapMissFailure?: boolean;
-  tooEarlyFailure?: boolean;
-  holdMissFailure?: boolean;
-  holdReleaseFailure?: boolean;
-  
-  // Timing data
-  pressTime?: number;
-  hitTime?: number;
-  pressHoldTime?: number;
-  releaseTime?: number;
-  pressReleaseTime?: number;
-  failureTime?: number;
-  
-  // Beatmap bounds
-  beatmapStart?: number;
-  beatmapEnd?: number;
-}
-
-export interface GameConfig {
-  TAP_HIT_WINDOW: number;
-  TAP_FAILURE_BUFFER: number;
-  HOLD_MISS_TIMEOUT: number;
-  HOLD_RELEASE_OFFSET: number;
-  HOLD_RELEASE_WINDOW: number;
-  HOLD_ACTIVATION_WINDOW: number;
-  LEAD_TIME: number;
-  ACCURACY_PERFECT_MS: number;
-  ACCURACY_GREAT_MS: number;
-  ACCURACY_PERFECT_POINTS: number;
-  ACCURACY_GREAT_POINTS: number;
-  ACCURACY_NORMAL_POINTS: number;
-  MAX_HEALTH: number;
-}
+import {
+  Difficulty,
+  GameState,
+  NoteType,
+  Note,
+  GameConfig,
+  ScoreState,
+  TimingResult,
+  FailureType,
+} from './game_types';
 
 // ============================================================================
 // TIMING MANAGER - Handles all time-related calculations
@@ -108,12 +68,6 @@ export class TimingManager {
 // ============================================================================
 // SCORING MANAGER - Handles score, combo, health
 // ============================================================================
-
-export interface ScoreState {
-  score: number;
-  combo: number;
-  health: number;
-}
 
 export class ScoringManager {
   private state: ScoreState;

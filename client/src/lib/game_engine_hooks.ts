@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  GameEngineCore,
   GameConfig,
   GameState,
   Note,
   Difficulty,
   ScoreState,
-} from './game_engine_core';
+} from './game_types';
+import { GameEngineCore } from './game_engine_core';
 
 // ============================================================================
 // CONFIGURATION HOOK
