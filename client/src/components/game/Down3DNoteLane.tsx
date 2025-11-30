@@ -4,11 +4,11 @@ import { VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/utils/gameConstants'
 import { useVanishingPointOffset } from '@/hooks/useVanishingPointOffset';
 import { useKeyboardControls } from '@/hooks/useKeyboardControls';
 import { useVisibleNotes } from '@/hooks/useVisibleNotes';
-import { TunnelBackground } from './TunnelBackground';
-import { SoundpadButtons } from './SoundpadButtons';
-import { JudgementLines } from './JudgementLines';
-import { HoldNotes } from './HoldNotes';
-import { TapNotes } from './TapNotes';
+import { TunnelBackground } from './tunnel/TunnelBackground';
+import { SoundpadButtons } from './ui/SoundpadButtons';
+import { JudgementLines } from './tunnel/JudgementLines';
+import { HoldNotes } from './notes/HoldNotes';
+import { TapNotes } from './notes/TapNotes';
 
 interface Down3DNoteLaneProps {
   notes: Note[];

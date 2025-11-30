@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { BeatmapLoader } from "@/components/game/BeatmapLoader";
+import { BeatmapLoader } from "@/components/game/loaders/BeatmapLoader";
 
 interface HomeProps {
   onStartGame: (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => void;

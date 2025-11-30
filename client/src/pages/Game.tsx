@@ -13,11 +13,11 @@ import { ScoreDisplay } from "@/components/ui/HUD/ScoreDisplay";
 import { ComboDisplay } from "@/components/ui/HUD/ComboDisplay";
 import { ErrorIndicator } from "@/components/ui/HUD/ErrorIndicator";
 import { ControlsHint } from "@/components/ui/HUD/ControlsHint";
-import { VisualEffects } from "@/components/game/VisualEffects";
-import { DeckHoldMeters } from "@/components/game/DeckHoldMeters";
-import { CamelotWheel } from "@/components/game/CamelotWheel";
+import { VisualEffects } from "@/components/game/effects/VisualEffects";
+import { DeckHoldMeters } from "@/components/game/ui/DeckHoldMeters";
+import { CamelotWheel } from "@/components/game/effects/CamelotWheel";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
-import { ErrorLogViewer } from "@/components/game/ErrorLogViewer";
+import { ErrorLogViewer } from "@/components/game/loaders/ErrorLogViewer";
 
 interface GameProps {
   difficulty: Difficulty;
