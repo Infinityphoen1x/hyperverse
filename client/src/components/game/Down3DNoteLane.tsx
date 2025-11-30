@@ -1,4 +1,4 @@
-import { Note, GameErrors, HoldNoteFailureStates } from "@/lib/gameEngine";
+import { Note, GameErrors } from "@/lib/gameEngine";
 import { useEffect, useState, useRef } from "react";
 import { 
   BUTTON_CONFIG, 
