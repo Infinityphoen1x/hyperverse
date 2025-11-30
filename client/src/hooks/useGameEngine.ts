@@ -92,31 +92,26 @@ function useStateSynchronizer<T>(
 ): T {
   const [value, setValue] = useState<T>(getValue);
   const lastUpdateRef = useRef<number>(0);
-  const valueRef = useRef<T>(getValue());
   const getValueRef = useRef(getValue);
 
   useEffect(() => {
     getValueRef.current = getValue;
   }, [getValue]);
 
-  // Immediate sync when activated
+  // Sync state - immediate on activation, then continuous
   useEffect(() => {
     if (!isActive) return;
+
+    // Immediate sync
     const newValue = getValueRef.current();
-    valueRef.current = newValue;
     setValue(newValue);
     lastUpdateRef.current = performance.now();
-  }, [isActive]);
 
-  // Continuous sync while active
-  useEffect(() => {
-    if (!isActive) return;
-
+    // Continuous sync
     const checkUpdate = () => {
       const now = performance.now();
       if (now - lastUpdateRef.current >= interval) {
         const newValue = getValueRef.current();
-        valueRef.current = newValue;
         setValue(newValue);
         lastUpdateRef.current = now;
       }
@@ -224,8 +219,8 @@ export function useGameEngine({
 
   // Logging for debugging
   useEffect(() => {
-    console.log(`[GAME-ENGINE-STATE] gameState=${gameState}, isPaused=${isPaused}, currentTime=${currentTime.toFixed(2)}, notes=${engineRef.current?.getNotes().length || 0}`);
-  }, [gameState, isPaused, currentTime]);
+    console.log(`[GAME-ENGINE-STATE] gameState=${gameState}, isPaused=${isPaused}, notes=${engineRef.current?.getNotes().length || 0}`);
+  }, [gameState, isPaused]);
 
   // Game loop
   useGameLoop(gameState === 'PLAYING' && !isPaused, {
