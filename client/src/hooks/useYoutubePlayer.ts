@@ -5,16 +5,14 @@ import {
   playYouTubeVideo, 
   pauseYouTubeVideo 
 } from '@/lib/youtube';
-import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from '@/lib/config/gameConstants';
 
 interface UseYouTubePlayerProps {
   videoId: string | null;
-  iframeRef: React.RefObject<HTMLIFrameElement>;
   playerInitializedRef: React.RefObject<boolean>;
   onPlaying?: () => void;
 }
 
-export function useYouTubePlayer({ videoId, iframeRef, playerInitializedRef, onPlaying }: UseYouTubePlayerProps) {
+export function useYouTubePlayer({ videoId, playerInitializedRef, onPlaying }: UseYouTubePlayerProps) {
   const [isReady, setIsReady] = useState(false);
   const initRef = useRef(false);
 

@@ -59,7 +59,6 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     isReady: playerReady
   } = useYouTubePlayer({
     videoId: youtubeVideoId,
-    iframeRef: youtubeIframeRef,
     playerInitializedRef,
     onPlaying: () => startGame() // Auto-start game when video plays
   });
