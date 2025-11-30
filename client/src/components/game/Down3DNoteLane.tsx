@@ -122,7 +122,8 @@ const determineGreyscaleState = (
     return { isGreyed: true, reason: 'tooEarlyImmediate' };
   }
   
-  if (failures.isHoldMissFailure && approachNearDistance >= JUDGEMENT_RADIUS) {
+  // holdMissFailure: Greyscale sooner (before reaching judgement line) to prevent glow buildup
+  if (failures.isHoldMissFailure && approachNearDistance >= JUDGEMENT_RADIUS * 0.7) {
     return { isGreyed: true, reason: 'holdMissAtJudgement' };
   }
   

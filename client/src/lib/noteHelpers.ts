@@ -226,9 +226,11 @@ export const calculateTapNoteStyle = (
       opacity = Math.max(0.1, (1 - fadeProgress) * (0.4 + (progress * 0.6)));
     }
   } else {
-    const clampedProgress = Math.min(progress, 1.0);
-    opacity = 0.4 + (clampedProgress * 0.6);
-    filter = `drop-shadow(0 0 ${15 * clampedProgress}px ${noteColor})`;
+    // Approaching: use unclamped progress to flow smoothly through tunnel
+    opacity = 0.4 + (progress * 0.6);
+    // Cap glow scaling to prevent artifact buildup past judgement line
+    const glowScale = Math.min(progress, 1.0);
+    filter = `drop-shadow(0 0 ${15 * glowScale}px ${noteColor})`;
   }
   
   const hitFlashIntensity = state.isHit && state.timeSinceHit < 600 
