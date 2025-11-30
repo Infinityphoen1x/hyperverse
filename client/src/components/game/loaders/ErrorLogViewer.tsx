@@ -29,7 +29,7 @@ export function ErrorLogViewer() {
     return () => clearInterval(updateInterval);
   }, []);
 
-  const downloadLogs = () => {
+  const downloadGameErrors = () => {
     const logData = {
       timestamp: new Date().toISOString(),
       errorLog: GameErrors.notes,
@@ -43,6 +43,21 @@ export function ErrorLogViewer() {
     const link = document.createElement('a');
     link.href = url;
     link.download = `game-errors-${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadConsoleLogs = () => {
+    const consoleLogs = (window as any).__consoleLogs || [];
+    const logText = consoleLogs.join('\n');
+    
+    const blob = new Blob([logText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `console-logs-${Date.now()}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -223,11 +238,20 @@ export function ErrorLogViewer() {
             <div className="border-t border-cyan-500/30 p-4 bg-gray-950 space-y-2 flex-shrink-0">
               <div className="flex gap-2 text-xs">
                 <button
-                  onClick={downloadLogs}
+                  onClick={downloadGameErrors}
                   className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white px-2 py-1 rounded transition"
-                  data-testid="button-download-logs"
+                  data-testid="button-download-game-errors"
+                  title="Download game error log (JSON)"
                 >
-                  Download
+                  Game Errors
+                </button>
+                <button
+                  onClick={downloadConsoleLogs}
+                  className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white px-2 py-1 rounded transition"
+                  data-testid="button-download-console-logs"
+                  title="Download console logs (TXT)"
+                >
+                  Console Logs
                 </button>
                 <button
                   onClick={clearLogs}
