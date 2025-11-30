@@ -24,6 +24,7 @@ export function GameOverScreen({ score, combo, errors, onRestart }: GameOverScre
         whileHover={{ scale: 1.05 }}
         onClick={onRestart}
         className="px-8 py-3 bg-neon-blue text-black font-bold hover:bg-white transition-colors"
+        data-testid="button-restart-game"
       >
         REBOOT SYSTEM
       </motion.button>
