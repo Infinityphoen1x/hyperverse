@@ -46,6 +46,7 @@ export function useGameLogic({
   const errorCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const gameAlreadyStartedRef = useRef(false);
   const asyncReadyRef = useRef(false);
+  const countdownStartedRef = useRef(false);
 
   const setPauseMenuOpenHandler = useCallback((open: boolean) => {
     setPauseMenuOpen?.(open);
@@ -59,6 +60,7 @@ export function useGameLogic({
   // Resume handler - triggers 3-second countdown
   const handleResume = useCallback(() => {
     if (gameState === 'PAUSED') {
+      countdownStartedRef.current = true;
       setCountdownSeconds(3);
     }
   }, [gameState]);
@@ -80,10 +82,11 @@ export function useGameLogic({
 
   // Execute resume when countdown reaches 0
   useEffect(() => {
-    if (countdownSeconds !== 0 || gameState !== 'PAUSED') return;
+    if (countdownSeconds !== 0 || gameState !== 'PAUSED' || !countdownStartedRef.current) return;
 
     (async () => {
       console.log('[COUNTDOWN-COMPLETE] Starting resume sequence');
+      countdownStartedRef.current = false; // Reset flag
       setPauseMenuOpenHandler(false);
       resumeGame();
       setGameState('RESUMING');
