@@ -306,12 +306,12 @@ const calculateTapNoteStyle = (
   let filter = `drop-shadow(0 0 ${15 * progress}px ${noteColor})`;
   
   if (state.isTapTooEarlyFailure) {
-    // Too early: orange/amber alert, faster fade (800ms)
+    // Too early: greyscale fade (800ms) - matches hold note tooEarlyFailure
     const failProgress = Math.min(state.timeSinceFail / 800, 1.0);
     opacity = (1 - failProgress) * 0.7;
-    fill = 'rgba(255,165,0,0.4)';
-    stroke = 'rgba(255,165,0,0.8)';
-    filter = `drop-shadow(0 0 12px rgba(255,165,0,0.8)) drop-shadow(0 0 6px rgba(255,165,0,0.5))`;
+    fill = 'rgba(80,80,80,0.8)';
+    stroke = 'rgba(100,100,100,0.6)';
+    filter = `drop-shadow(0 0 8px rgba(100,100,100,0.4)) grayscale(1)`;
   } else if (state.isTapMissFailure) {
     // Missed: red/grey, standard fade (1100ms)
     const failProgress = Math.min(state.timeSinceFail / 1100, 1.0);
