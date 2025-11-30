@@ -222,7 +222,7 @@ export class GameDebugger {
 import { useRef, useEffect } from 'react';
 
 export function useGameDebugger(enabled: boolean = true): GameDebugger {
-  const debuggerRef = useRef<GameDebugger | undefined>();
+  const debuggerRef = useRef<GameDebugger | undefined>(undefined);
   
   if (!debuggerRef.current) {
     debuggerRef.current = new GameDebugger(enabled);
