@@ -259,7 +259,9 @@ const calculateTapNoteGeometry = (
   vpY: number,
   isSuccessfulHit: boolean = false,
   pressHoldTime: number = 0,
-  currentTime: number = 0
+  currentTime: number = 0,
+  isFailed: boolean = false,
+  noteTime: number = 0
 ): TapNoteGeometry => {
   const MIN_DEPTH = 5;
   const MAX_DEPTH = 40;
@@ -290,10 +292,18 @@ const calculateTapNoteGeometry = (
     };
   }
   
-  // Normal approach for unapproached/failed notes
-  const clampedProgress = Math.max(0, Math.min(1, progress));
-  const TRAPEZOID_DEPTH = MIN_DEPTH + (clampedProgress * (MAX_DEPTH - MIN_DEPTH));
-  const nearDist = 1 + (clampedProgress * (JUDGEMENT_RADIUS - 1));
+  // For failed notes: use unclamped progress so they continue past judgement line (like hold notes)
+  // For unapproached notes: use clamped progress
+  let effectiveProgress = progress;
+  if (isFailed && Number.isFinite(noteTime) && Number.isFinite(currentTime)) {
+    // Unclamped progress allows notes to continue past the judgement line
+    effectiveProgress = Math.max(0, 1 - ((noteTime - currentTime) / 2000));
+  } else {
+    effectiveProgress = Math.max(0, Math.min(1, progress));
+  }
+  
+  const TRAPEZOID_DEPTH = MIN_DEPTH + (Math.min(effectiveProgress, 1) * (MAX_DEPTH - MIN_DEPTH));
+  const nearDist = 1 + (effectiveProgress * (JUDGEMENT_RADIUS - 1));
   const farDist = Math.max(1, nearDist - TRAPEZOID_DEPTH);
   
   // Narrower flanking angles (±8°) for compact appearance
@@ -1308,7 +1318,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
             // Get rendering data
             const tapRayAngle = getLaneAngle(note.lane);
             const noteColor = getColorForLane(note.lane);
-            const geometry = calculateTapNoteGeometry(progress, tapRayAngle, vpX, vpY, state.isHit, note.pressHoldTime || 0, currentTime);
+            const geometry = calculateTapNoteGeometry(progress, tapRayAngle, vpX, vpY, state.isHit, note.pressHoldTime || 0, currentTime, state.isFailed, note.time);
             const style = calculateTapNoteStyle(progress, state, noteColor);
             
             return (
