@@ -338,8 +338,7 @@ interface TapNoteStyle {
 const calculateTapNoteStyle = (
   progress: number,
   state: TapNoteState,
-  noteColor: string,
-  isFailed: boolean = false
+  noteColor: string
 ): TapNoteStyle => {
   let opacity: number;
   let fill = noteColor;
@@ -527,8 +526,7 @@ const calculateHoldNoteColors = (
 const trackHoldNoteAnimationLifecycle = (
   note: Note,
   failures: HoldNoteFailureStates,
-  currentTime: number,
-  collapseProgress: number
+  currentTime: number
 ): void => {
   if (!failures.hasAnyFailure) return; // Only track failures
   
@@ -1202,7 +1200,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
               const { x1, y1, x2, y2, x3, y3, x4, y4 } = corners;
               
               // Track hold note animation lifecycle
-              trackHoldNoteAnimationLifecycle(note, failures, currentTime, collapseProgress);
+              trackHoldNoteAnimationLifecycle(note, failures, currentTime);
               
               // Calculate opacity (fade during collapse for failures)
               const approachProgress = (approachGeometry.nearDistance - 1) / (JUDGEMENT_RADIUS - 1);
@@ -1315,7 +1313,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
             const noteColor = getColorForLane(note.lane);
             const progressForGeometry = state.isFailed ? rawProgress : clampedProgress;
             const geometry = calculateTapNoteGeometry(progressForGeometry, tapRayAngle, vpX, vpY, state.isHit, note.pressHoldTime || 0, currentTime, state.isFailed, note.time);
-            const style = calculateTapNoteStyle(clampedProgress, state, noteColor, state.isFailed);
+            const style = calculateTapNoteStyle(clampedProgress, state, noteColor);
             
             return (
               <polygon
