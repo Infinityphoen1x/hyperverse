@@ -41,7 +41,7 @@ import {
   getHoldNoteFailureStates,
   determineGreyscaleState,
   getTrapezoidCorners,
-} from "@/lib/noteHelpers";
+} from "@/lib/notes/noteHelpers";
 
 // Tunnel-specific: health-based ray color gradient
 const getHealthBasedRayColor = (health: number): string => {
