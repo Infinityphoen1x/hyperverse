@@ -204,6 +204,14 @@ export function useGameEngine({
     isGameActive
   );
 
+  // Force notes refresh when resuming from pause
+  useEffect(() => {
+    if (!isPaused && gameState === 'PLAYING') {
+      // Trigger a manual sync by creating a dependency on resume
+      engineRef.current?.getNotes();
+    }
+  }, [isPaused, gameState]);
+
   // Game loop
   useGameLoop(gameState === 'PLAYING' && !isPaused, {
     onFrame: () => {
