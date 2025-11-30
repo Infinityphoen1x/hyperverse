@@ -9,9 +9,16 @@ interface SoundPadProps {
   currentTime: number;
 }
 
-// Calculate fixed hexagon corner positions (4 soundpad lanes only)
+// Calculate fixed hexagon corner positions for all lanes (soundpad + deck)
 const getPadPosition = (laneIndex: number): { x: number; y: number } => {
-  const config = BUTTON_CONFIG[laneIndex];
+  let config;
+  if (laneIndex === -1) {
+    config = BUTTON_CONFIG[4]; // Q - left deck
+  } else if (laneIndex === -2) {
+    config = BUTTON_CONFIG[5]; // P - right deck
+  } else {
+    config = BUTTON_CONFIG[laneIndex];
+  }
   if (!config) return { x: 0, y: 0 };
   const rad = (config.angle * Math.PI) / 180;
   const x = VANISHING_POINT_X + Math.cos(rad) * JUDGEMENT_RADIUS;
@@ -20,7 +27,7 @@ const getPadPosition = (laneIndex: number): { x: number; y: number } => {
 };
 
 export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
-  const [hitFeedback, setHitFeedback] = useState<Record<number, boolean>>({ 0: false, 1: false, 2: false, 3: false });
+  const [hitFeedback, setHitFeedback] = useState<Record<number, boolean>>({ 0: false, 1: false, 2: false, 3: false, '-1': false, '-2': false });
   
   // Validate pad index with bounds checking
   const isValidPadIndex = (index: number): boolean => {
@@ -72,6 +79,8 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
         case 'o': checkHitAndTriggerFeedback(1); break;
         case 'i': checkHitAndTriggerFeedback(2); break;
         case 'e': checkHitAndTriggerFeedback(3); break;
+        case 'q': checkHitAndTriggerFeedback(-1); break;
+        case 'p': checkHitAndTriggerFeedback(-2); break;
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -98,10 +107,19 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
 
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {[0, 1, 2, 3].map((i) => {
+      {[0, 1, 2, 3, -1, -2].map((i) => {
         const pos = getPadPosition(i);
-        const config = BUTTON_CONFIG[i];
+        let config;
+        if (i === -1) {
+          config = BUTTON_CONFIG[4];
+        } else if (i === -2) {
+          config = BUTTON_CONFIG[5];
+        } else {
+          config = BUTTON_CONFIG[i];
+        }
         if (!config) return null;
+        
+        const isPressed = hitFeedback[i];
         
         return (
           <motion.button
@@ -111,9 +129,9 @@ export function SoundPad({ onPadHit, notes, currentTime }: SoundPadProps) {
               left: `${pos.x}px`,
               top: `${pos.y}px`,
               transform: 'translate(-50%, -50%)',
-              backgroundColor: hitFeedback[i] ? config.color : `${config.color}40`,
+              backgroundColor: isPressed ? config.color : `${config.color}40`,
               border: `2px solid ${config.color}`,
-              boxShadow: hitFeedback[i] 
+              boxShadow: isPressed 
                 ? `0 0 30px ${config.color}, 0 0 60px ${config.color}, inset 0 0 15px ${config.color}`
                 : `0 0 15px ${config.color}66`,
             }}
