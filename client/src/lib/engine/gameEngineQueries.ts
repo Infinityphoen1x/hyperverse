@@ -1,6 +1,6 @@
 import { Note } from './gameTypes';
-import { NoteValidator } from '../notes/noteValidator';
-import { ScoringManager } from '../managers/scoringManager';
+import { NoteValidator } from '@/lib/notes/processors/noteValidator';
+import { ScoringManager } from '@/lib/managers/scoringManager';
 
 /**
  * Query utilities for GameEngineCore
