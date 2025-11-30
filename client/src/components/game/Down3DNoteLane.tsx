@@ -5,7 +5,7 @@ import { useVanishingPointOffset } from '@/hooks/useVanishingPointOffset';
 import { useKeyboardControls } from '@/hooks/useKeyboardControls';
 import { useVisibleNotes } from '@/hooks/useVisibleNotes';
 import { TunnelBackground } from './tunnel/TunnelBackground';
-import { SoundpadButtons } from './ui/SoundpadButtons';
+import { SoundpadButtons } from './hud/SoundpadButtons';
 import { JudgementLines } from './tunnel/JudgementLines';
 import { HoldNotes } from './notes/HoldNotes';
 import { TapNotes } from './notes/TapNotes';
