@@ -265,36 +265,9 @@ const calculateTapNoteGeometry = (
   const MIN_DEPTH = 5;
   const MAX_DEPTH = 40;
   
-  // For successful hits: lock at tap position (judgement line) instead of approaching
-  if (isSuccessfulHit && pressHoldTime > 0) {
-    const lockedNearDist = JUDGEMENT_RADIUS;
-    const TRAPEZOID_DEPTH = MIN_DEPTH + 0.5 * (MAX_DEPTH - MIN_DEPTH); // Half depth when locked
-    const lockedFarDist = Math.max(1, lockedNearDist - TRAPEZOID_DEPTH);
-    
-    const tapLeftRayAngle = tapRayAngle - 8;
-    const tapRightRayAngle = tapRayAngle + 8;
-    const tapLeftRad = (tapLeftRayAngle * Math.PI) / 180;
-    const tapRightRad = (tapRightRayAngle * Math.PI) / 180;
-    
-    const x1 = vpX + Math.cos(tapLeftRad) * lockedFarDist;
-    const y1 = vpY + Math.sin(tapLeftRad) * lockedFarDist;
-    const x2 = vpX + Math.cos(tapRightRad) * lockedFarDist;
-    const y2 = vpY + Math.sin(tapRightRad) * lockedFarDist;
-    const x3 = vpX + Math.cos(tapRightRad) * lockedNearDist;
-    const y3 = vpY + Math.sin(tapRightRad) * lockedNearDist;
-    const x4 = vpX + Math.cos(tapLeftRad) * lockedNearDist;
-    const y4 = vpY + Math.sin(tapLeftRad) * lockedNearDist;
-    
-    return {
-      x1, y1, x2, y2, x3, y3, x4, y4,
-      points: `${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`,
-    };
-  }
-  
-  // For failed notes: use unclamped progress so they continue past judgement line (like hold notes)
-  // For unapproached notes: use clamped progress
+  // All TAP notes flow through tunnel with approach geometry (successful hits don't lock)
   let effectiveProgress = progress;
-  if (isFailed && Number.isFinite(noteTime) && Number.isFinite(currentTime)) {
+  if ((isFailed || isSuccessfulHit) && Number.isFinite(noteTime) && Number.isFinite(currentTime)) {
     // Unclamped progress allows notes to continue past the judgement line
     effectiveProgress = Math.max(0, 1 - ((noteTime - currentTime) / 2000));
   } else {
@@ -338,7 +311,8 @@ interface TapNoteStyle {
 const calculateTapNoteStyle = (
   progress: number,
   state: TapNoteState,
-  noteColor: string
+  noteColor: string,
+  rawProgress: number = 0
 ): TapNoteStyle => {
   let opacity: number;
   let fill = noteColor;
@@ -346,9 +320,9 @@ const calculateTapNoteStyle = (
   let filter = '';
   
   if (state.isTapTooEarlyFailure || state.isTapMissFailure) {
-    // Failed notes: use clamped progress opacity like holdMissFailure (no special styling)
-    const clampedProgress = Math.min(progress, 1.0);
-    opacity = 0.4 + (clampedProgress * 0.6);
+    // Failed notes: use dynamic (unclamped) progress for smooth visual transition
+    // Opacity follows note position through tunnel, not static at judgement line
+    opacity = 0.4 + (rawProgress * 0.6);
     // Apply greyscale fade after animation timeout
     const animDuration = state.isTapTooEarlyFailure ? 800 : 1100;
     const failProgress = Math.min(state.timeSinceFail / animDuration, 1.0);
@@ -1308,12 +1282,12 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
             // Track animation lifecycle
             trackTapNoteAnimation(note, state, currentTime);
             
-            // Get rendering data - use unclamped progress for failed notes, clamped for others
+            // Get rendering data - use unclamped progress for failed/hit notes, clamped for approaching
             const tapRayAngle = getLaneAngle(note.lane);
             const noteColor = getColorForLane(note.lane);
-            const progressForGeometry = state.isFailed ? rawProgress : clampedProgress;
+            const progressForGeometry = (state.isFailed || state.isHit) ? rawProgress : clampedProgress;
             const geometry = calculateTapNoteGeometry(progressForGeometry, tapRayAngle, vpX, vpY, state.isHit, note.pressHoldTime || 0, currentTime, state.isFailed, note.time);
-            const style = calculateTapNoteStyle(clampedProgress, state, noteColor);
+            const style = calculateTapNoteStyle(clampedProgress, state, noteColor, rawProgress);
             
             return (
               <polygon
