@@ -342,29 +342,22 @@ const calculateTapNoteStyle = (
   noteColor: string,
   isFailed: boolean = false
 ): TapNoteStyle => {
-  // For failed notes: use no glow (greyscale only)
-  // For approaching notes: clamp progress to avoid judgement line glow
-  const clampedProgress = isFailed ? Math.max(0, Math.min(1, progress)) : progress;
-  
-  let opacity = 0.4 + (clampedProgress * 0.6);
+  let opacity: number;
   let fill = noteColor;
   let stroke = 'rgba(255,255,255,0.8)';
-  let filter = isFailed ? 'none' : `drop-shadow(0 0 ${15 * clampedProgress}px ${noteColor})`;
+  let filter = '';
   
-  if (state.isTapTooEarlyFailure) {
-    // Too early: greyscale fade (800ms) - NO GLOW
-    const failProgress = Math.min(state.timeSinceFail / 800, 1.0);
-    opacity = (1 - failProgress) * 0.7;
-    fill = 'rgba(80,80,80,0.8)';
-    stroke = 'rgba(100,100,100,0.6)';
-    filter = 'grayscale(1)';
-  } else if (state.isTapMissFailure) {
-    // Missed: greyscale fade (1100ms) - NO GLOW
-    const failProgress = Math.min(state.timeSinceFail / 1100, 1.0);
-    opacity = (1 - failProgress) * 0.6;
+  if (state.isTapTooEarlyFailure || state.isTapMissFailure) {
+    // Failed notes: use clamped progress opacity like holdMissFailure (no special styling)
+    const clampedProgress = Math.min(progress, 1.0);
+    opacity = 0.4 + (clampedProgress * 0.6);
+    // Apply greyscale fade after animation timeout
+    const animDuration = state.isTapTooEarlyFailure ? 800 : 1100;
+    const failProgress = Math.min(state.timeSinceFail / animDuration, 1.0);
+    opacity = opacity * (1.0 - failProgress);
     fill = 'rgba(80,80,80,0.3)';
     stroke = 'rgba(100,100,100,0.6)';
-    filter = 'grayscale(1)';
+    filter = `grayscale(1)`;
   } else if (state.isHit) {
     // For successful hits: stay visible for TAP_HIT_HOLD_DURATION (700ms), flash for first 600ms
     if (state.timeSinceHit < 600) {
@@ -374,6 +367,11 @@ const calculateTapNoteStyle = (
       const fadeProgress = (state.timeSinceHit - 600) / 100;
       opacity = Math.max(0.1, (1 - fadeProgress) * (0.4 + (progress * 0.6)));
     }
+  } else {
+    // Approaching: use clamped progress to prevent haze buildup at judgement line
+    const clampedProgress = Math.min(progress, 1.0);
+    opacity = 0.4 + (clampedProgress * 0.6);
+    filter = `drop-shadow(0 0 ${15 * clampedProgress}px ${noteColor})`;
   }
   
   const hitFlashIntensity = state.isHit && state.timeSinceHit < 600 
