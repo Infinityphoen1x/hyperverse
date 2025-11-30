@@ -49,7 +49,7 @@ export function Down3DNoteLane({
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
       <TunnelBackground vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} health={health} />
-      <SoundpadButtons onPadHit={onPadHit} />
+      <SoundpadButtons vpX={vpX} vpY={vpY} onPadHit={onPadHit} />
       <JudgementLines vpX={vpX} vpY={vpY} type="tap" />
       <HoldNotes visibleNotes={visibleNotes} currentTime={currentTime} vpX={vpX} vpY={vpY} />
       <JudgementLines vpX={vpX} vpY={vpY} type="hold" />

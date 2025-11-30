@@ -2,16 +2,18 @@ import React from 'react';
 import { BUTTON_CONFIG, VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_MAX_DISTANCE } from '@/lib/config/gameConstants';
 
 interface SoundpadButtonsProps {
+  vpX: number;
+  vpY: number;
   onPadHit?: (lane: number) => void;
 }
 
-export function SoundpadButtons({ onPadHit }: SoundpadButtonsProps) {
+export function SoundpadButtons({ vpX, vpY, onPadHit }: SoundpadButtonsProps) {
   return (
     <svg className="absolute inset-0 w-full h-full" style={{ opacity: 1 }}>
       {BUTTON_CONFIG.map(({ lane, key, angle, color }) => {
         const rad = (angle * Math.PI) / 180;
-        const cx = VANISHING_POINT_X + Math.cos(rad) * TUNNEL_MAX_DISTANCE;
-        const cy = VANISHING_POINT_Y + Math.sin(rad) * TUNNEL_MAX_DISTANCE;
+        const cx = vpX + Math.cos(rad) * TUNNEL_MAX_DISTANCE;
+        const cy = vpY + Math.sin(rad) * TUNNEL_MAX_DISTANCE;
 
         return (
           <g key={`soundpad-button-${lane}`}>
