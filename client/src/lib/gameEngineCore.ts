@@ -1,4 +1,4 @@
-import { Note, GameConfig, ScoreState } from './game_types';
+import { Note, GameConfig, ScoreState } from './gameTypes';
 import { TimingManager } from './timingManager';
 import { ScoringManager } from './scoringManager';
 import { NoteValidator } from './noteValidator';

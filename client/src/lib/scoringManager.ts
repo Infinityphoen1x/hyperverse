@@ -1,4 +1,4 @@
-import { GameConfig, ScoreState } from './game_types';
+import { GameConfig, ScoreState } from './gameTypes';
 
 // ============================================================================
 // SCORING MANAGER - Handles score, combo, health

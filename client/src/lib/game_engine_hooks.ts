@@ -5,8 +5,8 @@ import {
   Note,
   Difficulty,
   ScoreState,
-} from './game_types';
-import { GameEngineCore } from './game_engine_core';
+} from './gameTypes';
+import { GameEngineCore } from './gameEngineCore';
 
 // ============================================================================
 // CONFIGURATION HOOK

@@ -1,4 +1,4 @@
-import { Note, GameConfig, NoteType } from './game_types';
+import { Note, GameConfig, NoteType } from './gameTypes';
 
 // ============================================================================
 // NOTE VALIDATOR - Pure functions for note state validation
