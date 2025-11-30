@@ -253,6 +253,10 @@ export function useGameEngine({
       setCurrentTime(time);
       
       const { shouldGameOver } = engine.processFrame(time);
+      
+      // Monitor health in frame processing
+      const currentHealth = engineRef.current?.getScore().health || config.MAX_HEALTH;
+      console.log(`[FRAME] Time: ${time.toFixed(0)}ms, Health: ${currentHealth}, GameOver: ${shouldGameOver}, Active Notes: ${engine.getActiveNotes().length}`);
 
       console.log(
         `[GAME-DEBUG] currentTime=${time.toFixed(0)}ms`,
@@ -263,6 +267,7 @@ export function useGameEngine({
       );
       
       if (shouldGameOver) {
+        console.error('[CRITICAL] Game over detected post-frame - likely miss threshold');
         setGameState('GAME_OVER');
       }
     },
