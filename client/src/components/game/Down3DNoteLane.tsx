@@ -339,12 +339,17 @@ interface TapNoteStyle {
 const calculateTapNoteStyle = (
   progress: number,
   state: TapNoteState,
-  noteColor: string
+  noteColor: string,
+  isFailed: boolean = false
 ): TapNoteStyle => {
-  let opacity = 0.4 + (progress * 0.6);
+  // For failed notes: use no glow (greyscale only)
+  // For approaching notes: clamp progress to avoid judgement line glow
+  const clampedProgress = isFailed ? Math.max(0, Math.min(1, progress)) : progress;
+  
+  let opacity = 0.4 + (clampedProgress * 0.6);
   let fill = noteColor;
   let stroke = 'rgba(255,255,255,0.8)';
-  let filter = `drop-shadow(0 0 ${15 * progress}px ${noteColor})`;
+  let filter = isFailed ? 'none' : `drop-shadow(0 0 ${15 * clampedProgress}px ${noteColor})`;
   
   if (state.isTapTooEarlyFailure) {
     // Too early: greyscale fade (800ms) - NO GLOW
@@ -1319,7 +1324,7 @@ export function Down3DNoteLane({ notes, currentTime, health = MAX_HEALTH, combo 
             const tapRayAngle = getLaneAngle(note.lane);
             const noteColor = getColorForLane(note.lane);
             const geometry = calculateTapNoteGeometry(progress, tapRayAngle, vpX, vpY, state.isHit, note.pressHoldTime || 0, currentTime, state.isFailed, note.time);
-            const style = calculateTapNoteStyle(progress, state, noteColor);
+            const style = calculateTapNoteStyle(progress, state, noteColor, state.isFailed);
             
             return (
               <polygon
