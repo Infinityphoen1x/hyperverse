@@ -1,11 +1,5 @@
-// src/lib/utils/youtube/youtubePause.ts
 import { waitForPlayerReady } from './youtubePlayerState';
-import { youtubeCurrentTimeMs } from './youtubeSharedState';
-// Note: ytPlayer and youtubeIframeElement need to be imported or accessed via a shared module
-// Assuming they are exported from a shared state file, e.g., import { ytPlayer, youtubeIframeElement } from './youtubeSharedState';
-
-let ytPlayer: any = null; // If not shared, declare locally or import
-let youtubeIframeElement: HTMLIFrameElement | null = null; // If not shared
+import { getYtPlayer, getYoutubeIframeElement, getYoutubeCurrentTimeMs } from './youtubeSharedState';
 
 /**
  * Pause YouTube video
@@ -13,6 +7,9 @@ let youtubeIframeElement: HTMLIFrameElement | null = null; // If not shared
  */
 export async function pauseYouTubeVideo(): Promise<void> {
   await waitForPlayerReady(1000);
+  const ytPlayer = getYtPlayer();
+  const youtubeIframeElement = getYoutubeIframeElement();
+  const youtubeCurrentTimeMs = getYoutubeCurrentTimeMs();
 
   try {
     let currentState: number | null = null;

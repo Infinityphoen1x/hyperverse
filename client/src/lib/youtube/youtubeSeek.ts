@@ -1,12 +1,7 @@
-// src/lib/utils/youtube/youtubeSeek.ts
 import { waitForPlayerReady } from './youtubePlayerState';
 import { getYouTubeVideoTime } from './youtubeTimeGetter';
 import { resetYouTubeTimeTracker } from './youtubeTimeReset';
-// Note: ytPlayer and youtubeIframeElement need to be imported or accessed via a shared module
-// Assuming they are exported from a shared state file, e.g., import { ytPlayer, youtubeIframeElement } from './youtubeSharedState';
-
-let ytPlayer: any = null; // If not shared, declare locally or import
-let youtubeIframeElement: HTMLIFrameElement | null = null; // If not shared
+import { getYtPlayer, getYoutubeIframeElement } from './youtubeSharedState';
 
 /**
  * Seek YouTube video to specific time (in seconds) with polling confirmation
@@ -24,6 +19,9 @@ export async function seekYouTubeVideo(timeSeconds: number, signal?: AbortSignal
   const seconds = (clampedTime % 60).toFixed(2);
 
   try {
+    const ytPlayer = getYtPlayer();
+    const youtubeIframeElement = getYoutubeIframeElement();
+    
     // Try official YouTube API first
     if (ytPlayer && typeof ytPlayer.seekTo === 'function') {
       ytPlayer.pauseVideo(); // Pause for accurate seek

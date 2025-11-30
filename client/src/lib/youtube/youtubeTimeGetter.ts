@@ -1,6 +1,4 @@
-// src/lib/utils/youtube/youtubeTimeGetter.ts
-import { ytPlayer } from './youtubeSharedState';
-import { youtubeCurrentTimeMs, lastTimeUpdate, youtubeIframeElement } from './youtubeSharedState';
+import { getYtPlayer, getYoutubeCurrentTimeMs, getLastTimeUpdate, getYoutubeIframeElement } from './youtubeSharedState';
 
 /**
  * Get current video time from YouTube player
@@ -8,6 +6,11 @@ import { youtubeCurrentTimeMs, lastTimeUpdate, youtubeIframeElement } from './yo
  * Tries official API first (getCurrentTime), falls back to postMessage tracking, then query
  */
 export function getYouTubeVideoTime(): number | null {
+  const ytPlayer = getYtPlayer();
+  const youtubeCurrentTimeMs = getYoutubeCurrentTimeMs();
+  const lastTimeUpdate = getLastTimeUpdate();
+  const youtubeIframeElement = getYoutubeIframeElement();
+  
   console.log('[YOUTUBE-TIME-READ] getYouTubeVideoTime() called - ytPlayer:', ytPlayer ? 'valid' : 'null', 'youtubeCurrentTimeMs:', youtubeCurrentTimeMs, 'lastTimeUpdate:', lastTimeUpdate);
   
   // Try official YouTube API method first

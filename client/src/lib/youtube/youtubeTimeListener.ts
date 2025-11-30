@@ -1,5 +1,4 @@
-// src/lib/utils/youtube/youtubeTimeListener.ts
-import { youtubeCurrentTimeMs, lastTimeUpdate } from './youtubeSharedState';
+import { getYoutubeCurrentTimeMs, setYoutubeCurrentTimeMs, setLastTimeUpdate } from './youtubeSharedState';
 
 /**
  * Initialize YouTube postMessage listener to track time updates
@@ -43,10 +42,10 @@ export function initYouTubeTimeListener(): void {
     // Time updates: Primarily from infoDelivery (fires ~1s during play)
     if (data.event === 'infoDelivery' && data.info?.currentTime !== undefined) {
       const newTimeMs = data.info.currentTime * 1000;
-      if (Math.abs(newTimeMs - youtubeCurrentTimeMs) > 50) { // Avoid micro-jitters
-        youtubeCurrentTimeMs = newTimeMs;
-        lastTimeUpdate = Date.now();
-        console.log(`[YOUTUBE-MESSAGE] Time update (infoDelivery): ${(data.info.currentTime).toFixed(2)}s (was ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s)`);
+      if (Math.abs(newTimeMs - getYoutubeCurrentTimeMs()) > 50) { // Avoid micro-jitters
+        setYoutubeCurrentTimeMs(newTimeMs);
+        setLastTimeUpdate(Date.now());
+        console.log(`[YOUTUBE-MESSAGE] Time update (infoDelivery): ${(data.info.currentTime).toFixed(2)}s (was ${(getYoutubeCurrentTimeMs() / 1000).toFixed(2)}s)`);
       }
       return;
     }
@@ -54,23 +53,23 @@ export function initYouTubeTimeListener(): void {
     // Fallback keys for other formats
     if (typeof data.currentTime === 'number') {
       console.log(`[YOUTUBE-MESSAGE] #${messageCount} Found currentTime in fallback format: ${data.currentTime}`);
-      youtubeCurrentTimeMs = data.currentTime * 1000;
-      lastTimeUpdate = Date.now();
+      setYoutubeCurrentTimeMs(data.currentTime * 1000);
+      setLastTimeUpdate(Date.now());
     } else if (data.info?.currentTime !== undefined) {
       console.log(`[YOUTUBE-MESSAGE] #${messageCount} Found currentTime in info format: ${data.info.currentTime}`);
-      youtubeCurrentTimeMs = data.info.currentTime * 1000;
-      lastTimeUpdate = Date.now();
+      setYoutubeCurrentTimeMs(data.info.currentTime * 1000);
+      setLastTimeUpdate(Date.now());
     } else if (data.time !== undefined && typeof data.time === 'number') {
       console.log(`[YOUTUBE-MESSAGE] #${messageCount} Found time in legacy format: ${data.time}`);
-      youtubeCurrentTimeMs = data.time * 1000;
-      lastTimeUpdate = Date.now();
+      setYoutubeCurrentTimeMs(data.time * 1000);
+      setLastTimeUpdate(Date.now());
     }
 
     // Query responses (e.g., getCurrentTime)
     if (data.event === 'onApiChange' && data.data?.currentTime !== undefined) {
       console.log(`[YOUTUBE-MESSAGE] #${messageCount} API change with currentTime: ${data.data.currentTime}`);
-      youtubeCurrentTimeMs = data.data.currentTime * 1000;
-      lastTimeUpdate = Date.now();
+      setYoutubeCurrentTimeMs(data.data.currentTime * 1000);
+      setLastTimeUpdate(Date.now());
     }
   };
 

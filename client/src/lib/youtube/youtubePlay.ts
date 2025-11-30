@@ -1,11 +1,5 @@
-// src/lib/utils/youtube/youtubePlay.ts
 import { waitForPlayerReady } from './youtubePlayerState';
-// Note: ytPlayer and youtubeIframeElement need to be imported or accessed via a shared module
-// Assuming they are exported from a shared state file, e.g., import { ytPlayer, youtubeIframeElement, youtubeCurrentTimeMs } from './youtubeSharedState';
-
-let ytPlayer: any = null; // If not shared, declare locally or import
-let youtubeIframeElement: HTMLIFrameElement | null = null; // If not shared
-let youtubeCurrentTimeMs: number = 0; // If not shared
+import { getYtPlayer, getYoutubeIframeElement, getYoutubeCurrentTimeMs } from './youtubeSharedState';
 
 /**
  * Play YouTube video
@@ -13,6 +7,9 @@ let youtubeCurrentTimeMs: number = 0; // If not shared
  */
 export async function playYouTubeVideo(): Promise<void> {
   await waitForPlayerReady(1000);
+  const ytPlayer = getYtPlayer();
+  const youtubeIframeElement = getYoutubeIframeElement();
+  const youtubeCurrentTimeMs = getYoutubeCurrentTimeMs();
 
   try {
     let currentState: number | null = null;
@@ -51,11 +48,13 @@ export async function playYouTubeVideo(): Promise<void> {
       const poll = () => {
         attempts++;
         let state = -1;
-        if (ytPlayer?.getPlayerState) {
-          state = ytPlayer.getPlayerState();
-        } else if (youtubeIframeElement?.contentWindow) {
+        const ytPlayerCheck = getYtPlayer();
+        const iframeCheck = getYoutubeIframeElement();
+        if (ytPlayerCheck?.getPlayerState) {
+          state = ytPlayerCheck.getPlayerState();
+        } else if (iframeCheck?.contentWindow) {
           // Fallback: Query state via postMessage (one-shot, response async but approx)
-          youtubeIframeElement.contentWindow.postMessage(
+          iframeCheck.contentWindow.postMessage(
             JSON.stringify({ event: 'command', func: 'getPlayerState', args: [] }),
             '*'
           );

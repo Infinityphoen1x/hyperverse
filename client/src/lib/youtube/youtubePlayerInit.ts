@@ -1,9 +1,5 @@
-// src/lib/utils/youtube/youtubePlayerInit.ts
 import { waitForPlayerReady } from './youtubePlayerState';
-
-let ytPlayer: any = null;
-let playerReady = false;
-let youtubeIframeElement: HTMLIFrameElement | null = null; // Keep reference to iframe for direct control
+import { setYtPlayer, setPlayerReady, setYoutubeIframeElement } from './youtubeSharedState';
 
 export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null, onReady?: () => void): void {
   console.log('[YOUTUBE-PLAYER-INIT] initYouTubePlayer called, iframeElement:', iframeElement ? 'present' : 'null');
@@ -13,7 +9,7 @@ export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null, onRea
   }
 
   // Store iframe reference for direct control (postMessage-based seek/play)
-  youtubeIframeElement = iframeElement;
+  setYoutubeIframeElement(iframeElement);
   console.log('[YOUTUBE-PLAYER-INIT] Iframe stored, src:', iframeElement.src?.slice(0, 50) + '...');
 
   // Dynamic script load if YT API missing
@@ -39,17 +35,17 @@ export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null, onRea
     console.log('[YOUTUBE-PLAYER-INIT] initPlayer() called, window.YT:', window.YT ? 'available' : 'undefined');
     try {
       console.log('[YOUTUBE-PLAYER-INIT] Creating new YT.Player instance...');
-      ytPlayer = new window.YT.Player(iframeElement, {
+      const player = new window.YT.Player(iframeElement, {
         events: {
           onReady: () => {
-            playerReady = true;
-            console.log('[YOUTUBE-PLAYER-INIT] Player onReady fired - ytPlayer is now:', ytPlayer ? 'valid' : 'null');
+            setPlayerReady(true);
+            console.log('[YOUTUBE-PLAYER-INIT] Player onReady fired - ytPlayer is now: valid');
             console.log('[YOUTUBE-PLAYER-INIT] ytPlayer methods available:', {
-              playVideo: typeof ytPlayer?.playVideo,
-              pauseVideo: typeof ytPlayer?.pauseVideo,
-              seekTo: typeof ytPlayer?.seekTo,
-              getCurrentTime: typeof ytPlayer?.getCurrentTime,
-              getPlayerState: typeof ytPlayer?.getPlayerState
+              playVideo: typeof player?.playVideo,
+              pauseVideo: typeof player?.pauseVideo,
+              seekTo: typeof player?.seekTo,
+              getCurrentTime: typeof player?.getCurrentTime,
+              getPlayerState: typeof player?.getPlayerState
             });
             onReadyCb?.();
           },
@@ -59,12 +55,12 @@ export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null, onRea
           }
         }
       });
-      console.log('[YOUTUBE-PLAYER-INIT] YT.Player instance created, ytPlayer:', ytPlayer ? 'valid' : 'null');
+      setYtPlayer(player);
+      console.log('[YOUTUBE-PLAYER-INIT] YT.Player instance created, ytPlayer: valid');
     } catch (error) {
       console.warn('[YOUTUBE-PLAYER-INIT] Failed to initialize YouTube player:', error);
-      console.warn('[YOUTUBE-PLAYER-INIT] ytPlayer state after error:', ytPlayer ? 'has value' : 'null');
       // Fallback ready
-      playerReady = true;
+      setPlayerReady(true);
       onReadyCb?.();
     }
   }

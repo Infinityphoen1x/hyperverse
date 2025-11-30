@@ -1,11 +1,22 @@
 // src/lib/utils/youtube/youtubeSharedState.ts
-// Optional: Shared state module to avoid globals and circular imports
-// Export shared variables here if needed for the controls
+// Shared state module to avoid globals and circular imports
 
-export let ytPlayer: any = null;
-export let youtubeIframeElement: HTMLIFrameElement | null = null;
-export let youtubeCurrentTimeMs: number = 0;
-export let lastTimeUpdate = 0;
-export let playerReady = false;
+let ytPlayer: any = null;
+let youtubeIframeElement: HTMLIFrameElement | null = null;
+let youtubeCurrentTimeMs: number = 0;
+let lastTimeUpdate = 0;
+let playerReady = false;
 
-// Update other files to import from here instead of declaring locally
+// Getters
+export const getYtPlayer = () => ytPlayer;
+export const getYoutubeIframeElement = () => youtubeIframeElement;
+export const getYoutubeCurrentTimeMs = () => youtubeCurrentTimeMs;
+export const getLastTimeUpdate = () => lastTimeUpdate;
+export const getPlayerReady = () => playerReady;
+
+// Setters
+export const setYtPlayer = (value: any) => { ytPlayer = value; };
+export const setYoutubeIframeElement = (value: HTMLIFrameElement | null) => { youtubeIframeElement = value; };
+export const setYoutubeCurrentTimeMs = (value: number) => { youtubeCurrentTimeMs = value; };
+export const setLastTimeUpdate = (value: number) => { lastTimeUpdate = value; };
+export const setPlayerReady = (value: boolean) => { playerReady = value; };

@@ -1,9 +1,12 @@
-import { ytPlayer, playerReady, youtubeIframeElement } from './youtubeSharedState';
+import { getYtPlayer, getPlayerReady, getYoutubeIframeElement } from './youtubeSharedState';
 
 /**
  * Check if YouTube player is ready
  */
 export function isPlayerReady(): boolean {
+  const ytPlayer = getYtPlayer();
+  const playerReady = getPlayerReady();
+  const youtubeIframeElement = getYoutubeIframeElement();
   return playerReady && (ytPlayer !== null || youtubeIframeElement !== null);
 }
 
