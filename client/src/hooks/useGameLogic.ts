@@ -94,8 +94,10 @@ export function useGameLogic({
       try {
         await Promise.race([
           (async () => {
-            // pauseTimeRef.current is already in seconds (from currentTime or getVideoTime())
-            await seekYouTubeVideo(pauseTimeRef.current);
+            // pauseTimeRef.current is in milliseconds (from getYouTubeVideoTime or currentTime)
+            // seekYouTubeVideo expects seconds, so divide by 1000
+            const pauseTimeSeconds = pauseTimeRef.current / 1000;
+            await seekYouTubeVideo(pauseTimeSeconds);
             await new Promise(resolve => setTimeout(resolve, 50));
             await playYouTubeVideo();
             return null;
