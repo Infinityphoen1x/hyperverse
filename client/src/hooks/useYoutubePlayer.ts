@@ -1,8 +1,6 @@
 import { useEffect, useCallback, useRef, useState } from "react";
 import { 
   getYouTubeVideoTime, 
-  buildYouTubeEmbedUrl, 
-  initYouTubePlayer, 
   seekYouTubeVideo, 
   playYouTubeVideo, 
   pauseYouTubeVideo 
