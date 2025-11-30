@@ -209,7 +209,7 @@ const shouldRenderTapNote = (state: TapNoteState, timeUntilHit: number): boolean
   // Time-based render window: 2000ms before (TAP_RENDER_WINDOW_MS) to 500ms after miss (TAP_FALLTHROUGH_WINDOW_MS)
   if (timeUntilHit > TAP_RENDER_WINDOW_MS || timeUntilHit < -TAP_FALLTHROUGH_WINDOW_MS) return false;
   
-  // After hit hold duration finishes (extended to 1100ms to match hold notes)
+  // After hit hold duration finishes (700ms)
   if (state.isHit && state.timeSinceHit >= TAP_HIT_HOLD_DURATION) return false;
   
   // After failure animation finishes - different durations for each failure type
@@ -351,12 +351,12 @@ const calculateTapNoteStyle = (
     stroke = 'rgba(100,100,100,0.6)';
     filter = 'grayscale(1)';
   } else if (state.isHit) {
-    // For successful hits: stay visible for TAP_HIT_HOLD_DURATION (1100ms), flash for first 600ms
+    // For successful hits: stay visible for TAP_HIT_HOLD_DURATION (700ms), flash for first 600ms
     if (state.timeSinceHit < 600) {
       opacity = 0.4 + (progress * 0.6); // Full opacity during flash
     } else {
-      // Fade out over remaining time (600ms to 1100ms)
-      const fadeProgress = (state.timeSinceHit - 600) / 500;
+      // Fade out over remaining time (600ms to 700ms = 100ms fade)
+      const fadeProgress = (state.timeSinceHit - 600) / 100;
       opacity = Math.max(0.1, (1 - fadeProgress) * (0.4 + (progress * 0.6)));
     }
   }

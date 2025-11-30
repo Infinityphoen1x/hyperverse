@@ -280,8 +280,8 @@ export const useGameEngine = (difficulty: Difficulty, getVideoTime?: () => numbe
           const n = notes[i];
           if (!n) continue;
           
-          // Cleanup successfully hit notes after animation completes (1100ms after hit)
-          if (n.hit && n.hitTime && time > n.hitTime + 1100) {
+          // Cleanup successfully hit notes after animation completes (700ms after hit)
+          if (n.hit && n.hitTime && time > n.hitTime + 700) {
             notes.splice(i, 1);
             i--; // Adjust index after removing element
             continue;
