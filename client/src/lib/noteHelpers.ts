@@ -1,7 +1,6 @@
 import { Note, GameErrors } from "@/lib/gameEngine";
 import {
   HOLD_NOTE_STRIP_WIDTH_MULTIPLIER,
-  FAILURE_ANIMATION_DURATION,
   LEAD_TIME,
   JUDGEMENT_RADIUS,
   HOLD_ANIMATION_DURATION,
