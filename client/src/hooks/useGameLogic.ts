@@ -66,46 +66,53 @@ export function useGameLogic({
   // Pause/Resume Logic (usePauseResume equivalent)
   useEffect(() => {
     if (countdownSeconds <= 0 || gameState !== 'PAUSED') return;
-    const currentCount = countdownSeconds; // Capture current count
+    
     const timer = setTimeout(async () => {
-      if (currentCount === 1) {
-        setPauseMenuOpenHandler(false);
-        resumeGame();
-        setGameState('RESUMING');
-        setCountdownSeconds(0);
-        setResumeFadeOpacity(0);
-        resumeStartTimeRef.current = performance.now();
+      // Decrement first, check will happen on next render
+      setCountdownSeconds(prev => {
+        const newCount = prev - 1;
+        
+        // If this is the final second, execute resume
+        if (newCount === 0) {
+          (async () => {
+            setPauseMenuOpenHandler(false);
+            resumeGame();
+            setGameState('RESUMING');
+            setResumeFadeOpacity(0);
+            resumeStartTimeRef.current = performance.now();
 
-        const timeoutPromise = new Promise<null>((_, reject) =>
-          setTimeout(() => reject(new Error('Resume timeout')), 2000)
-        );
-        try {
-          await Promise.race([
-            (async () => {
-              const pauseTimeSeconds = pauseTimeRef.current / 1000;
-              await seekYouTubeVideo(pauseTimeSeconds);
-              const confirmedTime = getVideoTime?.() ?? null;
-              if (confirmedTime !== null) {
-                // Sync currentTime if needed
-                console.log(`[RESUME] Synced to ${(confirmedTime / 1000).toFixed(2)}s`);
-              }
-              await new Promise(resolve => setTimeout(resolve, 50));
-              await playYouTubeVideo();
-              return null;
-            })(),
-            timeoutPromise
-          ]);
-          asyncReadyRef.current = true;
-        } catch (err) {
-          console.error('[RESUME] Failed:', err);
-          asyncReadyRef.current = true;
+            const timeoutPromise = new Promise<null>((_, reject) =>
+              setTimeout(() => reject(new Error('Resume timeout')), 2000)
+            );
+            try {
+              await Promise.race([
+                (async () => {
+                  const pauseTimeSeconds = pauseTimeRef.current / 1000;
+                  await seekYouTubeVideo(pauseTimeSeconds);
+                  const confirmedTime = getVideoTime?.() ?? null;
+                  if (confirmedTime !== null) {
+                    console.log(`[RESUME] Synced to ${(confirmedTime / 1000).toFixed(2)}s`);
+                  }
+                  await new Promise(resolve => setTimeout(resolve, 50));
+                  await playYouTubeVideo();
+                  return null;
+                })(),
+                timeoutPromise
+              ]);
+              asyncReadyRef.current = true;
+            } catch (err) {
+              console.error('[RESUME] Failed:', err);
+              asyncReadyRef.current = true;
+            }
+          })();
         }
-      } else {
-        setCountdownSeconds(prev => prev - 1);
-      }
+        
+        return newCount;
+      });
     }, 1000);
+    
     return () => clearTimeout(timer);
-  }, [countdownSeconds, gameState, resumeGame, setGameState, getVideoTime, pauseGame, resumeStartTimeRef, setPauseMenuOpenHandler]);
+  }, [countdownSeconds, gameState, resumeGame, setGameState, getVideoTime, setPauseMenuOpenHandler]);
 
   // Fade animation
   useEffect(() => {
