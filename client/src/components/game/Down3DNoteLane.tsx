@@ -26,13 +26,15 @@ import {
   COLOR_DECK_RIGHT,
 } from '@/lib/utils/gameConstants';
 import {
-  markAnimationCompletedIfDone,
-  calculateApproachGeometry,
   getTapNoteState,
   shouldRenderTapNote,
   trackTapNoteAnimation,
   calculateTapNoteGeometry,
   calculateTapNoteStyle,
+} from "@/lib/notes/tapNoteHelpers";
+import {
+  markAnimationCompletedIfDone,
+  calculateApproachGeometry,
   calculateCollapseGeometry,
   calculateLockedNearDistance,
   calculateHoldNoteGlow,
@@ -41,7 +43,7 @@ import {
   getHoldNoteFailureStates,
   determineGreyscaleState,
   getTrapezoidCorners,
-} from "@/lib/notes/noteHelpers";
+} from "@/lib/notes/holdNoteHelpers";
 
 // Tunnel-specific: health-based ray color gradient
 const getHealthBasedRayColor = (health: number): string => {

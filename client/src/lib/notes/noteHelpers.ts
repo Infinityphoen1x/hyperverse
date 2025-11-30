@@ -1,3 +1,0 @@
-export { getTapNoteState, shouldRenderTapNote, trackTapNoteAnimation, calculateTapNoteGeometry, calculateTapNoteStyle, type TapNoteState, type TapNoteGeometry, type TapNoteStyle } from './tapNoteHelpers';
-
-export { getHoldNoteFailureStates, markAnimationCompletedIfDone, calculateApproachGeometry, calculateCollapseGeometry, calculateLockedNearDistance, calculateHoldNoteGlow, calculateHoldNoteColors, trackHoldNoteAnimationLifecycle, determineGreyscaleState, getTrapezoidCorners, type HoldNoteFailureStates, type ApproachGeometry, type CollapseGeometry, type GlowCalculation, type HoldNoteColors, type GreyscaleState } from './holdNoteHelpers';
