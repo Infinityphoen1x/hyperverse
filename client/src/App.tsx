@@ -3,6 +3,7 @@ import { queryClient } from "./lib/config/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useConsoleLogger } from "@/hooks/useConsoleLogger";
 import { initYouTubePlayer, initYouTubeTimeListener, buildYouTubeEmbedUrl } from "@/lib/youtube";
 import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from "@/lib/config/gameConstants";
 import Home from "@/pages/Home";
@@ -15,66 +16,8 @@ function App() {
   const playerInitializedRef = useRef(false);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
 
-  // Capture filtered console logs for diagnostic download (optimized format)
-  useEffect(() => {
-    const logEntries: any[] = [];
-    const startTime = Date.now();
-    (window as any).__consoleLogs = logEntries;
-
-    const originalLog = console.log;
-    const originalWarn = console.warn;
-    const originalError = console.error;
-
-    // Filter to only capture important logs, not spam
-    const shouldCapture = (message: string): boolean => {
-      // Always capture errors and warnings
-      // Only capture logs with important tags
-      return (
-        message.includes('[CRITICAL]') ||
-        message.includes('[ERROR]') ||
-        message.includes('[WARN]') ||
-        message.includes('[ENGINE]') ||
-        message.includes('[RESUME]') ||
-        message.includes('[SYNC]') ||
-        message.includes('[FRAME]') ||
-        message.includes('[GAME-OVER]') ||
-        message.includes('[SYSTEM]')
-      );
-    };
-
-    const captureLog = (level: string, ...args: any[]) => {
-      const message = args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-      ).join(' ');
-      
-      if (level === 'error' || level === 'warn' || shouldCapture(message)) {
-        logEntries.push({
-          t: Date.now() - startTime,
-          l: level,
-          m: message
-        });
-      }
-    };
-
-    console.log = (...args) => {
-      originalLog(...args);
-      captureLog('log', ...args);
-    };
-    console.warn = (...args) => {
-      originalWarn(...args);
-      captureLog('warn', ...args);
-    };
-    console.error = (...args) => {
-      originalError(...args);
-      captureLog('error', ...args);
-    };
-
-    return () => {
-      console.log = originalLog;
-      console.warn = originalWarn;
-      console.error = originalError;
-    };
-  }, []);
+  // Initialize console logging for diagnostics
+  useConsoleLogger();
 
   const handleStartGame = (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => {
     setSelectedDifficulty(difficulty);
