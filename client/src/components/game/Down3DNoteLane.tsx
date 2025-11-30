@@ -34,16 +34,20 @@ import {
 } from "@/lib/notes/tapNoteHelpers";
 import {
   markAnimationCompletedIfDone,
+  trackHoldNoteAnimationLifecycle,
+  getHoldNoteFailureStates,
+} from "@/lib/notes/holdNoteHelpers";
+import {
   calculateApproachGeometry,
   calculateCollapseGeometry,
   calculateLockedNearDistance,
   calculateHoldNoteGlow,
-  calculateHoldNoteColors,
-  trackHoldNoteAnimationLifecycle,
-  getHoldNoteFailureStates,
-  determineGreyscaleState,
   getTrapezoidCorners,
-} from "@/lib/notes/holdNoteHelpers";
+} from "@/lib/notes/holdNoteGeometry";
+import {
+  calculateHoldNoteColors,
+  determineGreyscaleState,
+} from "@/lib/notes/holdGreystate";
 
 // Tunnel-specific: health-based ray color gradient
 const getHealthBasedRayColor = (health: number): string => {
