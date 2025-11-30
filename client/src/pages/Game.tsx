@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 
 import { useYouTubePlayer } from "@/hooks/useYoutubePlayer";
 import { useGameLogic } from "@/hooks/useGameLogic";
-import { getYouTubeVideoTime } from "@/lib/youtube";
 import { GameOverScreen } from "@/components/screens/GameOverScreen";
 import { PauseMenu } from "@/components/ui/HUD/PauseMenu";
 import { ResumeOverlay } from "@/components/screens/ResumeOverlay";
