@@ -56,6 +56,13 @@ export function useGameLogic({
   const handleLeftDeckSpin = useCallback(() => hitNote(-1), [hitNote]);
   const handleRightDeckSpin = useCallback(() => hitNote(-2), [hitNote]);
 
+  // Resume handler - triggers 3-second countdown
+  const handleResume = useCallback(() => {
+    if (gameState === 'PAUSED' && countdownSeconds === 0) {
+      setCountdownSeconds(3);
+    }
+  }, [gameState, countdownSeconds]);
+
   // Pause/Resume Logic (usePauseResume equivalent)
   useEffect(() => {
     if (countdownSeconds <= 0 || gameState !== 'PAUSED') return;
@@ -169,6 +176,7 @@ export function useGameLogic({
     try {
       await pauseYouTubeVideo();
       await seekYouTubeVideo(0);
+      await playYouTubeVideo(); // Play after seeking to 0
     } catch (err) {
       console.error('[REWIND] Failed:', err);
     }
@@ -234,6 +242,7 @@ export function useGameLogic({
     gameErrors,
     handleLeftDeckSpin,
     handleRightDeckSpin,
-    handleRewind
+    handleRewind,
+    handleResume
   };
 }

@@ -113,9 +113,11 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     }
   }, []);
 
-  // Auto-play YouTube when game PLAYING state reached
+  // Auto-play YouTube when game PLAYING state reached (first time only)
+  const hasAutoPlayedRef = useRef(false);
   useEffect(() => {
-    if (gameState === 'PLAYING') {
+    if (gameState === 'PLAYING' && !hasAutoPlayedRef.current) {
+      hasAutoPlayedRef.current = true;
       const playVideo = async () => {
         try {
           const { playYouTubeVideo } = await import('@/lib/youtube');
