@@ -1,8 +1,7 @@
-import { Note, ScoreState } from '../engine/gameTypes';
+import { Note, ScoreState } from '@/lib/engine/gameTypes';
 
 export interface NoteUpdateResult {
   updatedNote: Note;
   scoreChange?: ScoreState;
-  shouldGameOver?: boolean;
-  success?: boolean;
+  success: boolean;
 }
