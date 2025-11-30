@@ -1,15 +1,17 @@
-import { getYtPlayer, getYoutubeCurrentTimeMs, getLastTimeUpdate, getYoutubeIframeElement } from './youtubeSharedState';
+import { getYtPlayer, getYoutubeCurrentTimeMs, getLastTimeUpdate, getYoutubeIframeElement, getLastGoodTimeMs } from './youtubeSharedState';
 
 /**
  * Get current video time from YouTube player
  * Returns time in milliseconds to match game engine format
  * Tries official API first (getCurrentTime), falls back to postMessage tracking, then query
+ * CRITICAL: Never returns null during normal flow to prevent note desync in rhythm game
  */
 export function getYouTubeVideoTime(): number | null {
   const ytPlayer = getYtPlayer();
   const youtubeCurrentTimeMs = getYoutubeCurrentTimeMs();
   const lastTimeUpdate = getLastTimeUpdate();
   const youtubeIframeElement = getYoutubeIframeElement();
+  const lastGoodTimeMs = getLastGoodTimeMs();
   
   console.log('[YOUTUBE-TIME-READ] getYouTubeVideoTime() called - ytPlayer:', ytPlayer ? 'valid' : 'null', 'youtubeCurrentTimeMs:', youtubeCurrentTimeMs, 'lastTimeUpdate:', lastTimeUpdate);
   
@@ -46,7 +48,11 @@ export function getYouTubeVideoTime(): number | null {
       JSON.stringify({ event: 'command', func: 'getCurrentTime', args: [] }),
       '*'
     );
-    // Listen once for response (handled in listener)
+    // Critical: Return last good time instead of null to prevent note desync
+    if (lastGoodTimeMs !== null) {
+      console.log(`[YOUTUBE-TIME-READ] Holding lastGoodTime: ${(lastGoodTimeMs / 1000).toFixed(2)}s (${lastGoodTimeMs.toFixed(0)}ms)`);
+      return lastGoodTimeMs;
+    }
   } else {
     console.log('[YOUTUBE-TIME-READ] No iframe element to query');
   }
