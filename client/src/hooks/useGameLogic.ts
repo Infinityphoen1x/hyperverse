@@ -121,7 +121,12 @@ export function useGameLogic({
 
   // Fade animation
   useEffect(() => {
-    if (gameState !== 'RESUMING' || !asyncReadyRef.current) return;
+    console.log('[FADE-ANIMATION] Checking: gameState:', gameState, 'asyncReadyRef:', asyncReadyRef.current);
+    if (gameState !== 'RESUMING' || !asyncReadyRef.current) {
+      console.log('[FADE-ANIMATION] Skipped - not ready');
+      return;
+    }
+    console.log('[FADE-ANIMATION] Starting fade animation');
     const fadeInDuration = 500;
     let animationFrameId: number;
     const animate = () => {
@@ -132,6 +137,7 @@ export function useGameLogic({
       if (progress < 1.0) {
         animationFrameId = requestAnimationFrame(animate);
       } else {
+        console.log('[FADE-ANIMATION] Complete - transitioning to PLAYING');
         setGameState('PLAYING');
         setResumeFadeOpacity(1.0);
         asyncReadyRef.current = false;
@@ -139,6 +145,7 @@ export function useGameLogic({
       }
     };
     setTimeout(() => {
+      console.log('[FADE-ANIMATION] Starting animation frame');
       resumeStartTimeRef.current = performance.now();
       animationFrameId = requestAnimationFrame(animate);
     }, 100);
@@ -150,8 +157,8 @@ export function useGameLogic({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         console.log('[ESCAPE-KEY] Pressed - gameState:', gameState, 'isPaused:', isPaused, 'isPauseMenuOpen:', isPauseMenuOpen);
-        if (gameState === 'PLAYING' && !isPaused) {
-          console.log('[ESCAPE-KEY] Condition met: PLAYING && !isPaused → Pausing');
+        if ((gameState === 'PLAYING' || gameState === 'RESUMING') && !isPaused) {
+          console.log('[ESCAPE-KEY] Condition met: (PLAYING|RESUMING) && !isPaused → Pausing');
           pauseTimeRef.current = currentTime;
           pauseGame();
           (async () => {
@@ -174,6 +181,7 @@ export function useGameLogic({
           })();
         } else if (gameState === 'PAUSED' && isPaused) {
           console.log('[ESCAPE-KEY] Condition met: PAUSED && isPaused → Starting resume countdown');
+          countdownStartedRef.current = true;
           setCountdownSeconds(3);
         } else {
           console.log('[ESCAPE-KEY] No condition met - gameState:', gameState, 'isPaused:', isPaused);
