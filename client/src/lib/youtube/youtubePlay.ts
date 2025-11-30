@@ -1,5 +1,6 @@
 import { waitForPlayerReady } from './youtubePlayerState';
 import { getYtPlayer, getYoutubeIframeElement, getYoutubeCurrentTimeMs } from './youtubeSharedState';
+import { resetYouTubeTimeTracker } from './youtubeTimeReset';
 
 /**
  * Play YouTube video
@@ -68,6 +69,9 @@ export async function playYouTubeVideo(): Promise<void> {
         }
         if (state === 1) { // Playing confirmed
           console.log(`[YOUTUBE-PLAY] Confirmed playing after ${attempts * 50}ms`);
+          // Reset time tracker to mark as "fresh" - restarts 1000ms fallback window
+          const currentTimeSeconds = ytPlayerCheck?.getCurrentTime?.() ?? youtubeCurrentTimeMs / 1000 ?? 0;
+          resetYouTubeTimeTracker(currentTimeSeconds);
           resolve();
         } else if (attempts >= maxAttempts) {
           console.warn(`[YOUTUBE-PLAY] Timeout: state=${state}, proceeding`);
