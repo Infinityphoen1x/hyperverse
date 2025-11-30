@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Note, GameErrors } from "@/lib/gameEngine";
 import { useEffect, useState, useRef } from "react";
 import { 
