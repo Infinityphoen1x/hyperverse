@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Note, GameState } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo, waitForYouTubeReady } from '@/lib/youtube';
+import { seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo, waitForPlayerReady } from '@/lib/youtube';
 
 interface UseGameLogicProps {
   gameState: GameState;
@@ -89,9 +89,9 @@ export function useGameLogic({
       setPauseMenuOpenHandler(false);
 
       try {
-        // Wait for player readiness (returns null if API not available)
+        // Wait for player readiness (uses postMessage fallback if API not available)
         console.log('[RESUME] Waiting for YouTube player to be ready...');
-        await waitForYouTubeReady(2000);
+        await waitForPlayerReady(2000);
 
         // Seek to correct time
         const targetTime = pauseTimeRef.current / 1000; // seconds
