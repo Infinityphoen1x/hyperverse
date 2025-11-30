@@ -41,26 +41,14 @@ export function useYouTubePlayer({ videoId, iframeRef, playerInitializedRef, onP
     return pauseYouTubeVideo();
   }, []);
 
-  // Init on videoId change
+  // Wait for player to be ready (App.tsx handles initialization)
   useEffect(() => {
-    if (!videoId || !iframeRef.current || initRef.current) return;
-
-    const initPlayer = () => {
-      try {
-        const embedUrl = buildYouTubeEmbedUrl(videoId, YOUTUBE_BACKGROUND_EMBED_OPTIONS);
-        iframeRef.current!.src = embedUrl;
-        initYouTubePlayer(iframeRef.current!);
-        playerInitializedRef.current = true;
-        setIsReady(true);
-        initRef.current = true;
-        console.log('[YOUTUBE-HOOK] Player initialized');
-      } catch (err) {
-        console.error('[YOUTUBE-HOOK] Init failed:', err);
-      }
-    };
-
-    initPlayer();
-  }, [videoId, iframeRef, playerInitializedRef]);
+    if (!videoId || !playerInitializedRef.current || initRef.current) return;
+    
+    setIsReady(true);
+    initRef.current = true;
+    console.log('[YOUTUBE-HOOK] Player ready (initialized by App.tsx)');
+  }, [videoId, playerInitializedRef]);
 
   // Auto-seek/play on ready + signal
   useEffect(() => {
