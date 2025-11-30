@@ -1,5 +1,5 @@
 // src/lib/utils/youtube/youtubePlayerInit.ts
-import { waitForPlayerReady, isPlayerReady } from './youtubePlayerState';
+import { waitForPlayerReady } from './youtubePlayerState';
 
 let ytPlayer: any = null;
 let playerReady = false;
@@ -70,6 +70,3 @@ export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null, onRea
   }
 }
 
-export function isPlayerReady(): boolean {
-  return playerReady && (ytPlayer !== null || youtubeIframeElement !== null);
-}

@@ -1,4 +1,12 @@
-// src/lib/utils/youtube/youtubePlayerState.ts
+import { ytPlayer, playerReady, youtubeIframeElement } from './youtubeSharedState';
+
+/**
+ * Check if YouTube player is ready
+ */
+export function isPlayerReady(): boolean {
+  return playerReady && (ytPlayer !== null || youtubeIframeElement !== null);
+}
+
 /**
  * Wait for YouTube player to be ready with exponential backoff
  * Returns true if player becomes ready within timeout
@@ -19,6 +27,3 @@ export async function waitForPlayerReady(maxWaitMs: number = 5000): Promise<bool
   console.warn(`[YOUTUBE-INIT] Player not ready after ${maxWaitMs}ms timeout`);
   return false;
 }
-
-// Import isPlayerReady from youtubePlayerInit.ts if needed, but for circularity, re-export or inline if necessary
-// Assuming isPlayerReady is available via import

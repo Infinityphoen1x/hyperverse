@@ -1,8 +1,8 @@
 // Main YouTube utilities aggregator
 export * from './youtubeTypes';
 export { extractYouTubeId, buildYouTubeEmbedUrl } from './youtubeUrlUtils';
-export { initYouTubePlayer, isPlayerReady } from './youtubePlayerInit';
-export { waitForPlayerReady } from './youtubePlayerState';
+export { initYouTubePlayer } from './youtubePlayerInit';
+export { waitForPlayerReady, isPlayerReady } from './youtubePlayerState';
 export * from './youtubeSharedState';
 export { getYouTubeVideoTime } from './youtubeTimeGetter';
 export { initYouTubeTimeListener } from './youtubeTimeListener';
