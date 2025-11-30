@@ -81,3 +81,8 @@ export type FailureType =
   | 'tooEarlyFailure'
   | 'holdMissFailure'
   | 'holdReleaseFailure';
+
+// Input handler types for GameEngineCore
+export type InputHandler = () => Note | null;
+export type Processor = (note: Note, time: number) => { updatedNote: Note; success?: boolean };
+export type PostProcessor = (note: Note, time: number) => void;

@@ -1,13 +1,10 @@
-import { Note, GameConfig, ScoreState } from './gameTypes';
+import { Note, GameConfig, ScoreState, InputHandler, Processor, PostProcessor } from './gameTypes';
 import { TimingManager } from '../managers/timingManager';
 import { ScoringManager } from '../managers/scoringManager';
 import { NoteValidator } from '../notes/noteValidator';
 import { NoteProcessor } from '../notes/noteProcessor';
+import { GameEngineQueries } from './gameEngineQueries';
 import { GameErrors } from '../errors/errorLog';
-
-type InputHandler = () => Note | null;
-type Processor = (note: Note, time: number) => { updatedNote: Note; success?: boolean };
-type PostProcessor = (note: Note, time: number) => void;
 
 // ============================================================================
 // GAME ENGINE CORE - Lightweight orchestrator that delegates to specialists
@@ -29,6 +26,7 @@ export class GameEngineCore {
   private scoringManager: ScoringManager;
   private validator: NoteValidator;
   private processor: NoteProcessor;
+  private queries: GameEngineQueries;
   
   private notes: Note[];
   private releaseTimeMap: Map<string, number>;
@@ -37,15 +35,16 @@ export class GameEngineCore {
     private config: GameConfig,
     initialNotes: Note[] = []
   ) {
+    // Initialize state first
+    this.notes = [...initialNotes];
+    this.releaseTimeMap = new Map();
+    
     // Initialize all managers
     this.timingManager = new TimingManager();
     this.scoringManager = new ScoringManager(config);
     this.validator = new NoteValidator(config);
     this.processor = new NoteProcessor(config, this.validator, this.scoringManager);
-    
-    // Initialize state
-    this.notes = [...initialNotes];
-    this.releaseTimeMap = new Map();
+    this.queries = new GameEngineQueries(this.validator, this.scoringManager, this.notes);
   }
 
   // ==========================================================================
@@ -195,34 +194,22 @@ export class GameEngineCore {
   }
 
   // ==========================================================================
-  // ADVANCED QUERIES - For UI/debugging
+  // ADVANCED QUERIES - Delegated to GameEngineQueries
   // ==========================================================================
 
-  /**
-   * Get all active notes (not yet completed)
-   */
   getActiveNotes(): Note[] {
-    return this.validator.getActiveNotes(this.notes);
+    return this.queries.getActiveNotes();
   }
 
-  /**
-   * Get all completed notes (hit or failed)
-   */
   getCompletedNotes(): Note[] {
-    return this.validator.getCompletedNotes(this.notes);
+    return this.queries.getCompletedNotes();
   }
 
-  /**
-   * Get active notes on a specific lane
-   */
   getActiveNotesOnLane(lane: number): Note[] {
-    return this.validator.getActiveNotesOnLane(this.notes, lane);
+    return this.queries.getActiveNotesOnLane(lane);
   }
 
-  /**
-   * Check if player is dead (health depleted)
-   */
   isDead(): boolean {
-    return this.scoringManager.isDead();
+    return this.queries.isDead();
   }
 }
