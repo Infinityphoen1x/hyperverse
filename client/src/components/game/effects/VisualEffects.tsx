@@ -5,10 +5,10 @@ import { useParticles } from '@/hooks/useParticles';
 import { useShake } from '@/hooks/useShake';
 import { useChromatic } from '@/hooks/useChromatic';
 import { useGlitch } from '@/hooks/useGlitch';
-import { ParticleSystem } from './ParticleSystem';
-import { GlitchOverlay } from './GlitchOverlay';
-import { ChromaticAberration } from './ChromaticAberration';
-import { PerfectPulse } from './PerfectPulse';
+import { ParticleSystem } from '@/components/ParticleSystem';
+import { GlitchOverlay } from '@/components/GlitchOverlay';
+import { ChromaticAberration } from '@/components/ChromaticAberration';
+import { PerfectPulse } from '@/components/PerfectPulse';
 import { MAX_HEALTH, LOW_HEALTH_THRESHOLD, COMBO_PERFECT_MILESTONE, GREYSCALE_INTENSITY, GLITCH_BACKGROUND_SIZE } from '@/lib/config/gameConstants';
 import { GameErrors } from '@/lib/errors/errorLog';
 

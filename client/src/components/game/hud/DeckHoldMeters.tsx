@@ -2,9 +2,8 @@
 import React from 'react';
 import { useGameStore } from '@/stores/useGameStore'; // Assumes store with notes, currentTime
 import { useHoldProgress } from '@/hooks/useHoldProgress';
-import { RectangleMeter } from './RectangleMeter';
+import { RectangleMeter } from '@/components/RectangleMeter';
 import { COLOR_DECK_LEFT, COLOR_DECK_RIGHT } from '@/lib/config/gameConstants';
-import type { Note } from '@/types/game';
 
 interface DeckHoldMetersProps {
   // Optional overrides; defaults to store for global sync
@@ -34,19 +33,27 @@ export function DeckHoldMeters({ notes: propNotes, currentTime: propCurrentTime 
   });
 
   return (
-    <>
-      <RectangleMeter
-        progress={leftProgress}
-        color={COLOR_DECK_LEFT}
-        isGlowing={leftGlowing}
-        side="left"
-      />
-      <RectangleMeter
-        progress={rightProgress}
-        color={COLOR_DECK_RIGHT}
-        isGlowing={rightGlowing}
-        side="right"
-      />
-    </>
+    <div className="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
+      {/* Left Deck Hold Meter */}
+      <div className="flex flex-col items-center gap-3">
+        <div className="text-sm font-rajdhani text-neon-green font-bold tracking-widest">Q</div>
+        <RectangleMeter
+          progress={leftProgress}
+          outlineColor={COLOR_DECK_LEFT}
+          lane={-1}
+          isGlowing={leftGlowing}
+        />
+      </div>
+      {/* Right Deck Hold Meter */}
+      <div className="flex flex-col items-center gap-3">
+        <div className="text-sm font-rajdhani text-neon-red font-bold tracking-widest">P</div>
+        <RectangleMeter
+          progress={rightProgress}
+          outlineColor={COLOR_DECK_RIGHT}
+          lane={-2}
+          isGlowing={rightGlowing}
+        />
+      </div>
+    </div>
   );
 }
