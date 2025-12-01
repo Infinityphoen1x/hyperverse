@@ -26,6 +26,7 @@ interface UseGameLogicProps {
   engineRef?: React.RefObject<any>;
   setPauseMenuOpen?: (open: boolean) => void;
   onHome?: () => void;
+  youtubeIsReady?: boolean;
 }
 
 interface UseGameLogicReturn {
@@ -55,6 +56,7 @@ export function useGameLogic({
   customNotes,
   engineRef,
   setPauseMenuOpen,
+  youtubeIsReady = true,
 }: UseGameLogicProps): UseGameLogicReturn {
   const [isPauseMenuOpen, setIsPauseMenuOpenLocal] = useState(false);
   const [resumeFadeOpacity, setResumeFadeOpacity] = useState(0);
@@ -105,8 +107,8 @@ export function useGameLogic({
     setResumeFadeOpacity,
   });
 
-  // Auto-start
-  useAutoStart({ customNotes: customNotes ?? [], startGame });
+  // Auto-start (only if YouTube is ready if video is loaded)
+  useAutoStart({ customNotes: customNotes ?? [], startGame, youtubeIsReady });
 
   // Reset on game state changes
   useEffect(() => {

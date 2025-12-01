@@ -33,7 +33,7 @@ function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
   const engineRefForLogic = useRef<any>(null);
 
   // YouTube hook first – provides getVideoTime with caching
-  const { getVideoTime, resetTime } = useYouTubePlayer({
+  const { getVideoTime, resetTime, isReady } = useYouTubePlayer({
     videoId: youtubeVideoId,
     playerInitializedRef,
     onPlaying: () => startGameRef.current?.()
@@ -98,7 +98,8 @@ function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
     trackHoldEnd,
     customNotes,
     engineRef: engineRefForLogic,
-    onHome: onBackToHome
+    onHome: onBackToHome,
+    youtubeIsReady: youtubeVideoId ? isReady : true // If no YouTube video, consider ready; otherwise wait for YouTube
   });
 
   // Memoized values - ensure notes is always an array
