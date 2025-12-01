@@ -399,6 +399,7 @@ export const FAILURE_ANIMATION_DURATION = HOLD_NOTE_GEOMETRY.failureAnimationDur
 // Deck Meter exports
 export const DECK_METER_COMPLETION_THRESHOLD = DECK_METER.completionThreshold;
 export const DECK_METER_COMPLETION_GLOW_DURATION = DECK_METER.completionGlowDuration;
+export const DECK_METER_DEFAULT_HOLD_DURATION = DECK_METER.defaultHoldDuration;
 
 // Deck Rotation exports
 export const ROTATION_SPEED = DECK_WHEEL_CONFIG.rotationSpeed;

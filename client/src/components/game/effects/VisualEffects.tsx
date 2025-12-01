@@ -1,5 +1,5 @@
 // src/components/VisualEffects.tsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '@/stores/useGameStore'; // Your game store (e.g., with combo, health, missCount)
 import { useParticles } from '@/hooks/useParticles';
 import { useShake } from '@/hooks/useShake';
@@ -20,12 +20,19 @@ interface VisualEffectsProps {
 }
 
 export function VisualEffects({ combo: propCombo, health: propHealth, missCount: propMissCount }: VisualEffectsProps = {}) {
-  // Pull from Zustand (fallback to props for testing/flexibility)
-  const { combo, health = 100, missCount = 0 } = useGameStore(state => ({
+  // Refs to track previous values
+  const prevMissCountRef = useRef(0);
+  const prevComboRef = useRef(0);
+
+  // Memoized store selector to prevent unnecessary selector recreation
+  const selectGameState = useCallback((state: any) => ({
     combo: propCombo ?? state.combo,
     health: propHealth ?? state.health,
     missCount: propMissCount ?? state.missCount,
-  }));
+  }), [propCombo, propHealth, propMissCount]);
+
+  // Pull from Zustand (fallback to props for testing/flexibility)
+  const { combo, health = 100, missCount = 0 } = useGameStore(selectGameState);
 
   // Validation (runs on prop/store changes)
   useEffect(() => {
@@ -40,9 +47,21 @@ export function VisualEffects({ combo: propCombo, health: propHealth, missCount:
   const { glitch, glitchPhase, glitchOpacityMultiplier } = useGlitch({ 
     missCount, 
     health, 
-    prevMissCount: missCount // Assumes store tracks increments; adjust if using a ref
+    prevMissCount: prevMissCountRef.current
   });
-  const showPerfectPulse = combo > 0 && combo % COMBO_PERFECT_MILESTONE === 0;
+
+  // Track perfect pulse trigger by detecting milestone crossing
+  const showPerfectPulse = combo > 0 && combo % COMBO_PERFECT_MILESTONE === 0 && combo !== prevComboRef.current;
+
+  // Update refs after each render to track changes
+  useEffect(() => {
+    prevMissCountRef.current = missCount;
+  }, [missCount]);
+
+  useEffect(() => {
+    prevComboRef.current = combo;
+  }, [combo]);
+
   const greyscaleIntensity = Math.max(0, (MAX_HEALTH - health) / MAX_HEALTH) * GREYSCALE_INTENSITY;
 
   // Glitch CSS init (once, outside deps)
