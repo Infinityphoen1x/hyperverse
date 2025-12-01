@@ -1,11 +1,9 @@
 // src/components/Down3DNoteLane.tsx
-import React, { useEffect } from "react";
-import { Note } from '@/lib/engine/gameTypes';
+import React, { memo, useEffect } from "react";
 import { VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config/gameConstants';
 import { useVanishingPointOffset } from '@/hooks/useVanishingPointOffset';
 import { useKeyControls } from '@/hooks/useKeyControls';
-import { useVisibleNotes } from '@/hooks/useVisibleNotes';
-import { useGameStore } from '@/stores/useGameStore'; // Assumes store with game state/actions
+import { useGameStore } from '@/stores/useGameStore';
 import { TunnelBackground } from './tunnel/TunnelBackground';
 import { SoundpadButtons } from './hud/SoundpadButtons';
 import { JudgementLines } from './tunnel/JudgementLines';
@@ -13,43 +11,25 @@ import { HoldNotes } from './notes/HoldNotes';
 import { TapNotes } from './notes/TapNotes';
 
 interface Down3DNoteLaneProps {
-  notes?: Note[];
-  currentTime?: number;
   health?: number;
   combo?: number;
-  onPadHit?: (lane: number) => void;
-  onDeckHoldStart?: (lane: number) => void;
-  onDeckHoldEnd?: (lane: number) => void;
 }
 
-export function Down3DNoteLane({
-  notes: propNotes,
-  currentTime: propCurrentTime,
+const Down3DNoteLaneComponent = ({
   health: propHealth,
   combo: propCombo,
-}: Down3DNoteLaneProps = {}) {
-  // Pull from Zustand (fallback to props for testing/flexibility)
+}: Down3DNoteLaneProps = {}) => {
   const { 
-    notes, 
-    currentTime, 
     health = 100, 
     combo = 0,
-    hitPad, // Store action for pad hits
-    startDeckHold, // Store action for hold start
-    endDeckHold, // Store action for hold end
   } = useGameStore(state => ({
-    notes: propNotes ?? state.notes,
-    currentTime: propCurrentTime ?? state.currentTime,
     health: propHealth ?? state.health,
     combo: propCombo ?? state.combo,
-    hitPad: state.hitPad,
-    startDeckHold: state.startDeckHold,
-    endDeckHold: state.endDeckHold,
   }));
 
-  const vpOffset = useVanishingPointOffset(combo);
-  useKeyboardControls({ onPadHit: hitPad, onDeckHoldStart: startDeckHold, onDeckHoldEnd: endDeckHold });
-  const visibleNotes = useVisibleNotes(notes, currentTime);
+  const vpOffset = useVanishingPointOffset();
+  useKeyControls({ setPauseMenuOpen: () => {} });
+  
   const vpX = VANISHING_POINT_X + vpOffset.x;
   const vpY = VANISHING_POINT_Y + vpOffset.y;
   const hexCenterX = VANISHING_POINT_X;
@@ -64,13 +44,15 @@ export function Down3DNoteLane({
   }, [vpOffset, combo, vpX, vpY]);
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+    <div className="relative w-full h-full flex items-center justify-center overflow-hidden" data-testid="down3d-note-lane">
       <TunnelBackground vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} health={health} />
-      <SoundpadButtons vpX={vpX} vpY={vpY} onPadHit={hitPad} />
+      <SoundpadButtons vpX={vpX} vpY={vpY} />
       <JudgementLines vpX={vpX} vpY={vpY} type="tap" />
-      <HoldNotes visibleNotes={visibleNotes} currentTime={currentTime} vpX={vpX} vpY={vpY} />
+      <HoldNotes vpX={vpX} vpY={vpY} />
       <JudgementLines vpX={vpX} vpY={vpY} type="hold" />
-      <TapNotes visibleNotes={visibleNotes} currentTime={currentTime} vpX={vpX} vpY={vpY} />
+      <TapNotes vpX={vpX} vpY={vpY} />
     </div>
   );
-}
+};
+
+export const Down3DNoteLane = memo(Down3DNoteLaneComponent);
