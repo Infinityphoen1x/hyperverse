@@ -12,9 +12,18 @@ const calculateEffectiveProgress = (
   progress: number,
   isFailedOrHit: boolean,
   noteTime: number,
-  currentTime: number
+  currentTime: number,
+  failureTime?: number
 ): number => {
   if (isFailedOrHit && Number.isFinite(noteTime) && Number.isFinite(currentTime)) {
+    // Early failure: note failed before reaching hit line (e.g., tapped too early)
+    // Use normal progress calculation so note continues to approach hit line
+    if (failureTime !== undefined && failureTime < noteTime) {
+      return Math.max(0, Math.min(1, progress));
+    }
+    
+    // Late failure or successful hit: note passed hit line
+    // Use fallthrough progress to continue morphing past hit line
     return Math.max(0, 1 - ((noteTime - currentTime) / TAP_DEPTH.FADE_TIME));
   }
   return Math.max(0, Math.min(1, progress));
@@ -59,10 +68,11 @@ export const calculateTapNoteGeometry = (
   isSuccessfulHit: boolean = false,
   currentTime: number = 0,
   isFailed: boolean = false,
-  noteTime: number = 0
+  noteTime: number = 0,
+  failureTime?: number
 ): TapNoteGeometry => {
   const isFailedOrHit = isFailed || isSuccessfulHit;
-  const effectiveProgress = calculateEffectiveProgress(progress, isFailedOrHit, noteTime, currentTime);
+  const effectiveProgress = calculateEffectiveProgress(progress, isFailedOrHit, noteTime, currentTime, failureTime);
   const { nearDist, farDist } = calculateDistances(effectiveProgress);
   const corners = calculateRayCorners(vpX, vpY, tapRayAngle, nearDist, farDist);
 

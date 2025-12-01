@@ -30,10 +30,12 @@ export function useTapNotes(): TapNoteProcessedData[] {
     }
 
     // Filter visibly relevant notes first to reduce map overhead
-    const visibleNotes = notes.filter(n => 
-        n.time <= currentTime + LEAD_TIME && 
-        n.time >= currentTime - 500 // Keep them a bit after they pass
-    );
+    // Keep failed notes visible longer (2000ms) to ensure greyscale animation completes
+    const visibleNotes = notes.filter(n => {
+      const isFailed = n.tapTooEarlyFailure || n.tapMissFailure;
+      const keepWindow = isFailed ? 2000 : 500; // Extend window for failed notes
+      return n.time <= currentTime + LEAD_TIME && n.time >= currentTime - keepWindow;
+    });
     
     const processed = visibleNotes
       .filter(n => n.type === 'TAP')

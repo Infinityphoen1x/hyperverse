@@ -20,7 +20,7 @@ interface TapNoteProps {
 const TapNoteComponent = ({ note, currentTime, vpX, vpY, state, progressForGeometry, clampedProgress, rawProgress }: TapNoteProps): React.ReactElement => {
   const tapRayAngle = getLaneAngle(note.lane);
   const noteColor = getColorForLane(note.lane);
-  const geometry = calculateTapNoteGeometry(progressForGeometry, tapRayAngle, vpX, vpY, state.isHit, currentTime, state.isFailed, note.time);
+  const geometry = calculateTapNoteGeometry(progressForGeometry, tapRayAngle, vpX, vpY, state.isHit, currentTime, state.isFailed, note.time, state.failureTime);
   const style = calculateTapNoteStyle(clampedProgress, state, noteColor, rawProgress, note.lane);
   return (
     <polygon
