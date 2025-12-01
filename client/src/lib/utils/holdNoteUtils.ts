@@ -64,7 +64,7 @@ export function processSingleHoldNote(note: Note, currentTime: number): HoldNote
 
     if (collapseGeo.collapseProgress >= 1.0) return null;
 
-    const greyscaleState = determineGreyscaleState(failures, pressHoldTime, approachGeometry.nearDistance);
+    const greyscaleState = determineGreyscaleState(failures, pressHoldTime, approachGeometry.nearDistance, note.hit || false);
     const glowCalc = calculateHoldNoteGlow(pressHoldTime, currentTime, collapseDuration, approachGeometry.nearDistance > 0 ? (approachGeometry.nearDistance - 1) / (JUDGEMENT_RADIUS - 1) : 0, note);
     const baseColor = getColorForLane(note.lane);
     const colors = calculateHoldNoteColors(greyscaleState.isGreyed, note.lane, baseColor);

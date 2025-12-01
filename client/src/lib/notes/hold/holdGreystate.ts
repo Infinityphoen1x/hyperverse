@@ -47,16 +47,23 @@ export interface GreyscaleState {
 export const determineGreyscaleState = (
   failures: HoldNoteFailureStates,
   pressHoldTime: number,
-  approachNearDistance: number
+  approachNearDistance: number,
+  isHit: boolean = false
 ): GreyscaleState => {
+  // Prevent greyscale if note was successfully hit
+  if (isHit) {
+    return { isGreyed: false, reason: 'none' };
+  }
+
   if (failures.isHoldReleaseFailure) {
     return { isGreyed: true, reason: 'holdReleaseFailure' };
   }
   
-  if (failures.isTooEarlyFailure && pressHoldTime > 0) {
+  if (failures.isTooEarlyFailure) {
     return { isGreyed: true, reason: 'tooEarlyImmediate' };
   }
   
+  // Greyscale when miss reaches 70% of judgement radius (at judgement moment)
   if (failures.isHoldMissFailure && approachNearDistance >= JUDGEMENT_RADIUS * 0.7) {
     return { isGreyed: true, reason: 'holdMissAtJudgement' };
   }

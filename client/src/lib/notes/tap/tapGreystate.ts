@@ -20,10 +20,16 @@ export const determineTapGreyscaleState = (
   state: TapNoteState,
   progress: number
 ): TapGreyscaleState => {
+  // Prevent greyscale if note was successfully hit
+  if (state.isHit) {
+    return { isGreyed: false, reason: 'none' };
+  }
+
   if (state.isTapTooEarlyFailure) {
     return { isGreyed: true, reason: 'tapTooEarlyImmediate' };
   }
   
+  // Greyscale when miss passes 70% through note (at judgement moment)
   if (state.isTapMissFailure && progress >= 0.7) {
     return { isGreyed: true, reason: 'tapMissAtJudgement' };
   }
