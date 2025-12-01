@@ -64,4 +64,17 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const { getVisibleNotes } = get();
     return getVisibleNotes().filter(n => n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT');
   },
+  getActiveNotes: () => {
+    return get().getVisibleNotes();
+  },
+  getCompletedNotes: () => {
+    const { notes } = get();
+    return notes.filter(n => n.hit || n.missed);
+  },
+  getActiveNotesOnLane: (lane: number) => {
+    return get().getVisibleNotes().filter(n => n.lane === lane);
+  },
+  isDead: () => {
+    return get().health <= 0;
+  },
 }));

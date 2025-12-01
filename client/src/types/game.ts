@@ -104,4 +104,8 @@ export interface GameStoreState {
   getVisibleNotes: () => Note[];
   getProcessedTapNotes: () => Note[];
   getHoldNotes: () => Note[];
+  getActiveNotes: () => Note[];
+  getCompletedNotes: () => Note[];
+  getActiveNotesOnLane: (lane: number) => Note[];
+  isDead: () => boolean;
 }

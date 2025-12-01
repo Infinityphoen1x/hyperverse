@@ -1,6 +1,6 @@
 // src/hooks/useGameQueries.ts
-import { useGameEngineStore } from '@/stores/useGameEngineStore';
-import type { Note } from '@/lib/engine/gameTypes';
+import { useGameStore } from '@/stores/useGameStore';
+import type { Note } from '@/types/game'; // Updated import path
 import { shallow } from 'zustand/shallow';
 
 export function useGameQueries() {
@@ -9,16 +9,18 @@ export function useGameQueries() {
     getCompletedNotes,
     getActiveNotesOnLane,
     isDead,
-  } = useGameEngineStore();
+  } = useGameStore();
 
   return {
     activeNotes: getActiveNotes(),
     completedNotes: getCompletedNotes(),
     activeNotesOnLane: (lane: number) => getActiveNotesOnLane(lane),
     isDead: isDead(),
+    // Add any other missing properties if needed by consumers
+    // For example, some consumers might expect raw arrays if they were accessing store state directly
   };
 }
 
 export function useActiveNotes(): Note[] {
-  return useGameEngineStore((state) => state.getActiveNotes(), shallow);
+  return useGameStore((state) => state.getActiveNotes(), shallow);
 }

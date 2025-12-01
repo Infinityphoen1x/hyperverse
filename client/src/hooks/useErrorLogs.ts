@@ -1,7 +1,7 @@
 // src/hooks/useErrorLogs.ts
 import { useState, useEffect } from 'react';
 import { useErrorStore } from '@/stores/useErrorStore'; // Zustand store for errors/stats
-import { countErrorsByCategory, formatLaneStats, resetHitStats, resetRenderStats } from './ErrorLogViewerHelpers';
+import { countErrorsByCategory, formatLaneStats, resetHitStats, resetRenderStats } from '@/lib/utils/errorLogUtils';
 import { GameErrors } from '@/lib/errors/errorLog';
 
 interface UseErrorLogsReturn {
