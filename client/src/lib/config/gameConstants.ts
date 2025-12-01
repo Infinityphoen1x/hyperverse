@@ -44,8 +44,14 @@ export const TUNNEL_GEOMETRY: TunnelGeometry = {
 };
 
 // Hold note geometry constants
-export const HOLD_NOTE_STRIP_WIDTH_MULTIPLIER = 0.15; // Convert duration (ms) to Z-depth
-export const FAILURE_ANIMATION_DURATION = 1100; // ms - time for failure animations
+export interface HoldNoteGeometry {
+  stripWidthMultiplier: number; // Convert duration (ms) to Z-depth
+  failureAnimationDuration: number; // ms - time for failure animations
+}
+export const HOLD_NOTE_GEOMETRY: HoldNoteGeometry = {
+  stripWidthMultiplier: 0.15,
+  failureAnimationDuration: 1100,
+};
 
 // Soundpad timing
 export interface SoundpadTiming {
@@ -72,12 +78,18 @@ export const SOUNDPAD_TIMING: SoundpadTiming = {
 };
 
 // Soundpad colors - RGB values for dynamic styling
-export const SOUNDPAD_COLORS = [
-  'rgb(255,0,127)', // Lane 0 (W) - pink
-  'rgb(0,150,255)', // Lane 1 (O) - blue
-  'rgb(190,0,255)', // Lane 2 (I) - purple
-  'rgb(0,255,255)' // Lane 3 (E) - cyan
-];
+export interface SoundpadColorPalette {
+  colors: string[];
+}
+export const SOUNDPAD_COLORS_PALETTE: SoundpadColorPalette = {
+  colors: [
+    'rgb(255,0,127)', // Lane 0 (W) - pink
+    'rgb(0,150,255)', // Lane 1 (O) - blue
+    'rgb(190,0,255)', // Lane 2 (I) - purple
+    'rgb(0,255,255)' // Lane 3 (E) - cyan
+  ],
+};
+export const SOUNDPAD_COLORS = SOUNDPAD_COLORS_PALETTE.colors;
 
 // Soundpad Tailwind styles - derived from SOUNDPAD_COLORS
 export interface SoundpadStyle {
@@ -161,13 +173,19 @@ export const VISUAL_EFFECTS: VisualEffects = {
 };
 
 // Visual effects - color palette for particle effects
-export const PARTICLE_COLORS = [
-  'hsl(120, 100%, 50%)', // Green
-  'hsl(0, 100%, 50%)', // Red
-  'hsl(180, 100%, 50%)', // Cyan
-  'hsl(280, 100%, 60%)', // Purple
-  'hsl(320, 100%, 60%)', // Magenta
-];
+export interface ParticleColorPalette {
+  colors: string[];
+}
+export const PARTICLE_COLORS_PALETTE: ParticleColorPalette = {
+  colors: [
+    'hsl(120, 100%, 50%)', // Green
+    'hsl(0, 100%, 50%)', // Red
+    'hsl(180, 100%, 50%)', // Cyan
+    'hsl(280, 100%, 60%)', // Purple
+    'hsl(320, 100%, 60%)', // Magenta
+  ],
+};
+export const PARTICLE_COLORS = PARTICLE_COLORS_PALETTE.colors;
 
 // Deck hold meter constants
 export interface DeckMeter {
@@ -186,14 +204,34 @@ export const DECK_METER: DeckMeter = {
 };
 
 // Color palette - consolidated references for UI elements
-export const COLOR_DECK_LEFT = '#00FF00'; // Q - green (left deck)
-export const COLOR_DECK_RIGHT = '#FF0000'; // P - red (right deck)
-export const COLOR_PAD_W = '#FF007F'; // W - pink (bottom-left)
-export const COLOR_PAD_O = '#0096FF'; // O - blue (bottom-right)
-export const COLOR_PAD_I = '#BE00FF'; // I - purple (top-right)
-export const COLOR_PAD_E = '#00FFFF'; // E - cyan (top-left)
-export const COLOR_PARTICLE_GREEN = 'hsl(120, 100%, 50%)'; // Green particles
-export const COLOR_PARTICLE_RED = 'hsl(0, 100%, 50%)'; // Red particles
+export interface UIColorPalette {
+  deckLeft: string; // Q - green (left deck)
+  deckRight: string; // P - red (right deck)
+  padW: string; // W - pink (bottom-left)
+  padO: string; // O - blue (bottom-right)
+  padI: string; // I - purple (top-right)
+  padE: string; // E - cyan (top-left)
+  particleGreen: string; // Green particles
+  particleRed: string; // Red particles
+}
+export const UI_COLORS: UIColorPalette = {
+  deckLeft: '#00FF00',
+  deckRight: '#FF0000',
+  padW: '#FF007F',
+  padO: '#0096FF',
+  padI: '#BE00FF',
+  padE: '#00FFFF',
+  particleGreen: 'hsl(120, 100%, 50%)',
+  particleRed: 'hsl(0, 100%, 50%)',
+};
+export const COLOR_DECK_LEFT = UI_COLORS.deckLeft;
+export const COLOR_DECK_RIGHT = UI_COLORS.deckRight;
+export const COLOR_PAD_W = UI_COLORS.padW;
+export const COLOR_PAD_O = UI_COLORS.padO;
+export const COLOR_PAD_I = UI_COLORS.padI;
+export const COLOR_PAD_E = UI_COLORS.padE;
+export const COLOR_PARTICLE_GREEN = UI_COLORS.particleGreen;
+export const COLOR_PARTICLE_RED = UI_COLORS.particleRed;
 
 // YouTube overlay UI strings
 export interface YouTubeUI {
@@ -240,14 +278,20 @@ export const YOUTUBE_DIMENSIONS: YouTubeDimensions = {
 };
 
 // YouTube embed options for iframe configuration
-export const YOUTUBE_PREVIEW_EMBED_OPTIONS = {
+export interface YouTubeEmbedOptions {
+  autoplay: boolean;
+  controls: boolean;
+  modestBranding: boolean;
+  enableJsApi: boolean;
+}
+export const YOUTUBE_PREVIEW_EMBED_OPTIONS: YouTubeEmbedOptions = {
   autoplay: false,
   controls: false,
   modestBranding: true,
   enableJsApi: true
 } as const;
 
-export const YOUTUBE_BACKGROUND_EMBED_OPTIONS = {
+export const YOUTUBE_BACKGROUND_EMBED_OPTIONS: YouTubeEmbedOptions = {
   autoplay: false,
   controls: false,
   modestBranding: true,
@@ -344,6 +388,10 @@ export const VANISHING_POINT_X = TUNNEL_GEOMETRY.vanishingPointX;
 export const VANISHING_POINT_Y = TUNNEL_GEOMETRY.vanishingPointY;
 export const TUNNEL_CONTAINER_WIDTH = TUNNEL_GEOMETRY.tunnelContainerWidth;
 export const TUNNEL_CONTAINER_HEIGHT = TUNNEL_GEOMETRY.tunnelContainerHeight;
+
+// Hold Note Geometry exports
+export const HOLD_NOTE_STRIP_WIDTH_MULTIPLIER = HOLD_NOTE_GEOMETRY.stripWidthMultiplier;
+export const FAILURE_ANIMATION_DURATION = HOLD_NOTE_GEOMETRY.failureAnimationDuration;
 
 // Deck Meter exports
 export const DECK_METER_COMPLETION_GLOW_DURATION = DECK_METER.completionGlowDuration;
