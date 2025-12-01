@@ -187,6 +187,7 @@ function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
           <Down3DNoteLane 
             health={health}
             combo={combo}
+            onPadHit={hitNote}
           />
         </div>
         <div className="absolute right-8">

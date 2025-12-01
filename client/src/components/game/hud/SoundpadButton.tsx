@@ -24,7 +24,14 @@ export const SoundpadButton: React.FC<SoundpadButtonProps> = ({ lane, position, 
         strokeWidth="2"
         opacity="0.8"
         style={{ cursor: 'pointer' }}
-        onMouseDown={() => onPadHit(lane)}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          onPadHit(lane);
+        }}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          onPadHit(lane);
+        }}
       />
       <rect
         x={cx - 20}

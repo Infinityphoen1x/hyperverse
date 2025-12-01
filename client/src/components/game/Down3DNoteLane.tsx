@@ -12,11 +12,13 @@ import { TapNotes } from './notes/TapNotes';
 interface Down3DNoteLaneProps {
   health?: number;
   combo?: number;
+  onPadHit?: (lane: number) => void;
 }
 
 const Down3DNoteLaneComponent = ({
   health: propHealth,
   combo: propCombo,
+  onPadHit
 }: Down3DNoteLaneProps = {}) => {
   // Select atomic values to prevent unnecessary re-renders
   const health = useGameStore(state => propHealth ?? state.health);
@@ -40,7 +42,7 @@ const Down3DNoteLaneComponent = ({
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-hidden" data-testid="down3d-note-lane">
       <TunnelBackground vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} health={health} />
-      <SoundpadButtons vpX={vpX} vpY={vpY} />
+      <SoundpadButtons vpX={vpX} vpY={vpY} onPadHit={onPadHit} />
       <JudgementLines vpX={vpX} vpY={vpY} type="tap" />
       <HoldNotes vpX={vpX} vpY={vpY} />
       <JudgementLines vpX={vpX} vpY={vpY} type="hold" />
