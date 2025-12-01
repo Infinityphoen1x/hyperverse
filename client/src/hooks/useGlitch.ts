@@ -30,7 +30,7 @@ export const useGlitch = ({ missCount, health, prevMissCount }: UseGlitchProps):
           }
           return prev + 0.1;
         });
-      }, 50);
+      }, 30);
     }
   }, [missCount, prevMiss]);
 
