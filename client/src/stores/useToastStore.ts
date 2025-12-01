@@ -95,7 +95,7 @@ interface ToastStore extends State {
   removeToast: (toastId?: string) => void;
 }
 
-export const useToastStore = create<ToastStore>((set, get) => ({
+export const useToastStore = create<ToastStore>((set) => ({
   toasts: [],
   toast({ ...props }: Omit<ToasterToast, 'id'>) {
     const id = genId();
