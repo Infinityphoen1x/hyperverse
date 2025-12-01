@@ -5,12 +5,14 @@ import { seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo } from '@/lib/you
 
 interface UseRewindProps {
   setPauseMenuOpen: (open: boolean) => void;
+  engineRef?: React.RefObject<any>;
 }
 
-export function useRewind({ setPauseMenuOpen }: UseRewindProps): { handleRewind: () => Promise<void> } {
+export function useRewind({ setPauseMenuOpen, engineRef }: UseRewindProps): { handleRewind: () => Promise<void> } {
   const restartGame = useGameStore(state => state.restartGame);
   const setGameState = useGameStore(state => state.setGameState);
   const isRewindingRef = useRef(false);
+  const lastRewindTimeRef = useRef(0);
 
   const handleRewind = useCallback(async (): Promise<void> => {
     // Allow rewind even if currently "rewinding" if it's been > 500ms (break locks)
@@ -22,6 +24,12 @@ export function useRewind({ setPauseMenuOpen }: UseRewindProps): { handleRewind:
 
     restartGame();
     setPauseMenuOpen(false);
+    
+    // CRITICAL: Reset the cached time in useYouTubePlayer to prevent
+    // the engine from seeing old time and failing all notes immediately
+    if (engineRef?.current?.resetTime) {
+        engineRef.current.resetTime();
+    }
     
     try {
       // Fire and forget pause to ensure we don't get weird audio artifacts
@@ -41,9 +49,7 @@ export function useRewind({ setPauseMenuOpen }: UseRewindProps): { handleRewind:
           isRewindingRef.current = false;
       }, 100);
     }
-  }, [restartGame, setGameState, setPauseMenuOpen]);
-
-  const lastRewindTimeRef = useRef(0);
+  }, [restartGame, setGameState, setPauseMenuOpen, engineRef]);
 
   return { handleRewind };
 }

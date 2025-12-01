@@ -88,16 +88,12 @@ export function useGameEngine({
   }), []);
 
   // Initialize Engine Components
-  const { processor, scorer } = useMemo(() => {
+  const { processor, validator, scorer } = useMemo(() => {
     const scorer = new ScoringManager(gameConfig);
     const validator = new NoteValidator(gameConfig);
     const processor = new NoteProcessor(gameConfig, validator, scorer);
-    return { processor, scorer };
+    return { processor, validator, scorer };
   }, [gameConfig]);
-
-  // Sync scorer with store state on mount/change (if needed)
-  // Actually, we should probably trust the store as source of truth if possible,
-  // but Scorer is stateful. Let's just reset it on restart.
 
   // Store last frame timestamp for fallback timing
   const lastFrameTimeRef = useRef<number>(performance.now());
@@ -128,10 +124,73 @@ export function useGameEngine({
     lastFrameTimeRef.current = performance.now();
   }, [scorer, restartGameStore]);
 
+  // IMPLEMENTATION OF HIT NOTE
+  const handleHitNote = useCallback((lane: number) => {
+    const { notes, currentTime } = useGameStore.getState();
+    
+    // Lanes 0-3 are Taps
+    if (lane >= 0 && lane <= 3) {
+        const targetNote = validator.findClosestActiveNote(notes, lane, 'TAP', currentTime);
+        
+        if (targetNote) {
+            console.log(`[GAME-ENGINE] Try hit note ${targetNote.id} at ${currentTime}ms (diff ${currentTime - targetNote.time}ms)`);
+            const result = processor.processTapHit(targetNote, currentTime);
+            
+            if (result.success) {
+                console.log(`[GAME-ENGINE] Hit success!`, result.scoreChange);
+                
+                // Update the specific note
+                setNotes(notes.map(n => n.id === targetNote.id ? result.updatedNote : n));
+                
+                if (result.scoreChange) {
+                    setScore(result.scoreChange.score);
+                    setCombo(result.scoreChange.combo);
+                    setHealth(result.scoreChange.health);
+                }
+            } else {
+                console.log(`[GAME-ENGINE] Hit failed (too early/late)`);
+            }
+        } else {
+             console.log(`[GAME-ENGINE] No active note found in lane ${lane} at ${currentTime}`);
+        }
+    } 
+  }, [validator, processor, setNotes, setScore, setCombo, setHealth]);
+
+  const handleTrackHoldStart = useCallback((lane: number) => {
+     const { notes, currentTime } = useGameStore.getState();
+     
+     const targetNote = validator.findPressableHoldNote(notes, lane, currentTime);
+     
+     if (targetNote) {
+         const result = processor.processHoldStart(targetNote, currentTime);
+         if (result.success) {
+             setNotes(notes.map(n => n.id === targetNote.id ? result.updatedNote : n));
+             startDeckHold(lane);
+         }
+     }
+  }, [validator, processor, setNotes, startDeckHold]);
+
+  const handleTrackHoldEnd = useCallback((lane: number) => {
+     const { notes, currentTime } = useGameStore.getState();
+     
+     const targetNote = validator.findActiveHoldNote(notes, lane, currentTime);
+     
+     if (targetNote) {
+         const result = processor.processHoldEnd(targetNote, currentTime);
+         setNotes(notes.map(n => n.id === targetNote.id ? result.updatedNote : n));
+         
+         if (result.scoreChange) {
+             setScore(result.scoreChange.score);
+             setCombo(result.scoreChange.combo);
+             setHealth(result.scoreChange.health);
+         }
+     }
+     endDeckHold(lane);
+  }, [validator, processor, setNotes, endDeckHold, setScore, setCombo, setHealth]);
+
   useEffect(() => {
-    // Run loop if playing (even if video time is missing, we should fallback)
     if (gameState !== 'PLAYING' || isPaused) {
-        lastFrameTimeRef.current = performance.now(); // Reset delta tracking
+        lastFrameTimeRef.current = performance.now();
         return;
     }
     
@@ -142,14 +201,10 @@ export function useGameEngine({
 
       let timeToUse: number | null = getVideoTime ? getVideoTime() : null;
 
-      // Fallback: If video time is missing or 0 (stuck), and we are playing, use local delta
-      // This ensures the game works even if YouTube fails
       if (timeToUse === null || (timeToUse === 0 && dt > 0)) {
           const currentStoreTime = useGameStore.getState().currentTime;
-          // If we were at 0 and now falling back, start moving
           timeToUse = currentStoreTime + dt; 
           
-          // Debug log occasionally
           if (Math.random() < 0.01) {
              console.log('[GAME-ENGINE] Using fallback local timing:', timeToUse.toFixed(0));
           }
@@ -170,15 +225,11 @@ export function useGameEngine({
         if (result.updatedNotes !== currentNotes) {
              setNotes(result.updatedNotes);
         }
-        
-        if (result.shouldGameOver) {
-            // setGameState('GAME_OVER'); // Optional: Enable later
-        }
       }
     }, 16);
     
     return () => clearInterval(interval);
-  }, [getVideoTime, gameState, isPaused, setCurrentTime, processor, setScore, setCombo, setHealth, setNotes, setGameState]);
+  }, [getVideoTime, gameState, isPaused, setCurrentTime, processor, setScore, setCombo, setHealth, setNotes]);
 
   return {
     gameState,
@@ -193,9 +244,9 @@ export function useGameEngine({
     resumeGame,
     restartGame,
     setGameState,
-    hitNote,
-    trackHoldStart: startDeckHold,
-    trackHoldEnd: endDeckHold,
+    hitNote: handleHitNote,
+    trackHoldStart: handleTrackHoldStart,
+    trackHoldEnd: handleTrackHoldEnd,
     markNoteMissed,
     getReleaseTime,
   };

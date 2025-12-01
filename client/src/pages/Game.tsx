@@ -33,7 +33,7 @@ function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
   const engineRefForLogic = useRef<any>(null);
 
   // YouTube hook first – provides getVideoTime with caching
-  const { getVideoTime } = useYouTubePlayer({
+  const { getVideoTime, resetTime } = useYouTubePlayer({
     videoId: youtubeVideoId,
     playerInitializedRef,
     onPlaying: () => startGameRef.current?.()
@@ -68,9 +68,10 @@ function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
 
   useEffect(() => {
     engineRefForLogic.current = { 
-      getCurrentTime: () => currentTime 
+      getCurrentTime: () => currentTime,
+      resetTime: resetTime // Expose resetTime to logic
     };
-  }, [currentTime]);
+  }, [currentTime, resetTime]);
 
   // Game logic hooks (pause, keys, sync, errors)
   const {

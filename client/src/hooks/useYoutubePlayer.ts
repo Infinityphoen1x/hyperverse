@@ -10,6 +10,7 @@ interface UseYouTubePlayerProps {
 
 interface UseYouTubePlayerReturn {
   getVideoTime: () => number | null;
+  resetTime: () => void;
   seek: typeof seekYouTubeVideo;
   play: typeof playYouTubeVideo;
   pause: typeof pauseYouTubeVideo;
@@ -30,6 +31,10 @@ export function useYouTubePlayer({ videoId, playerInitializedRef, onPlaying }: U
     return lastValidTime.current;
   }, []);
 
+  const resetTime = useCallback(() => {
+    lastValidTime.current = 0;
+  }, []);
+
   const seek = useCallback(seekYouTubeVideo, []);
   const play = useCallback(playYouTubeVideo, []);
   const pause = useCallback(pauseYouTubeVideo, []);
@@ -42,6 +47,7 @@ export function useYouTubePlayer({ videoId, playerInitializedRef, onPlaying }: U
 
   return {
     getVideoTime,
+    resetTime,
     seek,
     play,
     pause,
