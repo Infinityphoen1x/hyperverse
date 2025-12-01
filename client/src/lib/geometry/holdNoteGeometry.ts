@@ -40,7 +40,8 @@ export const calculateCollapseGeometry = (
   farDistanceAtPress: number,
   approachNearDistance: number,
   approachFarDistance: number,
-  isSuccessfulHit: boolean = false
+  isSuccessfulHit: boolean = false,
+  noteTime: number = 0
 ): CollapseGeometry => {
   if (!pressHoldTime || pressHoldTime === 0) {
     if (!isSuccessfulHit) {
@@ -49,8 +50,11 @@ export const calculateCollapseGeometry = (
     pressHoldTime = currentTime;
   }
   
-  const timeSincePress = currentTime - pressHoldTime;
-  const collapseProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
+  // For successful holds, collapse should start from noteTime to match deck meter fill timing
+  // For failures, collapse starts from pressHoldTime (frozen geometry at failure moment)
+  const collapseStartTime = isSuccessfulHit ? noteTime : pressHoldTime;
+  const timeSinceCollapseStart = currentTime - collapseStartTime;
+  const collapseProgress = Math.min(Math.max(timeSinceCollapseStart / collapseDuration, 0), 1.0);
   
   const nearDistance = lockedNearDistance;
   const farDistance = farDistanceAtPress * (1 - collapseProgress) + lockedNearDistance * collapseProgress;
@@ -90,7 +94,9 @@ export const calculateHoldNoteGlow = (
   currentTime: number,
   collapseDuration: number,
   approachProgress: number,
-  note: Note
+  note: Note,
+  isSuccessfulHit: boolean = false,
+  noteTime: number = 0
 ): GlowCalculation => {
   const hasActivePress = pressHoldTime > 0 || note.hit;
   
@@ -98,8 +104,11 @@ export const calculateHoldNoteGlow = (
   
   let collapseGlow = 0;
   if (pressHoldTime && pressHoldTime > 0) {
-    const timeSincePress = currentTime - pressHoldTime;
-    const collapseGlowProgress = Math.min(Math.max(timeSincePress / collapseDuration, 0), 1.0);
+    // For successful holds, glow collapse starts from noteTime to match deck meter timing
+    // For failures, collapse starts from pressHoldTime
+    const collapseStartTime = isSuccessfulHit ? noteTime : pressHoldTime;
+    const timeSinceCollapseStart = currentTime - collapseStartTime;
+    const collapseGlowProgress = Math.min(Math.max(timeSinceCollapseStart / collapseDuration, 0), 1.0);
     collapseGlow = collapseGlowProgress > 0 ? (1 - collapseGlowProgress) * 0.8 : 0;
   }
   

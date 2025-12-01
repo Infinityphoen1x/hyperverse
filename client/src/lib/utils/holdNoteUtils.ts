@@ -69,12 +69,12 @@ export function processSingleHoldNote(note: Note, currentTime: number): HoldNote
     const lockedNearDistance = calculateLockedNearDistance(note, pressHoldTime, failures.isTooEarlyFailure, approachGeometry.nearDistance, failureTime);
     const stripWidth = holdDuration * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
     const farDistanceAtPress = lockedNearDistance ? Math.max(1, lockedNearDistance - stripWidth) : approachGeometry.farDistance;
-    const collapseGeo = calculateCollapseGeometry(pressHoldTime, collapseDuration, currentTime, lockedNearDistance || approachGeometry.nearDistance, farDistanceAtPress, approachGeometry.nearDistance, approachGeometry.farDistance, note.hit);
+    const collapseGeo = calculateCollapseGeometry(pressHoldTime, collapseDuration, currentTime, lockedNearDistance || approachGeometry.nearDistance, farDistanceAtPress, approachGeometry.nearDistance, approachGeometry.farDistance, note.hit, note.time);
 
     if (collapseGeo.collapseProgress >= 1.0) return null;
 
     const greyscaleState = determineGreyscaleState(failures, pressHoldTime, approachGeometry.nearDistance, note.hit || false);
-    const glowCalc = calculateHoldNoteGlow(pressHoldTime, currentTime, collapseDuration, approachGeometry.nearDistance > 0 ? (approachGeometry.nearDistance - 1) / (JUDGEMENT_RADIUS - 1) : 0, note);
+    const glowCalc = calculateHoldNoteGlow(pressHoldTime, currentTime, collapseDuration, approachGeometry.nearDistance > 0 ? (approachGeometry.nearDistance - 1) / (JUDGEMENT_RADIUS - 1) : 0, note, note.hit, note.time);
     const baseColor = getColorForLane(note.lane);
     const colors = calculateHoldNoteColors(greyscaleState.isGreyed, note.lane, baseColor);
     const approachProgress = (approachGeometry.nearDistance - 1) / (JUDGEMENT_RADIUS - 1);
