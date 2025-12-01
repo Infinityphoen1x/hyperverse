@@ -2,7 +2,7 @@
 import React from 'react';
 
 interface ErrorListSectionProps {
-  errors: string[];
+  errors: (string | any)[];
 }
 
 export const ErrorListSection: React.FC<ErrorListSectionProps> = ({ errors }) => (
@@ -13,11 +13,15 @@ export const ErrorListSection: React.FC<ErrorListSectionProps> = ({ errors }) =>
     {errors.length === 0 ? (
       <div className="text-gray-500">No errors</div>
     ) : (
-      errors.map((error, idx) => (
-        <div key={idx} className="truncate hover:text-red-200 break-words whitespace-pre-wrap">
-          {error}
-        </div>
-      ))
+      errors.map((entry, idx) => {
+        const msg = typeof entry === 'string' ? entry : entry.message || '';
+        const timestamp = typeof entry === 'string' ? '' : ` [${entry.timestamp?.toFixed(0) || '?'}ms]`;
+        return (
+          <div key={idx} className="truncate hover:text-red-200 break-words whitespace-pre-wrap">
+            {msg}{timestamp}
+          </div>
+        );
+      })
     )}
   </div>
 );

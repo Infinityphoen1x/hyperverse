@@ -32,14 +32,20 @@ export interface RenderStatsType {
   preMissed: number;
 }
 
+export interface LogEntry {
+  message: string;
+  timestamp: number; // milliseconds since game start
+}
+
 export interface GameDebuggerStoreState {
-  notes: string[];
+  notes: (string | LogEntry)[];
   animations: AnimationTrackingEntry[];
   noteStats: NoteStatsType;
   renderStats: RenderStatsType;
   hitStats: HitStatsType;
+  gameStartTime?: number;
 
-  log: (msg: string) => void;
+  log: (msg: string, gameTime?: number) => void;
   trackAnimation: (noteId: string, type: FailureType, failureTime?: number) => void;
   updateAnimation: (noteId: string, updates: Partial<AnimationTrackingEntry>) => void;
   updateNoteStats: (notes: any[]) => void;
@@ -54,9 +60,15 @@ export const useGameDebuggerStore = create<GameDebuggerStoreState>((set) => ({
   noteStats: { total: 0, tap: 0, hold: 0, hit: 0, missed: 0, failed: 0, byLane: {} },
   renderStats: { rendered: 0, preMissed: 0 },
   hitStats: { successfulHits: 0, tapTooEarlyFailures: 0, tapMissFailures: 0, tooEarlyFailures: 0, holdMissFailures: 0, holdReleaseFailures: 0 },
+  gameStartTime: undefined,
 
-  log: (msg) => {
-    set((state) => ({ notes: [...state.notes, msg] }));
+  log: (msg, gameTime) => {
+    set((state) => ({ 
+      notes: [...state.notes, { 
+        message: msg, 
+        timestamp: gameTime ?? performance.now() 
+      }] 
+    }));
   },
 
   trackAnimation: (noteId, type, failureTime) => {
@@ -104,6 +116,7 @@ export const useGameDebuggerStore = create<GameDebuggerStoreState>((set) => ({
         noteStats: { total: 0, tap: 0, hold: 0, hit: 0, missed: 0, failed: 0, byLane: {} },
         renderStats: { rendered: 0, preMissed: 0 },
         hitStats: { successfulHits: 0, tapTooEarlyFailures: 0, tapMissFailures: 0, tooEarlyFailures: 0, holdMissFailures: 0, holdReleaseFailures: 0 },
+        gameStartTime: undefined,
     });
   }
 }));
