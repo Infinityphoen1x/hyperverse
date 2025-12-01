@@ -30,11 +30,13 @@ export function useTapNotes(): TapNoteProcessedData[] {
     }
 
     // Filter visibly relevant notes first to reduce map overhead
-    // Keep failed notes visible longer (2000ms) to ensure greyscale animation completes
+    // Keep failed notes visible longer to ensure they reach judgement line and greyscale animation completes
+    // tapTooEarlyFailure needs very long window (4000ms) to travel from failure point to judgement line
+    // tapMissFailure needs moderate window (2000ms) since they already reached judgement line
     const visibleNotes = notes.filter(n => {
-      const isFailed = n.tapTooEarlyFailure || n.tapMissFailure;
-      const keepWindow = isFailed ? 2000 : 500; // Extend window for failed notes
-      return n.time <= currentTime + LEAD_TIME && n.time >= currentTime - keepWindow;
+      if (n.tapTooEarlyFailure) return n.time <= currentTime + LEAD_TIME && n.time >= currentTime - 4000;
+      if (n.tapMissFailure) return n.time <= currentTime + LEAD_TIME && n.time >= currentTime - 2000;
+      return n.time <= currentTime + LEAD_TIME && n.time >= currentTime - 500;
     });
     
     const processed = visibleNotes

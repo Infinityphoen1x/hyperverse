@@ -17,11 +17,9 @@ const calculateEffectiveProgress = (
 ): number => {
   if (isFailedOrHit && Number.isFinite(noteTime) && Number.isFinite(currentTime)) {
     // Early failure: note failed BEFORE reaching hit line (failureTime < noteTime)
-    // Use the progress value that was calculated at failure time, not current time
-    // This prevents the geometry from morphing based on current time changes
+    // Use the frozen progress value - DO NOT CLAMP to allow smooth flow past judgement line
     if (failureTime !== undefined && failureTime < noteTime) {
-      // Use progress as-is (it's already frozen from useTapNotes)
-      return Math.max(0, Math.min(1, progress));
+      return Math.max(0, progress);
     }
     
     // Late failure or successful hit: note PASSED hit line (failureTime >= noteTime)
@@ -32,7 +30,8 @@ const calculateEffectiveProgress = (
 };
 
 const calculateDistances = (effectiveProgress: number): { nearDist: number; farDist: number } => {
-  const trapezoidDepth = TAP_DEPTH.MIN + (Math.min(effectiveProgress, 1) * (TAP_DEPTH.MAX - TAP_DEPTH.MIN));
+  const clampedProgress = Math.max(0, Math.min(1, effectiveProgress));
+  const trapezoidDepth = TAP_DEPTH.MIN + (clampedProgress * (TAP_DEPTH.MAX - TAP_DEPTH.MIN));
   const nearDist = 1 + (effectiveProgress * (JUDGEMENT_RADIUS - 1));
   const farDist = Math.max(1, nearDist - trapezoidDepth);
   return { nearDist, farDist };

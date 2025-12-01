@@ -444,7 +444,7 @@ export const LEAD_TIME = GAME_ENGINE_TIMING.leadTime;
 // ============================================================================
 
 export const TAP_FAILURE_ANIMATIONS = {
-  TOO_EARLY: { duration: 800 },
+  TOO_EARLY: { duration: 1200 },
   MISS: { duration: 1100 },
 } as const;
 
