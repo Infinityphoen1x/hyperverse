@@ -18,9 +18,14 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
     if (!notes || !Array.isArray(notes)) return [];
     const leadTime = 2000;
     return notes.filter(n => {
+      // For hold notes, check visibility based on note.time + note.duration, not just note.time
+      const isHoldNote = n.type === 'HOLD' || n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT';
+      const noteEndTime = isHoldNote ? n.time + (n.duration || 1000) : n.time;
+      
       if (n.tooEarlyFailure) return n.time <= currentTime + leadTime && n.time >= currentTime - 4000;
       if (n.holdMissFailure || n.holdReleaseFailure) return n.time <= currentTime + leadTime && n.time >= currentTime - 2000;
-      return n.time <= currentTime + leadTime && n.time >= currentTime - 500;
+      // For normal notes: keep visible from leadTime before start to 500ms after end
+      return n.time <= currentTime + leadTime && noteEndTime >= currentTime - 500;
     });
   }, [notes, currentTime]);
 
