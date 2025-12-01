@@ -1,7 +1,6 @@
 // src/hooks/useKeyControls.ts
 import { useEffect, useCallback } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
-import type { GameState } from '@/types/game';
 
 interface UseKeyControlsProps {
   setPauseMenuOpen: (open: boolean) => void;
