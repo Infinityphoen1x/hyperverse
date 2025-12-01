@@ -96,7 +96,6 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     isPaused,
     notes,
     getVideoTime,
-    pauseGame,
     resumeGame,
     restartGame,
     startGame,
@@ -197,8 +196,6 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
         </div>
         <div className="relative flex-1 flex items-center justify-center">
           <Down3DNoteLane 
-            notes={notes} 
-            currentTime={Math.round(currentTime)}
             health={health}
             combo={combo}
           />

@@ -11,6 +11,8 @@ import { useRewind } from './useRewind';
 interface UseGameLogicProps {
   gameState: GameState;
   currentTime: number;
+  isPaused: boolean;
+  notes: Note[];
   getVideoTime?: (() => number | null) | null;
   resumeGame: () => void;
   restartGame: () => void;
@@ -18,18 +20,22 @@ interface UseGameLogicProps {
   setGameState: (state: GameState) => void;
   setCurrentTime: (time: number) => void;
   hitNote: (noteId: number) => void;
+  trackHoldStart: (noteId: number) => void;
+  trackHoldEnd: (noteId: number) => void;
   customNotes?: Note[];
   engineRef?: React.RefObject<any>;
   setPauseMenuOpen?: (open: boolean) => void;
+  onHome?: () => void;
 }
 
 interface UseGameLogicReturn {
   isPauseMenuOpen: boolean;
   countdownSeconds: number;
   resumeFadeOpacity: number;
+  gameErrors: any[];
   handleLeftDeckSpin: () => void;
   handleRightDeckSpin: () => void;
-  handleRewind: () => void;
+  handleRewind: () => Promise<void>;
   handleResume: () => void;
   pauseGame: () => void;
 }
@@ -62,17 +68,12 @@ export function useGameLogic({
 
   // Pause logic
   const { pauseGame: pauseHandler, handleResume } = usePauseLogic({
-    gameState,
-    currentTime,
     getVideoTime: getVideoTime ?? undefined,
-    engineRef,
-    setCurrentTime,
-    setGameState,
     setPauseMenuOpen: setPauseMenuOpenHandler,
   });
 
   // Rewind (must be declared before useKeyControls)
-  const handleRewind = useRewind({ restartGame, startGame, setPauseMenuOpen: setPauseMenuOpenHandler });
+  const { handleRewind } = useRewind({ setPauseMenuOpen: setPauseMenuOpenHandler });
 
   // Key controls
   useKeyControls({
@@ -112,6 +113,7 @@ export function useGameLogic({
     isPauseMenuOpen,
     countdownSeconds: useGameStore(s => s.countdownSeconds), // From store
     resumeFadeOpacity,
+    gameErrors: [],
     handleLeftDeckSpin,
     handleRightDeckSpin,
     handleRewind,
