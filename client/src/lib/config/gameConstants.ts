@@ -388,6 +388,7 @@ export const PARTICLE_SIZE_MAX = PARTICLE_SIZE.max;
 
 // Tunnel geometry exports
 export const HEXAGON_RADII = TUNNEL_GEOMETRY.hexagonRadii;
+export const HOLD_JUDGEMENT_LINE_WIDTH = TUNNEL_GEOMETRY.holdJudgementLineWidth;
 
 // Tunnel viewport exports
 export const VANISHING_POINT_X = TUNNEL_VIEWPORT.vanishingPointX;
