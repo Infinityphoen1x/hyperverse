@@ -20,12 +20,22 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
     return notes.filter(n => {
       // For hold notes, check visibility based on note.time + note.duration, not just note.time
       const isHoldNote = n.type === 'HOLD' || n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT';
-      const noteEndTime = isHoldNote ? n.time + (n.duration || 1000) : n.time;
+      const holdDuration = isHoldNote ? (n.duration || 1000) : 0;
+      const noteStartTime = n.time;
+      const noteEndTime = isHoldNote ? n.time + holdDuration : n.time;
       
-      if (n.tooEarlyFailure) return n.time <= currentTime + leadTime && n.time >= currentTime - 4000;
-      if (n.holdMissFailure || n.holdReleaseFailure) return n.time <= currentTime + leadTime && n.time >= currentTime - 2000;
-      // For normal notes: keep visible from leadTime before start to 500ms after end
-      return n.time <= currentTime + leadTime && noteEndTime >= currentTime - 500;
+      if (n.tooEarlyFailure) return noteStartTime <= currentTime + leadTime && noteStartTime >= currentTime - 4000;
+      if (n.holdMissFailure || n.holdReleaseFailure) return noteStartTime <= currentTime + leadTime && noteStartTime >= currentTime - 2000;
+      
+      // For hold notes: keep visible from far past (vanishing point) through entire duration
+      // Lower bound: leadTime + holdDuration before note start (so it's visible traveling through tunnel)
+      // Upper bound: 500ms after note ends
+      if (isHoldNote) {
+        return noteStartTime <= currentTime + leadTime && noteEndTime >= currentTime - (leadTime + holdDuration);
+      }
+      
+      // For normal tap notes: keep visible from leadTime before start to 500ms after start
+      return noteStartTime <= currentTime + leadTime && noteStartTime >= currentTime - 500;
     });
   }, [notes, currentTime]);
 

@@ -16,11 +16,13 @@ export const calculateApproachGeometry = (
   const stripWidth = (holdDuration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
   
   const rawApproachProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-  // Clamp progress to 0-1 for approach geometry
-  // (Collapse geometry will handle the animation from here)
-  const approachProgress = Math.max(0, Math.min(1, rawApproachProgress));
+  // For hold notes in approach phase, allow progress beyond 1.0 to continue showing far end
+  // Don't clamp to 1.0 - let it go higher so far end stays visible as near end reaches judgement
+  const approachProgress = Math.max(0, rawApproachProgress);
   
-  const nearDistance = Math.max(1, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
+  // Keep near distance clamped to judgement radius (max approach)
+  const nearDistance = Math.max(1, Math.min(JUDGEMENT_RADIUS, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1))));
+  // Far distance extends back based on strip width, even if near is at judgement
   const farDistance = Math.max(1, nearDistance - stripWidth);
   
   return { nearDistance, farDistance };
