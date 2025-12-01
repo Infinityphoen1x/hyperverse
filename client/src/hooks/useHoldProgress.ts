@@ -25,6 +25,7 @@ export const useHoldProgress = ({ lane: propLane }: UseHoldProgressProps = {}): 
 
   const [isGlowing, setIsGlowing] = useState(false);
   const prevCompletionRef = useRef<boolean>(false);
+  const prevActiveNoteIdRef = useRef<string>('');
   const glowTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Clean up glow timeout on unmount

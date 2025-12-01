@@ -12,6 +12,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   combo: 0,
   health: 200,
   maxHealth: 200,
+  missCount: 0,
   countdownSeconds: 3,
 
   // Setters
@@ -21,6 +22,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setScore: (score) => set({ score }),
   setCombo: (combo) => set({ combo }),
   setHealth: (health) => set({ health }),
+  setMissCount: (missCount) => set({ missCount }),
   setCurrentTime: (currentTime) => set({ currentTime }),
   setIsPaused: (isPaused) => set({ isPaused }),
   setCountdownSeconds: (countdownSeconds) => set({ countdownSeconds }),

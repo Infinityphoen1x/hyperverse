@@ -5,10 +5,10 @@ import { useParticles } from '@/hooks/useParticles';
 import { useShake } from '@/hooks/useShake';
 import { useChromatic } from '@/hooks/useChromatic';
 import { useGlitch } from '@/hooks/useGlitch';
-import { ParticleSystem } from '@/components/ParticleSystem';
-import { GlitchOverlay } from '@/components/GlitchOverlay';
-import { ChromaticAberration } from '@/components/ChromaticAberration';
-import { PerfectPulse } from '@/components/PerfectPulse';
+import { ParticleSystem } from '@/components/game/effects/ParticleSystem';
+import { GlitchOverlay } from '@/components/game/effects/GlitchOverlay';
+import { ChromaticAberration } from '@/components/game/effects/ChromaticAberration';
+import { PerfectPulse } from '@/components/game/effects/PerfectPulse';
 import { MAX_HEALTH, LOW_HEALTH_THRESHOLD, COMBO_PERFECT_MILESTONE, GREYSCALE_INTENSITY, GLITCH_BACKGROUND_SIZE } from '@/lib/config/gameConstants';
 import { GameErrors } from '@/lib/errors/errorLog';
 
@@ -34,8 +34,8 @@ export function VisualEffects({ combo: propCombo, health: propHealth, missCount:
     }
   }, [combo, health, missCount]);
 
-  const particles = useParticles({ combo });
-  const shakeOffset = useShake({ combo });
+  const particles = useParticles();
+  const shakeOffset = useShake();
   const chromaticIntensity = useChromatic({ combo });
   const { glitch, glitchPhase, glitchOpacityMultiplier } = useGlitch({ 
     missCount, 

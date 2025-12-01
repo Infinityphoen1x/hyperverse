@@ -1,15 +1,5 @@
 import { create } from 'zustand';
-
-export interface Particle {
-  id: string;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  life: number;
-  color: string;
-  size: number;
-}
+import type { Particle } from '@/types/visualEffects';
 
 export interface ParticlesStoreState {
   particles: Particle[];

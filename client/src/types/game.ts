@@ -75,6 +75,7 @@ export interface GameStoreState {
   combo: number;
   health: number;
   maxHealth: number;
+  missCount: number;
   
   // UI state
   countdownSeconds: number;
@@ -86,6 +87,7 @@ export interface GameStoreState {
   setScore: (score: number) => void;
   setCombo: (combo: number) => void;
   setHealth: (health: number) => void;
+  setMissCount: (missCount: number) => void;
   setCurrentTime: (time: number) => void;
   setIsPaused: (paused: boolean) => void;
   setCountdownSeconds: (seconds: number) => void;

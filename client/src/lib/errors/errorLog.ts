@@ -40,10 +40,19 @@ export const GameErrors = {
   },
 
   getAnimationStats() {
-    // Delegate to store (add if missing: selector for aggregated stats)
+    const animations = useGameDebuggerStore.getState().animations;
+    const total = animations.length;
+    const completed = animations.filter(a => a.completed).length;
+    const failed = 0; // Not currently tracked in AnimationTrackingEntry
+    const pending = total - completed;
+    const rendering = pending; // Simplified mapping
+
     return {
-      total: useGameDebuggerStore.getState().animations.length,
-      // ... compute from animations
+      total,
+      completed,
+      failed,
+      pending,
+      rendering
     };
   },
 };

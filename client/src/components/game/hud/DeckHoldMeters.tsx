@@ -2,8 +2,9 @@
 import React from 'react';
 import { useGameStore } from '@/stores/useGameStore'; // Assumes store with notes, currentTime
 import { useHoldProgress } from '@/hooks/useHoldProgress';
-import { RectangleMeter } from '@/components/RectangleMeter';
+import { RectangleMeter } from '@/components/game/hud/RectangleMeter';
 import { COLOR_DECK_LEFT, COLOR_DECK_RIGHT } from '@/lib/config/gameConstants';
+import { Note } from '@/types/game';
 
 interface DeckHoldMetersProps {
   // Optional overrides; defaults to store for global sync
@@ -20,15 +21,11 @@ export function DeckHoldMeters({ notes: propNotes, currentTime: propCurrentTime 
 
   // Left meter (lane -1 for Q)
   const { progress: leftProgress, isGlowing: leftGlowing } = useHoldProgress({
-    notes,
-    currentTime,
     lane: -1,
   });
 
   // Right meter (lane -2 for P)
   const { progress: rightProgress, isGlowing: rightGlowing } = useHoldProgress({
-    notes,
-    currentTime,
     lane: -2,
   });
 

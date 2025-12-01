@@ -1,8 +1,9 @@
 import { create } from 'zustand';
+import { FailureType } from '@/types/gameDebugTypes';
 
 export interface AnimationTrackingEntry {
   noteId: string;
-  type: string;
+  type: FailureType;
   failureTime?: number;
   completed: boolean;
 }
@@ -39,7 +40,7 @@ export interface GameDebuggerStoreState {
   hitStats: HitStatsType;
 
   log: (msg: string) => void;
-  trackAnimation: (noteId: string, type: string, failureTime?: number) => void;
+  trackAnimation: (noteId: string, type: FailureType, failureTime?: number) => void;
   updateAnimation: (noteId: string, updates: Partial<AnimationTrackingEntry>) => void;
   updateNoteStats: (notes: any[]) => void;
   updateRenderStats: (rendered: number, preMissed: number) => void;
