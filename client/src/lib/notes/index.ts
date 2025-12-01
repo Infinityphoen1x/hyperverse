@@ -14,6 +14,3 @@ export { NoteProcessor } from './processors/noteProcessor';
 export { NoteValidator } from './processors/noteValidator';
 export * from './processors/noteUpdateHelpers';
 export * from './processors/noteAutoFailHelpers';
-
-// Config
-export * from './config/constants';
