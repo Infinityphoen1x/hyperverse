@@ -2,7 +2,6 @@
 import React, { memo, useEffect } from "react";
 import { VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config/gameConstants';
 import { useVanishingPointOffset } from '@/hooks/useVanishingPointOffset';
-import { useKeyControls } from '@/hooks/useKeyControls';
 import { useGameStore } from '@/stores/useGameStore';
 import { TunnelBackground } from './tunnel/TunnelBackground';
 import { SoundpadButtons } from './hud/SoundpadButtons';
@@ -24,7 +23,6 @@ const Down3DNoteLaneComponent = ({
   const combo = useGameStore(state => propCombo ?? state.combo);
 
   const vpOffset = useVanishingPointOffset();
-  useKeyControls({ setPauseMenuOpen: () => {} });
   
   const vpX = VANISHING_POINT_X + vpOffset.x;
   const vpY = VANISHING_POINT_Y + vpOffset.y;

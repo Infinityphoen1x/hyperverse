@@ -3,7 +3,9 @@ import { useEffect, useCallback } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 
 interface UseKeyControlsProps {
-  setPauseMenuOpen: (open: boolean) => void;
+  onPause?: () => void;
+  onResume?: () => void;
+  onRewind?: () => void;
 }
 
 const KEY_LANE_MAP: Record<string, number> = {
@@ -17,13 +19,10 @@ const KEY_LANE_MAP: Record<string, number> = {
 
 const GAMEPLAY_KEYS = new Set(['w', 'W', 'o', 'O', 'i', 'I', 'e', 'E', 'q', 'Q', 'p', 'P']);
 
-export function useKeyControls({ setPauseMenuOpen }: UseKeyControlsProps): void {
+export function useKeyControls({ onPause, onResume, onRewind }: UseKeyControlsProps): void {
   const gameState = useGameStore(state => state.gameState);
   const isPaused = useGameStore(state => state.isPaused);
   const hitNote = useGameStore(state => state.hitNote);
-  const pauseGame = useGameStore(state => state.pauseGame);
-  const resumeGame = useGameStore(state => state.resumeGame);
-  const rewindGame = useGameStore(state => state.rewindGame);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent): void => {
@@ -34,15 +33,13 @@ export function useKeyControls({ setPauseMenuOpen }: UseKeyControlsProps): void 
       if (e.key === 'Escape') {
         e.preventDefault();
         if (gameState === 'PAUSED' || isPaused) {
-          resumeGame();
-          setPauseMenuOpen(false);
+          onResume?.();
         } else if (gameState === 'PLAYING' || gameState === 'RESUMING') {
-          pauseGame();
-          setPauseMenuOpen(true);
+          onPause?.();
         }
       } else if ((e.key === 'r' || e.key === 'R') && (gameState === 'PLAYING' || gameState === 'PAUSED')) {
         e.preventDefault();
-        rewindGame();
+        onRewind?.();
       }
 
       if ((gameState === 'PLAYING' || gameState === 'RESUMING') && !isPaused) {
@@ -52,7 +49,7 @@ export function useKeyControls({ setPauseMenuOpen }: UseKeyControlsProps): void 
         }
       }
     },
-    [gameState, isPaused, hitNote, pauseGame, resumeGame, rewindGame, setPauseMenuOpen]
+    [gameState, isPaused, hitNote, onPause, onResume, onRewind]
   );
 
   useEffect(() => {

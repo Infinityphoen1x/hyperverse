@@ -77,7 +77,9 @@ export function useGameLogic({
 
   // Key controls
   useKeyControls({
-    setPauseMenuOpen: setPauseMenuOpenHandler,
+    onPause: pauseHandler,
+    onResume: handleResume,
+    onRewind: handleRewind,
   });
 
   // Countdown
