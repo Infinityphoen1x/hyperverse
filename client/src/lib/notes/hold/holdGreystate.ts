@@ -1,10 +1,10 @@
 import {
   GREYSCALE_FILL_COLOR,
   GREYSCALE_GLOW_COLOR,
+  JUDGEMENT_RADIUS,
   COLOR_DECK_LEFT,
   COLOR_DECK_RIGHT,
-  JUDGEMENT_RADIUS,
-} from '../config/constants';
+} from '@/lib/config/gameConstants';
 import { HoldNoteFailureStates } from './holdNoteHelpers';
 
 export interface HoldNoteColors {

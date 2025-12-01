@@ -4,7 +4,7 @@ import { GameErrors } from '@/lib/errors/errorLog';
 import { calculateApproachGeometry, calculateLockedNearDistance, calculateHoldNoteGlow, calculateCollapseGeometry } from "@/lib/geometry/holdNoteGeometry";
 import { calculateHoldNoteColors, determineGreyscaleState } from "@/lib/notes/hold/holdGreystate";
 import { markAnimationCompletedIfDone, trackHoldNoteAnimationLifecycle, getHoldNoteFailureStates } from "@/lib/notes/hold/holdNoteHelpers";
-import { HOLD_ANIMATION_DURATION, FAILURE_ANIMATION_DURATION, HOLD_NOTE_STRIP_WIDTH_MULTIPLIER, JUDGEMENT_RADIUS, LEAD_TIME } from '@/lib/config/gameConstants';
+import { FAILURE_ANIMATION_DURATION, HOLD_NOTE_STRIP_WIDTH_MULTIPLIER, JUDGEMENT_RADIUS, LEAD_TIME } from '@/lib/config/gameConstants';
 import { getLaneAngle, getColorForLane } from '@/lib/utils/laneUtils';
 
 export interface HoldNoteProcessedData {
@@ -43,7 +43,7 @@ export function processSingleHoldNote(note: Note, currentTime: number): HoldNote
 
     if (failures.hasAnyFailure) {
       const timeSinceFail = Math.max(0, currentTime - failureTime);
-      if (timeSinceFail > HOLD_ANIMATION_DURATION) {
+      if (timeSinceFail > FAILURE_ANIMATION_DURATION) {
         markAnimationCompletedIfDone(note, failures, timeSinceFail, currentTime);
         return null;
       }
