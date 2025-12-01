@@ -9,7 +9,7 @@ interface UseRewindProps {
 }
 
 export function useRewind({ setPauseMenuOpen, engineRef }: UseRewindProps): { handleRewind: () => Promise<void> } {
-  const rewindGame = useGameStore(state => state.rewindGame);
+  const restartGame = useGameStore(state => state.restartGame);
   const setGameState = useGameStore(state => state.setGameState);
   const isRewindingRef = useRef(false);
   const lastRewindTimeRef = useRef(0);
@@ -22,7 +22,13 @@ export function useRewind({ setPauseMenuOpen, engineRef }: UseRewindProps): { ha
     isRewindingRef.current = true;
     lastRewindTimeRef.current = now;
 
-    rewindGame();
+    // TODO: CHECKPOINT SYSTEM (Future Practice Mode)
+    // Instead of calling restartGame(), this should:
+    // 1. Load the last checkpoint (saved game state + time + notes)
+    // 2. Preserve score/combo/health from checkpoint
+    // 3. Allow practice mode where users can retry sections without penalty
+    // For now, reset everything to full restart behavior
+    restartGame();
     setPauseMenuOpen(false);
     
     // CRITICAL: Reset the cached time in useYouTubePlayer to prevent
@@ -49,7 +55,7 @@ export function useRewind({ setPauseMenuOpen, engineRef }: UseRewindProps): { ha
           isRewindingRef.current = false;
       }, 100);
     }
-  }, [rewindGame, setGameState, setPauseMenuOpen, engineRef]);
+  }, [restartGame, setGameState, setPauseMenuOpen, engineRef]);
 
   return { handleRewind };
 }
