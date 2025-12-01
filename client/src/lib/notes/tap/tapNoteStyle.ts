@@ -1,5 +1,6 @@
-import { GREYSCALE_FILL_COLOR, GREYSCALE_GLOW_COLOR, TAP_FAILURE_ANIMATIONS, TAP_HIT_FLASH, TAP_COLORS, TAP_OPACITY } from '@/lib/config/gameConstants';
+import { GREYSCALE_GLOW_COLOR, TAP_FAILURE_ANIMATIONS, TAP_HIT_FLASH, TAP_COLORS, TAP_OPACITY } from '@/lib/config/gameConstants';
 import { TapNoteState } from './tapNoteHelpers';
+import { TapNoteColors, TapGreyscaleState, determineTapGreyscaleState, calculateTapNoteColors } from './tapGreystate';
 
 export interface TapNoteStyle {
   opacity: number;
@@ -33,32 +34,53 @@ const calculateHitFlashIntensity = (state: TapNoteState): number => {
   return Math.max(0, 1 - (state.timeSinceHit / TAP_HIT_FLASH.DURATION));
 };
 
+const calculateGlowFilter = (
+  greyscaleState: TapGreyscaleState,
+  colors: TapNoteColors,
+  hitFlashIntensity: number
+): string => {
+  if (greyscaleState.isGreyed) {
+    return `drop-shadow(0 0 8px ${GREYSCALE_GLOW_COLOR}) grayscale(1)`;
+  }
+  
+  if (hitFlashIntensity > 0) {
+    return TAP_COLORS.GLOW_SHADOW(colors.glowColor);
+  }
+  
+  return '';
+};
+
 export const calculateTapNoteStyle = (
   progress: number,
   state: TapNoteState,
   noteColor: string,
-  rawProgress: number = 0
+  rawProgress: number = 0,
+  lane: number = 0
 ): TapNoteStyle => {
   const hitFlashIntensity = calculateHitFlashIntensity(state);
+  const greyscaleState = determineTapGreyscaleState(state, rawProgress);
+  const colors = calculateTapNoteColors(greyscaleState, lane, noteColor);
 
   let opacity: number;
-  let fill = noteColor;
-  let stroke: string = TAP_COLORS.STROKE_DEFAULT;
   let filter = '';
 
   if (state.isTapTooEarlyFailure || state.isTapMissFailure) {
     opacity = getFailureOpacity(state, rawProgress);
-    fill = 'rgba(100, 40, 40, 0.8)'; // Red-tinted grey for visibility
-    stroke = 'rgba(150, 50, 50, 1)'; // Red stroke
-    filter = `grayscale(0.8) brightness(0.7) drop-shadow(0 0 5px rgba(255,0,0,0.5))`; 
+    filter = calculateGlowFilter(greyscaleState, colors, 0);
   } else if (state.isHit) {
     opacity = getHitOpacity(state, progress);
-    if (hitFlashIntensity > 0) {
-      filter = TAP_COLORS.GLOW_SHADOW(noteColor);
-    }
+    filter = calculateGlowFilter(greyscaleState, colors, hitFlashIntensity);
   } else {
     opacity = getApproachingOpacity(progress);
   }
 
-  return { opacity: Math.max(opacity, 0), fill, stroke, filter, hitFlashIntensity };
+  return { 
+    opacity: Math.max(opacity, 0), 
+    fill: colors.fillColor, 
+    stroke: colors.strokeColor, 
+    filter, 
+    hitFlashIntensity 
+  };
 };
+
+export { determineTapGreyscaleState, calculateTapNoteColors, type TapNoteColors, type TapGreyscaleState } from './tapGreystate';

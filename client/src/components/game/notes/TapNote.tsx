@@ -21,7 +21,7 @@ const TapNoteComponent = ({ note, currentTime, vpX, vpY, state, progressForGeome
   const tapRayAngle = getLaneAngle(note.lane);
   const noteColor = getColorForLane(note.lane);
   const geometry = calculateTapNoteGeometry(progressForGeometry, tapRayAngle, vpX, vpY, state.isHit, currentTime, state.isFailed, note.time);
-  const style = calculateTapNoteStyle(clampedProgress, state, noteColor, rawProgress);
+  const style = calculateTapNoteStyle(clampedProgress, state, noteColor, rawProgress, note.lane);
   return (
     <polygon
       data-testid={`tap-note-${note.id}`}
