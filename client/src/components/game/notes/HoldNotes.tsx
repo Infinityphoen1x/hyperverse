@@ -17,6 +17,9 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
   const visibleNotes = React.useMemo(() => {
     if (!notes || !Array.isArray(notes)) return [];
     const leadTime = 2000;
+    const holdNotes = notes.filter(n => n.type === 'HOLD' || n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT');
+    const tapNotes = notes.filter(n => n.type === 'TAP');
+    
     return notes.filter(n => {
       // For hold notes, check visibility based on note.time + note.duration, not just note.time
       const isHoldNote = n.type === 'HOLD' || n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT';
@@ -31,7 +34,8 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
       // Upper bound: leadTime before start (so it appears at vanishing point)
       // Lower bound: 500ms after it ends (holdDuration past start)
       if (isHoldNote) {
-        return noteStartTime <= currentTime + leadTime && noteEndTime >= currentTime - 500;
+        const isVisible = noteStartTime <= currentTime + leadTime && noteEndTime >= currentTime - 500;
+        return isVisible;
       }
       
       // For normal tap notes: keep visible from leadTime before start to 500ms after start
