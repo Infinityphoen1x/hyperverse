@@ -15,7 +15,7 @@ export function ErrorLogViewer() {
   const {
     errors,
     animations,
-    errorCounts,
+    noteCounts: errorCounts,
     noteStats,
     renderStats,
     hitStats,

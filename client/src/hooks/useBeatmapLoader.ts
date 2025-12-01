@@ -3,9 +3,7 @@ import { useState } from 'react';
 import { parseBeatmap } from "@/lib/beatmap/beatmapParser";
 import { convertBeatmapNotes } from "@/lib/beatmap/beatmapConverter";
 import { extractYouTubeId } from '@/lib/youtube';
-import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { useGameStore } from '@/stores/useGameStore'; // For dispatching load + loaded state
 interface UseBeatmapLoaderProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
 }
@@ -18,17 +16,21 @@ interface UseBeatmapLoaderReturn {
   handleLoadBeatmap: () => void;
   handleQuickLoadEscapingGravity: () => Promise<void>;
 }
-const defaultBeatmap = `[METADATA]
-title:
-artist:
-bpm: 120
-duration: 0
-youtube:
-[${'EASY'}]`; // Placeholder; will be overridden by prop
+const defaultBeatmap = `{
+  "metadata": {
+    "title": "",
+    "artist": "",
+    "bpm": 120,
+    "duration": 0,
+    "youtube": ""
+  },
+  "notes": []
+}`;
+
 export const useBeatmapLoader = ({ difficulty }: UseBeatmapLoaderProps): UseBeatmapLoaderReturn => {
-  const [beatmapText, setBeatmapText] = useState(defaultBeatmap.replace('[EASY]', `[${difficulty}]`));
+  const [beatmapText, setBeatmapText] = useState(defaultBeatmap);
   const [error, setError] = useState("");
-  const { loadBeatmap, isBeatmapLoaded, setBeatmapLoaded } = useGameStore(); // Dispatch + loaded state
+  const [isBeatmapLoaded, setIsBeatmapLoaded] = useState(false);
   const handleBeatmapTextChange = (text: string) => {
     setBeatmapText(text);
     setError("");
@@ -67,8 +69,8 @@ export const useBeatmapLoader = ({ difficulty }: UseBeatmapLoaderProps): UseBeat
         GameErrors.log(`BeatmapLoader: ${msg}`);
         return;
       }
-      loadBeatmap(youtubeVideoId, convertedNotes); // Dispatch to store
-      setBeatmapLoaded(true); // Update global loaded state
+      // TODO: Dispatch beatmap to game store when integrated
+      setIsBeatmapLoaded(true);
       setBeatmapText("");
     } catch (error) {
       const msg = `Beatmap loading error: ${error instanceof Error ? error.message : 'Unknown error'}`;
