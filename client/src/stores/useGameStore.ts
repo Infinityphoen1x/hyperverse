@@ -13,7 +13,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   health: 200,
   maxHealth: 200,
   missCount: 0,
-  countdownSeconds: 3,
+  countdownSeconds: 0,
 
   // Setters
   setGameState: (gameState) => set({ gameState }),
@@ -40,7 +40,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   endDeckHold: (lane) => {
     console.log(`[GAME] End deck hold on lane ${lane}`);
   },
-  pauseGame: () => set({ isPaused: true }),
+  pauseGame: () => set({ isPaused: true, countdownSeconds: 0 }),
   resumeGame: () => set({ isPaused: false }),
   rewindGame: () => set({ currentTime: 0 }),
   restartGame: () => set({ 
@@ -50,7 +50,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     health: 200, 
     gameState: 'IDLE', 
     notes: [],
-    isPaused: false
+    isPaused: false,
+    countdownSeconds: 0
   }),
 
   // Selectors
