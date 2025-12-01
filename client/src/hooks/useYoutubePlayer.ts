@@ -8,31 +8,43 @@ interface UseYouTubePlayerProps {
   onPlaying?: () => void;
 }
 
-export function useYouTubePlayer({ videoId, playerInitializedRef, onPlaying }: UseYouTubePlayerProps) {
+interface UseYouTubePlayerReturn {
+  getVideoTime: () => number | null;
+  seek: typeof seekYouTubeVideo;
+  play: typeof playYouTubeVideo;
+  pause: typeof pauseYouTubeVideo;
+  isReady: boolean;
+}
+
+export function useYouTubePlayer({ videoId, playerInitializedRef, onPlaying }: UseYouTubePlayerProps): UseYouTubePlayerReturn {
   const [isReady, setIsReady] = useState(false);
   const initRef = useRef(false);
   const lastValidTime = useRef<number | null>(null);
 
   const getVideoTime = useCallback((): number | null => {
     const t = getYouTubeVideoTime();
-    if (t != null) {
+    if (t !== null) {
       lastValidTime.current = t;
       return t;
     }
     return lastValidTime.current;
   }, []);
 
+  const seek = useCallback(seekYouTubeVideo, []);
+  const play = useCallback(playYouTubeVideo, []);
+  const pause = useCallback(pauseYouTubeVideo, []);
+
   useEffect(() => {
     if (!videoId || !playerInitializedRef.current || initRef.current) return;
     setIsReady(true);
     initRef.current = true;
-  }, [videoId, playerInitializedRef]);
+  }, [videoId]);
 
   return {
     getVideoTime,
-    seek: seekYouTubeVideo,
-    play: playYouTubeVideo,
-    pause: pauseYouTubeVideo,
+    seek,
+    play,
+    pause,
     isReady
   };
 }
