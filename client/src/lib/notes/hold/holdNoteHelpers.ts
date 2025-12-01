@@ -1,6 +1,6 @@
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { HOLD_ANIMATION_DURATION } from '@/lib/config/gameConstants';
+import { FAILURE_ANIMATION_DURATION } from '@/lib/config/gameConstants';
 
 export interface HoldNoteFailureStates {
   isTooEarlyFailure: boolean;
@@ -28,7 +28,7 @@ export const markAnimationCompletedIfDone = (
   timeSinceFail: number,
   currentTime: number
 ): void => {
-  if (timeSinceFail > HOLD_ANIMATION_DURATION) {
+  if (timeSinceFail > FAILURE_ANIMATION_DURATION) {
     const failureTypes: Array<'tooEarlyFailure' | 'holdReleaseFailure' | 'holdMissFailure'> = [];
     if (failures.isTooEarlyFailure) failureTypes.push('tooEarlyFailure');
     if (failures.isHoldReleaseFailure) failureTypes.push('holdReleaseFailure');
@@ -36,8 +36,8 @@ export const markAnimationCompletedIfDone = (
     
     for (const failureType of failureTypes) {
       const animEntry = GameErrors.animations.find(a => a.noteId === note.id && a.type === failureType);
-      if (animEntry && animEntry.status !== 'completed') {
-        GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
+      if (animEntry && !animEntry.completed) {
+        GameErrors.updateAnimation(note.id, { completed: true });
       }
     }
   }
@@ -66,14 +66,8 @@ export const trackHoldNoteAnimationLifecycle = (
     }
     
     if (animEntry) {
-      if (animEntry.status === 'pending') {
-        if (timeSinceFailure >= HOLD_ANIMATION_DURATION) {
-          GameErrors.updateAnimation(note.id, { status: 'completed', renderStart: currentTime, renderEnd: currentTime });
-        } else {
-          GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
-        }
-      } else if (animEntry.status === 'rendering' && timeSinceFailure >= HOLD_ANIMATION_DURATION) {
-        GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
+      if (!animEntry.completed && timeSinceFailure >= FAILURE_ANIMATION_DURATION) {
+        GameErrors.updateAnimation(note.id, { completed: true });
       }
     }
   }

@@ -19,7 +19,7 @@ export const getTapNoteState = (note: Note, currentTime: number): TapNoteState =
   const isTapMissFailure = note.tapMissFailure || false;
   const isFailed = isTapTooEarlyFailure || isTapMissFailure;
   const failureTime = note.failureTime;
-  const hitTime = note.hitTime;
+  const hitTime = isHit ? currentTime : undefined;
   
   const timeSinceFail = failureTime ? Math.max(0, currentTime - failureTime) : 0;
   const timeSinceHit = isHit && hitTime ? Math.max(0, currentTime - hitTime) : 0;
@@ -51,14 +51,8 @@ export const trackTapNoteAnimation = (note: Note, state: TapNoteState, currentTi
   const animEntry = GameErrors.animations.find((a: any) => a.noteId === note.id && a.type === failureType);
   if (!animEntry) {
     GameErrors.trackAnimation(note.id, failureType, state.failureTime || currentTime);
-  } else if (animEntry.status === 'pending') {
-    if (state.timeSinceFail >= animDuration) {
-      GameErrors.updateAnimation(note.id, { status: 'completed', renderStart: currentTime, renderEnd: currentTime });
-    } else {
-      GameErrors.updateAnimation(note.id, { status: 'rendering', renderStart: currentTime });
-    }
-  } else if (animEntry.status === 'rendering' && state.timeSinceFail >= animDuration) {
-    GameErrors.updateAnimation(note.id, { status: 'completed', renderEnd: currentTime });
+  } else if (!animEntry.completed && state.timeSinceFail >= animDuration) {
+    GameErrors.updateAnimation(note.id, { completed: true });
   }
 };
 
