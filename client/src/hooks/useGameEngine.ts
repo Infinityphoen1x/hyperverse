@@ -4,6 +4,7 @@ import type { GameState, Note, Difficulty, GameConfig } from '@/types/game';
 import { NoteProcessor } from '@/lib/notes/processors/noteProcessor';
 import { NoteValidator } from '@/lib/notes/processors/noteValidator';
 import { ScoringManager } from '@/lib/managers/scoringManager';
+import { GameErrors } from '@/lib/errors/errorLog';
 import { 
   LEAD_TIME, 
   MAX_HEALTH
@@ -102,6 +103,7 @@ export function useGameEngine({
     if (customNotes && customNotes.length > 0) {
         console.log(`[GAME-ENGINE] Loading ${customNotes.length} custom notes`);
         setNotes(customNotes);
+        GameErrors.updateNoteStats(customNotes);
     }
   }, [customNotes, setNotes]);
 
@@ -140,7 +142,9 @@ export function useGameEngine({
                 console.log(`[GAME-ENGINE] Hit success!`, result.scoreChange);
                 
                 // Update the specific note
-                setNotes(notes.map(n => n.id === targetNote.id ? result.updatedNote : n));
+                const updatedNotes = notes.map(n => n.id === targetNote.id ? result.updatedNote : n);
+                setNotes(updatedNotes);
+                GameErrors.updateNoteStats(updatedNotes);
                 
                 if (result.scoreChange) {
                     setScore(result.scoreChange.score);
@@ -164,7 +168,9 @@ export function useGameEngine({
      if (targetNote) {
          const result = processor.processHoldStart(targetNote, currentTime);
          if (result.success) {
-             setNotes(notes.map(n => n.id === targetNote.id ? result.updatedNote : n));
+             const updatedNotes = notes.map(n => n.id === targetNote.id ? result.updatedNote : n);
+             setNotes(updatedNotes);
+             GameErrors.updateNoteStats(updatedNotes);
              startDeckHold(lane);
          }
      }
@@ -177,7 +183,9 @@ export function useGameEngine({
      
      if (targetNote) {
          const result = processor.processHoldEnd(targetNote, currentTime);
-         setNotes(notes.map(n => n.id === targetNote.id ? result.updatedNote : n));
+         const updatedNotes = notes.map(n => n.id === targetNote.id ? result.updatedNote : n);
+         setNotes(updatedNotes);
+         GameErrors.updateNoteStats(updatedNotes);
          
          if (result.scoreChange) {
              setScore(result.scoreChange.score);
@@ -224,6 +232,7 @@ export function useGameEngine({
 
         if (result.updatedNotes !== currentNotes) {
              setNotes(result.updatedNotes);
+             GameErrors.updateNoteStats(result.updatedNotes);
         }
       }
     }, 16);
