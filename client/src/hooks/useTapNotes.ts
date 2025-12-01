@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import type { Note } from '@/lib/engine/gameTypes';
 import { getTapNoteState, TapNoteState, shouldRenderTapNote } from '@/lib/notes/tap/tapNoteHelpers';
+import { LEAD_TIME } from '@/lib/config/gameConstants';
 
 export interface TapNoteProcessedData {
   note: Note;
@@ -17,11 +18,9 @@ export function useTapNotes(): TapNoteProcessedData[] {
   const currentTime = useGameStore(state => state.currentTime);
 
   return useMemo(() => {
-    const leadTime = 2000; // Standard approach distance
-    
     // Filter visibly relevant notes first to reduce map overhead
     const visibleNotes = notes.filter(n => 
-        n.time <= currentTime + leadTime && 
+        n.time <= currentTime + LEAD_TIME && 
         n.time >= currentTime - 500 // Keep them a bit after they pass
     );
     
@@ -33,7 +32,7 @@ export function useTapNotes(): TapNoteProcessedData[] {
         // Calculate progress
         // progress 0 = spawn (far away)
         // progress 1 = hit line (near)
-        const rawProgress = 1 - ((note.time - currentTime) / leadTime);
+        const rawProgress = 1 - ((note.time - currentTime) / LEAD_TIME);
         const clampedProgress = Math.max(0, Math.min(1, rawProgress));
         
         // For geometry, we allow it to go > 1 to show it falling through/passing judgement line

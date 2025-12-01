@@ -66,7 +66,7 @@ export interface TapNoteGeometry {
   hitHoldDurationMs: number; // Duration to show hit state
 }
 export const TAP_NOTE_GEOMETRY: TapNoteGeometry = {
-  renderWindowMs: 500,
+  renderWindowMs: 4000, // Match LEAD_TIME so notes appear at vanishing point
   fallthroughWindowMs: 200,
   hitHoldDurationMs: 200,
 };
