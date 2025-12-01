@@ -85,7 +85,7 @@ export function useGameLogic({
   // Countdown
   useCountdown({
     gameState,
-    onCountdownComplete: handleResume,
+    onCountdownComplete: () => setGameState('RESUMING'),
     setPauseMenuOpen: setPauseMenuOpenHandler,
   });
 

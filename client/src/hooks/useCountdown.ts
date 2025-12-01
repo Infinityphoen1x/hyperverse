@@ -1,5 +1,5 @@
 // src/hooks/useCountdown.ts
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { GameState } from '@/lib/engine/gameTypes';
 
@@ -16,7 +16,16 @@ export function useCountdown({
 }: UseCountdownProps): void {
   const countdownSeconds = useGameStore(state => state.countdownSeconds);
   const setCountdownSeconds = useGameStore(state => state.setCountdownSeconds);
+  const wasCountingDownRef = useRef(false);
 
+  // Track if we are actively counting down
+  useEffect(() => {
+    if (countdownSeconds > 0) {
+      wasCountingDownRef.current = true;
+    }
+  }, [countdownSeconds]);
+
+  // Ticking logic
   useEffect(() => {
     if (gameState !== 'PAUSED' || countdownSeconds === 0) return;
 
@@ -28,10 +37,13 @@ export function useCountdown({
     return () => clearInterval(interval);
   }, [gameState, countdownSeconds, setCountdownSeconds]);
 
+  // Completion logic
   useEffect(() => {
-    if (countdownSeconds !== 0 || gameState !== 'PAUSED') return;
-
-    setPauseMenuOpen?.(false);
-    onCountdownComplete();
+    // Only trigger completion if we were actually counting down and hit 0
+    if (countdownSeconds === 0 && gameState === 'PAUSED' && wasCountingDownRef.current) {
+      wasCountingDownRef.current = false;
+      setPauseMenuOpen?.(false);
+      onCountdownComplete();
+    }
   }, [countdownSeconds, gameState, setPauseMenuOpen, onCountdownComplete]);
 }
