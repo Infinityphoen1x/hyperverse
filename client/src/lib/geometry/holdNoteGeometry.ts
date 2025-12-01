@@ -16,8 +16,9 @@ export const calculateApproachGeometry = (
   const stripWidth = (holdDuration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
   
   const rawApproachProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-  const isSuccessfulPress = pressHoldTime > 0 && !isTooEarlyFailure;
-  const approachProgress = isSuccessfulPress ? Math.min(rawApproachProgress, 1.0) : rawApproachProgress;
+  // For early failures, use raw progress (frozen from press time)
+  // For successful presses or late failures, allow progress to continue
+  const approachProgress = rawApproachProgress;
   
   const nearDistance = Math.max(1, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
   const farDistance = Math.max(1, nearDistance - stripWidth);

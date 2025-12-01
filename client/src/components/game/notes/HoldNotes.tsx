@@ -17,7 +17,11 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
   const visibleNotes = React.useMemo(() => {
     if (!notes || !Array.isArray(notes)) return [];
     const leadTime = 2000;
-    return notes.filter(n => n.time <= currentTime + leadTime && n.time >= currentTime - 500);
+    return notes.filter(n => {
+      if (n.tooEarlyFailure) return n.time <= currentTime + leadTime && n.time >= currentTime - 4000;
+      if (n.holdMissFailure || n.holdReleaseFailure) return n.time <= currentTime + leadTime && n.time >= currentTime - 2000;
+      return n.time <= currentTime + leadTime && n.time >= currentTime - 500;
+    });
   }, [notes, currentTime]);
 
   const processedNotes = useHoldNotes(visibleNotes, currentTime);
