@@ -9,7 +9,7 @@ interface UseAutoStartProps {
 }
 
 export function useAutoStart({ customNotes, startGame }: UseAutoStartProps): void {
-  const { gameState } = useGameStore(state => ({ gameState: state.gameState }));
+  const gameState = useGameStore(state => state.gameState);
 
   useEffect(() => {
     if (gameState !== 'IDLE' || !customNotes || customNotes.length === 0) return;

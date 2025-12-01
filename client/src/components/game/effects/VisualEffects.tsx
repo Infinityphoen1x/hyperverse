@@ -24,15 +24,10 @@ export function VisualEffects({ combo: propCombo, health: propHealth, missCount:
   const prevMissCountRef = useRef(0);
   const prevComboRef = useRef(0);
 
-  // Memoized store selector to prevent unnecessary selector recreation
-  const selectGameState = useCallback((state: any) => ({
-    combo: propCombo ?? state.combo,
-    health: propHealth ?? state.health,
-    missCount: propMissCount ?? state.missCount,
-  }), [propCombo, propHealth, propMissCount]);
-
-  // Pull from Zustand (fallback to props for testing/flexibility)
-  const { combo, health = 100, missCount = 0 } = useGameStore(selectGameState);
+  // Pull from Zustand individually to prevent unnecessary re-renders
+  const combo = useGameStore(state => propCombo ?? state.combo);
+  const health = useGameStore(state => propHealth ?? state.health);
+  const missCount = useGameStore(state => propMissCount ?? state.missCount);
 
   // Validation (runs on prop/store changes)
   useEffect(() => {
