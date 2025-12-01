@@ -1,23 +1,13 @@
-// src/hooks/useConsoleLogger.ts
-import * as React from "react";
+import { useEffect } from 'react';
 import { useConsoleLogStore } from '@/stores/useConsoleLogStore';
 
-/**
- * useConsoleLogger - Captures filtered console output for diagnostics
- *
- * Intercepts console.log, console.warn, console.error and stores important entries
- * in Zustand store for later export. Filters out spam and only captures
- * tagged logs and errors.
- */
 export function useConsoleLogger() {
-  React.useEffect(() => {
-    const logEntries: any[] = []; // Temp for capture; store pushes to Zustand
+  useEffect(() => {
     const startTime = Date.now();
     const originalLog = console.log;
     const originalWarn = console.warn;
     const originalError = console.error;
 
-    // Only capture important logs (avoid spam like YouTube messages)
     const shouldCapture = (message: string): boolean => {
       return (
         message.includes('[CRITICAL]') ||
