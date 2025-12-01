@@ -11,31 +11,33 @@ import { useRewind } from './useRewind';
 interface UseGameLogicProps {
   gameState: GameState;
   currentTime: number;
-  isPaused: boolean;
-  notes: Note[];
   getVideoTime?: (() => number | null) | null;
-  pauseGame: () => void;
   resumeGame: () => void;
   restartGame: () => void;
   startGame: () => void;
   setGameState: (state: GameState) => void;
   setCurrentTime: (time: number) => void;
   hitNote: (noteId: number) => void;
-  trackHoldStart?: (noteId: number) => void;
-  trackHoldEnd?: (noteId: number) => void;
   customNotes?: Note[];
   engineRef?: React.RefObject<any>;
   setPauseMenuOpen?: (open: boolean) => void;
-  onHome?: () => void;
+}
+
+interface UseGameLogicReturn {
+  isPauseMenuOpen: boolean;
+  countdownSeconds: number;
+  resumeFadeOpacity: number;
+  handleLeftDeckSpin: () => void;
+  handleRightDeckSpin: () => void;
+  handleRewind: () => void;
+  handleResume: () => void;
+  pauseGame: () => void;
 }
 
 export function useGameLogic({
   gameState,
   currentTime,
-  isPaused,
-  notes,
   getVideoTime,
-  pauseGame,
   resumeGame,
   restartGame,
   startGame,
@@ -45,8 +47,7 @@ export function useGameLogic({
   customNotes,
   engineRef,
   setPauseMenuOpen,
-  onHome,
-}: UseGameLogicProps) {
+}: UseGameLogicProps): UseGameLogicReturn {
   const [isPauseMenuOpen, setIsPauseMenuOpenLocal] = useState(false);
   const [resumeFadeOpacity, setResumeFadeOpacity] = useState(0);
 
