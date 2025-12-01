@@ -81,7 +81,7 @@ export const SOUNDPAD_TIMING: SoundpadTiming = {
 export interface SoundpadColorPalette {
   colors: string[];
 }
-export const SOUNDPAD_COLORS_PALETTE: SoundpadColorPalette = {
+export const SOUNDPAD_COLOR_PALETTE: SoundpadColorPalette = {
   colors: [
     'rgb(255,0,127)', // Lane 0 (W) - pink
     'rgb(0,150,255)', // Lane 1 (O) - blue
@@ -89,7 +89,7 @@ export const SOUNDPAD_COLORS_PALETTE: SoundpadColorPalette = {
     'rgb(0,255,255)' // Lane 3 (E) - cyan
   ],
 };
-export const SOUNDPAD_COLORS = SOUNDPAD_COLORS_PALETTE.colors;
+export const SOUNDPAD_COLORS = SOUNDPAD_COLOR_PALETTE.colors;
 
 // Soundpad Tailwind styles - derived from SOUNDPAD_COLORS
 export interface SoundpadStyle {
@@ -176,7 +176,7 @@ export const VISUAL_EFFECTS: VisualEffects = {
 export interface ParticleColorPalette {
   colors: string[];
 }
-export const PARTICLE_COLORS_PALETTE: ParticleColorPalette = {
+export const PARTICLE_COLOR_PALETTE: ParticleColorPalette = {
   colors: [
     'hsl(120, 100%, 50%)', // Green
     'hsl(0, 100%, 50%)', // Red
@@ -185,7 +185,7 @@ export const PARTICLE_COLORS_PALETTE: ParticleColorPalette = {
     'hsl(320, 100%, 60%)', // Magenta
   ],
 };
-export const PARTICLE_COLORS = PARTICLE_COLORS_PALETTE.colors;
+export const PARTICLE_COLORS = PARTICLE_COLOR_PALETTE.colors;
 
 // Deck hold meter constants
 export interface DeckMeter {
@@ -214,7 +214,7 @@ export interface UIColorPalette {
   particleGreen: string; // Green particles
   particleRed: string; // Red particles
 }
-export const UI_COLORS: UIColorPalette = {
+export const UI_COLOR_PALETTE: UIColorPalette = {
   deckLeft: '#00FF00',
   deckRight: '#FF0000',
   padW: '#FF007F',
@@ -224,14 +224,14 @@ export const UI_COLORS: UIColorPalette = {
   particleGreen: 'hsl(120, 100%, 50%)',
   particleRed: 'hsl(0, 100%, 50%)',
 };
-export const COLOR_DECK_LEFT = UI_COLORS.deckLeft;
-export const COLOR_DECK_RIGHT = UI_COLORS.deckRight;
-export const COLOR_PAD_W = UI_COLORS.padW;
-export const COLOR_PAD_O = UI_COLORS.padO;
-export const COLOR_PAD_I = UI_COLORS.padI;
-export const COLOR_PAD_E = UI_COLORS.padE;
-export const COLOR_PARTICLE_GREEN = UI_COLORS.particleGreen;
-export const COLOR_PARTICLE_RED = UI_COLORS.particleRed;
+export const COLOR_DECK_LEFT = UI_COLOR_PALETTE.deckLeft;
+export const COLOR_DECK_RIGHT = UI_COLOR_PALETTE.deckRight;
+export const COLOR_PAD_W = UI_COLOR_PALETTE.padW;
+export const COLOR_PAD_O = UI_COLOR_PALETTE.padO;
+export const COLOR_PAD_I = UI_COLOR_PALETTE.padI;
+export const COLOR_PAD_E = UI_COLOR_PALETTE.padE;
+export const COLOR_PARTICLE_GREEN = UI_COLOR_PALETTE.particleGreen;
+export const COLOR_PARTICLE_RED = UI_COLOR_PALETTE.particleRed;
 
 // YouTube overlay UI strings
 export interface YouTubeUI {
