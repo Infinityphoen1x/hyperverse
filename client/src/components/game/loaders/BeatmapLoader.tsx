@@ -5,14 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Music } from "lucide-react";
 import { useBeatmapLoader } from '@/hooks/useBeatmapLoader';
+import { BeatmapData } from '@/lib/beatmap/beatmapParser';
 
 interface BeatmapLoaderProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  onBeatmapLoad: (data: BeatmapData) => void;
 }
 
-export function BeatmapLoader({ difficulty, isOpen, setIsOpen }: BeatmapLoaderProps) {
+export function BeatmapLoader({ difficulty, isOpen, setIsOpen, onBeatmapLoad }: BeatmapLoaderProps) {
   const {
     beatmapText,
     error,
@@ -20,7 +22,7 @@ export function BeatmapLoader({ difficulty, isOpen, setIsOpen }: BeatmapLoaderPr
     handleBeatmapTextChange,
     handleLoadBeatmap,
     handleQuickLoadEscapingGravity,
-  } = useBeatmapLoader({ difficulty });
+  } = useBeatmapLoader({ difficulty, onBeatmapLoad });
 
   return (
     <div className="absolute top-4 left-4 z-30">

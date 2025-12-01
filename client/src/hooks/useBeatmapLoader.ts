@@ -1,21 +1,24 @@
 // src/hooks/useBeatmapLoader.ts
 import { useState } from 'react';
-import { parseBeatmap } from "@/lib/beatmap/beatmapParser";
+import { parseBeatmap, BeatmapData } from "@/lib/beatmap/beatmapParser";
 import { convertBeatmapNotes } from "@/lib/beatmap/beatmapConverter";
 import { extractYouTubeId } from '@/lib/youtube';
 import { GameErrors } from '@/lib/errors/errorLog';
+
 interface UseBeatmapLoaderProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  onBeatmapLoad: (data: BeatmapData) => void;
 }
+
 interface UseBeatmapLoaderReturn {
   beatmapText: string;
   error: string;
   isBeatmapLoaded: boolean;
-  setIsOpen: (open: boolean) => void; // For dialog control
   handleBeatmapTextChange: (text: string) => void;
   handleLoadBeatmap: () => void;
   handleQuickLoadEscapingGravity: () => Promise<void>;
 }
+
 const defaultBeatmap = `{
   "metadata": {
     "title": "",
@@ -27,14 +30,16 @@ const defaultBeatmap = `{
   "notes": []
 }`;
 
-export const useBeatmapLoader = ({ difficulty }: UseBeatmapLoaderProps): UseBeatmapLoaderReturn => {
+export const useBeatmapLoader = ({ difficulty, onBeatmapLoad }: UseBeatmapLoaderProps): UseBeatmapLoaderReturn => {
   const [beatmapText, setBeatmapText] = useState(defaultBeatmap);
   const [error, setError] = useState("");
   const [isBeatmapLoaded, setIsBeatmapLoaded] = useState(false);
+
   const handleBeatmapTextChange = (text: string) => {
     setBeatmapText(text);
     setError("");
   };
+
   const handleLoadBeatmap = () => {
     setError("");
     if (!beatmapText.trim()) {
@@ -43,14 +48,17 @@ export const useBeatmapLoader = ({ difficulty }: UseBeatmapLoaderProps): UseBeat
       GameErrors.log(`BeatmapLoader: ${msg}`);
       return;
     }
+
     try {
       const parsed = parseBeatmap(beatmapText, difficulty);
-      if (!parsed) {
-        const msg = `Failed to parse beatmap for ${difficulty} difficulty`;
+      
+      if (parsed.error) {
+        const msg = parsed.error;
         setError(msg);
         GameErrors.log(`BeatmapLoader: ${msg}`);
         return;
       }
+
       let youtubeVideoId: string | undefined;
       if (parsed.metadata.youtube) {
         const extractedId = extractYouTubeId(parsed.metadata.youtube);
@@ -62,6 +70,7 @@ export const useBeatmapLoader = ({ difficulty }: UseBeatmapLoaderProps): UseBeat
         }
         youtubeVideoId = extractedId;
       }
+
       const convertedNotes = convertBeatmapNotes(parsed.notes);
       if (convertedNotes.length === 0) {
         const msg = "Beatmap has no notes after conversion";
@@ -69,15 +78,24 @@ export const useBeatmapLoader = ({ difficulty }: UseBeatmapLoaderProps): UseBeat
         GameErrors.log(`BeatmapLoader: ${msg}`);
         return;
       }
-      // TODO: Dispatch beatmap to game store when integrated
+
       setIsBeatmapLoaded(true);
       setBeatmapText("");
+      
+      // Notify parent with the processed data
+      onBeatmapLoad({
+        ...parsed,
+        notes: convertedNotes as any[], // Convert strictly typed notes back to array for storage if needed, or adjust types
+        youtubeVideoId
+      });
+      
     } catch (error) {
       const msg = `Beatmap loading error: ${error instanceof Error ? error.message : 'Unknown error'}`;
       setError(msg);
       GameErrors.log(`BeatmapLoader: ${msg}`);
     }
   };
+
   const handleQuickLoadEscapingGravity = async () => {
     setError("");
     try {
@@ -91,13 +109,11 @@ export const useBeatmapLoader = ({ difficulty }: UseBeatmapLoaderProps): UseBeat
       GameErrors.log(`BeatmapLoader: ${msg}`);
     }
   };
-  // Note: isOpen is managed by parent dialog for simplicity; expose setter if needed
-  const setIsOpen = () => {}; // Placeholder; parent handles via prop if passed
+
   return {
     beatmapText,
     error,
     isBeatmapLoaded,
-    setIsOpen,
     handleBeatmapTextChange,
     handleLoadBeatmap,
     handleQuickLoadEscapingGravity,

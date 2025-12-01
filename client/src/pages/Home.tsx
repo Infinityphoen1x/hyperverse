@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { BeatmapLoader } from "@/components/game/loaders/BeatmapLoader";
+import { BeatmapData } from "@/lib/beatmap/beatmapParser";
 
 interface HomeProps {
   onStartGame: (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => void;
@@ -34,6 +35,18 @@ export default function Home({ onStartGame }: HomeProps) {
     return () => clearInterval(colorInterval);
   }, [colors.length]);
 
+  const handleBeatmapLoad = (data: BeatmapData) => {
+    // Store beatmap data for the game to use
+    const beatmapStorageData = { 
+      youtubeVideoId: data.youtubeVideoId, 
+      notes: data.notes, 
+      difficulty: selectedDifficulty 
+    };
+    localStorage.setItem('pendingBeatmap', JSON.stringify(beatmapStorageData));
+    setBeatmapLoaded(true);
+    setIsLoaderOpen(false); // Auto-close the loader
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden">
       {/* Beatmap Loader */}
@@ -41,6 +54,7 @@ export default function Home({ onStartGame }: HomeProps) {
         difficulty={selectedDifficulty}
         isOpen={isLoaderOpen}
         setIsOpen={setIsLoaderOpen}
+        onBeatmapLoad={handleBeatmapLoad}
       />
       {/* Semi-transparent overlay to show video behind */}
       <div className="absolute inset-0 bg-black/40 pointer-events-none z-0" />
