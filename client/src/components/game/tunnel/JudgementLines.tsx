@@ -1,26 +1,20 @@
 // src/components/JudgementLines.tsx
-import React from 'react';
-import { useGameStore } from '@/stores/useGameStore'; // Assumes store with viewport state
+import React, { memo } from 'react';
 import { TapJudgementLines } from './TapJudgementLines';
 import { HoldJudgementLines } from './HoldJudgementLines';
 
 interface JudgementLinesProps {
-  // Optional overrides; defaults to store for global sync
   vpX?: number;
   vpY?: number;
   type: 'tap' | 'hold';
 }
 
-export function JudgementLines({ vpX: propVpX, vpY: propVpY, type }: JudgementLinesProps) {
-  // Pull from Zustand (fallback to props for testing/flexibility)
-  const { vpX, vpY } = useGameStore(state => ({
-    vpX: propVpX ?? state.vpX,
-    vpY: propVpY ?? state.vpY,
-  }));
-
+const JudgementLinesComponent = ({ vpX = 350, vpY = 300, type }: JudgementLinesProps) => {
   return type === 'tap' ? (
-    <TapJudgementLines vpX={vpX} vpY={vpY} />
+    <TapJudgementLines vpX={vpX} vpY={vpY} data-testid="tap-judgement-lines" />
   ) : (
-    <HoldJudgementLines vpX={vpX} vpY={vpY} />
+    <HoldJudgementLines vpX={vpX} vpY={vpY} data-testid="hold-judgement-lines" />
   );
-}
+};
+
+export const JudgementLines = memo(JudgementLinesComponent);
