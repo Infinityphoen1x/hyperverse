@@ -59,6 +59,18 @@ export const HOLD_NOTE_GEOMETRY: HoldNoteGeometry = {
   failureAnimationDuration: 1100,
 };
 
+// Tap note timing constants
+export interface TapNoteGeometry {
+  renderWindowMs: number; // Time to render note before judgement line
+  fallthroughWindowMs: number; // Time after judgement line before miss
+  hitHoldDurationMs: number; // Duration to show hit state
+}
+export const TAP_NOTE_GEOMETRY: TapNoteGeometry = {
+  renderWindowMs: 500,
+  fallthroughWindowMs: 200,
+  hitHoldDurationMs: 200,
+};
+
 // Soundpad colors - RGB values for dynamic styling
 export const SOUNDPAD_COLORS = [
   'rgb(255,0,127)', // Lane 0 (W) - pink
@@ -405,6 +417,11 @@ export const TUNNEL_CONTAINER_HEIGHT = TUNNEL_VIEWPORT.containerHeight;
 // Hold Note Geometry exports
 export const HOLD_NOTE_STRIP_WIDTH_MULTIPLIER = HOLD_NOTE_GEOMETRY.stripWidthMultiplier;
 export const FAILURE_ANIMATION_DURATION = HOLD_NOTE_GEOMETRY.failureAnimationDuration;
+
+// Tap Note Geometry exports
+export const TAP_RENDER_WINDOW_MS = TAP_NOTE_GEOMETRY.renderWindowMs;
+export const TAP_FALLTHROUGH_WINDOW_MS = TAP_NOTE_GEOMETRY.fallthroughWindowMs;
+export const TAP_HIT_HOLD_DURATION = TAP_NOTE_GEOMETRY.hitHoldDurationMs;
 
 // Deck Meter exports
 export const DECK_METER_SEGMENTS = DECK_METER.segments;
