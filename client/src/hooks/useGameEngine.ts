@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import type { GameState, Note, Difficulty } from '@/types/game';
 
@@ -9,7 +9,6 @@ interface UseGameEngineProps {
 }
 
 export interface UseGameEngineReturn {
-  // State (reactive from store selectors)
   gameState: GameState;
   score: number;
   combo: number;
@@ -17,18 +16,15 @@ export interface UseGameEngineReturn {
   notes: Note[];
   currentTime: number;
   isPaused: boolean;
-  // Actions (store dispatches)
   startGame: () => void;
   pauseGame: () => void;
   resumeGame: () => void;
   restartGame: () => void;
   setGameState: (state: GameState) => void;
-  // Input handlers (store dispatches)
   hitNote: (lane: number) => void;
   trackHoldStart: (lane: number) => void;
   trackHoldEnd: (lane: number) => void;
   markNoteMissed: (noteId: string) => void;
-  // Utilities
   getReleaseTime: (noteId: string) => number | undefined;
 }
 
@@ -37,38 +33,34 @@ export function useGameEngine({
   customNotes = [],
   getVideoTime,
 }: UseGameEngineProps): UseGameEngineReturn {
-  const {
-    gameState,
-    score,
-    combo,
-    health,
-    notes,
-    currentTime,
-    isPaused,
-    setGameState,
-    setCurrentTime,
-    hitNote,
-    startDeckHold,
-    endDeckHold,
-    pauseGame,
-    resumeGame,
-    rewindGame,
-    restartGame
-  } = useGameStore();
+  const gameState = useGameStore(state => state.gameState);
+  const score = useGameStore(state => state.score);
+  const combo = useGameStore(state => state.combo);
+  const health = useGameStore(state => state.health);
+  const notes = useGameStore(state => state.notes);
+  const currentTime = useGameStore(state => state.currentTime);
+  const isPaused = useGameStore(state => state.isPaused);
+  const setGameState = useGameStore(state => state.setGameState);
+  const setCurrentTime = useGameStore(state => state.setCurrentTime);
+  const hitNote = useGameStore(state => state.hitNote);
+  const startDeckHold = useGameStore(state => state.startDeckHold);
+  const endDeckHold = useGameStore(state => state.endDeckHold);
+  const pauseGame = useGameStore(state => state.pauseGame);
+  const resumeGame = useGameStore(state => state.resumeGame);
+  const restartGame = useGameStore(state => state.restartGame);
 
-  const startGame = useCallback(() => {
+  const startGame = () => {
     setGameState('PLAYING');
-  }, [setGameState]);
+  };
 
-  const markNoteMissed = useCallback((noteId: string) => {
+  const markNoteMissed = (noteId: string) => {
     console.log(`[MISS] ${noteId}`);
-  }, []);
+  };
 
-  const getReleaseTime = useCallback((noteId: string) => {
+  const getReleaseTime = (noteId: string): number | undefined => {
     return undefined;
-  }, []);
+  };
 
-  // Video time sync
   useEffect(() => {
     if (!getVideoTime || gameState !== 'PLAYING' || isPaused) return;
     
@@ -77,13 +69,12 @@ export function useGameEngine({
       if (videoTime !== null) {
         setCurrentTime(videoTime);
       }
-    }, 16); // 60fps sync
+    }, 16);
     
     return () => clearInterval(interval);
   }, [getVideoTime, gameState, isPaused, setCurrentTime]);
 
   return {
-    // State
     gameState,
     score,
     combo,
@@ -91,18 +82,15 @@ export function useGameEngine({
     notes,
     currentTime,
     isPaused,
-    // Actions
     startGame,
     pauseGame,
     resumeGame,
     restartGame,
     setGameState,
-    // Inputs
     hitNote,
     trackHoldStart: startDeckHold,
     trackHoldEnd: endDeckHold,
     markNoteMissed,
-    // Utils
     getReleaseTime,
   };
 }
