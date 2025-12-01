@@ -1,4 +1,4 @@
-import { getYtPlayer, getYoutubeCurrentTimeMs, getLastTimeUpdate, getYoutubeIframeElement, getLastGoodTimeMs } from './youtubeSharedState';
+import { useYoutubeStore } from '@/stores/useYoutubeStore';
 
 /**
  * Get current video time from YouTube player
@@ -7,11 +7,7 @@ import { getYtPlayer, getYoutubeCurrentTimeMs, getLastTimeUpdate, getYoutubeIfra
  * CRITICAL: Never returns null during normal flow to prevent note desync in rhythm game
  */
 export function getYouTubeVideoTime(): number | null {
-  const ytPlayer = getYtPlayer();
-  const youtubeCurrentTimeMs = getYoutubeCurrentTimeMs();
-  const lastTimeUpdate = getLastTimeUpdate();
-  const youtubeIframeElement = getYoutubeIframeElement();
-  const lastGoodTimeMs = getLastGoodTimeMs();
+  const { ytPlayer, youtubeCurrentTimeMs, lastTimeUpdate, youtubeIframeElement, lastGoodTimeMs } = useYoutubeStore.getState();
   
   console.log('[YOUTUBE-TIME-READ] getYouTubeVideoTime() called - ytPlayer:', ytPlayer ? 'valid' : 'null', 'youtubeCurrentTimeMs:', youtubeCurrentTimeMs, 'lastTimeUpdate:', lastTimeUpdate);
   

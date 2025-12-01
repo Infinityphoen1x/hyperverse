@@ -1,5 +1,5 @@
 import { waitForPlayerReady } from './youtubePlayerState';
-import { getYtPlayer, getYoutubeIframeElement, getYoutubeCurrentTimeMs } from './youtubeSharedState';
+import { useYoutubeStore } from '@/stores/useYoutubeStore';
 import { resetYouTubeTimeTracker } from './youtubeTimeReset';
 
 /**
@@ -11,7 +11,7 @@ export async function playYouTubeVideo(): Promise<void> {
 
   try {
     // Get fresh player reference right before using it
-    let ytPlayer = getYtPlayer();
+    let ytPlayer = useYoutubeStore.getState().ytPlayer;
     let currentState: number | null = null;
     if (ytPlayer?.getPlayerState) {
       currentState = ytPlayer.getPlayerState();
@@ -22,9 +22,9 @@ export async function playYouTubeVideo(): Promise<void> {
     }
 
     // Get fresh references right before calling methods
-    ytPlayer = getYtPlayer();
-    const youtubeIframeElement = getYoutubeIframeElement();
-    const youtubeCurrentTimeMs = getYoutubeCurrentTimeMs();
+    ytPlayer = useYoutubeStore.getState().ytPlayer;
+    const youtubeIframeElement = useYoutubeStore.getState().youtubeIframeElement;
+    const youtubeCurrentTimeMs = useYoutubeStore.getState().youtubeCurrentTimeMs;
 
     if (ytPlayer && typeof ytPlayer.playVideo === 'function') {
       const currentTime = ytPlayer.getCurrentTime?.() ?? 0;
@@ -54,8 +54,8 @@ export async function playYouTubeVideo(): Promise<void> {
       const poll = () => {
         attempts++;
         let state = -1;
-        const ytPlayerCheck = getYtPlayer();
-        const iframeCheck = getYoutubeIframeElement();
+        const ytPlayerCheck = useYoutubeStore.getState().ytPlayer;
+        const iframeCheck = useYoutubeStore.getState().youtubeIframeElement;
         if (ytPlayerCheck?.getPlayerState) {
           state = ytPlayerCheck.getPlayerState();
         } else if (iframeCheck?.contentWindow) {

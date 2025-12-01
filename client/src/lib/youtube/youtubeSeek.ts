@@ -1,7 +1,7 @@
 import { waitForPlayerReady } from './youtubePlayerState';
 import { getYouTubeVideoTime } from './youtubeTimeGetter';
 import { resetYouTubeTimeTracker } from './youtubeTimeReset';
-import { getYtPlayer, getYoutubeIframeElement } from './youtubeSharedState';
+import { useYoutubeStore } from '@/stores/useYoutubeStore';
 
 /**
  * Seek YouTube video to specific time (in seconds) with polling confirmation
@@ -20,8 +20,8 @@ export async function seekYouTubeVideo(timeSeconds: number, signal?: AbortSignal
 
   try {
     // Get fresh player reference right before using it
-    let ytPlayer = getYtPlayer();
-    let youtubeIframeElement = getYoutubeIframeElement();
+    let ytPlayer = useYoutubeStore.getState().ytPlayer;
+    let youtubeIframeElement = useYoutubeStore.getState().youtubeIframeElement;
     
     // Try official YouTube API first
     if (ytPlayer && typeof ytPlayer.seekTo === 'function') {

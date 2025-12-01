@@ -1,5 +1,5 @@
 import { waitForPlayerReady } from './youtubePlayerState';
-import { getYtPlayer, getYoutubeIframeElement, getYoutubeCurrentTimeMs } from './youtubeSharedState';
+import { useYoutubeStore } from '@/stores/useYoutubeStore';
 
 /**
  * Pause YouTube video
@@ -10,7 +10,7 @@ export async function pauseYouTubeVideo(): Promise<void> {
 
   try {
     // Get fresh player reference right before using it
-    let ytPlayer = getYtPlayer();
+    let ytPlayer = useYoutubeStore.getState().ytPlayer;
     let currentState: number | null = null;
     if (ytPlayer?.getPlayerState) {
       currentState = ytPlayer.getPlayerState();
@@ -21,9 +21,9 @@ export async function pauseYouTubeVideo(): Promise<void> {
     }
 
     // Get fresh references right before calling methods
-    ytPlayer = getYtPlayer();
-    const youtubeIframeElement = getYoutubeIframeElement();
-    const youtubeCurrentTimeMs = getYoutubeCurrentTimeMs();
+    ytPlayer = useYoutubeStore.getState().ytPlayer;
+    const youtubeIframeElement = useYoutubeStore.getState().youtubeIframeElement;
+    const youtubeCurrentTimeMs = useYoutubeStore.getState().youtubeCurrentTimeMs;
 
     if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') {
       const currentTime = ytPlayer.getCurrentTime?.() ?? 0;

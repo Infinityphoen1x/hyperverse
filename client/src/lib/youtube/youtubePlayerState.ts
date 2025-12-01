@@ -1,13 +1,11 @@
-import { getYtPlayer, getPlayerReady, getYoutubeIframeElement } from './youtubeSharedState';
+import { useYoutubeStore } from '@/stores/useYoutubeStore';
 
 /**
  * SINGLE SOURCE OF TRUTH: Check if YouTube player is ready
  * ytPlayer exists AND playerReady flag is set AND has either API player or iframe element
  */
 export function isPlayerReady(): boolean {
-  const ytPlayer = getYtPlayer();
-  const playerReady = getPlayerReady();
-  const youtubeIframeElement = getYoutubeIframeElement();
+  const { ytPlayer, playerReady, youtubeIframeElement } = useYoutubeStore.getState();
   return playerReady && (ytPlayer !== null || youtubeIframeElement !== null);
 }
 
@@ -40,7 +38,7 @@ export async function waitForPlayerReady(maxWaitMs: number = 5000): Promise<bool
  * @returns true if current time is valid and >= 0
  */
 export function hasValidYouTubeTime(): boolean {
-  const ytPlayer = getYtPlayer();
+  const ytPlayer = useYoutubeStore.getState().ytPlayer;
   if (!ytPlayer || typeof ytPlayer.getCurrentTime !== 'function') {
     return false;
   }

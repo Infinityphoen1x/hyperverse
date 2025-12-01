@@ -1,4 +1,4 @@
-import { getYoutubeCurrentTimeMs, setYoutubeCurrentTimeMs, setLastTimeUpdate } from './youtubeSharedState';
+import { useYoutubeStore } from '@/stores/useYoutubeStore';
 
 /**
  * Initialize YouTube postMessage listener to track time updates
@@ -42,15 +42,17 @@ export function initYouTubeTimeListener(): void {
     // Time updates: Primarily from infoDelivery (fires ~1s during play)
     if (data.event === 'infoDelivery' && data.info?.currentTime !== undefined) {
       const newTimeMs = data.info.currentTime * 1000;
-      if (Math.abs(newTimeMs - getYoutubeCurrentTimeMs()) > 50) { // Avoid micro-jitters
+      const { youtubeCurrentTimeMs, setYoutubeCurrentTimeMs, setLastTimeUpdate } = useYoutubeStore.getState();
+      if (Math.abs(newTimeMs - youtubeCurrentTimeMs) > 50) { // Avoid micro-jitters
         setYoutubeCurrentTimeMs(newTimeMs);
         setLastTimeUpdate(Date.now());
-        console.log(`[YOUTUBE-MESSAGE] Time update (infoDelivery): ${(data.info.currentTime).toFixed(2)}s (was ${(getYoutubeCurrentTimeMs() / 1000).toFixed(2)}s)`);
+        console.log(`[YOUTUBE-MESSAGE] Time update (infoDelivery): ${(data.info.currentTime).toFixed(2)}s (was ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s)`);
       }
       return;
     }
 
     // Fallback keys for other formats
+    const { setYoutubeCurrentTimeMs, setLastTimeUpdate } = useYoutubeStore.getState();
     if (typeof data.currentTime === 'number') {
       console.log(`[YOUTUBE-MESSAGE] #${messageCount} Found currentTime in fallback format: ${data.currentTime}`);
       setYoutubeCurrentTimeMs(data.currentTime * 1000);
