@@ -2,7 +2,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { getHoldProgress } from '@/lib/utils/holdMeterUtils';
-import { DECK_METER_COMPLETION_GLOW_DURATION } from '@/lib/config/gameConstants';
+import { 
+  DECK_METER_COMPLETION_GLOW_DURATION,
+  DECK_METER_COMPLETION_THRESHOLD,
+  DECK_METER_DEFAULT_HOLD_DURATION
+} from '@/lib/config/gameConstants';
 
 interface UseHoldProgressProps {
   lane?: number;
