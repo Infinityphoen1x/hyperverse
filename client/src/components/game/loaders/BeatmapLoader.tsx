@@ -1,98 +1,26 @@
-import { useState } from "react";
+// src/components/BeatmapLoader.tsx
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { parseBeatmap } from "@/lib/beatmap/beatmapParser";
-import { convertBeatmapNotes } from "@/lib/beatmap/beatmapConverter";
-import { extractYouTubeId } from '@/lib/youtube';
-import { Note } from '@/lib/engine/gameTypes';
-import { GameErrors } from '@/lib/errors/errorLog';
 import { Music } from "lucide-react";
+import { useBeatmapLoader } from '@/hooks/useBeatmapLoader';
 
 interface BeatmapLoaderProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-  onBeatmapLoad: (youtubeVideoId?: string, notes?: Note[]) => void; // youtubeVideoId optional, notes from beatmap conversion
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
 }
 
-export function BeatmapLoader({ difficulty, onBeatmapLoad }: BeatmapLoaderProps) {
-  const defaultBeatmap = `[METADATA]
-title: 
-artist: 
-bpm: 120
-duration: 0
-youtube: 
-
-[${difficulty}]`;
-  
-  const [isOpen, setIsOpen] = useState(false);
-  const [beatmapText, setBeatmapText] = useState(defaultBeatmap);
-  const [error, setError] = useState("");
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  const handleLoadBeatmap = () => {
-    setError("");
-    if (!beatmapText.trim()) {
-      const msg = "Please paste a beatmap";
-      setError(msg);
-      GameErrors.log(`BeatmapLoader: ${msg}`);
-      return;
-    }
-
-    try {
-      const parsed = parseBeatmap(beatmapText, difficulty);
-      if (!parsed) {
-        const msg = `Failed to parse beatmap for ${difficulty} difficulty`;
-        setError(msg);
-        GameErrors.log(`BeatmapLoader: ${msg}`);
-        return;
-      }
-
-      let youtubeVideoId: string | undefined;
-      if (parsed.metadata.youtube) {
-        const extractedId = extractYouTubeId(parsed.metadata.youtube);
-        if (!extractedId) {
-          const msg = "Invalid YouTube URL in beatmap metadata";
-          setError(msg);
-          GameErrors.log(`BeatmapLoader: ${msg}`);
-          return;
-        }
-        youtubeVideoId = extractedId;
-      }
-
-      const convertedNotes = convertBeatmapNotes(parsed.notes);
-      
-      // Validate that beatmap has notes
-      if (convertedNotes.length === 0) {
-        const msg = "Beatmap has no notes after conversion";
-        setError(msg);
-        GameErrors.log(`BeatmapLoader: ${msg}`);
-        return;
-      }
-
-      onBeatmapLoad(youtubeVideoId, convertedNotes);
-      setIsLoaded(true);
-      setBeatmapText("");
-      setIsOpen(false);
-    } catch (error) {
-      const msg = `Beatmap loading error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-      setError(msg);
-      GameErrors.log(`BeatmapLoader: ${msg}`);
-    }
-  };
-
-  const handleQuickLoadEscapingGravity = async () => {
-    setError("");
-    try {
-      const response = await fetch("/escaping-gravity.txt");
-      if (!response.ok) throw new Error("Failed to load beatmap file");
-      const content = await response.text();
-      setBeatmapText(content);
-    } catch (error) {
-      const msg = `Failed to load escaping-gravity.txt: ${error instanceof Error ? error.message : 'Unknown error'}`;
-      setError(msg);
-      GameErrors.log(`BeatmapLoader: ${msg}`);
-    }
-  };
+export function BeatmapLoader({ difficulty, isOpen, setIsOpen }: BeatmapLoaderProps) {
+  const {
+    beatmapText,
+    error,
+    isLoaded,
+    handleBeatmapTextChange,
+    handleLoadBeatmap,
+    handleQuickLoadEscapingGravity,
+  } = useBeatmapLoader({ difficulty });
 
   return (
     <div className="absolute top-4 left-4 z-30">
@@ -126,15 +54,11 @@ youtube:
                 </label>
                 <Textarea
                   value={beatmapText}
-                  onChange={(e) => {
-                    setBeatmapText(e.target.value);
-                    setError("");
-                  }}
+                  onChange={(e) => handleBeatmapTextChange(e.target.value)}
                   className="bg-black/50 border-neon-cyan/30 text-white placeholder:text-white/20 font-mono text-xs resize-none flex-1"
                   data-testid="textarea-beatmap"
                 />
               </div>
-
               {/* Right: Instructions */}
               <div className="w-64 flex flex-col gap-2 overflow-y-auto">
                 <div className="bg-black/50 border border-neon-cyan/20 rounded p-3 text-xs text-white/60 font-rajdhani space-y-2 flex-shrink-0">
@@ -165,12 +89,10 @@ youtube:
                 </div>
               </div>
             </div>
-
             {/* Error message */}
             {error && (
               <p className="text-xs text-neon-pink font-rajdhani">{error}</p>
             )}
-
             {/* Buttons */}
             <div className="flex gap-2 flex-shrink-0">
               <Button
@@ -202,4 +124,4 @@ youtube:
       </Dialog>
     </div>
   );
-}
+}e

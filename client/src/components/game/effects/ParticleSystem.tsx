@@ -1,10 +1,10 @@
 // src/components/ParticleSystem.tsx
 import { motion } from 'framer-motion';
-import { Particle } from '@/hooks/useParticles'; // Shared type
+import { Particle } from '@/types/visualEffects';
 
 interface ParticleSystemProps { particles: Particle[]; }
 
-const ParticleSystem: React.FC<ParticleSystemProps> = ({ particles }) => (
+export const ParticleSystem: React.FC<ParticleSystemProps> = ({ particles }) => (
   <>
     {particles.map(particle => (
       <motion.div
@@ -29,5 +29,3 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ particles }) => (
     ))}
   </>
 );
-
-export default ParticleSystem;

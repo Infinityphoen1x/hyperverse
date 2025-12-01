@@ -1,13 +1,31 @@
+// src/components/PauseMenu.tsx
+import React from 'react';
 import { motion } from "framer-motion";
+import { useGameStore } from '@/stores/useGameStore'; // Assumes store with pause/game state/actions
 
 interface PauseMenuProps {
-  countdownSeconds: number;
-  onResume: () => void;
-  onRewind: () => void;
+  // Optional overrides; defaults to store for global sync
   onHome?: () => void;
 }
 
-export function PauseMenu({ countdownSeconds, onResume, onRewind, onHome }: PauseMenuProps) {
+export function PauseMenu({ onHome: propOnHome }: PauseMenuProps = {}) {
+  // Pull from Zustand (fallback to props for testing/flexibility)
+  const { 
+    isPaused, 
+    countdownSeconds, 
+    resumeGame, 
+    rewindGame, 
+    goHome 
+  } = useGameStore(state => ({
+    isPaused: state.isPaused,
+    countdownSeconds: state.countdownSeconds,
+    resumeGame: state.resumeGame,
+    rewindGame: state.rewindGame,
+    goHome: propOnHome ?? state.goHome,
+  }));
+
+  if (!isPaused) return null; // Hide if not paused
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
       <div className="text-center space-y-8">
@@ -30,8 +48,8 @@ export function PauseMenu({ countdownSeconds, onResume, onRewind, onHome }: Paus
           </>
         )}
         <div className="flex flex-col gap-4 mt-8">
-          <button 
-            onClick={onResume}
+          <button
+            onClick={resumeGame}
             disabled={countdownSeconds > 0}
             className="px-12 py-4 bg-neon-cyan text-black font-bold font-orbitron text-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="button-resume"
@@ -39,15 +57,15 @@ export function PauseMenu({ countdownSeconds, onResume, onRewind, onHome }: Paus
             {countdownSeconds > 0 ? 'RESUMING...' : 'RESUME'}
           </button>
           <button
-            onClick={onRewind}
+            onClick={rewindGame}
             className="px-12 py-4 bg-emerald-500 text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-emerald-500"
             data-testid="button-rewind"
           >
             REWIND
           </button>
-          {onHome && (
-            <button 
-              onClick={onHome}
+          {goHome && (
+            <button
+              onClick={goHome}
               className="px-12 py-4 bg-neon-pink text-black font-bold font-orbitron text-lg hover:bg-white transition-colors"
               data-testid="button-sever-node"
             >

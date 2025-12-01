@@ -12,3 +12,7 @@ export const generateParticles = (count: number) => {
     birthTime: now,
   }));
 };
+
+export const toggleGlitchState = (prevGlitch: number, opacity: number): number => {
+  return prevGlitch > 0 ? 0 : opacity;
+};

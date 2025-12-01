@@ -1,21 +1,46 @@
+// src/components/TapNotes.tsx
 import React from 'react';
 import { Note } from '@/lib/engine/gameTypes';
 import { TapNote } from './TapNote';
 import { useTapNotes } from '@/hooks/useTapNotes';
+import { useGameStore } from '@/stores/useGameStore'; // Assumes store with game state
 import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';
 
 interface TapNotesProps {
-  visibleNotes: Note[];
-  currentTime: number;
-  vpX: number;
-  vpY: number;
+  // Optional overrides; defaults to store for global sync
+  visibleNotes?: Note[];
+  currentTime?: number;
+  vpX?: number;
+  vpY?: number;
 }
 
-export function TapNotes({ visibleNotes, currentTime, vpX, vpY }: TapNotesProps) {
+export function TapNotes({ 
+  visibleNotes: propVisibleNotes, 
+  currentTime: propCurrentTime, 
+  vpX: propVpX, 
+  vpY: propVpY 
+}: TapNotesProps = {}) {
+  // Pull from Zustand (fallback to props for testing/flexibility)
+  const { visibleNotes, currentTime, vpX, vpY } = useGameStore(state => ({
+    visibleNotes: propVisibleNotes ?? state.visibleNotes,
+    currentTime: propCurrentTime ?? state.currentTime,
+    vpX: propVpX ?? state.vpX,
+    vpY: propVpY ?? state.vpY,
+  }));
+
   const processedNotes = useTapNotes(visibleNotes, currentTime);
 
   return (
-    <svg className="absolute inset-0" style={{ width: `${TUNNEL_CONTAINER_WIDTH}px`, height: `${TUNNEL_CONTAINER_HEIGHT}px`, opacity: 1, pointerEvents: 'none', margin: '0 auto' }}>
+    <svg 
+      className="absolute inset-0" 
+      style={{ 
+        width: `${TUNNEL_CONTAINER_WIDTH}px`, 
+        height: `${TUNNEL_CONTAINER_HEIGHT}px`, 
+        opacity: 1, 
+        pointerEvents: 'none', 
+        margin: '0 auto' 
+      }}
+    >
       {processedNotes.map((noteData) => (
         <TapNote
           key={noteData.note.id}

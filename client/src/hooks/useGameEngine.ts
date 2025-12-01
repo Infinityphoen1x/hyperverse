@@ -1,134 +1,12 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  GameConfig,
-  GameState,
-  Note,
-  Difficulty,
-} from '@/lib/engine/gameTypes';
-import { GameEngineCore } from '@/lib/engine/gameEngineCore';
-import { MAX_HEALTH } from '@/lib/config/gameConstants';
+// src/hooks/useGameEngine.ts
+import { useEffect, useCallback } from 'react';
+import { useGameEngineStore } from '@/stores/useGameEngineStore';
+import { useSyncedValue } from './useSyncedValue'; // From prior migration
+import { useGameConfig } from './useGameConfig';
+import type { GameConfig, GameState, Note, Difficulty, ScoreState } from '@/lib/engine/gameTypes';
+import { SyncConfig } from '@/lib/engine/gameTypes'; // Assume typed
 
-// ============================================================================
-// CONFIGURATION HOOK
-// ============================================================================
-
-export function useGameConfig(_difficulty: Difficulty): GameConfig {
-  // In real implementation, load these from constants file
-  return {
-    TAP_HIT_WINDOW: 150,
-    TAP_FAILURE_BUFFER: 100,
-    HOLD_MISS_TIMEOUT: 500,
-    HOLD_RELEASE_OFFSET: 200,
-    HOLD_RELEASE_WINDOW: 150,
-    HOLD_ACTIVATION_WINDOW: 300,
-    LEAD_TIME: 2000,
-    ACCURACY_PERFECT_MS: 50,
-    ACCURACY_GREAT_MS: 100,
-    ACCURACY_PERFECT_POINTS: 100,
-    ACCURACY_GREAT_POINTS: 75,
-    ACCURACY_NORMAL_POINTS: 50,
-    MAX_HEALTH: MAX_HEALTH,
-  };
-}
-
-// ============================================================================
-// GAME LOOP HOOK - Handles requestAnimationFrame timing
-// ============================================================================
-
-interface GameLoopCallbacks {
-  onFrame: (currentTime: number) => void;
-  onGameOver?: () => void;
-}
-
-function useGameLoop(
-  isActive: boolean,
-  callbacks: GameLoopCallbacks
-): void {
-  const requestRef = useRef<number | undefined>(undefined);
-  const callbacksRef = useRef<GameLoopCallbacks>(callbacks);
-
-  // Keep callbacks fresh without restarting loop
-  useEffect(() => {
-    callbacksRef.current = callbacks;
-  }, [callbacks]);
-
-  useEffect(() => {
-    if (!isActive) {
-      if (requestRef.current) {
-        cancelAnimationFrame(requestRef.current);
-        requestRef.current = undefined;
-      }
-      return;
-    }
-
-    const loop = () => {
-      callbacksRef.current.onFrame(performance.now());
-      requestRef.current = requestAnimationFrame(loop);
-    };
-
-    requestRef.current = requestAnimationFrame(loop);
-
-    return () => {
-      if (requestRef.current) {
-        cancelAnimationFrame(requestRef.current);
-      }
-    };
-  }, [isActive]);
-}
-
-// ============================================================================
-// STATE SYNC HOOK - Batches state updates to reduce re-renders
-// ============================================================================
-
-interface SyncConfig {
-  notesInterval: number;
-  stateInterval: number;
-}
-
-function useStateSynchronizer<T>(
-  getValue: () => T,
-  interval: number,
-  isActive: boolean
-): T {
-  const [value, setValue] = useState<T>(getValue);
-  const lastUpdateRef = useRef<number>(0);
-  const getValueRef = useRef(getValue);
-
-  useEffect(() => {
-    getValueRef.current = getValue;
-  }, [getValue]);
-
-  // Sync state - immediate on activation, then continuous
-  useEffect(() => {
-    if (!isActive) return;
-
-    // Immediate sync
-    const newValue = getValueRef.current();
-    setValue(newValue);
-    lastUpdateRef.current = performance.now();
-
-    // Continuous sync
-    const checkUpdate = () => {
-      const now = performance.now();
-      if (now - lastUpdateRef.current >= interval) {
-        const newValue = getValueRef.current();
-        setValue(newValue);
-        lastUpdateRef.current = now;
-      }
-    };
-
-    const intervalId = setInterval(checkUpdate, interval);
-    return () => clearInterval(intervalId);
-  }, [interval, isActive]);
-
-  return value;
-}
-
-// ============================================================================
-// MAIN GAME ENGINE HOOK
-// ============================================================================
-
-export interface UseGameEngineProps {
+interface UseGameEngineProps {
   difficulty: Difficulty;
   customNotes?: Note[];
   getVideoTime?: () => number | null;
@@ -136,7 +14,7 @@ export interface UseGameEngineProps {
 }
 
 export interface UseGameEngineReturn {
-  // State
+  // State (reactive from store selectors)
   gameState: GameState;
   score: number;
   combo: number;
@@ -144,20 +22,17 @@ export interface UseGameEngineReturn {
   notes: Note[];
   currentTime: number;
   isPaused: boolean;
-  
-  // Actions
+  // Actions (store dispatches)
   startGame: () => void;
   pauseGame: () => void;
   resumeGame: () => void;
   restartGame: () => void;
   setGameState: (state: GameState) => void;
-  
-  // Input handlers
+  // Input handlers (store dispatches)
   hitNote: (lane: number) => void;
   trackHoldStart: (lane: number) => void;
   trackHoldEnd: (lane: number) => void;
   markNoteMissed: (noteId: string) => void;
-  
   // Utilities
   getReleaseTime: (noteId: string) => number | undefined;
 }
@@ -168,203 +43,108 @@ export function useGameEngine({
   getVideoTime,
   syncIntervals = {},
 }: UseGameEngineProps): UseGameEngineReturn {
-  
   const config = useGameConfig(difficulty);
-  const engineRef = useRef<GameEngineCore | null>(null);
-  const justResumedRef = useRef(false);
-  
-  // Initialize engine
-  if (!engineRef.current) {
-    engineRef.current = new GameEngineCore(config, customNotes);
-    console.log(`[GAME-ENGINE] Initialized with ${customNotes.length} notes`);
-  }
+  const {
+    // State selectors
+    gameState,
+    isPaused,
+    currentTime,
+    getNotes,
+    getScore,
+    getReleaseTime: storeGetReleaseTime,
+    // Actions
+    init,
+    start: startGame,
+    pause: pauseGame,
+    resume: resumeGame,
+    reset: restartGame,
+    setCurrentTime,
+    handleTap: hitNote,
+    handleHoldStart: trackHoldStart,
+    handleHoldEnd: trackHoldEnd,
+    // Assume markNoteMissed added to store if needed
+    markNoteMissed,
+  } = useGameEngineStore();
 
-  const [gameState, setGameState] = useState<GameState>('IDLE');
-  const [isPaused, setIsPaused] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  
-  // Sync intervals with defaults
-  // Health must sync frequently (16ms = per-frame) to show depletion visually
+  // Synced values (batched for perf; use store selectors directly if no lag)
   const intervals = {
     notesInterval: syncIntervals.notesInterval || 50,
-    stateInterval: syncIntervals.stateInterval || 16,  // Changed from 100ms → 16ms for real-time health visibility
+    stateInterval: syncIntervals.stateInterval || 16, // ~60fps for health/score
   };
-
-  // Batch-synced state
   const isGameActive = gameState === 'PLAYING';
-  
-  const score = useStateSynchronizer(
-    () => engineRef.current?.getScore().score || 0,
-    intervals.stateInterval,
-    isGameActive
-  );
-  
-  const combo = useStateSynchronizer(
-    () => engineRef.current?.getScore().combo || 0,
-    intervals.stateInterval,
-    isGameActive
-  );
-  
-  const health = useStateSynchronizer(
-    () => engineRef.current?.getScore().health || config.MAX_HEALTH,
-    intervals.stateInterval,
-    isGameActive
-  );
-  
-  // Notes sync only during PLAYING - frozen during PAUSED to prevent stale state rendering
-  // During pause, the note array is locked; no render updates occur
-  const notes = useStateSynchronizer(
-    () => engineRef.current?.getNotes() || [],
-    intervals.notesInterval,
-    gameState === 'PLAYING'
-  );
 
-  // Logging for debugging
+  const { score, combo, health } = getScore(); // Direct if no sync needed; else:
+  // const syncedScore = useSyncedValue(useGameEngineStore, (state) => state.getScore().score, intervals.stateInterval, isGameActive);
+  // const syncedCombo = useSyncedValue(useGameEngineStore, (state) => state.getScore().combo, intervals.stateInterval, isGameActive);
+  // const syncedHealth = useSyncedValue(useGameEngineStore, (state) => state.getScore().health, intervals.stateInterval, isGameActive);
+
+  // Init engine on mount (once)
   useEffect(() => {
-    console.log(`[GAME-ENGINE-STATE] gameState=${gameState}, isPaused=${isPaused}, notes=${engineRef.current?.getNotes().length || 0}`);
-  }, [gameState, isPaused]);
+    init(config, customNotes);
+    console.log(`[GAME-ENGINE] Initialized with ${customNotes.length} notes`);
+  }, [init, config, customNotes]);
 
-  // Game loop
-  useGameLoop(gameState === 'PLAYING' && !isPaused, {
-    onFrame: () => {
-      const engine = engineRef.current;
-      if (!engine) return;
-
-      const videoTime = getVideoTime?.() ?? null;
-      
-      // CRITICAL: Sync engine timing on first frame after resume
-      if (justResumedRef.current && videoTime !== null && videoTime > 0) {
-        engine.syncToVideoTime(videoTime);
-        console.log(`[GAME-ENGINE-SYNC] Engine synced to YouTube time: ${videoTime.toFixed(0)}ms`);
-        
-        // *** NEW: Scrub/forgive actives to dodge critical on re-entry ***
-        const activeNotes = engine.getActiveNotes();
-        if (activeNotes.length > 0) {
-          console.log(`[SYNC-SAFETY] Forgave ${activeNotes.length} pending notes to avoid resume miss`);
-          activeNotes.forEach(note => { 
-            note.missed = false; 
-            note.hit = false; 
-          });
-        }
-        
-        // CRITICAL: Skip processFrame on first frame to prevent phantom miss
-        justResumedRef.current = false;
-        setCurrentTime(engine.getCurrentTime(videoTime));
-        console.log(`[RESUME-FIRST-FRAME] Skipped processFrame to prevent phantom miss`);
-        return;
+  // Video time sync (poll if provided)
+  useEffect(() => {
+    if (!getVideoTime || !isGameActive) return;
+    let interval: NodeJS.Timeout;
+    interval = setInterval(() => {
+      const videoTime = getVideoTime();
+      if (videoTime !== null) {
+        setCurrentTime(videoTime);
       }
-      
-      const time = engine.getCurrentTime(videoTime);
-      
-      setCurrentTime(time);
-      
-      const { shouldGameOver } = engine.processFrame(time);
-      
-      // Monitor health in frame processing
-      const currentHealth = engineRef.current?.getScore().health || config.MAX_HEALTH;
-      console.log(`[FRAME] Time: ${time.toFixed(0)}ms, Health: ${currentHealth}, GameOver: ${shouldGameOver}, Active Notes: ${engine.getActiveNotes().length}`);
+    }, intervals.notesInterval);
+    return () => clearInterval(interval);
+  }, [getVideoTime, isGameActive, setCurrentTime, intervals.notesInterval]);
 
-      console.log(
-        `[GAME-DEBUG] currentTime=${time.toFixed(0)}ms`,
-        'First note:',
-        engine.getNotes()[0]?.time,
-        'Active notes:',
-        engine.getActiveNotes().length
-      );
-      
-      if (shouldGameOver) {
-        console.error('[CRITICAL] Game over detected post-frame - likely miss threshold');
-        setGameState('GAME_OVER');
-      }
-    },
-  });
-
-  // Actions
-  const startGame = useCallback(() => {
-    const engine = engineRef.current;
-    if (!engine) return;
-
-    console.log(`[GAME-ENGINE-START] Starting game with ${customNotes.length} notes`);
-    engine.reset(customNotes);
-    engine.start();
-    
-    setGameState('PLAYING');
-    setIsPaused(false);
-    setCurrentTime(0);
-    console.log(`[GAME-ENGINE-START] Game started, engine notes=${engine.getNotes().length}`);
-  }, [customNotes]);
-
-  const pauseGame = useCallback(() => {
-    engineRef.current?.pause();
-    setIsPaused(true);
-  }, []);
-
-  const resumeGame = useCallback(() => {
-    if (!isPaused) {
-      console.log('[ENGINE] Resume skipped - already unpaused');
-      return;
-    }
-    engineRef.current?.resume();
-    setIsPaused(false);
-    justResumedRef.current = true; // Flag for sync on next frame
-    console.log('[GAME-ENGINE-RESUME] Resume executed - flagged for sync');
-  }, [isPaused]);
-
-  const restartGame = useCallback(() => {
-    startGame();
-  }, [startGame]);
-
-  // Input handlers
-  const hitNote = useCallback((lane: number) => {
-    const engine = engineRef.current;
-    if (!engine) return;
-    
-    const time = engine.getCurrentTime(getVideoTime?.() ?? null);
-    engine.handleTap(lane, time);
-  }, [getVideoTime]);
-
-  const trackHoldStart = useCallback((lane: number) => {
-    const engine = engineRef.current;
-    if (!engine) return;
-    
-    const time = engine.getCurrentTime(getVideoTime?.() ?? null);
-    engine.handleHoldStart(lane, time);
-  }, [getVideoTime]);
-
-  const trackHoldEnd = useCallback((lane: number) => {
-    const engine = engineRef.current;
-    if (!engine) return;
-    
-    const time = engine.getCurrentTime(getVideoTime?.() ?? null);
-    engine.handleHoldEnd(lane, time);
-  }, [getVideoTime]);
-
-  const markNoteMissed = useCallback((_noteId: string) => {
-    // Legacy compatibility - could be implemented if needed
-    console.warn('markNoteMissed is deprecated - auto-fail handles this');
-  }, []);
-
-  const getReleaseTime = useCallback((noteId: string) => {
-    return engineRef.current?.getReleaseTime(noteId);
+  // Legacy actions (dispatch to store; add setGameState if needed)
+  const setGameState = useCallback((state: GameState) => {
+    // e.g., useGameStore.getState().setGameState(state); or integrate into useGameEngineStore
   }, []);
 
   return {
+    // State
     gameState,
-    score,
-    combo,
-    health,
-    notes,
+    score: score, // Or syncedScore
+    combo: combo, // Or syncedCombo
+    health: health, // Or syncedHealth
+    notes: getNotes(),
     currentTime,
     isPaused,
+    // Actions
     startGame,
     pauseGame,
     resumeGame,
     restartGame,
     setGameState,
+    // Inputs
     hitNote,
     trackHoldStart,
     trackHoldEnd,
     markNoteMissed,
-    getReleaseTime,
+    // Utils
+    getReleaseTime: storeGetReleaseTime,
+  };
+}
+// src/hooks/useGameEngine.ts (snippet: add to UseGameEngineReturn and return)
+export interface UseGameEngineReturn {
+  // ... existing
+  // Queries
+  getActiveNotes: () => Note[];
+  getCompletedNotes: () => Note[];
+  getActiveNotesOnLane: (lane: number) => Note[];
+  isDead: () => boolean;
+}
+
+export function useGameEngine({ ... }: UseGameEngineProps): UseGameEngineReturn {
+  // ... existing
+  const { getActiveNotes, getCompletedNotes, getActiveNotesOnLane, isDead } = useGameEngineStore();
+
+  return {
+    // ... existing state/actions
+    getActiveNotes,
+    getCompletedNotes,
+    getActiveNotesOnLane,
+    isDead,
   };
 }

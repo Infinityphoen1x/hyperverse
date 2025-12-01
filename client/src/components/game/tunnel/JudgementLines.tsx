@@ -1,62 +1,26 @@
+// src/components/JudgementLines.tsx
 import React from 'react';
-import { JUDGEMENT_RADIUS, TAP_JUDGEMENT_LINE_WIDTH, HOLD_JUDGEMENT_LINE_WIDTH, COLOR_DECK_LEFT, COLOR_DECK_RIGHT, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';
+import { useGameStore } from '@/stores/useGameStore'; // Assumes store with viewport state
+import { TapJudgementLines } from './TapJudgementLines';
+import { HoldJudgementLines } from './HoldJudgementLines';
 
 interface JudgementLinesProps {
-  vpX: number;
-  vpY: number;
+  // Optional overrides; defaults to store for global sync
+  vpX?: number;
+  vpY?: number;
   type: 'tap' | 'hold';
 }
 
-export function JudgementLines({ vpX, vpY, type }: JudgementLinesProps) {
-  if (type === 'tap') {
-    return (
-      <svg className="absolute inset-0" style={{ width: `${TUNNEL_CONTAINER_WIDTH}px`, height: `${TUNNEL_CONTAINER_HEIGHT}px`, opacity: 1, pointerEvents: 'none', margin: '0 auto' }}>
-        {[
-          { angle: 120, color: '#FF007F', key: 'W' },
-          { angle: 60, color: '#0096FF', key: 'O' },
-          { angle: 300, color: '#BE00FF', key: 'I' },
-          { angle: 240, color: '#00FFFF', key: 'E' },
-        ].map((lane, idx) => {
-          const rad = (lane.angle * Math.PI) / 180;
-          const lineLength = TAP_JUDGEMENT_LINE_WIDTH;
-          const cx = vpX + Math.cos(rad) * JUDGEMENT_RADIUS;
-          const cy = vpY + Math.sin(rad) * JUDGEMENT_RADIUS;
-          const perpRad = rad + Math.PI / 2;
-          const x1 = cx + Math.cos(perpRad) * (lineLength / 2);
-          const y1 = cy + Math.sin(perpRad) * (lineLength / 2);
-          const x2 = cx - Math.cos(perpRad) * (lineLength / 2);
-          const y2 = cy - Math.sin(perpRad) * (lineLength / 2);
+export function JudgementLines({ vpX: propVpX, vpY: propVpY, type }: JudgementLinesProps) {
+  // Pull from Zustand (fallback to props for testing/flexibility)
+  const { vpX, vpY } = useGameStore(state => ({
+    vpX: propVpX ?? state.vpX,
+    vpY: propVpY ?? state.vpY,
+  }));
 
-          return (
-            <g key={`judgement-line-${idx}`}>
-              <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={lane.color} strokeWidth="2.5" opacity="1" strokeLinecap="round" />
-            </g>
-          );
-        })}
-      </svg>
-    );
-  }
-
-  return (
-    <svg className="absolute inset-0" style={{ width: `${TUNNEL_CONTAINER_WIDTH}px`, height: `${TUNNEL_CONTAINER_HEIGHT}px`, opacity: 1, pointerEvents: 'none', margin: '0 auto' }}>
-      {[
-        { angle: 180, color: COLOR_DECK_LEFT },
-        { angle: 0, color: COLOR_DECK_RIGHT },
-      ].map((lane, idx) => {
-        const rad = (lane.angle * Math.PI) / 180;
-        const lineLength = HOLD_JUDGEMENT_LINE_WIDTH;
-        const cx = vpX + Math.cos(rad) * JUDGEMENT_RADIUS;
-        const cy = vpY + Math.sin(rad) * JUDGEMENT_RADIUS;
-        const perpRad = rad + Math.PI / 2;
-        const x1 = cx + Math.cos(perpRad) * (lineLength / 2);
-        const y1 = cy + Math.sin(perpRad) * (lineLength / 2);
-        const x2 = cx - Math.cos(perpRad) * (lineLength / 2);
-        const y2 = cy - Math.sin(perpRad) * (lineLength / 2);
-
-        return (
-          <line key={`hold-judgement-line-${idx}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={lane.color} strokeWidth="3" opacity="1" strokeLinecap="round" />
-        );
-      })}
-    </svg>
+  return type === 'tap' ? (
+    <TapJudgementLines vpX={vpX} vpY={vpY} />
+  ) : (
+    <HoldJudgementLines vpX={vpX} vpY={vpY} />
   );
 }

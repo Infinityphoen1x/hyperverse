@@ -1,18 +1,18 @@
-import { useEffect } from 'react';
+// src/hooks/useConsoleLogger.ts
+import * as React from "react";
+import { useConsoleLogStore } from '@/stores/useConsoleLogStore';
 
 /**
  * useConsoleLogger - Captures filtered console output for diagnostics
- * 
+ *
  * Intercepts console.log, console.warn, console.error and stores important entries
- * in window.__consoleLogs for later export. Filters out spam and only captures
+ * in Zustand store for later export. Filters out spam and only captures
  * tagged logs and errors.
  */
 export function useConsoleLogger() {
-  useEffect(() => {
-    const logEntries: any[] = [];
+  React.useEffect(() => {
+    const logEntries: any[] = []; // Temp for capture; store pushes to Zustand
     const startTime = Date.now();
-    (window as any).__consoleLogs = logEntries;
-
     const originalLog = console.log;
     const originalWarn = console.warn;
     const originalError = console.error;
@@ -33,14 +33,14 @@ export function useConsoleLogger() {
     };
 
     const captureLog = (level: string, ...args: any[]) => {
-      const message = args.map(arg => 
+      const message = args.map(arg =>
         typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
       ).join(' ');
-      
+
       if (level === 'error' || level === 'warn' || shouldCapture(message)) {
-        logEntries.push({
+        useConsoleLogStore.getState().addLog({
           t: Date.now() - startTime,
-          l: level,
+          l: level as 'log' | 'warn' | 'error',
           m: message
         });
       }

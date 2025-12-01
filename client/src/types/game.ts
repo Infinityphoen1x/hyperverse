@@ -1,125 +1,158 @@
-/**
- * Core game engine types
- * For use in Zustand game store and game engine
- */
+// src/types/game.ts
+// Core game types - single source of truth (including debug)
 
+// Enums/Primitives
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
-export type GameState = 'IDLE' | 'PLAYING' | 'PAUSED' | 'RESUMING' | 'REWINDING' | 'GAME_OVER';
-export type NoteType = 'TAP' | 'SPIN_LEFT' | 'SPIN_RIGHT';
+export type GameState = 'IDLE' | 'PLAYING' | 'PAUSED' | 'RESUMING' | 'GAME_OVER';
+export type NoteType = 'TAP' | 'HOLD' | 'SPIN_LEFT' | 'SPIN_RIGHT';
+export type FailureType = 'tapTooEarlyFailure' | 'tapMissFailure' | 'tooEarlyFailure' | 'holdMissFailure' | 'holdReleaseFailure' | 'successful';
 
+// Note structure
 export interface Note {
   id: string;
-  lane: number;
-  time: number;
+  lane: number; // -2 to 3
+  time: number; // ms
   type: NoteType;
-  duration?: number;
-  
-  // State flags
+  duration?: number; // For HOLD/SPIN
   hit: boolean;
   missed: boolean;
-  
-  // Failure types
+  pressHoldTime?: number; // Start of hold
+  releaseTime?: number; // End of hold
+  failureTime?: number;
+  // Debug failure flags (for getFailures)
   tapTooEarlyFailure?: boolean;
   tapMissFailure?: boolean;
   tooEarlyFailure?: boolean;
   holdMissFailure?: boolean;
   holdReleaseFailure?: boolean;
-  
-  // Timing data
-  pressTime?: number;
-  hitTime?: number;
-  pressHoldTime?: number;
-  releaseTime?: number;
-  pressReleaseTime?: number;
-  failureTime?: number;
-  
-  // Beatmap bounds
   beatmapStart?: number;
   beatmapEnd?: number;
 }
 
+// Config
 export interface GameConfig {
-  // Tap note timing windows
-  TAP_HIT_WINDOW: number;
-  TAP_FAILURE_BUFFER: number;
-  
-  // Hold note timing windows
-  HOLD_MISS_TIMEOUT: number;
-  HOLD_RELEASE_OFFSET: number;
-  HOLD_RELEASE_WINDOW: number;
-  HOLD_ACTIVATION_WINDOW: number;
-  
-  // General
-  LEAD_TIME: number;
-  
-  // Scoring
-  ACCURACY_PERFECT_MS: number;
-  ACCURACY_GREAT_MS: number;
-  ACCURACY_PERFECT_POINTS: number;
-  ACCURACY_GREAT_POINTS: number;
-  ACCURACY_NORMAL_POINTS: number;
-  
-  // Health
-  MAX_HEALTH: number;
+  maxHealth: number;
+  bpm: number;
+  difficulty: Difficulty;
+  // ... other configs
 }
 
+// Scoring
 export interface ScoreState {
   score: number;
   combo: number;
   health: number;
+  accuracy: number; // 0-100
+  maxCombo: number;
 }
 
+// Timing
 export interface TimingResult {
-  error: number;
-  isWithinWindow: boolean;
-  isTooEarly: boolean;
-  isTooLate: boolean;
+  currentTime: number;
+  isPlaying: boolean;
+  elapsed: number;
 }
 
-export type FailureType = 
-  | 'tapTooEarlyFailure'
-  | 'tapMissFailure'
-  | 'tooEarlyFailure'
-  | 'holdMissFailure'
-  | 'holdReleaseFailure';
+// Handlers
+export type InputHandler = (currentTime: number) => Note | null;
+export type Processor = (note: Note, currentTime: number) => { success: boolean; updatedNote: Note; points?: number; accuracy?: number };
+export type PostProcessor = (note: Note, currentTime: number) => void;
 
-// Input handler types for GameEngineCore
-export type InputHandler = () => Note | null;
-export type Processor = (note: Note, time: number) => { updatedNote: Note; success?: boolean };
-export type PostProcessor = (note: Note, time: number) => void;
+// Sync Config
+export interface SyncConfig {
+  notesInterval: number;
+  stateInterval: number;
+}
 
-/**
- * Zustand Store Types
- */
-
-export interface GameStoreState {
-  // Core game state
+// Zustand Store Interfaces
+export interface GameStateStore {
   gameState: GameState;
-  difficulty: Difficulty;
+  isPaused: boolean;
+  currentTime: number;
   notes: Note[];
-  customNotes: Note[] | undefined;
-  
-  // Score tracking
   score: number;
   combo: number;
-  health: number;
-  maxHealth: number;
-  
-  // Timing
-  currentTime: number;
-  isPaused: boolean;
-  
-  // Actions
-  setGameState: (state: GameState) => void;
-  setDifficulty: (difficulty: Difficulty) => void;
-  setNotes: (notes: Note[]) => void;
-  setCustomNotes: (notes: Note[] | undefined) => void;
-  setScore: (score: number) => void;
-  setCombo: (combo: number) => void;
-  setHealth: (health: number) => void;
-  setCurrentTime: (time: number) => void;
-  setIsPaused: (paused: boolean) => void;
-  
-  // Complex actions
-  resetGame: (notes: Note[]) => void;
+
+  startGame: () => void;
+  // ... other actions
 }
+
+export interface NotesStoreState {
+  notes: Note[];
+  releaseTimeMap: Map<string, number>;
+
+  getActiveNotes: () => Note[];
+  // ... other
+}
+
+export interface ScoringStoreState {
+  scoreState: ScoreState;
+
+  addPoints: (points: number) => void;
+  // ... other
+}
+
+// ============================================================================
+// DEBUG TYPES
+// ============================================================================
+
+export interface AnimationTrackingEntry {
+  noteId: string;
+  type: FailureType;
+  failureTime?: number;
+  renderStart?: number;
+  renderEnd?: number;
+  status: 'pending' | 'rendering' | 'completed' | 'failed';
+  errorMsg?: string;
+}
+
+export interface NoteStatistics {
+  total: number;
+  tap: number;
+  hold: number;
+  hit: number;
+  missed: number;
+  failed: number;
+  byLane: Record<number, number>;
+}
+
+export interface HitStatistics {
+  successfulHits: number;
+  tapTooEarlyFailures: number;
+  tapMissFailures: number;
+  tooEarlyFailures: number;
+  holdMissFailures: number;
+  holdReleaseFailures: number;
+}
+
+export interface RenderStatistics {
+  rendered: number;
+  preMissed: number;
+}
+
+export interface AnimationStatistics {
+  total: number;
+  completed: number;
+  failed: number;
+  pending: number;
+  rendering: number;
+}
+
+// Empty defaults (for resets)
+export const EMPTY_NOTE_STATS: NoteStatistics = {
+  total: 0,
+  tap: 0,
+  hold: 0,
+  hit: 0,
+  missed: 0,
+  failed: 0,
+  byLane: {},
+};
+export const EMPTY_HIT_STATS: HitStatistics = {
+  successfulHits: 0,
+  tapTooEarlyFailures: 0,
+  tapMissFailures: 0,
+  tooEarlyFailures: 0,
+  holdMissFailures: 0,
+  holdReleaseFailures: 0,
+};

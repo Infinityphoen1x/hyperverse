@@ -1,3 +1,4 @@
+// src/components/HoldNote.tsx
 import React from 'react';
 import { getTrapezoidCorners } from "@/lib/geometry/holdNoteGeometry";
 import { calculateHoldNoteStyle } from "@/lib/notes/hold/holdNoteStyle";
@@ -12,12 +13,9 @@ interface HoldNoteProps {
 export function HoldNote({ noteData, vpX, vpY }: HoldNoteProps) {
   const { note, rayAngle, colors, approachProgress, collapseProgress, pressHoldTime, failures, failureTime, currentTime, greyscaleState, finalGlowScale } = noteData;
   const corners = getTrapezoidCorners(rayAngle, noteData.nearDistance, noteData.farDistance, vpX, vpY, note.id);
-
   if (!corners) return null;
-
   const { x1, y1, x2, y2, x3, y3, x4, y4 } = corners;
   const holdStyle = calculateHoldNoteStyle(approachProgress, collapseProgress, pressHoldTime, failures, failureTime, currentTime, greyscaleState, colors, finalGlowScale);
-
   return (
     <polygon
       points={`${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`}

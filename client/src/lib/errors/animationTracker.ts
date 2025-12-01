@@ -1,38 +1,30 @@
-import { AnimationTrackingEntry, FailureType, AnimationStatistics } from './gameDebugTypes';
+// src/hooks/useAnimationTracker.ts
+import { useAnimationTrackerStore } from '@/stores/useAnimationTrackerStore';
+import type { AnimationTrackingEntry, AnimationStatistics } from '@/types/gameDebugTypes';
+import { shallow } from 'zustand/shallow';
 
-export class AnimationTracker {
-  private tracking: AnimationTrackingEntry[] = [];
-  private readonly MAX_ENTRIES = 200;
+export function useAnimationTracker() {
+  const {
+    track,
+    update,
+    clear,
+    getEntries,
+    getStats,
+  } = useAnimationTrackerStore();
 
-  track(noteId: string, type: FailureType, failureTime?: number): void {
-    this.tracking.push({ noteId, type, failureTime, status: 'pending' });
-    if (this.tracking.length > this.MAX_ENTRIES) {
-      this.tracking.shift();
-    }
-  }
+  return {
+    entries: getEntries(),
+    stats: getStats(),
+    track,
+    update,
+    clear,
+  };
+}
 
-  update(noteId: string, updates: Partial<AnimationTrackingEntry>): void {
-    const entry = this.tracking.find(a => a.noteId === noteId);
-    if (entry) {
-      Object.assign(entry, updates);
-    }
-  }
+export function useAnimationStats(): AnimationStatistics {
+  return useAnimationTrackerStore((state) => state.getStats());
+}
 
-  getStats(): AnimationStatistics {
-    return {
-      total: this.tracking.length,
-      completed: this.tracking.filter(a => a.status === 'completed').length,
-      failed: this.tracking.filter(a => a.status === 'failed').length,
-      pending: this.tracking.filter(a => a.status === 'pending').length,
-      rendering: this.tracking.filter(a => a.status === 'rendering').length,
-    };
-  }
-
-  getEntries(): AnimationTrackingEntry[] {
-    return [...this.tracking];
-  }
-
-  clear(): void {
-    this.tracking = [];
-  }
+export function useAnimationEntries(): AnimationTrackingEntry[] {
+  return useAnimationTrackerStore((state) => state.getEntries(), shallow);
 }

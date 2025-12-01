@@ -1,3 +1,4 @@
+// src/components/TapNote.tsx
 import React from 'react';
 import { Note } from '@/lib/engine/gameTypes';
 import { getLaneAngle, getColorForLane } from '@/lib/utils/laneUtils';
@@ -21,7 +22,6 @@ export function TapNote({ note, currentTime, vpX, vpY, state, progressForGeometr
   const noteColor = getColorForLane(note.lane);
   const geometry = calculateTapNoteGeometry(progressForGeometry, tapRayAngle, vpX, vpY, state.isHit, currentTime, state.isFailed, note.time);
   const style = calculateTapNoteStyle(clampedProgress, state, noteColor, rawProgress);
-
   return (
     <polygon
       points={geometry.points}

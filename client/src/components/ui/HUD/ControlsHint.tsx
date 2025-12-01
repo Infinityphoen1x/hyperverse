@@ -1,3 +1,6 @@
+// src/components/ControlsHint.tsx
+import React from 'react';
+
 export function ControlsHint() {
   return (
     <div className="absolute bottom-4 w-full text-center text-white/20 text-xs">

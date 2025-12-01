@@ -1,30 +1,43 @@
+// src/components/SoundpadButtons.tsx
 import React from 'react';
-import { BUTTON_CONFIG, HEXAGON_RADII, VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';
+import { useGameStore } from '@/stores/useGameStore'; // Assumes store with vpX, vpY (e.g., viewport state)
+import { SoundpadButton } from '@/components/SoundpadButton';
+import { calculateButtonPosition } from '@/utils/soundpadUtils';
+import { BUTTON_CONFIG, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';
 
 interface SoundpadButtonsProps {
-  vpX: number;
-  vpY: number;
+  // Optional overrides; defaults to store for global sync
+  vpX?: number;
+  vpY?: number;
   onPadHit?: (lane: number) => void;
 }
 
-export function SoundpadButtons({ vpX, vpY, onPadHit }: SoundpadButtonsProps) {
-  const outerHexagonRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1];
-  
-  return (
-    <svg className="absolute inset-0" style={{ width: `${TUNNEL_CONTAINER_WIDTH}px`, height: `${TUNNEL_CONTAINER_HEIGHT}px`, opacity: 1, margin: '0 auto' }}>
-      {BUTTON_CONFIG.map(({ lane, key, angle, color }) => {
-        const rad = (angle * Math.PI) / 180;
-        const cx = vpX + Math.cos(rad) * outerHexagonRadius;
-        const cy = vpY + Math.sin(rad) * outerHexagonRadius;
+export function SoundpadButtons({ vpX: propVpX, vpY: propVpY, onPadHit = () => {} }: SoundpadButtonsProps = {}) {
+  // Pull from Zustand (fallback to props for testing/flexibility)
+  const { vpX, vpY } = useGameStore(state => ({
+    vpX: propVpX ?? state.vpX,
+    vpY: propVpY ?? state.vpY,
+  }));
 
+  return (
+    <svg
+      className="absolute inset-0"
+      style={{
+        width: `${TUNNEL_CONTAINER_WIDTH}px`,
+        height: `${TUNNEL_CONTAINER_HEIGHT}px`,
+        opacity: 1,
+        margin: '0 auto',
+      }}
+    >
+      {BUTTON_CONFIG.map(({ lane, angle }) => {
+        const position = calculateButtonPosition(angle, vpX, vpY);
         return (
-          <g key={`soundpad-button-${lane}`}>
-            <rect x={cx - 20} y={cy - 20} width="40" height="40" fill={color} stroke={color} strokeWidth="2" opacity="0.8" style={{ cursor: 'pointer' }} onMouseDown={() => onPadHit?.(lane)} data-testid={`soundpad-square-${lane}`} />
-            <rect x={cx - 20} y={cy - 20} width="40" height="40" fill="none" stroke={color} strokeWidth="1" opacity="0.3" style={{ pointerEvents: 'none' }} />
-            <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fill={color} fontSize="12" fontWeight="bold" fontFamily="Rajdhani, monospace" opacity="1" style={{ pointerEvents: 'none' }}>
-              {key}
-            </text>
-          </g>
+          <SoundpadButton
+            key={`soundpad-button-${lane}`}
+            lane={lane}
+            position={position}
+            onPadHit={onPadHit}
+          />
         );
       })}
     </svg>
