@@ -27,7 +27,6 @@ interface GameProps {
 function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
-  const [currentTimeState, setCurrentTimeState] = useState(0);
 
   // Store startGame in ref for use in callbacks
   const startGameRef = useRef<(() => void) | null>(null);
@@ -69,7 +68,6 @@ function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
 
   useEffect(() => {
     engineRefForLogic.current = { 
-      setCurrentTime: setCurrentTimeState, 
       getCurrentTime: () => currentTime 
     };
   }, [currentTime]);
@@ -91,7 +89,7 @@ function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
     restartGame,
     startGame,
     setGameState,
-    setCurrentTime: (time) => setCurrentTimeState(time),
+    setCurrentTime: () => {},
     hitNote,
     trackHoldStart,
     trackHoldEnd,
