@@ -1,6 +1,6 @@
 // src/components/HoldJudgementLines.tsx
 import React from 'react';
-import { calculateLinePoints, HOLD_LINE_CONFIGS } from '@/utils/judgementLineUtils';
+import { calculateLinePoints, HOLD_LINE_CONFIGS } from '@/lib/utils/judgementLineUtils';
 import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';
 import { HOLD_JUDGEMENT_LINE_WIDTH } from '@/lib/config/gameConstants';
 

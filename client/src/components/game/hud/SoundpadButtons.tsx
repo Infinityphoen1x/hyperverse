@@ -2,7 +2,7 @@
 import React from 'react';
 import { useGameStore } from '@/stores/useGameStore'; // Assumes store with vpX, vpY (e.g., viewport state)
 import { SoundpadButton } from './SoundpadButton';
-import { calculateButtonPosition } from '@/utils/soundpadUtils';
+import { calculateButtonPosition } from '@/lib/utils/soundpadUtils';
 import { BUTTON_CONFIG, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';
 
 interface SoundpadButtonsProps {

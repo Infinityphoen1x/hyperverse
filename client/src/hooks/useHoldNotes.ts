@@ -1,7 +1,7 @@
 // src/hooks/useHoldNotes.ts
 import { useMemo } from 'react';
 import { Note } from '@/lib/engine/gameTypes';
-import { processSingleHoldNote, HoldNoteProcessedData } from '@/utils/holdNoteUtils';
+import { processSingleHoldNote, HoldNoteProcessedData } from '@/lib/utils/holdNoteUtils';
 
 export function useHoldNotes(visibleNotes: Note[], currentTime: number): HoldNoteProcessedData[] {
   return useMemo(() => {

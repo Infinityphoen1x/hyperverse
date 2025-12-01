@@ -1,6 +1,6 @@
 // src/components/TapJudgementLines.tsx
 import React from 'react';
-import { calculateLinePoints, TAP_LINE_CONFIGS } from '@/utils/judgementLineUtils';
+import { calculateLinePoints, TAP_LINE_CONFIGS } from '@/lib/utils/judgementLineUtils';
 import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';
 import { TAP_JUDGEMENT_LINE_WIDTH } from '@/lib/config/gameConstants';
 

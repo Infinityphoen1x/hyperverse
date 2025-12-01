@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { GlitchState } from '@/types/visualEffects';
 import { LOW_HEALTH_THRESHOLD, GLITCH_BASE_INTERVAL, GLITCH_RANDOM_RANGE, GLITCH_OPACITY, MAX_HEALTH, GREYSCALE_INTENSITY } from '@/lib/config/gameConstants';
-import { toggleGlitchState } from '@/utils/visualEffectsUtils';
+import { toggleGlitchState } from '@/lib/utils/visualEffectsUtils';
 
 interface UseGlitchProps { missCount: number; health: number; prevMissCount: number; }
 

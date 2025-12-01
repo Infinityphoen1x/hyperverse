@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/stores/useGameStore'; // Assumes store with game state
 import { Note } from '@/lib/engine/gameTypes';
-import { getHoldProgress, HoldProgressData } from '@/utils/holdMeterUtils';
+import { getHoldProgress, HoldProgressData } from '@/lib/utils/holdMeterUtils';
 import { DECK_METER_COMPLETION_GLOW_DURATION } from '@/lib/config/gameConstants';
 
 interface UseHoldProgressProps {

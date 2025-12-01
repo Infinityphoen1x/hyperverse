@@ -1,7 +1,7 @@
 // src/components/TunnelBackground.tsx
 import React from 'react';
 import { useGameStore } from '@/stores/useGameStore'; // Assumes store with viewport/health state
-import { getHealthBasedRayColor } from '@/utils/tunnelUtils';
+import { getHealthBasedRayColor } from '@/lib/utils/tunnelUtils';
 import { HexagonLayers } from './HexagonLayers';
 import { RadialSpokes } from './RadialSpokes';
 import { VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';

@@ -5,7 +5,6 @@ import { usePauseLogic } from './usePauseLogic';
 import { useKeyControls } from './useKeyControls';
 import { useCountdown } from './useCountdown';
 import { useFadeAnimation } from './useFadeAnimation';
-import { useErrorMonitoring } from './useErrorMonitoring';
 import { useAutoStart } from './useAutoStart';
 import { useRewind } from './useRewind';
 
@@ -99,8 +98,6 @@ export function useGameLogic({
     setResumeFadeOpacity,
   });
 
-  // Error monitoring
-  const gameErrors = useErrorMonitoring({ notes });
 
   // Auto-start
   useAutoStart({ customNotes, startGame });
@@ -120,7 +117,6 @@ export function useGameLogic({
     isPauseMenuOpen,
     countdownSeconds: useGameStore(s => s.countdownSeconds), // From store
     resumeFadeOpacity,
-    gameErrors,
     handleLeftDeckSpin,
     handleRightDeckSpin,
     handleRewind,
