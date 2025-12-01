@@ -66,7 +66,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   },
   getHoldNotes: () => {
     const { getVisibleNotes } = get();
-    return getVisibleNotes().filter(n => n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT');
+    return getVisibleNotes().filter(n => n.type === 'HOLD' || n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT');
   },
   getActiveNotes: () => {
     return get().getVisibleNotes();

@@ -41,6 +41,7 @@ export function useGameEngine({
   const currentTime = useGameStore(state => state.currentTime);
   const isPaused = useGameStore(state => state.isPaused);
   const setGameState = useGameStore(state => state.setGameState);
+  const setNotes = useGameStore(state => state.setNotes);
   const setCurrentTime = useGameStore(state => state.setCurrentTime);
   const hitNote = useGameStore(state => state.hitNote);
   const startDeckHold = useGameStore(state => state.startDeckHold);
@@ -48,6 +49,12 @@ export function useGameEngine({
   const pauseGame = useGameStore(state => state.pauseGame);
   const resumeGame = useGameStore(state => state.resumeGame);
   const restartGame = useGameStore(state => state.restartGame);
+
+  useEffect(() => {
+    if (customNotes && customNotes.length > 0) {
+        setNotes(customNotes);
+    }
+  }, [customNotes, setNotes]);
 
   const startGame = () => {
     setGameState('PLAYING');
