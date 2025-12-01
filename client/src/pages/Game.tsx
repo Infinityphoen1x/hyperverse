@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useGameEngine } from "@/hooks/useGameEngine";
 import { Difficulty, Note } from "@/lib/engine/gameTypes";
-import { motion } from "framer-motion";
 
 import { useYouTubePlayer } from "@/hooks/useYoutubePlayer";
 import { useGameLogic } from "@/hooks/useGameLogic";
@@ -22,11 +21,10 @@ import { ErrorLogViewer } from "@/components/game/loaders/ErrorLogViewer";
 interface GameProps {
   difficulty: Difficulty;
   onBackToHome?: () => void;
-  youtubeIframeRef: React.RefObject<HTMLIFrameElement>;
-  playerInitializedRef: React.MutableRefObject<boolean>;
+  playerInitializedRef: React.RefObject<boolean>;
 }
 
-export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playerInitializedRef }: GameProps) {
+function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
   const [currentTimeState, setCurrentTimeState] = useState(0);
@@ -36,10 +34,7 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
   const engineRefForLogic = useRef<any>(null);
 
   // YouTube hook first – provides getVideoTime with caching
-  const {
-    getVideoTime,
-    isReady: playerReady
-  } = useYouTubePlayer({
+  const { getVideoTime } = useYouTubePlayer({
     videoId: youtubeVideoId,
     playerInitializedRef,
     onPlaying: () => startGameRef.current?.()
@@ -58,7 +53,6 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     hitNote,
     trackHoldStart,
     trackHoldEnd,
-    pauseGame,
     resumeGame,
     restartGame,
     setGameState
@@ -83,13 +77,10 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
   // Game logic hooks (pause, keys, sync, errors)
   const {
     isPauseMenuOpen,
-    countdownSeconds,
     resumeFadeOpacity,
     gameErrors,
     handleLeftDeckSpin,
-    handleRightDeckSpin,
-    handleRewind,
-    handleResume
+    handleRightDeckSpin
   } = useGameLogic({
     gameState,
     currentTime,
@@ -213,3 +204,5 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
     </div>
   );
 }
+
+export default Game;
