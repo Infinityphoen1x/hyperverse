@@ -55,7 +55,16 @@ export function processSingleHoldNote(note: Note, currentTime: number): HoldNote
       return null;
     }
 
-    const approachGeometry = calculateApproachGeometry(timeUntilHit, pressHoldTime, failures.isTooEarlyFailure, holdDuration);
+    // For early failures, calculate approach geometry at the time of failure (frozen)
+    // For other cases, use current time
+    let approachGeometry;
+    if (failures.isTooEarlyFailure && failureTime) {
+      const timeUntilHitAtFailure = note.time - failureTime;
+      approachGeometry = calculateApproachGeometry(timeUntilHitAtFailure, pressHoldTime, failures.isTooEarlyFailure, holdDuration);
+    } else {
+      approachGeometry = calculateApproachGeometry(timeUntilHit, pressHoldTime, failures.isTooEarlyFailure, holdDuration);
+    }
+    
     const collapseDuration = failures.hasAnyFailure ? FAILURE_ANIMATION_DURATION : holdDuration;
     const lockedNearDistance = calculateLockedNearDistance(note, pressHoldTime, failures.isTooEarlyFailure, approachGeometry.nearDistance, failureTime);
     const stripWidth = holdDuration * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;

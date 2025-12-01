@@ -16,9 +16,9 @@ export const calculateApproachGeometry = (
   const stripWidth = (holdDuration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
   
   const rawApproachProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-  // For early failures, use raw progress (frozen from press time)
-  // For successful presses or late failures, allow progress to continue
-  const approachProgress = rawApproachProgress;
+  // Clamp progress to 0-1 for approach geometry
+  // (Collapse geometry will handle the animation from here)
+  const approachProgress = Math.max(0, Math.min(1, rawApproachProgress));
   
   const nearDistance = Math.max(1, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
   const farDistance = Math.max(1, nearDistance - stripWidth);
