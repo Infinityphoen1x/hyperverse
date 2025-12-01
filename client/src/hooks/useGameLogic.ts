@@ -63,7 +63,7 @@ export function useGameLogic({
   const { pauseGame: pauseHandler, handleResume } = usePauseLogic({
     gameState,
     currentTime,
-    getVideoTime,
+    getVideoTime: getVideoTime ?? undefined,
     engineRef,
     setCurrentTime,
     setGameState,
@@ -75,18 +75,13 @@ export function useGameLogic({
 
   // Key controls
   useKeyControls({
-    gameState,
-    isPaused,
-    hitNote,
-    handleRewind,
-    handleResume,
     setPauseMenuOpen: setPauseMenuOpenHandler,
   });
 
   // Countdown
   useCountdown({
     gameState,
-    onCountdownComplete: handleResume, // Or dispatch
+    onCountdownComplete: handleResume,
     setPauseMenuOpen: setPauseMenuOpenHandler,
   });
 
@@ -98,9 +93,8 @@ export function useGameLogic({
     setResumeFadeOpacity,
   });
 
-
   // Auto-start
-  useAutoStart({ customNotes, startGame });
+  useAutoStart({ customNotes: customNotes ?? [], startGame });
 
   // Reset on game state changes
   useEffect(() => {
