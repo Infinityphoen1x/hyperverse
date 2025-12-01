@@ -12,7 +12,7 @@ import Game from "@/pages/Game";
 function App() {
   const [gameActive, setGameActive] = useState(false);
   const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
-  const playerInitializedRef = useRef(false);
+  const playerInitializedRef = useRef<boolean>(false) as React.RefObject<boolean>;
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
 
   // Initialize console logging for diagnostics
@@ -86,8 +86,8 @@ function App() {
             )}
             {gameActive && (
               <Game 
+                difficulty="MEDIUM"
                 onBackToHome={() => setGameActive(false)}
-                youtubeIframeRef={youtubeIframeRef as React.RefObject<HTMLIFrameElement>}
                 playerInitializedRef={playerInitializedRef}
               />
             )}
