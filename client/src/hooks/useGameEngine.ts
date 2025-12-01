@@ -138,13 +138,13 @@ export function useGameEngine({
             console.log(`[GAME-ENGINE] Try hit note ${targetNote.id} at ${currentTime}ms (diff ${currentTime - targetNote.time}ms)`);
             const result = processor.processTapHit(targetNote, currentTime);
             
+            // Always persist the note update (success or failure)
+            const updatedNotes = notes.map(n => n.id === targetNote.id ? result.updatedNote : n);
+            setNotes(updatedNotes);
+            GameErrors.updateNoteStats(updatedNotes);
+            
             if (result.success) {
                 console.log(`[GAME-ENGINE] Hit success!`, result.scoreChange);
-                
-                // Update the specific note
-                const updatedNotes = notes.map(n => n.id === targetNote.id ? result.updatedNote : n);
-                setNotes(updatedNotes);
-                GameErrors.updateNoteStats(updatedNotes);
                 
                 if (result.scoreChange) {
                     setScore(result.scoreChange.score);
@@ -152,7 +152,13 @@ export function useGameEngine({
                     setHealth(result.scoreChange.health);
                 }
             } else {
-                console.log(`[GAME-ENGINE] Hit failed (too early/late)`);
+                console.log(`[GAME-ENGINE] Hit failed - tapTooEarlyFailure: ${result.updatedNote.tapTooEarlyFailure}, tapMissFailure: ${result.updatedNote.tapMissFailure}`);
+                
+                if (result.scoreChange) {
+                    setScore(result.scoreChange.score);
+                    setCombo(result.scoreChange.combo);
+                    setHealth(result.scoreChange.health);
+                }
             }
         } else {
              console.log(`[GAME-ENGINE] No active note found in lane ${lane} at ${currentTime}`);
@@ -167,14 +173,30 @@ export function useGameEngine({
      
      if (targetNote) {
          const result = processor.processHoldStart(targetNote, currentTime);
+         // Always persist the note update (success or failure)
+         const updatedNotes = notes.map(n => n.id === targetNote.id ? result.updatedNote : n);
+         setNotes(updatedNotes);
+         GameErrors.updateNoteStats(updatedNotes);
+         
          if (result.success) {
-             const updatedNotes = notes.map(n => n.id === targetNote.id ? result.updatedNote : n);
-             setNotes(updatedNotes);
-             GameErrors.updateNoteStats(updatedNotes);
              startDeckHold(lane);
+             
+             if (result.scoreChange) {
+                 setScore(result.scoreChange.score);
+                 setCombo(result.scoreChange.combo);
+                 setHealth(result.scoreChange.health);
+             }
+         } else {
+             console.log(`[GAME-ENGINE] Hold start failed - tooEarlyFailure: ${result.updatedNote.tooEarlyFailure}, holdMissFailure: ${result.updatedNote.holdMissFailure}`);
+             
+             if (result.scoreChange) {
+                 setScore(result.scoreChange.score);
+                 setCombo(result.scoreChange.combo);
+                 setHealth(result.scoreChange.health);
+             }
          }
      }
-  }, [validator, processor, setNotes, startDeckHold]);
+  }, [validator, processor, setNotes, setScore, setCombo, setHealth, startDeckHold]);
 
   const handleTrackHoldEnd = useCallback((lane: number) => {
      const { notes, currentTime } = useGameStore.getState();
