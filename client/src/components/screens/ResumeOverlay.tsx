@@ -1,29 +1,27 @@
 // src/components/ResumeOverlay.tsx
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from "framer-motion";
-import { useGameStore } from '@/stores/useGameStore'; // Assumes store with pause/resume state
+import { useGameStore } from '@/stores/useGameStore';
 
 interface ResumeOverlayProps {
-  // Optional overrides; defaults to store for global sync
   visible?: boolean;
   opacity?: number;
 }
 
-export function ResumeOverlay({ visible: propVisible, opacity: propOpacity }: ResumeOverlayProps = {}) {
-  // Pull from Zustand (fallback to props for testing/flexibility)
-  const { isPaused, overlayOpacity } = useGameStore(state => ({
-    isPaused: propVisible ?? state.isPaused, // Map 'visible' to pause state
-    overlayOpacity: propOpacity ?? state.overlayOpacity ?? 0.3, // Default fallback
-  }));
+const ResumeOverlayComponent = ({ visible: propVisible, opacity: propOpacity = 0.3 }: ResumeOverlayProps = {}) => {
+  const isPaused = propVisible ?? useGameStore(state => state.isPaused);
 
   if (!isPaused) return null;
 
   return (
     <motion.div
       className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+      data-testid="resume-overlay"
       initial={{ opacity: 0 }}
-      animate={{ opacity: overlayOpacity }}
-      transition={{ duration: 0 }}
+      animate={{ opacity: propOpacity }}
+      transition={{ duration: 0.2 }}
     />
   );
-}
+};
+
+export const ResumeOverlay = memo(ResumeOverlayComponent);
