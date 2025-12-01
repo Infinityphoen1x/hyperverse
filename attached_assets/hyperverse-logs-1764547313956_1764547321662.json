@@ -1,0 +1,2194 @@
+{
+  "timestamp": "2025-12-01T00:01:53.950Z",
+  "gameErrors": {
+    "errors": [
+      "[1764547300830] BeatmapConverter: HOLD note hold_0 lane=-1 → type=SPIN_LEFT",
+      "[1764547300830] BeatmapConverter: HOLD note hold_1 lane=-2 → type=SPIN_RIGHT",
+      "[1764547300830] BeatmapConverter: HOLD note hold_2 lane=-1 → type=SPIN_LEFT",
+      "[1764547300830] BeatmapConverter: HOLD note hold_3 lane=-2 → type=SPIN_RIGHT",
+      "[1764547300830] BeatmapConverter: HOLD note hold_4 lane=-1 → type=SPIN_LEFT",
+      "[1764547300830] BeatmapConverter: HOLD note hold_5 lane=-1 → type=SPIN_LEFT",
+      "[1764547300830] BeatmapConverter: HOLD note hold_6 lane=-2 → type=SPIN_RIGHT",
+      "[1764547300830] BeatmapConverter: HOLD note hold_7 lane=-1 → type=SPIN_LEFT",
+      "[1764547300830] BeatmapConverter: HOLD note hold_8 lane=-2 → type=SPIN_RIGHT",
+      "[1764547300830] BeatmapConverter: HOLD note hold_9 lane=-1 → type=SPIN_LEFT",
+      "[1764547300830] BeatmapConverter: HOLD note hold_10 lane=-1 → type=SPIN_LEFT",
+      "[1764547300830] BeatmapConverter: HOLD note hold_11 lane=-2 → type=SPIN_RIGHT"
+    ],
+    "animations": [],
+    "stats": {
+      "notes": {
+        "total": 107,
+        "tap": 95,
+        "hold": 12,
+        "hit": 0,
+        "missed": 0,
+        "failed": 0,
+        "byLane": {
+          "0": 132,
+          "1": 144,
+          "2": 156,
+          "3": 138,
+          "-1": 42,
+          "-2": 30
+        }
+      },
+      "render": {
+        "rendered": 0,
+        "preMissed": 0
+      },
+      "hits": {
+        "successfulHits": 0,
+        "tapTooEarlyFailures": 0,
+        "tapMissFailures": 0,
+        "tooEarlyFailures": 0,
+        "holdMissFailures": 0,
+        "holdReleaseFailures": 0
+      },
+      "animation": {
+        "total": 0,
+        "completed": 0,
+        "failed": 0,
+        "pending": 0,
+        "rendering": 0
+      }
+    }
+  },
+  "consoleLogs": [
+    {
+      "t": 1912,
+      "level": "warn",
+      "message": "Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}."
+    },
+    {
+      "t": 4515,
+      "level": "warn",
+      "message": "[GAME DEBUG] [1764547300830] BeatmapConverter: HOLD note hold_0 lane=-1 → type=SPIN_LEFT"
+    },
+    {
+      "t": 4515,
+      "level": "warn",
+      "message": "[GAME DEBUG] [1764547300830] BeatmapConverter: HOLD note hold_1 lane=-2 → type=SPIN_RIGHT"
+    },
+    {
+      "t": 4515,
+      "level": "warn",
+      "message": "[GAME DEBUG] [1764547300830] BeatmapConverter: HOLD note hold_2 lane=-1 → type=SPIN_LEFT"
+    },
+    {
+      "t": 4515,
+      "level": "warn",
+      "message": "[GAME DEBUG] [1764547300830] BeatmapConverter: HOLD note hold_3 lane=-2 → type=SPIN_RIGHT"
+    },
+    {
+      "t": 4515,
+      "level": "warn",
+      "message": "[GAME DEBUG] [1764547300830] BeatmapConverter: HOLD note hold_4 lane=-1 → type=SPIN_LEFT"
+    },
+    {
+      "t": 4515,
+      "level": "warn",
+      "message": "[GAME DEBUG] [1764547300830] BeatmapConverter: HOLD note hold_5 lane=-1 → type=SPIN_LEFT"
+    },
+    {
+      "t": 4515,
+      "level": "warn",
+      "message": "[GAME DEBUG] [1764547300830] BeatmapConverter: HOLD note hold_6 lane=-2 → type=SPIN_RIGHT"
+    },
+    {
+      "t": 4515,
+      "level": "warn",
+      "message": "[GAME DEBUG] [1764547300830] BeatmapConverter: HOLD note hold_7 lane=-1 → type=SPIN_LEFT"
+    },
+    {
+      "t": 4515,
+      "level": "warn",
+      "message": "[GAME DEBUG] [1764547300830] BeatmapConverter: HOLD note hold_8 lane=-2 → type=SPIN_RIGHT"
+    },
+    {
+      "t": 4515,
+      "level": "warn",
+      "message": "[GAME DEBUG] [1764547300830] BeatmapConverter: HOLD note hold_9 lane=-1 → type=SPIN_LEFT"
+    },
+    {
+      "t": 4515,
+      "level": "warn",
+      "message": "[GAME DEBUG] [1764547300830] BeatmapConverter: HOLD note hold_10 lane=-1 → type=SPIN_LEFT"
+    },
+    {
+      "t": 4515,
+      "level": "warn",
+      "message": "[GAME DEBUG] [1764547300830] BeatmapConverter: HOLD note hold_11 lane=-2 → type=SPIN_RIGHT"
+    },
+    {
+      "t": 10434,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10441,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10447,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10469,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10481,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10487,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10495,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10503,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10511,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10518,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10531,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10536,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10545,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10551,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10561,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10569,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10583,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10586,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10605,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10610,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10616,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10627,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10641,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10645,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10652,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10661,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10668,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10677,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10685,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10696,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10704,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10710,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10720,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10728,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10739,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10745,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10753,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10761,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10770,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10778,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10788,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10816,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10825,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10830,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10841,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10851,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10855,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10861,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10870,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10878,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10886,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10937,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10945,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10953,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10962,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10969,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10979,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10985,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 10995,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11002,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11012,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11020,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11028,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11046,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11054,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11060,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11072,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11087,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11103,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11113,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11120,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11127,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11137,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11144,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11154,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11162,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11170,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11178,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11190,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11195,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11203,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11207,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11214,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11221,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11230,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11238,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11247,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11254,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11263,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11271,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11285,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11288,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11297,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11305,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11313,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11322,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11330,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11353,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11381,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11392,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11406,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11409,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11416,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11422,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11430,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11438,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11446,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11455,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11463,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11471,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11480,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11489,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11497,
+      "level": "log",
+      "message": "[FRAME] Time: 0ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11506,
+      "level": "log",
+      "message": "[FRAME] Time: 119ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11515,
+      "level": "log",
+      "message": "[FRAME] Time: 128ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11523,
+      "level": "log",
+      "message": "[FRAME] Time: 136ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11531,
+      "level": "log",
+      "message": "[FRAME] Time: 144ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11539,
+      "level": "log",
+      "message": "[FRAME] Time: 152ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11610,
+      "level": "log",
+      "message": "[FRAME] Time: 223ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11616,
+      "level": "log",
+      "message": "[FRAME] Time: 220ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11623,
+      "level": "log",
+      "message": "[FRAME] Time: 227ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11628,
+      "level": "log",
+      "message": "[FRAME] Time: 232ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11637,
+      "level": "log",
+      "message": "[FRAME] Time: 241ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11645,
+      "level": "log",
+      "message": "[FRAME] Time: 249ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11653,
+      "level": "log",
+      "message": "[FRAME] Time: 257ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11662,
+      "level": "log",
+      "message": "[FRAME] Time: 265ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11670,
+      "level": "log",
+      "message": "[FRAME] Time: 273ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11683,
+      "level": "log",
+      "message": "[FRAME] Time: 287ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11687,
+      "level": "log",
+      "message": "[FRAME] Time: 291ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11695,
+      "level": "log",
+      "message": "[FRAME] Time: 299ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11704,
+      "level": "log",
+      "message": "[FRAME] Time: 308ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11712,
+      "level": "log",
+      "message": "[FRAME] Time: 316ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11719,
+      "level": "log",
+      "message": "[FRAME] Time: 323ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11728,
+      "level": "log",
+      "message": "[FRAME] Time: 331ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11738,
+      "level": "log",
+      "message": "[FRAME] Time: 341ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11745,
+      "level": "log",
+      "message": "[FRAME] Time: 349ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11753,
+      "level": "log",
+      "message": "[FRAME] Time: 357ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11761,
+      "level": "log",
+      "message": "[FRAME] Time: 365ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11770,
+      "level": "log",
+      "message": "[FRAME] Time: 374ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11777,
+      "level": "log",
+      "message": "[FRAME] Time: 381ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11785,
+      "level": "log",
+      "message": "[FRAME] Time: 389ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11795,
+      "level": "log",
+      "message": "[FRAME] Time: 399ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11803,
+      "level": "log",
+      "message": "[FRAME] Time: 407ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11811,
+      "level": "log",
+      "message": "[FRAME] Time: 415ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11820,
+      "level": "log",
+      "message": "[FRAME] Time: 424ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11828,
+      "level": "log",
+      "message": "[FRAME] Time: 432ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11861,
+      "level": "log",
+      "message": "[FRAME] Time: 465ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11866,
+      "level": "log",
+      "message": "[FRAME] Time: 470ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11871,
+      "level": "log",
+      "message": "[FRAME] Time: 483ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11878,
+      "level": "log",
+      "message": "[FRAME] Time: 490ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11886,
+      "level": "log",
+      "message": "[FRAME] Time: 497ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11895,
+      "level": "log",
+      "message": "[FRAME] Time: 507ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11905,
+      "level": "log",
+      "message": "[FRAME] Time: 517ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11912,
+      "level": "log",
+      "message": "[FRAME] Time: 524ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11919,
+      "level": "log",
+      "message": "[FRAME] Time: 531ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11929,
+      "level": "log",
+      "message": "[FRAME] Time: 541ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11941,
+      "level": "log",
+      "message": "[FRAME] Time: 553ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11947,
+      "level": "log",
+      "message": "[FRAME] Time: 559ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11953,
+      "level": "log",
+      "message": "[FRAME] Time: 565ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11962,
+      "level": "log",
+      "message": "[FRAME] Time: 574ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11970,
+      "level": "log",
+      "message": "[FRAME] Time: 582ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11979,
+      "level": "log",
+      "message": "[FRAME] Time: 591ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11986,
+      "level": "log",
+      "message": "[FRAME] Time: 598ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 11995,
+      "level": "log",
+      "message": "[FRAME] Time: 607ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12003,
+      "level": "log",
+      "message": "[FRAME] Time: 615ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12012,
+      "level": "log",
+      "message": "[FRAME] Time: 624ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12020,
+      "level": "log",
+      "message": "[FRAME] Time: 632ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12027,
+      "level": "log",
+      "message": "[FRAME] Time: 639ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12037,
+      "level": "log",
+      "message": "[FRAME] Time: 649ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12044,
+      "level": "log",
+      "message": "[FRAME] Time: 656ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12053,
+      "level": "log",
+      "message": "[FRAME] Time: 664ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12061,
+      "level": "log",
+      "message": "[FRAME] Time: 673ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12071,
+      "level": "log",
+      "message": "[FRAME] Time: 682ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12079,
+      "level": "log",
+      "message": "[FRAME] Time: 690ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12086,
+      "level": "log",
+      "message": "[FRAME] Time: 698ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12096,
+      "level": "log",
+      "message": "[FRAME] Time: 708ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12103,
+      "level": "log",
+      "message": "[FRAME] Time: 715ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12112,
+      "level": "log",
+      "message": "[FRAME] Time: 724ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12120,
+      "level": "log",
+      "message": "[FRAME] Time: 732ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12129,
+      "level": "log",
+      "message": "[FRAME] Time: 741ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12138,
+      "level": "log",
+      "message": "[FRAME] Time: 748ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12146,
+      "level": "log",
+      "message": "[FRAME] Time: 756ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12155,
+      "level": "log",
+      "message": "[FRAME] Time: 764ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12173,
+      "level": "log",
+      "message": "[FRAME] Time: 783ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12179,
+      "level": "log",
+      "message": "[FRAME] Time: 789ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12191,
+      "level": "log",
+      "message": "[FRAME] Time: 801ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12200,
+      "level": "log",
+      "message": "[FRAME] Time: 810ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12209,
+      "level": "log",
+      "message": "[FRAME] Time: 819ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12215,
+      "level": "log",
+      "message": "[FRAME] Time: 825ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12225,
+      "level": "log",
+      "message": "[FRAME] Time: 835ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12232,
+      "level": "log",
+      "message": "[FRAME] Time: 842ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12240,
+      "level": "log",
+      "message": "[FRAME] Time: 850ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12249,
+      "level": "log",
+      "message": "[FRAME] Time: 859ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12257,
+      "level": "log",
+      "message": "[FRAME] Time: 867ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12265,
+      "level": "log",
+      "message": "[FRAME] Time: 875ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12272,
+      "level": "log",
+      "message": "[FRAME] Time: 882ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12278,
+      "level": "log",
+      "message": "[FRAME] Time: 888ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12287,
+      "level": "log",
+      "message": "[FRAME] Time: 897ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12294,
+      "level": "log",
+      "message": "[FRAME] Time: 904ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12304,
+      "level": "log",
+      "message": "[FRAME] Time: 913ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12311,
+      "level": "log",
+      "message": "[FRAME] Time: 921ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12320,
+      "level": "log",
+      "message": "[FRAME] Time: 930ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12328,
+      "level": "log",
+      "message": "[FRAME] Time: 938ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12337,
+      "level": "log",
+      "message": "[FRAME] Time: 947ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12345,
+      "level": "log",
+      "message": "[FRAME] Time: 955ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12354,
+      "level": "log",
+      "message": "[FRAME] Time: 964ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12362,
+      "level": "log",
+      "message": "[FRAME] Time: 971ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12370,
+      "level": "log",
+      "message": "[FRAME] Time: 979ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12378,
+      "level": "log",
+      "message": "[FRAME] Time: 988ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12387,
+      "level": "log",
+      "message": "[FRAME] Time: 997ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12395,
+      "level": "log",
+      "message": "[FRAME] Time: 1005ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12402,
+      "level": "log",
+      "message": "[FRAME] Time: 1012ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12412,
+      "level": "log",
+      "message": "[FRAME] Time: 1021ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12430,
+      "level": "log",
+      "message": "[FRAME] Time: 1039ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12438,
+      "level": "log",
+      "message": "[FRAME] Time: 1047ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12444,
+      "level": "log",
+      "message": "[FRAME] Time: 1053ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12454,
+      "level": "log",
+      "message": "[FRAME] Time: 1062ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12462,
+      "level": "log",
+      "message": "[FRAME] Time: 1071ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12468,
+      "level": "log",
+      "message": "[FRAME] Time: 1077ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12478,
+      "level": "log",
+      "message": "[FRAME] Time: 1087ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12487,
+      "level": "log",
+      "message": "[FRAME] Time: 1096ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12494,
+      "level": "log",
+      "message": "[FRAME] Time: 1103ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12503,
+      "level": "log",
+      "message": "[FRAME] Time: 1112ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12510,
+      "level": "log",
+      "message": "[FRAME] Time: 1119ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12520,
+      "level": "log",
+      "message": "[FRAME] Time: 1129ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12531,
+      "level": "log",
+      "message": "[FRAME] Time: 1140ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12537,
+      "level": "log",
+      "message": "[FRAME] Time: 1146ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12545,
+      "level": "log",
+      "message": "[FRAME] Time: 1153ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12553,
+      "level": "log",
+      "message": "[FRAME] Time: 1162ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12562,
+      "level": "log",
+      "message": "[FRAME] Time: 1171ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12570,
+      "level": "log",
+      "message": "[FRAME] Time: 1179ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12582,
+      "level": "log",
+      "message": "[FRAME] Time: 1191ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12589,
+      "level": "log",
+      "message": "[FRAME] Time: 1197ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12596,
+      "level": "log",
+      "message": "[FRAME] Time: 1205ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12603,
+      "level": "log",
+      "message": "[FRAME] Time: 1212ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12612,
+      "level": "log",
+      "message": "[FRAME] Time: 1221ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12620,
+      "level": "log",
+      "message": "[FRAME] Time: 1229ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12629,
+      "level": "log",
+      "message": "[FRAME] Time: 1238ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12640,
+      "level": "log",
+      "message": "[FRAME] Time: 1249ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12646,
+      "level": "log",
+      "message": "[FRAME] Time: 1255ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12652,
+      "level": "log",
+      "message": "[FRAME] Time: 1261ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12661,
+      "level": "log",
+      "message": "[FRAME] Time: 1273ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12671,
+      "level": "log",
+      "message": "[FRAME] Time: 1283ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12677,
+      "level": "log",
+      "message": "[FRAME] Time: 1289ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12687,
+      "level": "log",
+      "message": "[FRAME] Time: 1299ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12706,
+      "level": "log",
+      "message": "[FRAME] Time: 1318ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12712,
+      "level": "log",
+      "message": "[FRAME] Time: 1324ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12720,
+      "level": "log",
+      "message": "[FRAME] Time: 1332ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12729,
+      "level": "log",
+      "message": "[FRAME] Time: 1341ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12738,
+      "level": "log",
+      "message": "[FRAME] Time: 1350ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12745,
+      "level": "log",
+      "message": "[FRAME] Time: 1357ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12753,
+      "level": "log",
+      "message": "[FRAME] Time: 1365ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12762,
+      "level": "log",
+      "message": "[FRAME] Time: 1374ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12771,
+      "level": "log",
+      "message": "[FRAME] Time: 1382ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12779,
+      "level": "log",
+      "message": "[FRAME] Time: 1391ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12786,
+      "level": "log",
+      "message": "[FRAME] Time: 1398ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12794,
+      "level": "log",
+      "message": "[FRAME] Time: 1406ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12804,
+      "level": "log",
+      "message": "[FRAME] Time: 1416ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12810,
+      "level": "log",
+      "message": "[FRAME] Time: 1422ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12819,
+      "level": "log",
+      "message": "[FRAME] Time: 1431ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12831,
+      "level": "log",
+      "message": "[FRAME] Time: 1443ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12837,
+      "level": "log",
+      "message": "[FRAME] Time: 1449ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12844,
+      "level": "log",
+      "message": "[FRAME] Time: 1456ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12852,
+      "level": "log",
+      "message": "[FRAME] Time: 1464ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12862,
+      "level": "log",
+      "message": "[FRAME] Time: 1474ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12870,
+      "level": "log",
+      "message": "[FRAME] Time: 1482ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12878,
+      "level": "log",
+      "message": "[FRAME] Time: 1490ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12887,
+      "level": "log",
+      "message": "[FRAME] Time: 1499ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12894,
+      "level": "log",
+      "message": "[FRAME] Time: 1506ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12904,
+      "level": "log",
+      "message": "[FRAME] Time: 1516ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12911,
+      "level": "log",
+      "message": "[FRAME] Time: 1523ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12920,
+      "level": "log",
+      "message": "[FRAME] Time: 1532ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12930,
+      "level": "log",
+      "message": "[FRAME] Time: 1541ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12937,
+      "level": "log",
+      "message": "[FRAME] Time: 1548ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12943,
+      "level": "log",
+      "message": "[FRAME] Time: 1554ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12953,
+      "level": "log",
+      "message": "[FRAME] Time: 1564ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12962,
+      "level": "log",
+      "message": "[FRAME] Time: 1573ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12969,
+      "level": "log",
+      "message": "[FRAME] Time: 1580ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12980,
+      "level": "log",
+      "message": "[FRAME] Time: 1591ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12989,
+      "level": "log",
+      "message": "[FRAME] Time: 1600ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 12996,
+      "level": "log",
+      "message": "[FRAME] Time: 1606ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13018,
+      "level": "log",
+      "message": "[FRAME] Time: 1629ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13026,
+      "level": "log",
+      "message": "[FRAME] Time: 1637ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13035,
+      "level": "log",
+      "message": "[FRAME] Time: 1645ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13049,
+      "level": "log",
+      "message": "[FRAME] Time: 1660ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13057,
+      "level": "log",
+      "message": "[FRAME] Time: 1668ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13063,
+      "level": "log",
+      "message": "[FRAME] Time: 1674ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13071,
+      "level": "log",
+      "message": "[FRAME] Time: 1682ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13078,
+      "level": "log",
+      "message": "[FRAME] Time: 1689ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13086,
+      "level": "log",
+      "message": "[FRAME] Time: 1697ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13095,
+      "level": "log",
+      "message": "[FRAME] Time: 1706ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13103,
+      "level": "log",
+      "message": "[FRAME] Time: 1714ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13111,
+      "level": "log",
+      "message": "[FRAME] Time: 1722ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13119,
+      "level": "log",
+      "message": "[FRAME] Time: 1730ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13129,
+      "level": "log",
+      "message": "[FRAME] Time: 1739ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13141,
+      "level": "log",
+      "message": "[FRAME] Time: 1752ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13147,
+      "level": "log",
+      "message": "[FRAME] Time: 1758ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13156,
+      "level": "log",
+      "message": "[FRAME] Time: 1767ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13162,
+      "level": "log",
+      "message": "[FRAME] Time: 1773ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13170,
+      "level": "log",
+      "message": "[FRAME] Time: 1781ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13178,
+      "level": "log",
+      "message": "[FRAME] Time: 1789ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13192,
+      "level": "log",
+      "message": "[FRAME] Time: 1803ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13200,
+      "level": "log",
+      "message": "[FRAME] Time: 1812ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13208,
+      "level": "log",
+      "message": "[FRAME] Time: 1820ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13215,
+      "level": "log",
+      "message": "[FRAME] Time: 1827ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13221,
+      "level": "log",
+      "message": "[FRAME] Time: 1833ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13228,
+      "level": "log",
+      "message": "[FRAME] Time: 1840ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13237,
+      "level": "log",
+      "message": "[FRAME] Time: 1848ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13250,
+      "level": "log",
+      "message": "[FRAME] Time: 1862ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13254,
+      "level": "log",
+      "message": "[FRAME] Time: 1866ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13262,
+      "level": "log",
+      "message": "[FRAME] Time: 1874ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13270,
+      "level": "log",
+      "message": "[FRAME] Time: 1882ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13277,
+      "level": "log",
+      "message": "[FRAME] Time: 1889ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13287,
+      "level": "log",
+      "message": "[FRAME] Time: 1899ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13295,
+      "level": "log",
+      "message": "[FRAME] Time: 1906ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13304,
+      "level": "log",
+      "message": "[FRAME] Time: 1915ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13311,
+      "level": "log",
+      "message": "[FRAME] Time: 1923ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13320,
+      "level": "log",
+      "message": "[FRAME] Time: 1932ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13328,
+      "level": "log",
+      "message": "[FRAME] Time: 1940ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13337,
+      "level": "log",
+      "message": "[FRAME] Time: 1949ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13345,
+      "level": "log",
+      "message": "[FRAME] Time: 1956ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13354,
+      "level": "log",
+      "message": "[FRAME] Time: 1966ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13361,
+      "level": "log",
+      "message": "[FRAME] Time: 1973ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13370,
+      "level": "log",
+      "message": "[FRAME] Time: 1981ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13380,
+      "level": "log",
+      "message": "[FRAME] Time: 1991ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13385,
+      "level": "log",
+      "message": "[FRAME] Time: 1997ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13395,
+      "level": "log",
+      "message": "[FRAME] Time: 2007ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13403,
+      "level": "log",
+      "message": "[FRAME] Time: 2015ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13411,
+      "level": "log",
+      "message": "[FRAME] Time: 2023ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13420,
+      "level": "log",
+      "message": "[FRAME] Time: 2032ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13427,
+      "level": "log",
+      "message": "[FRAME] Time: 2039ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13438,
+      "level": "log",
+      "message": "[FRAME] Time: 2050ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13445,
+      "level": "log",
+      "message": "[FRAME] Time: 2057ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13453,
+      "level": "log",
+      "message": "[FRAME] Time: 2065ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13464,
+      "level": "log",
+      "message": "[FRAME] Time: 2076ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13469,
+      "level": "log",
+      "message": "[FRAME] Time: 2081ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13478,
+      "level": "log",
+      "message": "[FRAME] Time: 2089ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13486,
+      "level": "log",
+      "message": "[FRAME] Time: 2097ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13495,
+      "level": "log",
+      "message": "[FRAME] Time: 2106ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13503,
+      "level": "log",
+      "message": "[FRAME] Time: 2114ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13526,
+      "level": "log",
+      "message": "[FRAME] Time: 2137ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13531,
+      "level": "log",
+      "message": "[FRAME] Time: 2142ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13537,
+      "level": "log",
+      "message": "[FRAME] Time: 2148ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13545,
+      "level": "log",
+      "message": "[FRAME] Time: 2155ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13553,
+      "level": "log",
+      "message": "[FRAME] Time: 2164ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13561,
+      "level": "log",
+      "message": "[FRAME] Time: 2172ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13568,
+      "level": "log",
+      "message": "[FRAME] Time: 2179ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13578,
+      "level": "log",
+      "message": "[FRAME] Time: 2189ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13587,
+      "level": "log",
+      "message": "[FRAME] Time: 2198ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13595,
+      "level": "log",
+      "message": "[FRAME] Time: 2206ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13602,
+      "level": "log",
+      "message": "[FRAME] Time: 2213ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13612,
+      "level": "log",
+      "message": "[FRAME] Time: 2222ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13620,
+      "level": "log",
+      "message": "[FRAME] Time: 2230ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13628,
+      "level": "log",
+      "message": "[FRAME] Time: 2239ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13637,
+      "level": "log",
+      "message": "[FRAME] Time: 2248ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13645,
+      "level": "log",
+      "message": "[FRAME] Time: 2256ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13653,
+      "level": "log",
+      "message": "[FRAME] Time: 2264ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13661,
+      "level": "log",
+      "message": "[FRAME] Time: 2272ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13669,
+      "level": "log",
+      "message": "[FRAME] Time: 2279ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13681,
+      "level": "log",
+      "message": "[FRAME] Time: 2291ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13687,
+      "level": "log",
+      "message": "[FRAME] Time: 2298ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13695,
+      "level": "log",
+      "message": "[FRAME] Time: 2306ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13704,
+      "level": "log",
+      "message": "[FRAME] Time: 2315ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13711,
+      "level": "log",
+      "message": "[FRAME] Time: 2322ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13721,
+      "level": "log",
+      "message": "[FRAME] Time: 2331ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13731,
+      "level": "log",
+      "message": "[FRAME] Time: 2343ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13736,
+      "level": "log",
+      "message": "[FRAME] Time: 2348ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13745,
+      "level": "log",
+      "message": "[FRAME] Time: 2357ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13754,
+      "level": "log",
+      "message": "[FRAME] Time: 2365ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13761,
+      "level": "log",
+      "message": "[FRAME] Time: 2373ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13769,
+      "level": "log",
+      "message": "[FRAME] Time: 2381ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13779,
+      "level": "log",
+      "message": "[FRAME] Time: 2391ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13786,
+      "level": "log",
+      "message": "[FRAME] Time: 2398ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13795,
+      "level": "log",
+      "message": "[FRAME] Time: 2407ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13803,
+      "level": "log",
+      "message": "[FRAME] Time: 2415ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13811,
+      "level": "log",
+      "message": "[FRAME] Time: 2423ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13833,
+      "level": "log",
+      "message": "[FRAME] Time: 2444ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13842,
+      "level": "log",
+      "message": "[FRAME] Time: 2454ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13847,
+      "level": "log",
+      "message": "[FRAME] Time: 2459ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13854,
+      "level": "log",
+      "message": "[FRAME] Time: 2466ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13860,
+      "level": "log",
+      "message": "[FRAME] Time: 2472ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13870,
+      "level": "log",
+      "message": "[FRAME] Time: 2482ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13878,
+      "level": "log",
+      "message": "[FRAME] Time: 2490ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13886,
+      "level": "log",
+      "message": "[FRAME] Time: 2498ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13895,
+      "level": "log",
+      "message": "[FRAME] Time: 2507ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13904,
+      "level": "log",
+      "message": "[FRAME] Time: 2516ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13912,
+      "level": "log",
+      "message": "[FRAME] Time: 2524ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13919,
+      "level": "log",
+      "message": "[FRAME] Time: 2531ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13927,
+      "level": "log",
+      "message": "[FRAME] Time: 2539ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13937,
+      "level": "log",
+      "message": "[FRAME] Time: 2549ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13943,
+      "level": "log",
+      "message": "[FRAME] Time: 2555ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13952,
+      "level": "log",
+      "message": "[FRAME] Time: 2564ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13961,
+      "level": "log",
+      "message": "[FRAME] Time: 2573ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13970,
+      "level": "log",
+      "message": "[FRAME] Time: 2582ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13978,
+      "level": "log",
+      "message": "[FRAME] Time: 2590ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13986,
+      "level": "log",
+      "message": "[FRAME] Time: 2598ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 13994,
+      "level": "log",
+      "message": "[FRAME] Time: 2604ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 14003,
+      "level": "log",
+      "message": "[FRAME] Time: 2614ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 14011,
+      "level": "log",
+      "message": "[FRAME] Time: 2622ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 14021,
+      "level": "log",
+      "message": "[FRAME] Time: 2632ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 14032,
+      "level": "log",
+      "message": "[FRAME] Time: 2643ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 14041,
+      "level": "log",
+      "message": "[FRAME] Time: 2652ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 14047,
+      "level": "log",
+      "message": "[FRAME] Time: 2658ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 14056,
+      "level": "log",
+      "message": "[FRAME] Time: 2667ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 14063,
+      "level": "log",
+      "message": "[FRAME] Time: 2674ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 14071,
+      "level": "log",
+      "message": "[FRAME] Time: 2682ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 14080,
+      "level": "log",
+      "message": "[FRAME] Time: 2691ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 14088,
+      "level": "log",
+      "message": "[FRAME] Time: 2699ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 14096,
+      "level": "log",
+      "message": "[FRAME] Time: 2707ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 14125,
+      "level": "log",
+      "message": "[FRAME] Time: 2736ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 14133,
+      "level": "log",
+      "message": "[FRAME] Time: 2743ms, Health: 200, GameOver: false, Active Notes: 0"
+    },
+    {
+      "t": 14142,
+      "level": "log",
+      "message": "[FRAME] Time: 2752ms, Health: 198, GameOver: true, Active Notes: 0"
+    },
+    {
+      "t": 14142,
+      "level": "error",
+      "message": "[CRITICAL] Game over detected post-frame - likely miss threshold"
+    },
+    {
+      "t": 14156,
+      "level": "log",
+      "message": "[FRAME] Time: 2767ms, Health: 198, GameOver: false, Active Notes: 0"
+    }
+  ]
+}
