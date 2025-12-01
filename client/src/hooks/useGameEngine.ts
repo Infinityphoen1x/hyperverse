@@ -1,6 +1,30 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
-import type { GameState, Note, Difficulty } from '@/types/game';
+import type { GameState, Note, Difficulty, GameConfig } from '@/types/game';
+import { NoteProcessor } from '@/lib/notes/processors/noteProcessor';
+import { NoteValidator } from '@/lib/notes/processors/noteValidator';
+import { ScoringManager } from '@/lib/managers/scoringManager';
+import { 
+  LEAD_TIME, 
+  MAX_HEALTH
+} from '@/lib/config/gameConstants';
+
+// Default config if constants are missing
+const DEFAULT_CONFIG: GameConfig = {
+  TAP_HIT_WINDOW: 100,
+  TAP_FAILURE_BUFFER: 50,
+  HOLD_MISS_TIMEOUT: 150,
+  HOLD_RELEASE_OFFSET: 100,
+  HOLD_RELEASE_WINDOW: 150,
+  HOLD_ACTIVATION_WINDOW: 100,
+  LEAD_TIME: 2000,
+  ACCURACY_PERFECT_MS: 25,
+  ACCURACY_GREAT_MS: 50,
+  ACCURACY_PERFECT_POINTS: 300,
+  ACCURACY_GREAT_POINTS: 100,
+  ACCURACY_NORMAL_POINTS: 50,
+  MAX_HEALTH: 200,
+};
 
 interface UseGameEngineProps {
   difficulty: Difficulty;
@@ -40,6 +64,7 @@ export function useGameEngine({
   const notes = useGameStore(state => state.notes);
   const currentTime = useGameStore(state => state.currentTime);
   const isPaused = useGameStore(state => state.isPaused);
+  
   const setGameState = useGameStore(state => state.setGameState);
   const setNotes = useGameStore(state => state.setNotes);
   const setCurrentTime = useGameStore(state => state.setCurrentTime);
@@ -48,7 +73,31 @@ export function useGameEngine({
   const endDeckHold = useGameStore(state => state.endDeckHold);
   const pauseGame = useGameStore(state => state.pauseGame);
   const resumeGame = useGameStore(state => state.resumeGame);
-  const restartGame = useGameStore(state => state.restartGame);
+  const restartGameStore = useGameStore(state => state.restartGame);
+  
+  const setScore = useGameStore(state => state.setScore);
+  const setCombo = useGameStore(state => state.setCombo);
+  const setHealth = useGameStore(state => state.setHealth);
+
+  // Construct GameConfig
+  const gameConfig = useMemo<GameConfig>(() => ({
+    ...DEFAULT_CONFIG,
+    LEAD_TIME: LEAD_TIME || DEFAULT_CONFIG.LEAD_TIME,
+    MAX_HEALTH: MAX_HEALTH || DEFAULT_CONFIG.MAX_HEALTH,
+    // Map other constants if they exist, otherwise fallback
+  }), []);
+
+  // Initialize Engine Components
+  const { processor, scorer } = useMemo(() => {
+    const scorer = new ScoringManager(gameConfig);
+    const validator = new NoteValidator(gameConfig);
+    const processor = new NoteProcessor(gameConfig, validator, scorer);
+    return { processor, scorer };
+  }, [gameConfig]);
+
+  // Sync scorer with store state on mount/change (if needed)
+  // Actually, we should probably trust the store as source of truth if possible,
+  // but Scorer is stateful. Let's just reset it on restart.
 
   useEffect(() => {
     if (customNotes && customNotes.length > 0) {
@@ -68,6 +117,11 @@ export function useGameEngine({
     return undefined;
   };
 
+  const restartGame = useCallback(() => {
+    scorer.reset();
+    restartGameStore();
+  }, [scorer, restartGameStore]);
+
   useEffect(() => {
     if (!getVideoTime || gameState !== 'PLAYING' || isPaused) return;
     
@@ -75,11 +129,40 @@ export function useGameEngine({
       const videoTime = getVideoTime();
       if (videoTime !== null) {
         setCurrentTime(videoTime);
+        
+        // Process frame (auto-fails, cleanup)
+        // We need to get the LATEST notes from store. 
+        // Since we are in a closure, 'notes' might be stale if not added to dependency array.
+        // But adding 'notes' to dependency array would restart interval every frame (bad!).
+        // Solution: Use the functional update form or a ref for notes.
+        // Since useGameStore is external, we can read it directly via getState() if needed,
+        // but here we can just use the store instance if we had access.
+        // Better: useGameStore.getState().notes
+        
+        const currentNotes = useGameStore.getState().notes;
+        const result = processor.processNotesFrame(currentNotes, videoTime);
+        
+        if (result.scoreState) {
+             setScore(result.scoreState.score);
+             setCombo(result.scoreState.combo);
+             setHealth(result.scoreState.health);
+        }
+
+        // Only update notes if they changed
+        // processNotesFrame returns either the same array ref (if no changes) or a new one
+        if (result.updatedNotes !== currentNotes) {
+             setNotes(result.updatedNotes);
+        }
+        
+        if (result.shouldGameOver) {
+            // Handle game over if needed
+            // setGameState('GAME_OVER');
+        }
       }
     }, 16);
     
     return () => clearInterval(interval);
-  }, [getVideoTime, gameState, isPaused, setCurrentTime]);
+  }, [getVideoTime, gameState, isPaused, setCurrentTime, processor, setScore, setCombo, setHealth, setNotes, setGameState]);
 
   return {
     gameState,

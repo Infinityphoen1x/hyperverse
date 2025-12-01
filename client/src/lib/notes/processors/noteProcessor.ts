@@ -149,31 +149,40 @@ export class NoteProcessor {
       return checkTapAutoFail(note, currentTime, this.config, this.scorer);
     }
 
-    if (note.type === 'SPIN_LEFT' || note.type === 'SPIN_RIGHT') {
+    if (note.type === 'SPIN_LEFT' || note.type === 'SPIN_RIGHT' || note.type === 'HOLD') {
       return checkHoldAutoFail(note, currentTime, this.config, this.scorer);
     }
 
     return null;
   }
 
-  processNotesFrame(notes: Note[], currentTime: number): { updatedNotes: Note[]; shouldGameOver: boolean } {
+  processNotesFrame(notes: Note[], currentTime: number): { updatedNotes: Note[]; shouldGameOver: boolean; scoreState: ScoreState | null } {
     let shouldGameOver = false;
+    let hasChanges = false;
+    let scoreUpdated = false;
+
     const updatedNotes = notes.map(note => {
       // Auto-fail check
       const autoFailResult = this.checkAutoFail(note, currentTime);
       if (autoFailResult && !autoFailResult.success) {
-        shouldGameOver = true;
+        // shouldGameOver = true; // Don't force game over on single miss, rely on health
+        hasChanges = true;
+        scoreUpdated = true;
         return autoFailResult.updatedNote;
       }
 
       // Cleanup check
       if (this.validator.shouldCleanupNote(note, currentTime)) {
-        return { ...note, missed: true };
+        hasChanges = true;
+        return { ...note, missed: true }; // Mark as missed if cleaned up without hit
       }
 
       return note;
     });
+    
+    const scoreState = scoreUpdated ? this.scorer.getState() : null;
+    if (this.scorer.isDead()) shouldGameOver = true;
 
-    return { updatedNotes, shouldGameOver };
+    return { updatedNotes: hasChanges ? updatedNotes : notes, shouldGameOver, scoreState };
   }
 }
