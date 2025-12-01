@@ -25,7 +25,6 @@ export const createFailureUpdate = (
 
 export const createSuccessUpdate = (
   note: Note,
-  currentTime: number,
   scoreChange: ScoreState
 ): NoteUpdateResult => ({
   updatedNote: {
