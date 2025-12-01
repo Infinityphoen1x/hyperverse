@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useCallback } from 'react';
+import { useEffect, useMemo, useCallback, useRef } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import type { GameState, Note, Difficulty, GameConfig } from '@/types/game';
 import { NoteProcessor } from '@/lib/notes/processors/noteProcessor';
@@ -99,14 +99,19 @@ export function useGameEngine({
   // Actually, we should probably trust the store as source of truth if possible,
   // but Scorer is stateful. Let's just reset it on restart.
 
+  // Store last frame timestamp for fallback timing
+  const lastFrameTimeRef = useRef<number>(performance.now());
+
   useEffect(() => {
     if (customNotes && customNotes.length > 0) {
+        console.log(`[GAME-ENGINE] Loading ${customNotes.length} custom notes`);
         setNotes(customNotes);
     }
   }, [customNotes, setNotes]);
 
   const startGame = () => {
     setGameState('PLAYING');
+    lastFrameTimeRef.current = performance.now();
   };
 
   const markNoteMissed = (noteId: string) => {
@@ -120,27 +125,41 @@ export function useGameEngine({
   const restartGame = useCallback(() => {
     scorer.reset();
     restartGameStore();
+    lastFrameTimeRef.current = performance.now();
   }, [scorer, restartGameStore]);
 
   useEffect(() => {
-    if (!getVideoTime || gameState !== 'PLAYING' || isPaused) return;
+    // Run loop if playing (even if video time is missing, we should fallback)
+    if (gameState !== 'PLAYING' || isPaused) {
+        lastFrameTimeRef.current = performance.now(); // Reset delta tracking
+        return;
+    }
     
     const interval = setInterval(() => {
-      const videoTime = getVideoTime();
-      if (videoTime !== null) {
-        setCurrentTime(videoTime);
-        
-        // Process frame (auto-fails, cleanup)
-        // We need to get the LATEST notes from store. 
-        // Since we are in a closure, 'notes' might be stale if not added to dependency array.
-        // But adding 'notes' to dependency array would restart interval every frame (bad!).
-        // Solution: Use the functional update form or a ref for notes.
-        // Since useGameStore is external, we can read it directly via getState() if needed,
-        // but here we can just use the store instance if we had access.
-        // Better: useGameStore.getState().notes
+      const now = performance.now();
+      const dt = now - lastFrameTimeRef.current;
+      lastFrameTimeRef.current = now;
+
+      let timeToUse: number | null = getVideoTime ? getVideoTime() : null;
+
+      // Fallback: If video time is missing or 0 (stuck), and we are playing, use local delta
+      // This ensures the game works even if YouTube fails
+      if (timeToUse === null || (timeToUse === 0 && dt > 0)) {
+          const currentStoreTime = useGameStore.getState().currentTime;
+          // If we were at 0 and now falling back, start moving
+          timeToUse = currentStoreTime + dt; 
+          
+          // Debug log occasionally
+          if (Math.random() < 0.01) {
+             console.log('[GAME-ENGINE] Using fallback local timing:', timeToUse.toFixed(0));
+          }
+      }
+
+      if (timeToUse !== null) {
+        setCurrentTime(timeToUse);
         
         const currentNotes = useGameStore.getState().notes;
-        const result = processor.processNotesFrame(currentNotes, videoTime);
+        const result = processor.processNotesFrame(currentNotes, timeToUse);
         
         if (result.scoreState) {
              setScore(result.scoreState.score);
@@ -148,15 +167,12 @@ export function useGameEngine({
              setHealth(result.scoreState.health);
         }
 
-        // Only update notes if they changed
-        // processNotesFrame returns either the same array ref (if no changes) or a new one
         if (result.updatedNotes !== currentNotes) {
              setNotes(result.updatedNotes);
         }
         
         if (result.shouldGameOver) {
-            // Handle game over if needed
-            // setGameState('GAME_OVER');
+            // setGameState('GAME_OVER'); // Optional: Enable later
         }
       }
     }, 16);
