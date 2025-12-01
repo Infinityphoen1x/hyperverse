@@ -366,28 +366,114 @@ export const GREYSCALE_COLORS: GreyscaleColors = {
 
 // Hold animation duration (already in FAILURE_ANIMATION_DURATION)
 
-// Top-level exports for backward compatibility and direct access
-// Visual Effects exports
-export const MAX_HEALTH = VISUAL_EFFECTS.maxHealth;
-export const LOW_HEALTH_THRESHOLD = VISUAL_EFFECTS.lowHealthThreshold;
-export const COMBO_MILESTONE = VISUAL_EFFECTS.comboMilestone;
-export const COMBO_PERFECT_MILESTONE = VISUAL_EFFECTS.comboPerfectMilestone;
-export const CHROMATIC_DURATION = VISUAL_EFFECTS.chromaticDuration;
-export const CHROMATIC_INTENSITY = VISUAL_EFFECTS.chromaticIntensity;
-export const CHROMATIC_OFFSET_PX = VISUAL_EFFECTS.chromaticOffsetPx;
-export const GREYSCALE_INTENSITY = VISUAL_EFFECTS.greyscaleIntensity;
-export const GLITCH_BACKGROUND_SIZE = VISUAL_EFFECTS.glitchBackgroundSize;
-export const GLITCH_BASE_INTERVAL = VISUAL_EFFECTS.glitchBaseInterval;
-export const GLITCH_RANDOM_RANGE = VISUAL_EFFECTS.glitchRandomRange;
-export const GLITCH_OPACITY = VISUAL_EFFECTS.glitchOpacity;
-export const PARTICLE_SIZE_MIN = VISUAL_EFFECTS.particleSizeMin;
-export const PARTICLE_SIZE_MAX = VISUAL_EFFECTS.particleSizeMax;
+// Grouped convenience interfaces for related visual effects
+export interface HealthThresholds {
+  max: number;
+  lowThreshold: number;
+}
+export const HEALTH_THRESHOLDS: HealthThresholds = {
+  max: VISUAL_EFFECTS.maxHealth,
+  lowThreshold: VISUAL_EFFECTS.lowHealthThreshold,
+};
 
-// Tunnel Geometry exports
-export const VANISHING_POINT_X = TUNNEL_GEOMETRY.vanishingPointX;
-export const VANISHING_POINT_Y = TUNNEL_GEOMETRY.vanishingPointY;
-export const TUNNEL_CONTAINER_WIDTH = TUNNEL_GEOMETRY.tunnelContainerWidth;
-export const TUNNEL_CONTAINER_HEIGHT = TUNNEL_GEOMETRY.tunnelContainerHeight;
+export interface ComboMilestones {
+  normal: number;
+  perfect: number;
+}
+export const COMBO_MILESTONES: ComboMilestones = {
+  normal: VISUAL_EFFECTS.comboMilestone,
+  perfect: VISUAL_EFFECTS.comboPerfectMilestone,
+};
+
+export interface ChromaticEffect {
+  duration: number;
+  intensity: number;
+  offsetPx: number;
+}
+export const CHROMATIC_EFFECT: ChromaticEffect = {
+  duration: VISUAL_EFFECTS.chromaticDuration,
+  intensity: VISUAL_EFFECTS.chromaticIntensity,
+  offsetPx: VISUAL_EFFECTS.chromaticOffsetPx,
+};
+
+export interface GlitchEffect {
+  baseInterval: number;
+  randomRange: number;
+  opacity: number;
+  backgroundSize: number;
+}
+export const GLITCH_EFFECT: GlitchEffect = {
+  baseInterval: VISUAL_EFFECTS.glitchBaseInterval,
+  randomRange: VISUAL_EFFECTS.glitchRandomRange,
+  opacity: VISUAL_EFFECTS.glitchOpacity,
+  backgroundSize: VISUAL_EFFECTS.glitchBackgroundSize,
+};
+
+export interface ParticleSize {
+  min: number;
+  max: number;
+}
+export const PARTICLE_SIZE: ParticleSize = {
+  min: VISUAL_EFFECTS.particleSizeMin,
+  max: VISUAL_EFFECTS.particleSizeMax,
+};
+
+export interface TunnelViewport {
+  vanishingPointX: number;
+  vanishingPointY: number;
+  containerWidth: number;
+  containerHeight: number;
+}
+export const TUNNEL_VIEWPORT: TunnelViewport = {
+  vanishingPointX: TUNNEL_GEOMETRY.vanishingPointX,
+  vanishingPointY: TUNNEL_GEOMETRY.vanishingPointY,
+  containerWidth: TUNNEL_GEOMETRY.tunnelContainerWidth,
+  containerHeight: TUNNEL_GEOMETRY.tunnelContainerHeight,
+};
+
+export interface DeckWheelConfig {
+  rotationSpeed: number;
+  spinThreshold: number;
+  dragVelocityThreshold: number;
+}
+export const DECK_WHEEL_CONFIG: DeckWheelConfig = {
+  rotationSpeed: DECK_ROTATION.rotationSpeed,
+  spinThreshold: DECK_ROTATION.spinThreshold,
+  dragVelocityThreshold: DECK_ROTATION.dragVelocityThreshold,
+};
+
+// Top-level exports for backward compatibility and direct access
+// Health exports
+export const MAX_HEALTH = HEALTH_THRESHOLDS.max;
+export const LOW_HEALTH_THRESHOLD = HEALTH_THRESHOLDS.lowThreshold;
+
+// Combo exports
+export const COMBO_MILESTONE = COMBO_MILESTONES.normal;
+export const COMBO_PERFECT_MILESTONE = COMBO_MILESTONES.perfect;
+
+// Chromatic effect exports
+export const CHROMATIC_DURATION = CHROMATIC_EFFECT.duration;
+export const CHROMATIC_INTENSITY = CHROMATIC_EFFECT.intensity;
+export const CHROMATIC_OFFSET_PX = CHROMATIC_EFFECT.offsetPx;
+
+// Greyscale export
+export const GREYSCALE_INTENSITY = VISUAL_EFFECTS.greyscaleIntensity;
+
+// Glitch effect exports
+export const GLITCH_BACKGROUND_SIZE = GLITCH_EFFECT.backgroundSize;
+export const GLITCH_BASE_INTERVAL = GLITCH_EFFECT.baseInterval;
+export const GLITCH_RANDOM_RANGE = GLITCH_EFFECT.randomRange;
+export const GLITCH_OPACITY = GLITCH_EFFECT.opacity;
+
+// Particle size exports
+export const PARTICLE_SIZE_MIN = PARTICLE_SIZE.min;
+export const PARTICLE_SIZE_MAX = PARTICLE_SIZE.max;
+
+// Tunnel viewport exports
+export const VANISHING_POINT_X = TUNNEL_VIEWPORT.vanishingPointX;
+export const VANISHING_POINT_Y = TUNNEL_VIEWPORT.vanishingPointY;
+export const TUNNEL_CONTAINER_WIDTH = TUNNEL_VIEWPORT.containerWidth;
+export const TUNNEL_CONTAINER_HEIGHT = TUNNEL_VIEWPORT.containerHeight;
 
 // Hold Note Geometry exports
 export const HOLD_NOTE_STRIP_WIDTH_MULTIPLIER = HOLD_NOTE_GEOMETRY.stripWidthMultiplier;
@@ -397,9 +483,9 @@ export const FAILURE_ANIMATION_DURATION = HOLD_NOTE_GEOMETRY.failureAnimationDur
 export const DECK_METER_COMPLETION_GLOW_DURATION = DECK_METER.completionGlowDuration;
 
 // Deck Rotation exports
-export const ROTATION_SPEED = DECK_ROTATION.rotationSpeed;
-export const SPIN_THRESHOLD = DECK_ROTATION.spinThreshold;
-export const DRAG_VELOCITY_THRESHOLD = DECK_ROTATION.dragVelocityThreshold;
+export const ROTATION_SPEED = DECK_WHEEL_CONFIG.rotationSpeed;
+export const SPIN_THRESHOLD = DECK_WHEEL_CONFIG.spinThreshold;
+export const DRAG_VELOCITY_THRESHOLD = DECK_WHEEL_CONFIG.dragVelocityThreshold;
 
 // Game Engine exports
 export const STATE_UPDATE_INTERVAL = GAME_ENGINE_TIMING.stateUpdateInterval;
