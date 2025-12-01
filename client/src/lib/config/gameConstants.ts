@@ -386,6 +386,9 @@ export const GLITCH_OPACITY = GLITCH_EFFECT.opacity;
 export const PARTICLE_SIZE_MIN = PARTICLE_SIZE.min;
 export const PARTICLE_SIZE_MAX = PARTICLE_SIZE.max;
 
+// Tunnel geometry exports
+export const HEXAGON_RADII = TUNNEL_GEOMETRY.hexagonRadii;
+
 // Tunnel viewport exports
 export const VANISHING_POINT_X = TUNNEL_VIEWPORT.vanishingPointX;
 export const VANISHING_POINT_Y = TUNNEL_VIEWPORT.vanishingPointY;
@@ -398,6 +401,7 @@ export const FAILURE_ANIMATION_DURATION = HOLD_NOTE_GEOMETRY.failureAnimationDur
 
 // Deck Meter exports
 export const DECK_METER_SEGMENTS = DECK_METER.segments;
+export const DECK_METER_SEGMENT_WIDTH = DECK_METER.segmentWidth;
 export const DECK_METER_COMPLETION_THRESHOLD = DECK_METER.completionThreshold;
 export const DECK_METER_COMPLETION_GLOW_DURATION = DECK_METER.completionGlowDuration;
 export const DECK_METER_DEFAULT_HOLD_DURATION = DECK_METER.defaultHoldDuration;

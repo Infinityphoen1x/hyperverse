@@ -1,4 +1,5 @@
 // src/components/RectangleMeter.tsx
+import React, { memo } from "react";
 import { motion } from "framer-motion";
 import { GameErrors } from '@/lib/errors/errorLog';
 import {
@@ -22,7 +23,7 @@ interface RectangleMeterProps {
   isGlowing: boolean; // From hook, replaces completionGlow record
 }
 
-export const RectangleMeter = ({ progress, outlineColor, lane, isGlowing }: RectangleMeterProps) => {
+const RectangleMeterComponent = ({ progress, outlineColor, lane, isGlowing }: RectangleMeterProps) => {
   // Validate progress before rendering
   if (!Number.isFinite(progress) || progress < 0 || progress > 1) {
     GameErrors.log(`DeckMeter: Invalid progress=${progress} for lane ${lane}`);
@@ -39,7 +40,6 @@ export const RectangleMeter = ({ progress, outlineColor, lane, isGlowing }: Rect
   }
 
   const fillColor = getRectangleMeterColor(lane);
-  const fullMeterGlow = isFull;
 
   return (
     <motion.div
@@ -58,7 +58,7 @@ export const RectangleMeter = ({ progress, outlineColor, lane, isGlowing }: Rect
               width: `${DECK_METER_SEGMENT_WIDTH}px`,
               borderColor: outlineColor,
               background: isFilled ? fillColor : 'transparent',
-              boxShadow: fullMeterGlow && isFilled
+              boxShadow: isFull && isFilled
                 ? `0 0 15px ${fillColor}, 0 0 30px ${fillColor}, inset 0 0 8px rgba(255,255,255,0.6)`
                 : isFilled
                   ? `0 0 10px ${fillColor}, inset 0 0 6px rgba(255,255,255,0.3)`
@@ -66,7 +66,7 @@ export const RectangleMeter = ({ progress, outlineColor, lane, isGlowing }: Rect
             }}
             animate={{
               opacity: isFilled ? 1 : 0.15,
-              boxShadow: fullMeterGlow && isFilled
+              boxShadow: isFull && isFilled
                 ? [
                     `0 0 15px ${fillColor}, 0 0 30px ${fillColor}, inset 0 0 8px rgba(255,255,255,0.6)`,
                     `0 0 20px ${fillColor}, 0 0 40px ${fillColor}, inset 0 0 10px rgba(255,255,255,0.8)`,
@@ -76,10 +76,12 @@ export const RectangleMeter = ({ progress, outlineColor, lane, isGlowing }: Rect
                   ? `0 0 10px ${fillColor}, inset 0 0 6px rgba(255,255,255,0.3)`
                   : 'none',
             }}
-            transition={fullMeterGlow && isFilled ? { duration: 0.6, repeat: Infinity } : { duration: 0.08 }}
+            transition={isFull && isFilled ? { duration: 0.6, repeat: Infinity } : { duration: 0.08 }}
           />
         );
       })}
     </motion.div>
   );
 };
+
+export const RectangleMeter = memo(RectangleMeterComponent);
