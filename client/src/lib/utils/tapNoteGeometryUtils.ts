@@ -1,5 +1,4 @@
 // src/utils/tapNoteGeometry.ts
-import { Note } from '@/types/game';
 import { GameErrors } from '@/lib/errors/errorLog';
 import {
   JUDGEMENT_RADIUS,
