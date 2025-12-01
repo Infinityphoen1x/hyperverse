@@ -1,17 +1,17 @@
 // src/hooks/useRewind.ts
 import { useCallback } from 'react';
-import { useGameStore } from '@/stores/useGameStore'; // For restart/pause actions
+import { useGameStore } from '@/stores/useGameStore';
 import { seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo } from '@/lib/youtube';
-import { startGame } from './useGameStart'; // Assume separate if needed
 
 interface UseRewindProps {
-  restartGame: () => void;
-  startGame: () => void;
   setPauseMenuOpen: (open: boolean) => void;
 }
 
-export function useRewind({ restartGame, startGame, setPauseMenuOpen }: UseRewindProps) {
-  const handleRewind = useCallback(async () => {
+export function useRewind({ setPauseMenuOpen }: UseRewindProps): { handleRewind: () => Promise<void> } {
+  const restartGame = useGameStore(state => state.restartGame);
+  const setGameState = useGameStore(state => state.setGameState);
+
+  const handleRewind = useCallback(async (): Promise<void> => {
     restartGame();
     setPauseMenuOpen(false);
     try {
@@ -21,8 +21,8 @@ export function useRewind({ restartGame, startGame, setPauseMenuOpen }: UseRewin
     } catch (err) {
       // Rewind failed, continue anyway
     }
-    startGame();
-  }, [restartGame, startGame, setPauseMenuOpen]);
+    setGameState('PLAYING');
+  }, [restartGame, setGameState, setPauseMenuOpen]);
 
-  return handleRewind;
+  return { handleRewind };
 }
