@@ -43,16 +43,29 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   pauseGame: () => set({ isPaused: true, countdownSeconds: 0 }),
   resumeGame: () => set({ isPaused: false }),
   rewindGame: () => set({ currentTime: 0 }),
-  restartGame: () => set({ 
+  restartGame: () => set((state) => ({ 
     currentTime: 0, 
     score: 0, 
     combo: 0, 
     health: 200, 
     gameState: 'IDLE', 
-    notes: [],
     isPaused: false,
-    countdownSeconds: 0
-  }),
+    countdownSeconds: 0,
+    // Reset note states but keep the notes array
+    notes: state.notes.map(note => ({
+      ...note,
+      hit: false,
+      missed: false,
+      failureTime: undefined,
+      pressHoldTime: undefined,
+      releaseTime: undefined,
+      tapTooEarlyFailure: false,
+      tapMissFailure: false,
+      tooEarlyFailure: false,
+      holdMissFailure: false,
+      holdReleaseFailure: false
+    }))
+  })),
 
   // Selectors
   getVisibleNotes: () => {

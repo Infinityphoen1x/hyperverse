@@ -28,17 +28,40 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
       GameErrors.log(`BeatmapConverter: Invalid lane ${note.lane} at note index ${i}. Valid lanes: -2 (P deck), -1 (Q deck), 0-3 (soundpads)`);
       continue;
     }
-    if (note.type === 'HOLD' && note.lane >= 0 && note.lane <= 3) {
-      GameErrors.log(`BeatmapConverter: Soundpad lane ${note.lane} cannot use HOLD type (note index ${i}). Use TAP instead.`);
-      continue;
+
+    // STRICT ENFORCEMENT: Lanes 0-3 are TAP only. Lanes -1/-2 are HOLD (SPIN) only.
+    let enforcedType = note.type;
+    
+    // Force Soundpads (0-3) to TAP
+    if (note.lane >= 0 && note.lane <= 3) {
+        if (note.type === 'HOLD') {
+            // console.warn(`BeatmapConverter: Lane ${note.lane} forced to TAP (HOLD not supported on soundpads)`);
+            enforcedType = 'TAP';
+        }
     }
-    if (note.type === 'HOLD') {
+
+    // Force Decks (-1, -2) to HOLD (SPIN) if they have duration, otherwise TAP (though deck taps might be rare/unsupported?)
+    // User said: "Lanes q and p, or -1 and -2, are reserved for hold notes alone"
+    if (note.lane === -1 || note.lane === -2) {
+        if (note.type === 'TAP') {
+             // console.warn(`BeatmapConverter: Lane ${note.lane} forced to HOLD (TAP not supported on decks)`);
+             enforcedType = 'HOLD';
+             // Give it a default duration if missing, so it works as a spin
+             if (!note.duration) note.duration = 1000; 
+        }
+    }
+
+    if (enforcedType === 'HOLD') {
       if (note.duration === undefined || !Number.isFinite(note.duration) || note.duration <= 0) {
-        GameErrors.log(`BeatmapConverter: HOLD note at index ${i} has invalid duration: ${note.duration}. Duration must be > 0.`);
-        continue;
+        // If we forced it to HOLD, we might have just added duration. If it was already HOLD but bad duration:
+        if (note.lane === -1 || note.lane === -2) {
+             note.duration = 1000; // Fallback for decks
+        } else {
+             GameErrors.log(`BeatmapConverter: HOLD note at index ${i} has invalid duration. Skipping.`);
+             continue;
+        }
       }
       if (note.holdId && seenHoldIds.has(note.holdId)) {
-        GameErrors.log(`BeatmapConverter: Duplicate holdId "${note.holdId}" at note index ${i}. Skipping duplicate.`);
         continue;
       }
       if (note.holdId) {
@@ -51,15 +74,18 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
   for (let i = 0; i < beatmapNotes.length; i++) {
     if (!validNoteIndices.has(i)) continue;
     const note = beatmapNotes[i];
+    
     let type: 'TAP' | 'SPIN_LEFT' | 'SPIN_RIGHT';
-    if (note.type === 'TAP') {
-      type = 'TAP';
-    } else if (note.type === 'HOLD') {
-      type = note.lane === -2 ? 'SPIN_RIGHT' : 'SPIN_LEFT';
-      GameErrors.log(`BeatmapConverter: HOLD note ${note.holdId} lane=${note.lane} → type=${type}`);
+    
+    // Re-apply logic to determine final internal type
+    if (note.lane === -1) {
+        type = 'SPIN_LEFT';
+    } else if (note.lane === -2) {
+        type = 'SPIN_RIGHT';
     } else {
-      type = 'TAP';
+        type = 'TAP';
     }
+
     const id = note.holdId || `note-${note.time}-${i}`;
     const gameNote: Note = {
       id,
@@ -69,9 +95,16 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
       hit: false,
       missed: false,
     };
-    if (note.type === 'HOLD' && note.duration) {
+    
+    // Apply duration if it's a spin note
+    if ((type === 'SPIN_LEFT' || type === 'SPIN_RIGHT') && note.duration) {
       gameNote.duration = note.duration;
     }
+    // Fallback: if we decided it's a spin note but it has no duration (was TAP in beatmap), give it default
+    if ((type === 'SPIN_LEFT' || type === 'SPIN_RIGHT') && !gameNote.duration) {
+      gameNote.duration = 1000;
+    }
+
     if (note.beatmapStart !== undefined) {
       gameNote.beatmapStart = note.beatmapStart;
     }
