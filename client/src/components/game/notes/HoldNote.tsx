@@ -1,5 +1,5 @@
 // src/components/HoldNote.tsx
-import React from 'react';
+import React, { memo } from 'react';
 import { getTrapezoidCorners } from "@/lib/geometry/holdNoteGeometry";
 import { calculateHoldNoteStyle } from "@/lib/notes/hold/holdNoteStyle";
 import { HoldNoteProcessedData } from '@/hooks/useHoldNotes';
@@ -10,7 +10,7 @@ interface HoldNoteProps {
   vpY: number;
 }
 
-export function HoldNote({ noteData, vpX, vpY }: HoldNoteProps) {
+const HoldNoteComponent = ({ noteData, vpX, vpY }: HoldNoteProps) => {
   const { note, rayAngle, colors, approachProgress, collapseProgress, pressHoldTime, failures, failureTime, currentTime, greyscaleState, finalGlowScale } = noteData;
   const corners = getTrapezoidCorners(rayAngle, noteData.nearDistance, noteData.farDistance, vpX, vpY, note.id);
   if (!corners) return null;
@@ -18,12 +18,16 @@ export function HoldNote({ noteData, vpX, vpY }: HoldNoteProps) {
   const holdStyle = calculateHoldNoteStyle(approachProgress, collapseProgress, pressHoldTime, failures, failureTime, currentTime, greyscaleState, colors, finalGlowScale);
   return (
     <polygon
+      key={`hold-note-${note.id}`}
+      data-testid={`hold-note-${note.id}`}
       points={`${x1},${y1} ${x2},${y2} ${x3},${y3} ${x4},${y4}`}
       fill={colors.fillColor}
       opacity={holdStyle.opacity}
       stroke={colors.strokeColor}
       strokeWidth={holdStyle.strokeWidth}
-      style={{ filter: holdStyle.filter, transition: 'all 0.05s linear', mixBlendMode: 'screen' }}
+      style={{ filter: holdStyle.filter || 'none', transition: 'all 0.05s linear', mixBlendMode: 'screen' }}
     />
   );
-}
+};
+
+export const HoldNote = memo(HoldNoteComponent);

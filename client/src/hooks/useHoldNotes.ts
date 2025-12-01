@@ -3,6 +3,8 @@ import { useMemo } from 'react';
 import { Note } from '@/lib/engine/gameTypes';
 import { processSingleHoldNote, HoldNoteProcessedData } from '@/lib/utils/holdNoteUtils';
 
+export type { HoldNoteProcessedData };
+
 export function useHoldNotes(visibleNotes: Note[], currentTime: number): HoldNoteProcessedData[] {
   return useMemo(() => {
     return visibleNotes
