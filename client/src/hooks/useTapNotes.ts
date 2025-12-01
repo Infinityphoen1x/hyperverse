@@ -4,6 +4,7 @@ import { useGameStore } from '@/stores/useGameStore';
 import type { Note } from '@/lib/engine/gameTypes';
 import { getTapNoteState, TapNoteState, shouldRenderTapNote } from '@/lib/notes/tap/tapNoteHelpers';
 import { LEAD_TIME } from '@/lib/config/gameConstants';
+import { GameErrors } from '@/lib/errors/errorLog';
 
 export interface TapNoteProcessedData {
   note: Note;
@@ -56,6 +57,13 @@ export function useTapNotes(): TapNoteProcessedData[] {
         if (!shouldRenderTapNote(state, note.time - currentTime)) {
             return null;
         }
+
+        // Log render tracking with detailed metrics
+        const renderLog = `[TAP-RENDER] noteId=${note.id} time=${note.time.toFixed(0)}ms lane=${note.lane} ` +
+          `currentTime=${currentTime.toFixed(0)}ms timeUntilHit=${(note.time - currentTime).toFixed(0)}ms ` +
+          `rawProgress=${rawProgress.toFixed(3)} clampedProgress=${clampedProgress.toFixed(3)} ` +
+          `state=${state} hit=${note.hit} missed=${note.missed} tapTooEarlyFailure=${note.tapTooEarlyFailure} tapMissFailure=${note.tapMissFailure}`;
+        GameErrors.log(renderLog);
 
         return {
           note,
