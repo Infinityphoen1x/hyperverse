@@ -11,17 +11,10 @@ interface PauseMenuProps {
 }
 
 const PauseMenuComponent = ({ onHome: propOnHome }: PauseMenuProps = {}) => {
-  const { 
-    isPaused, 
-    countdownSeconds, 
-    resumeGame, 
-    rewindGame
-  } = useGameStore(state => ({
-    isPaused: state.isPaused,
-    countdownSeconds: state.countdownSeconds,
-    resumeGame: state.resumeGame,
-    rewindGame: state.rewindGame,
-  }));
+  const isPaused = useGameStore(state => state.isPaused);
+  const countdownSeconds = useGameStore(state => state.countdownSeconds);
+  const resumeGame = useGameStore(state => state.resumeGame);
+  const rewindGame = useGameStore(state => state.rewindGame);
 
   if (!isPaused) return null;
 

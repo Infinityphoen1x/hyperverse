@@ -106,8 +106,8 @@ export function useGameLogic({
       setIsPauseMenuOpenLocal(false);
     } else if (gameState === 'PLAYING') {
       setIsPauseMenuOpenLocal(false);
-    } else if (gameState === 'PAUSED') {
-      // Pause-specific
+    } else if (gameState === 'RESUMING') {
+      setIsPauseMenuOpenLocal(false);
     }
   }, [gameState]);
 
