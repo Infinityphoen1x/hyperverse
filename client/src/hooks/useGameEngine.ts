@@ -1,16 +1,11 @@
-// src/hooks/useGameEngine.ts
 import { useEffect, useCallback } from 'react';
-import { useGameEngineStore } from '@/stores/useGameEngineStore';
-import { useSyncedValue } from './useSyncedValue'; // From prior migration
-import { useGameConfig } from './useGameConfig';
-import type { GameConfig, GameState, Note, Difficulty, ScoreState } from '@/lib/engine/gameTypes';
-import { SyncConfig } from '@/lib/engine/gameTypes'; // Assume typed
+import { useGameStore } from '@/stores/useGameStore';
+import type { GameConfig, GameState, Note, Difficulty, ScoreState } from '@/types/game';
 
 interface UseGameEngineProps {
   difficulty: Difficulty;
   customNotes?: Note[];
   getVideoTime?: () => number | null;
-  syncIntervals?: Partial<SyncConfig>;
 }
 
 export interface UseGameEngineReturn {
@@ -41,37 +36,53 @@ export function useGameEngine({
   difficulty,
   customNotes = [],
   getVideoTime,
-  syncIntervals = {},
 }: UseGameEngineProps): UseGameEngineReturn {
-  const config = useGameConfig(difficulty);
   const {
-    // State selectors
     gameState,
-    isPaused,
+    score,
+    combo,
+    health,
+    notes,
     currentTime,
-    getNotes,
-    getScore,
-    getReleaseTime: storeGetReleaseTime,
-    // Actions
-    init,
-    start: startGame,
-    pause: pauseGame,
-    resume: resumeGame,
-    reset: restartGame,
+    isPaused,
+    setGameState,
+    setScore,
+    setCombo,
+    setHealth,
     setCurrentTime,
-    handleTap: hitNote,
-    handleHoldStart: trackHoldStart,
-    handleHoldEnd: trackHoldEnd,
-    // Assume markNoteMissed added to store if needed
-    markNoteMissed,
-  } = useGameEngineStore();
+    hitNote,
+    pauseGame,
+    resumeGame,
+    rewindGame,
+  } = useGameStore();
 
-  // Synced values (batched for perf; use store selectors directly if no lag)
-  const intervals = {
-    notesInterval: syncIntervals.notesInterval || 50,
-    stateInterval: syncIntervals.stateInterval || 16, // ~60fps for health/score
-  };
-  const isGameActive = gameState === 'PLAYING';
+  const startGame = useCallback(() => {
+    setGameState('PLAYING');
+  }, [setGameState]);
+
+  const restartGame = useCallback(() => {
+    setCurrentTime(0);
+    setGameState('IDLE');
+  }, [setCurrentTime, setGameState]);
+
+  const trackHoldStart = useCallback((lane: number) => {
+    // Placeholder
+    console.log(`[HOLD] Start lane ${lane}`);
+  }, []);
+
+  const trackHoldEnd = useCallback((lane: number) => {
+    // Placeholder
+    console.log(`[HOLD] End lane ${lane}`);
+  }, []);
+
+  const markNoteMissed = useCallback((noteId: string) => {
+    // Placeholder
+    console.log(`[MISS] ${noteId}`);
+  }, []);
+
+  const getReleaseTime = useCallback((noteId: string) => {
+    return undefined;
+  }, []);
 
   const { score, combo, health } = getScore(); // Direct if no sync needed; else:
   // const syncedScore = useSyncedValue(useGameEngineStore, (state) => state.getScore().score, intervals.stateInterval, isGameActive);

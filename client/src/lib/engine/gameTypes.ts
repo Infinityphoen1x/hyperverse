@@ -18,3 +18,9 @@ export type {
   PostProcessor,
   GameStoreState,
 } from '@/types/game';
+
+// SyncConfig placeholder for compatibility
+export interface SyncConfig {
+  notesInterval?: number;
+  stateInterval?: number;
+}

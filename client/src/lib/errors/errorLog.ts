@@ -1,4 +1,3 @@
-// src/lib/errors/errorLog.ts
 import { useGameDebuggerStore } from '@/stores/useGameDebuggerStore';
 import type { AnimationTrackingEntry, FailureType } from '@/types/gameDebugTypes';
 

@@ -1,7 +1,6 @@
-// src/hooks/useGameLogic.ts
-import { useState, useCallback } from 'react';
-import { useGameStore } from '@/stores/useGameStore'; // For global state/actions
-import { GameState } from '@/lib/engine/gameTypes';
+import { useState, useCallback, useEffect } from 'react';
+import { useGameStore } from '@/stores/useGameStore';
+import type { GameState, Note } from '@/types/game';
 import { usePauseLogic } from './usePauseLogic';
 import { useKeyControls } from './useKeyControls';
 import { useCountdown } from './useCountdown';
@@ -15,7 +14,7 @@ interface UseGameLogicProps {
   currentTime: number;
   isPaused: boolean;
   notes: Note[];
-  getVideoTime: (() => number | null) | undefined;
+  getVideoTime?: (() => number | null) | null;
   pauseGame: () => void;
   resumeGame: () => void;
   restartGame: () => void;
@@ -72,12 +71,15 @@ export function useGameLogic({
     setPauseMenuOpen: setPauseMenuOpenHandler,
   });
 
+  // Rewind (must be declared before useKeyControls)
+  const handleRewind = useRewind({ restartGame, startGame, setPauseMenuOpen: setPauseMenuOpenHandler });
+
   // Key controls
   useKeyControls({
     gameState,
     isPaused,
     hitNote,
-    handleRewind, // From useRewind
+    handleRewind,
     handleResume,
     setPauseMenuOpen: setPauseMenuOpenHandler,
   });
@@ -102,9 +104,6 @@ export function useGameLogic({
 
   // Auto-start
   useAutoStart({ customNotes, startGame });
-
-  // Rewind
-  const handleRewind = useRewind({ restartGame, startGame, setPauseMenuOpen: setPauseMenuOpenHandler });
 
   // Reset on game state changes
   useEffect(() => {
