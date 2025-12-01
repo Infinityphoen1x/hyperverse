@@ -75,7 +75,8 @@ export const useBeatmapLoader = ({ difficulty, onBeatmapLoad }: UseBeatmapLoader
         youtubeVideoId = extractedId;
       }
 
-      const convertedNotes = convertBeatmapNotes(parsed.notes);
+      const beatmapStartOffset = parsed.metadata?.beatmapStart || 0;
+      const convertedNotes = convertBeatmapNotes(parsed.notes, beatmapStartOffset);
       if (convertedNotes.length === 0) {
         const msg = "Beatmap has no notes after conversion";
         setError(msg);
