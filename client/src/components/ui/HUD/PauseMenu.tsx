@@ -1,7 +1,7 @@
 // src/components/PauseMenu.tsx
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from "framer-motion";
-import { useGameStore } from '@/stores/useGameStore'; // Assumes store with pause/game state/actions
+import { useGameStore } from '@/stores/useGameStore';
 
 interface PauseMenuProps {
   onHome?: () => void;
@@ -10,26 +10,23 @@ interface PauseMenuProps {
   onRewind?: () => void;
 }
 
-export function PauseMenu({ onHome: propOnHome }: PauseMenuProps = {}) {
-  // Pull from Zustand (fallback to props for testing/flexibility)
+const PauseMenuComponent = ({ onHome: propOnHome }: PauseMenuProps = {}) => {
   const { 
     isPaused, 
     countdownSeconds, 
     resumeGame, 
-    rewindGame, 
-    goHome 
+    rewindGame
   } = useGameStore(state => ({
     isPaused: state.isPaused,
     countdownSeconds: state.countdownSeconds,
     resumeGame: state.resumeGame,
     rewindGame: state.rewindGame,
-    goHome: propOnHome ?? state.goHome,
   }));
 
-  if (!isPaused) return null; // Hide if not paused
+  if (!isPaused) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center" data-testid="pause-menu-container">
       <div className="text-center space-y-8">
         {countdownSeconds > 0 ? (
           <>
@@ -38,15 +35,16 @@ export function PauseMenu({ onHome: propOnHome }: PauseMenuProps = {}) {
               animate={{ scale: [1, 1.2, 1], textShadow: ['0 0 20px hsl(180, 100%, 50%)', '0 0 40px hsl(180, 100%, 50%)', '0 0 20px hsl(180, 100%, 50%)'] }}
               transition={{ duration: 1, repeat: Infinity }}
               key={countdownSeconds}
+              data-testid="countdown-display"
             >
               {countdownSeconds}
             </motion.div>
-            <p className="text-neon-cyan font-rajdhani text-lg">GET READY!</p>
+            <p className="text-neon-cyan font-rajdhani text-lg" data-testid="text-get-ready">GET READY!</p>
           </>
         ) : (
           <>
-            <h1 className="text-6xl font-orbitron text-neon-cyan neon-glow">PAUSED</h1>
-            <p className="text-neon-cyan font-rajdhani text-lg">Press ESC to resume</p>
+            <h1 className="text-6xl font-orbitron text-neon-cyan neon-glow" data-testid="text-paused">PAUSED</h1>
+            <p className="text-neon-cyan font-rajdhani text-lg" data-testid="text-resume-hint">Press ESC to resume</p>
           </>
         )}
         <div className="flex flex-col gap-4 mt-8">
@@ -65,9 +63,9 @@ export function PauseMenu({ onHome: propOnHome }: PauseMenuProps = {}) {
           >
             REWIND
           </button>
-          {goHome && (
+          {propOnHome && (
             <button
-              onClick={goHome}
+              onClick={propOnHome}
               className="px-12 py-4 bg-neon-pink text-black font-bold font-orbitron text-lg hover:bg-white transition-colors"
               data-testid="button-sever-node"
             >
@@ -78,4 +76,6 @@ export function PauseMenu({ onHome: propOnHome }: PauseMenuProps = {}) {
       </div>
     </div>
   );
-}
+};
+
+export const PauseMenu = memo(PauseMenuComponent);
