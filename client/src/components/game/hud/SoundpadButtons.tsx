@@ -1,5 +1,5 @@
 // src/components/SoundpadButtons.tsx
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { useGameStore } from '@/stores/useGameStore'; // Assumes store with vpX, vpY (e.g., viewport state)
 import { SoundpadButton } from './SoundpadButton';
 import { calculateButtonPosition } from '@/lib/utils/soundpadUtils';
