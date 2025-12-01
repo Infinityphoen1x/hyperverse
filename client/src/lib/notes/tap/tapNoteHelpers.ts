@@ -1,13 +1,10 @@
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
+import { TAP_FAILURE_ANIMATIONS } from '@/lib/config/gameConstants';
 
 const TAP_RENDER_WINDOW_MS = 500;
 const TAP_FALLTHROUGH_WINDOW_MS = 200;
 const TAP_HIT_HOLD_DURATION = 200;
-const TAP_FAILURE_ANIMATIONS = {
-  TOO_EARLY: { duration: 600 },
-  MISS: { duration: 800 }
-};
 
 export interface TapNoteState {
   isHit: boolean;
