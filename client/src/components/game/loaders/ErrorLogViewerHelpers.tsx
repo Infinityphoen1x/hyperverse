@@ -1,4 +1,4 @@
-// src/components/StatComponents.tsx
+// src/components/ErrorLogViewerHelpers.tsx
 // UI-only components for stats display - no state, pure props
 import React from 'react';
 
@@ -64,3 +64,10 @@ export function StatSection({ title, titleColor = 'purple', textColor = 'purple'
     </div>
   );
 }
+
+export const formatLaneStats = (lanes: any) => {
+  if (!lanes) return 'N/A';
+  return Object.entries(lanes)
+    .map(([lane, count]) => `L${lane}:${count}`)
+    .join(' ');
+};

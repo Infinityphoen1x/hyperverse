@@ -3,12 +3,12 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { useErrorLogs } from '@/hooks/useErrorLogs';
-import { NoteStatsSection } from '@/components/NoteStatsSection';
-import { RenderAndHitStatsSection } from '@/components/RenderAndHitStatsSection';
-import { FailureBreakdownSection } from '@/components/FailureBreakdownSection';
-import { AnimationStatsSection } from '@/components/AnimationStatsSection';
-import { ErrorCountsSection } from '@/components/ErrorCountsSection';
-import { ErrorListSection } from '@/components/ErrorListSection';
+import { NoteStatsSection } from './NoteStatsSection';
+import { RenderAndHitStatsSection } from './RenderAndHitStatsSection';
+import { FailureBreakdownSection } from './FailureBreakdownSection';
+import { AnimationStatsSection } from './AnimationStatsSection';
+import { ErrorCountsSection } from './ErrorCountsSection';
+import { ErrorListSection } from './ErrorListSection';
 
 export function ErrorLogViewer() {
   const [isOpen, setIsOpen] = useState(false);

@@ -320,3 +320,14 @@ export const GREYSCALE_COLORS: GreyscaleColors = {
 };
 
 // Hold animation duration (already in FAILURE_ANIMATION_DURATION)
+// Top-level exports for backward compatibility and direct access
+export const MAX_HEALTH = VISUAL_EFFECTS.maxHealth;
+export const LOW_HEALTH_THRESHOLD = VISUAL_EFFECTS.lowHealthThreshold;
+export const COMBO_PERFECT_MILESTONE = VISUAL_EFFECTS.comboPerfectMilestone;
+export const GREYSCALE_INTENSITY = VISUAL_EFFECTS.greyscaleIntensity;
+export const GLITCH_BACKGROUND_SIZE = VISUAL_EFFECTS.glitchBackgroundSize;
+export const VANISHING_POINT_X = TUNNEL_GEOMETRY.vanishingPointX;
+export const VANISHING_POINT_Y = TUNNEL_GEOMETRY.vanishingPointY;
+export const TUNNEL_CONTAINER_WIDTH = TUNNEL_GEOMETRY.tunnelContainerWidth;
+export const TUNNEL_CONTAINER_HEIGHT = TUNNEL_GEOMETRY.tunnelContainerHeight;
+export const DECK_METER_COMPLETION_GLOW_DURATION = DECK_METER.completionGlowDuration;

@@ -4,8 +4,10 @@ import { motion } from "framer-motion";
 import { useGameStore } from '@/stores/useGameStore'; // Assumes store with pause/game state/actions
 
 interface PauseMenuProps {
-  // Optional overrides; defaults to store for global sync
   onHome?: () => void;
+  countdownSeconds?: number;
+  onResume?: () => void;
+  onRewind?: () => void;
 }
 
 export function PauseMenu({ onHome: propOnHome }: PauseMenuProps = {}) {

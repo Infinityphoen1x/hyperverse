@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { Note } from '@/lib/engine/gameTypes';
 import { VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config/gameConstants';
 import { useVanishingPointOffset } from '@/hooks/useVanishingPointOffset';
-import { useKeyboardControls } from '@/hooks/useKeyboardControls';
+import { useKeyControls } from '@/hooks/useKeyControls';
 import { useVisibleNotes } from '@/hooks/useVisibleNotes';
 import { useGameStore } from '@/stores/useGameStore'; // Assumes store with game state/actions
 import { TunnelBackground } from './tunnel/TunnelBackground';
@@ -13,11 +13,13 @@ import { HoldNotes } from './notes/HoldNotes';
 import { TapNotes } from './notes/TapNotes';
 
 interface Down3DNoteLaneProps {
-  // Optional overrides; defaults to store for global sync
   notes?: Note[];
   currentTime?: number;
   health?: number;
   combo?: number;
+  onPadHit?: (lane: number) => void;
+  onDeckHoldStart?: (lane: number) => void;
+  onDeckHoldEnd?: (lane: number) => void;
 }
 
 export function Down3DNoteLane({

@@ -5,8 +5,10 @@ import { useGameStore } from '@/stores/useGameStore'; // Assumes store with game
 import { ErrorLogViewer } from "@/components/game/loaders/ErrorLogViewer";
 
 interface GameOverScreenProps {
-  // Optional overrides; defaults to store for global sync
   onRestart?: () => void;
+  score?: number;
+  combo?: number;
+  errors?: number;
 }
 
 export function GameOverScreen({ onRestart: propOnRestart }: GameOverScreenProps = {}) {

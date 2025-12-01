@@ -155,7 +155,7 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
   }, [gameState, youtubeVideoId]);
 
   if (gameState === 'GAME_OVER') {
-    return <GameOverScreen score={score} combo={combo} errors={gameErrors.length} onRestart={() => window.location.reload()} />;
+    return <GameOverScreen onRestart={() => window.location.reload()} />;
   }
 
   return (
@@ -173,9 +173,6 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
       {/* Pause Menu */}
       {isPauseMenuOpen && isPaused && (
         <PauseMenu
-          countdownSeconds={countdownSeconds}
-          onResume={handleResume}
-          onRewind={handleRewind}
           onHome={onBackToHome}
         />
       )}
@@ -204,9 +201,6 @@ export default function Game({ difficulty, onBackToHome, youtubeIframeRef, playe
             currentTime={Math.round(currentTime)}
             health={health}
             combo={combo}
-            onPadHit={hitNote}
-            onDeckHoldStart={trackHoldStart}
-            onDeckHoldEnd={trackHoldEnd}
           />
         </div>
         <div className="absolute right-8">
