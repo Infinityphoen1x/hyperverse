@@ -1,11 +1,17 @@
 // src/hooks/useGameQueries.ts
 import { useGameStore } from '@/stores/useGameStore';
-import { shallow } from 'zustand/shallow';
 import type { Note } from '@/types/game';
 
-export function useGameQueries() {
-  const activeNotes = useGameStore(state => state.getActiveNotes(), shallow);
-  const completedNotes = useGameStore(state => state.getCompletedNotes(), shallow);
+export interface UseGameQueriesReturn {
+  activeNotes: Note[];
+  completedNotes: Note[];
+  activeNotesOnLane: (lane: number) => Note[];
+  isDead: boolean;
+}
+
+export function useGameQueries(): UseGameQueriesReturn {
+  const activeNotes = useGameStore(state => state.getActiveNotes());
+  const completedNotes = useGameStore(state => state.getCompletedNotes());
   const isDead = useGameStore(state => state.isDead());
   const getActiveNotesOnLane = useGameStore(state => state.getActiveNotesOnLane);
 
@@ -18,5 +24,5 @@ export function useGameQueries() {
 }
 
 export function useActiveNotes(): Note[] {
-  return useGameStore((state) => state.getActiveNotes(), shallow);
+  return useGameStore((state) => state.getActiveNotes());
 }
