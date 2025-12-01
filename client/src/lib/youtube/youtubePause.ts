@@ -1,4 +1,4 @@
-import { waitForPlayerReady } from './youtubePlayerState';
+import { waitForPlayerReady, isPlayerReady } from './youtubePlayerState';
 import { useYoutubeStore } from '@/stores/useYoutubeStore';
 
 /**
@@ -6,7 +6,11 @@ import { useYoutubeStore } from '@/stores/useYoutubeStore';
  * Uses official API if available, falls back to iframe postMessage control
  */
 export async function pauseYouTubeVideo(): Promise<void> {
-  await waitForPlayerReady(1000);
+  // Optimization: If player is already ready (which is 99% of the time during gameplay),
+  // don't wait. Just execute immediately to minimize latency.
+  if (!isPlayerReady()) {
+    await waitForPlayerReady(1000);
+  }
 
   try {
     // Get fresh player reference right before using it
@@ -29,7 +33,10 @@ export async function pauseYouTubeVideo(): Promise<void> {
       const currentTime = ytPlayer.getCurrentTime?.() ?? 0;
       const minutes = Math.floor(currentTime / 60);
       const seconds = (currentTime % 60).toFixed(2);
+      
+      // Execute synchronously if possible
       ytPlayer.pauseVideo();
+      
       console.log(`[YOUTUBE-PAUSE] Official API: Paused at ${minutes}:${seconds} (${currentTime.toFixed(2)}s total)`);
     } else if (youtubeIframeElement?.contentWindow) {
       youtubeIframeElement.contentWindow.postMessage(
