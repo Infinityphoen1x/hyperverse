@@ -63,7 +63,7 @@ export function useTapNotes(): TapNoteProcessedData[] {
           `currentTime=${currentTime.toFixed(0)}ms timeUntilHit=${(note.time - currentTime).toFixed(0)}ms ` +
           `rawProgress=${rawProgress.toFixed(3)} clampedProgress=${clampedProgress.toFixed(3)} ` +
           `state=${state} hit=${note.hit} missed=${note.missed} tapTooEarlyFailure=${note.tapTooEarlyFailure} tapMissFailure=${note.tapMissFailure}`;
-        GameErrors.log(renderLog);
+        GameErrors.log(renderLog, currentTime);
 
         return {
           note,

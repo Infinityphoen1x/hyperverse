@@ -94,7 +94,7 @@ export function processSingleHoldNote(note: Note, currentTime: number): HoldNote
       `approachProg=${approachProgress.toFixed(3)} collapseProg=${collapseGeo.collapseProgress.toFixed(3)} ` +
       `nearDist=${collapseGeo.nearDistance.toFixed(1)} farDist=${collapseGeo.farDistance.toFixed(1)} ` +
       `duration=${holdDuration}ms pressHoldTime=${pressHoldTime} failures=${JSON.stringify(failures)}`;
-    GameErrors.log(renderLog);
+    GameErrors.log(renderLog, currentTime);
 
     return {
       note,

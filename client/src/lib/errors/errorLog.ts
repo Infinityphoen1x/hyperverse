@@ -3,16 +3,16 @@ import type { AnimationTrackingEntry, FailureType } from '@/types/gameDebugTypes
 
 export const GameErrors = {
   // Public selectors (reactive)
-  notes: [] as string[], // Legacy mutable; update via actions
+  notes: [] as (string | any)[], // Mixed strings/LogEntry objects
   animations: [] as AnimationTrackingEntry[],
   noteStats: { total: 0, tap: 0, hold: 0, hit: 0, missed: 0, failed: 0, byLane: {} as Record<number, number> },
   renderStats: { rendered: 0, preMissed: 0 },
   hitStats: { successfulHits: 0, tapTooEarlyFailures: 0, tapMissFailures: 0, tooEarlyFailures: 0, holdMissFailures: 0, holdReleaseFailures: 0 },
 
   // Methods (dispatch to store)
-  log(msg: string) {
-    useGameDebuggerStore.getState().log(msg);
-    // Sync legacy (if needed; otherwise remove)
+  log(msg: string, gameTime?: number) {
+    useGameDebuggerStore.getState().log(msg, gameTime);
+    // Sync legacy
     this.notes = [...useGameDebuggerStore.getState().notes];
   },
 
