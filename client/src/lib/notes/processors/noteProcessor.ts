@@ -29,7 +29,6 @@ export class NoteProcessor {
       return {
         updatedNote: {
           ...note,
-          pressTime: roundTime(currentTime),
           tapTooEarlyFailure: true,
           failureTime: roundTime(currentTime),
         },
@@ -45,8 +44,6 @@ export class NoteProcessor {
         updatedNote: {
           ...note,
           hit: true,
-          hitTime: roundTime(currentTime),
-          pressTime: roundTime(currentTime),
         },
         scoreChange,
         success: true,
@@ -126,7 +123,6 @@ export class NoteProcessor {
           ...note,
           hit: true,
           releaseTime: roundTime(currentTime),
-          pressReleaseTime: roundTime(currentTime),
         },
         scoreChange,
         success: true,
