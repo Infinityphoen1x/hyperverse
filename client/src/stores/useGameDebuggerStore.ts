@@ -45,6 +45,7 @@ export interface GameDebuggerStoreState {
   updateNoteStats: (notes: any[]) => void;
   updateRenderStats: (rendered: number, preMissed: number) => void;
   updateHitStats: (stats: Partial<HitStatsType>) => void;
+  reset: () => void;
 }
 
 export const useGameDebuggerStore = create<GameDebuggerStoreState>((set) => ({
@@ -95,4 +96,14 @@ export const useGameDebuggerStore = create<GameDebuggerStoreState>((set) => ({
       hitStats: { ...state.hitStats, ...stats },
     }));
   },
+
+  reset: () => {
+    set({
+        notes: [],
+        animations: [],
+        noteStats: { total: 0, tap: 0, hold: 0, hit: 0, missed: 0, failed: 0, byLane: {} },
+        renderStats: { rendered: 0, preMissed: 0 },
+        hitStats: { successfulHits: 0, tapTooEarlyFailures: 0, tapMissFailures: 0, tooEarlyFailures: 0, holdMissFailures: 0, holdReleaseFailures: 0 },
+    });
+  }
 }));
