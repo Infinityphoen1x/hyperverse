@@ -6,7 +6,6 @@ import {
   JUDGEMENT_RADIUS,
   HOLD_NOTE_STRIP_WIDTH_MULTIPLIER,
 } from '@/lib/config/gameConstants';
-import type { FailureType } from '@/types/game';
 
 export interface ApproachGeometry {
   nearDistance: number;
