@@ -1,4 +1,3 @@
-import { waitForPlayerReady } from './youtubePlayerState';
 import { useYoutubeStore } from '@/stores/useYoutubeStore';
 
 export function initYouTubePlayer(iframeElement: HTMLIFrameElement | null, onReady?: () => void): void {
