@@ -99,6 +99,7 @@ export interface GameStoreState {
   endDeckHold: (lane: number) => void;
   pauseGame: () => void;
   resumeGame: () => void;
+  resetGameState: () => void;
   rewindGame: () => void;
   restartGame: () => void;
   

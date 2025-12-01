@@ -9,7 +9,7 @@ interface UseRewindProps {
 }
 
 export function useRewind({ setPauseMenuOpen, engineRef }: UseRewindProps): { handleRewind: () => Promise<void> } {
-  const restartGame = useGameStore(state => state.restartGame);
+  const rewindGame = useGameStore(state => state.rewindGame);
   const setGameState = useGameStore(state => state.setGameState);
   const isRewindingRef = useRef(false);
   const lastRewindTimeRef = useRef(0);
@@ -22,7 +22,7 @@ export function useRewind({ setPauseMenuOpen, engineRef }: UseRewindProps): { ha
     isRewindingRef.current = true;
     lastRewindTimeRef.current = now;
 
-    restartGame();
+    rewindGame();
     setPauseMenuOpen(false);
     
     // CRITICAL: Reset the cached time in useYouTubePlayer to prevent
@@ -49,7 +49,7 @@ export function useRewind({ setPauseMenuOpen, engineRef }: UseRewindProps): { ha
           isRewindingRef.current = false;
       }, 100);
     }
-  }, [restartGame, setGameState, setPauseMenuOpen, engineRef]);
+  }, [rewindGame, setGameState, setPauseMenuOpen, engineRef]);
 
   return { handleRewind };
 }
