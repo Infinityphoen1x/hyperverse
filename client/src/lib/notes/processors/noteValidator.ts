@@ -28,10 +28,6 @@ export class NoteValidator {
   shouldCleanupNote(note: Note, currentTime: number): boolean {
     const CLEANUP_DELAY = 700;
     
-    if (note.type === 'TAP' && note.hit && note.hitTime) {
-      return currentTime > note.hitTime + CLEANUP_DELAY;
-    }
-    
     if ((note.type === 'SPIN_LEFT' || note.type === 'SPIN_RIGHT') && 
         note.holdMissFailure && note.failureTime) {
       return currentTime > note.failureTime + CLEANUP_DELAY;
