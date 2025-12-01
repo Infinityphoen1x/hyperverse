@@ -340,3 +340,7 @@ export const VANISHING_POINT_Y = TUNNEL_GEOMETRY.vanishingPointY;
 export const TUNNEL_CONTAINER_WIDTH = TUNNEL_GEOMETRY.tunnelContainerWidth;
 export const TUNNEL_CONTAINER_HEIGHT = TUNNEL_GEOMETRY.tunnelContainerHeight;
 export const DECK_METER_COMPLETION_GLOW_DURATION = DECK_METER.completionGlowDuration;
+export const ROTATION_SPEED = DECK_ROTATION.rotationSpeed;
+export const SPIN_THRESHOLD = DECK_ROTATION.spinThreshold;
+export const DRAG_VELOCITY_THRESHOLD = DECK_ROTATION.dragVelocityThreshold;
+export const STATE_UPDATE_INTERVAL = GAME_ENGINE_TIMING.stateUpdateInterval;
