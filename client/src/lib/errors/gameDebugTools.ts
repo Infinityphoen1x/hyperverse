@@ -1,6 +1,5 @@
 import { Note } from '@/lib/engine/gameTypes';
 import { HitStatistics, NoteStatistics, RenderStatistics, AnimationStatistics, FailureType, AnimationTrackingEntry } from './gameDebugTypes';
-import { AnimationTracker } from './animationTracker';
 
 const EMPTY_NOTE_STATS: NoteStatistics = {
   total: 0,
@@ -21,16 +20,22 @@ const EMPTY_HIT_STATS: HitStatistics = {
   holdReleaseFailures: 0,
 };
 
+const EMPTY_ANIM_STATS: AnimationStatistics = {
+  total: 0,
+  completed: 0,
+  failed: 0,
+  pending: 0,
+  rendering: 0
+};
+
 export class GameDebugger {
   private errorLog: string[] = [];
-  private animationTracker: AnimationTracker;
   private noteStats: NoteStatistics = { ...EMPTY_NOTE_STATS };
   private hitStats: HitStatistics = { ...EMPTY_HIT_STATS };
   private renderStats: RenderStatistics = { rendered: 0, preMissed: 0 };
   private readonly MAX_LOG_SIZE = 100;
 
   constructor(private enableConsole: boolean = true) {
-    this.animationTracker = new AnimationTracker();
   }
 
   log(message: string): void {
@@ -41,11 +46,11 @@ export class GameDebugger {
   }
 
   trackAnimation(noteId: string, type: FailureType, failureTime?: number): void {
-    this.animationTracker.track(noteId, type, failureTime);
+    // Animation tracking removed
   }
 
   updateAnimation(noteId: string, updates: Record<string, unknown>): void {
-    this.animationTracker.update(noteId, updates as Partial<Record<string, unknown>>);
+    // Animation tracking removed
   }
 
   updateRenderStats(rendered: number, preMissed: number): void {
@@ -81,11 +86,11 @@ export class GameDebugger {
   }
 
   getAnimationStats(): AnimationStatistics {
-    return this.animationTracker.getStats();
+    return { ...EMPTY_ANIM_STATS };
   }
 
   getAnimationTracking(): AnimationTrackingEntry[] {
-    return this.animationTracker.getEntries();
+    return [];
   }
 
   getErrorLog(): string[] {
@@ -106,7 +111,6 @@ export class GameDebugger {
 
   clear(): void {
     this.errorLog = [];
-    this.animationTracker.clear();
     this.noteStats = { ...EMPTY_NOTE_STATS };
     this.hitStats = { ...EMPTY_HIT_STATS };
     this.renderStats = { rendered: 0, preMissed: 0 };
@@ -124,30 +128,3 @@ export class GameDebugger {
 }
 
 export { useGameDebugger, useDebugValue } from './gameDebugHooks';
-// src/lib/engine/gameDebugTools.ts
-import { Note } from '@/lib/engine/gameTypes';
-import { HitStatistics, NoteStatistics, RenderStatistics, AnimationStatistics, FailureType, AnimationTrackingEntry } from './gameDebugTypes';
-import { useGameDebugger, useDebugValue } from './gameDebugHooks'; // Hooks unchanged
-
-// Legacy constants (if needed)
-const EMPTY_NOTE_STATS: NoteStatistics = {
-  total: 0,
-  tap: 0,
-  hold: 0,
-  hit: 0,
-  missed: 0,
-  failed: 0,
-  byLane: {},
-};
-const EMPTY_HIT_STATS: HitStatistics = {
-  successfulHits: 0,
-  tapTooEarlyFailures: 0,
-  tapMissFailures: 0,
-  tooEarlyFailures: 0,
-  holdMissFailures: 0,
-  holdReleaseFailures: 0,
-};
-
-// No class export; use hooks/stores directly
-export { EMPTY_NOTE_STATS, EMPTY_HIT_STATS };
-export { useGameDebugger, useDebugValue };
