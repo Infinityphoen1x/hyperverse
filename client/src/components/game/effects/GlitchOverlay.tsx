@@ -1,5 +1,5 @@
 // src/components/GlitchOverlay.tsx
-import { GLITCH_BACKGROUND_SIZE } from '@/lib/config/gameConstants';
+import { GLITCH_BACKGROUND_SIZE, GLITCH_OPACITY } from '@/lib/config/gameConstants';
 
 interface GlitchOverlayProps { glitch: number; glitchPhase: number; glitchOpacityMultiplier: number; }
 
