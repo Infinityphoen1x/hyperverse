@@ -8,6 +8,7 @@ interface HomeProps {
 
 export default function Home({ onStartGame }: HomeProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
+  const [isLoaderOpen, setIsLoaderOpen] = useState(false);
   const [beatmapLoaded, setBeatmapLoaded] = useState(false);
 
   const colors = ["#00FFFF", "#FF00FF", "#00FF00", "#00CCFF", "#FF0080"];
@@ -33,19 +34,13 @@ export default function Home({ onStartGame }: HomeProps) {
     return () => clearInterval(colorInterval);
   }, [colors.length]);
 
-  const handleBeatmapLoad = (youtubeVideoId?: string, notes?: any[]) => {
-    // Store beatmap data for the game to use
-    const beatmapData = { youtubeVideoId, notes, difficulty: selectedDifficulty };
-    localStorage.setItem('pendingBeatmap', JSON.stringify(beatmapData));
-    setBeatmapLoaded(true);
-  };
-
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden">
       {/* Beatmap Loader */}
       <BeatmapLoader 
-        difficulty={selectedDifficulty as 'EASY' | 'MEDIUM' | 'HARD'}
-        onBeatmapLoad={handleBeatmapLoad}
+        difficulty={selectedDifficulty}
+        isOpen={isLoaderOpen}
+        setIsOpen={setIsLoaderOpen}
       />
       {/* Semi-transparent overlay to show video behind */}
       <div className="absolute inset-0 bg-black/40 pointer-events-none z-0" />
