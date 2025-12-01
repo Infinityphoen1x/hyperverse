@@ -13,23 +13,37 @@ export function useRewind({ setPauseMenuOpen }: UseRewindProps): { handleRewind:
   const isRewindingRef = useRef(false);
 
   const handleRewind = useCallback(async (): Promise<void> => {
-    if (isRewindingRef.current) return;
+    // Allow rewind even if currently "rewinding" if it's been > 500ms (break locks)
+    const now = Date.now();
+    if (isRewindingRef.current && (now - lastRewindTimeRef.current < 500)) return;
+    
     isRewindingRef.current = true;
+    lastRewindTimeRef.current = now;
 
     restartGame();
     setPauseMenuOpen(false);
+    
     try {
-      await pauseYouTubeVideo();
+      // Fire and forget pause to ensure we don't get weird audio artifacts
+      pauseYouTubeVideo().catch(() => {});
+      
+      // Seek to 0
       await seekYouTubeVideo(0);
+      
+      // Play immediately
       await playYouTubeVideo();
     } catch (err) {
-      // Rewind failed, continue anyway
       console.warn('[REWIND] Async operation failed', err);
     } finally {
       setGameState('PLAYING');
-      isRewindingRef.current = false;
+      // Short delay to clear lock
+      setTimeout(() => {
+          isRewindingRef.current = false;
+      }, 100);
     }
   }, [restartGame, setGameState, setPauseMenuOpen]);
+
+  const lastRewindTimeRef = useRef(0);
 
   return { handleRewind };
 }

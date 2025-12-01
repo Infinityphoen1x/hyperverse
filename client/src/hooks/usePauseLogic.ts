@@ -31,27 +31,17 @@ export function usePauseLogic({
     setGameState('PAUSED');
     setPauseMenuOpen?.(true);
 
-    // Async YouTube pause
+    // Async YouTube pause - fire and forget mainly, don't block UI
     (async () => {
       try {
         await pauseYouTubeVideo();
         
-        // Check if we're still paused before doing anything else
-        if (gameStateRef.current !== 'PAUSED') return;
-
-        await new Promise(resolve => setTimeout(resolve, 150));
-        
-        if (gameStateRef.current !== 'PAUSED') return;
-
-        if (getVideoTime) {
-          for (let i = 0; i < 5; i++) {
-            // Abort if state changed (e.g. user resumed)
-            if (gameStateRef.current !== 'PAUSED') break;
-            
-            const youtubeTime = getVideoTime();
-            if (youtubeTime !== null) break;
-            await new Promise(resolve => setTimeout(resolve, 50));
-          }
+        // Simple verification
+        if (gameStateRef.current === 'PAUSED' && getVideoTime) {
+           // Just one quick check after a short delay
+           setTimeout(() => {
+              if (gameStateRef.current === 'PAUSED') getVideoTime();
+           }, 100);
         }
       } catch (err) {
         // Pause failed, continue anyway

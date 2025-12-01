@@ -49,7 +49,7 @@ export async function playYouTubeVideo(): Promise<void> {
 
     // Poll for play confirmation (handles buffering stalls)
     await new Promise<void>((resolve) => {
-      const maxAttempts = 20; // 1s @ 50ms
+      const maxAttempts = 5; // Reduced to 250ms for responsiveness
       let attempts = 0;
       const poll = () => {
         attempts++;
@@ -74,7 +74,7 @@ export async function playYouTubeVideo(): Promise<void> {
           resetYouTubeTimeTracker(currentTimeSeconds);
           resolve();
         } else if (attempts >= maxAttempts) {
-          console.warn(`[YOUTUBE-PLAY] Timeout: state=${state}, proceeding`);
+          console.warn(`[YOUTUBE-PLAY] Timeout: state=${state}, proceeding optimistically`);
           resolve(); // Fallback: Assume started
         } else {
           setTimeout(poll, 50);
