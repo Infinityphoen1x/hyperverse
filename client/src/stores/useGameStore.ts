@@ -49,7 +49,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     combo: 0, 
     health: 200, 
     gameState: 'IDLE', 
-    notes: [] 
+    notes: [],
+    isPaused: false
   }),
 
   // Selectors
