@@ -22,8 +22,10 @@ export const calculateApproachGeometry = (
   
   // Keep near distance clamped to judgement radius (max approach)
   const nearDistance = Math.max(1, Math.min(JUDGEMENT_RADIUS, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1))));
-  // Far distance extends back based on strip width, even if near is at judgement
-  const farDistance = Math.max(1, nearDistance - stripWidth);
+  // Far distance expands gradually from vanishing point as note approaches, creating smooth triangle->trapezoid transition
+  // At progress=0: farDistance=1 (point at vanishing point)
+  // At progress=1: farDistance extends back by stripWidth
+  const farDistance = Math.max(1, 1 - (stripWidth * Math.min(approachProgress, 1)));
   
   return { nearDistance, farDistance };
 };
