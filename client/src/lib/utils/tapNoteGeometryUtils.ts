@@ -68,7 +68,12 @@ export const calculateTapNoteGeometry = (
 ): TapNoteGeometry => {
   const isFailedOrHit = isFailed || isSuccessfulHit;
   const effectiveProgress = calculateEffectiveProgress(progress, isFailedOrHit, noteTime, currentTime);
-  const { nearDist, farDist } = calculateDistances(effectiveProgress);
+  
+  // Apply perspective warp (cubic) to simulate 3D depth speed
+  // Objects should move slowly in the distance and accelerate as they get closer
+  const perspectiveProgress = Math.pow(effectiveProgress, 3);
+  
+  const { nearDist, farDist } = calculateDistances(perspectiveProgress);
   const corners = calculateRayCorners(vpX, vpY, tapRayAngle, nearDist, farDist);
 
   // Validate finite values (debug log if invalid)

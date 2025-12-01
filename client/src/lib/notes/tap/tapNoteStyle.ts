@@ -48,9 +48,9 @@ export const calculateTapNoteStyle = (
 
   if (state.isTapTooEarlyFailure || state.isTapMissFailure) {
     opacity = getFailureOpacity(state, rawProgress);
-    fill = GREYSCALE_FILL_COLOR;
-    stroke = TAP_COLORS.STROKE_FAILED;
-    filter = `drop-shadow(0 0 8px ${GREYSCALE_GLOW_COLOR}) grayscale(1)`;
+    fill = 'rgba(100, 40, 40, 0.8)'; // Red-tinted grey for visibility
+    stroke = 'rgba(150, 50, 50, 1)'; // Red stroke
+    filter = `grayscale(0.8) brightness(0.7) drop-shadow(0 0 5px rgba(255,0,0,0.5))`; 
   } else if (state.isHit) {
     opacity = getHitOpacity(state, progress);
     if (hitFlashIntensity > 0) {

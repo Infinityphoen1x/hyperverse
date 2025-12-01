@@ -22,7 +22,10 @@ export const calculateApproachGeometry = (
 
   const rawApproachProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
   const isSuccessfulPress = pressHoldTime > 0 && !isTooEarlyFailure;
-  const approachProgress = isSuccessfulPress ? Math.min(rawApproachProgress, 1.0) : rawApproachProgress;
+  const linearApproachProgress = isSuccessfulPress ? Math.min(rawApproachProgress, 1.0) : rawApproachProgress;
+
+  // Apply cubic perspective warp for consistent 3D speed feeling
+  const approachProgress = Math.pow(Math.max(0, linearApproachProgress), 3);
 
   const nearDistance = Math.max(1, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
   const farDistance = Math.max(1, nearDistance - stripWidth);
