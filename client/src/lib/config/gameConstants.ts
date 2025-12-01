@@ -47,6 +47,7 @@ export const TUNNEL_GEOMETRY: TunnelGeometry = {
 export const RAY_ANGLES = TUNNEL_GEOMETRY.rayAngles;
 export const TUNNEL_MAX_DISTANCE = TUNNEL_GEOMETRY.tunnelMaxDistance;
 export const TAP_JUDGEMENT_LINE_WIDTH = TUNNEL_GEOMETRY.tapJudgementLineWidth;
+export const JUDGEMENT_RADIUS = TUNNEL_GEOMETRY.judgementRadius;
 
 // Hold note geometry constants
 export interface HoldNoteGeometry {
