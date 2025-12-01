@@ -13,12 +13,6 @@ interface DeckHoldMetersProps {
 }
 
 export function DeckHoldMeters({ notes: propNotes, currentTime: propCurrentTime }: DeckHoldMetersProps = {}) {
-  // Pull from Zustand (fallback to props for testing/flexibility)
-  const { notes, currentTime } = useGameStore(state => ({
-    notes: propNotes ?? state.notes,
-    currentTime: propCurrentTime ?? state.currentTime,
-  }));
-
   // Left meter (lane -1 for Q)
   const { progress: leftProgress, isGlowing: leftGlowing } = useHoldProgress({
     lane: -1,

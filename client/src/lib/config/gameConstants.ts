@@ -397,6 +397,7 @@ export const HOLD_NOTE_STRIP_WIDTH_MULTIPLIER = HOLD_NOTE_GEOMETRY.stripWidthMul
 export const FAILURE_ANIMATION_DURATION = HOLD_NOTE_GEOMETRY.failureAnimationDuration;
 
 // Deck Meter exports
+export const DECK_METER_SEGMENTS = DECK_METER.segments;
 export const DECK_METER_COMPLETION_THRESHOLD = DECK_METER.completionThreshold;
 export const DECK_METER_COMPLETION_GLOW_DURATION = DECK_METER.completionGlowDuration;
 export const DECK_METER_DEFAULT_HOLD_DURATION = DECK_METER.defaultHoldDuration;
