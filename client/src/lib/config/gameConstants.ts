@@ -53,55 +53,12 @@ export const HOLD_NOTE_GEOMETRY: HoldNoteGeometry = {
   failureAnimationDuration: 1100,
 };
 
-// Soundpad timing
-export interface SoundpadTiming {
-  activationWindow: number; // ms - hit window for notes
-  hitSuccessDuration: number; // ms - how long hit feedback glows
-  tapHitWindow: number; // ms - ±300ms window for TAP note hits
-  tapFailureBuffer: number; // ms - buffer for YouTube timing jitter before marking note as failed
-  holdMissTimeout: number; // ms - fail hold note if not pressed within this time
-  holdReleaseOffset: number; // ms - additional time before hold release failure
-  holdReleaseWindow: number; // ms - ±100ms accuracy window for hold release
-  tapHitFlashDuration: number; // ms - how long hit flash lasts
-  tapHitHoldDuration: number; // ms - how long successfully hit TAP notes stay visible (locked at tap position)
-}
-export const SOUNDPAD_TIMING: SoundpadTiming = {
-  activationWindow: 300,
-  hitSuccessDuration: 200,
-  tapHitWindow: 300,
-  tapFailureBuffer: 100,
-  holdMissTimeout: 1100,
-  holdReleaseOffset: 600,
-  holdReleaseWindow: 100,
-  tapHitFlashDuration: 600,
-  tapHitHoldDuration: 700,
-};
-
 // Soundpad colors - RGB values for dynamic styling
-export interface SoundpadColorPalette {
-  colors: string[];
-}
-export const SOUNDPAD_COLOR_PALETTE: SoundpadColorPalette = {
-  colors: [
-    'rgb(255,0,127)', // Lane 0 (W) - pink
-    'rgb(0,150,255)', // Lane 1 (O) - blue
-    'rgb(190,0,255)', // Lane 2 (I) - purple
-    'rgb(0,255,255)' // Lane 3 (E) - cyan
-  ],
-};
-export const SOUNDPAD_COLORS = SOUNDPAD_COLOR_PALETTE.colors;
-
-// Soundpad Tailwind styles - derived from SOUNDPAD_COLORS
-export interface SoundpadStyle {
-  bg: string;
-  border: string;
-  shadow: string;
-}
-export const SOUNDPAD_STYLES: SoundpadStyle[] = [
-  { bg: 'bg-neon-pink/30', border: 'border-neon-pink/50', shadow: 'shadow-[0_0_15px_rgb(255,0,127)]' },
-  { bg: 'bg-neon-blue/30', border: 'border-neon-blue/50', shadow: 'shadow-[0_0_15px_rgb(0,150,255)]' },
-  { bg: 'bg-neon-purple/30', border: 'border-neon-purple/50', shadow: 'shadow-[0_0_15px_rgb(190,0,255)]' },
-  { bg: 'bg-neon-cyan/30', border: 'border-neon-cyan/50', shadow: 'shadow-[0_0_15px_rgb(0,255,255)]' },
+export const SOUNDPAD_COLORS = [
+  'rgb(255,0,127)', // Lane 0 (W) - pink
+  'rgb(0,150,255)', // Lane 1 (O) - blue
+  'rgb(190,0,255)', // Lane 2 (I) - purple
+  'rgb(0,255,255)' // Lane 3 (E) - cyan
 ];
 
 // Deck wheel rotation constants
@@ -114,18 +71,6 @@ export const DECK_ROTATION: DeckRotation = {
   rotationSpeed: 2.0,
   spinThreshold: 30,
   dragVelocityThreshold: 100,
-};
-
-// Vanishing point angle shift (combo-triggered)
-export interface AngleShift {
-  interval: number; // Shift every 10x combo
-  distance: number; // Max pixel distance from center - dramatic shift
-  duration: number; // ms - 2 second smooth animation for visible ray adjustment
-}
-export const ANGLE_SHIFT: AngleShift = {
-  interval: 10,
-  distance: 20,
-  duration: 2000,
 };
 
 // Visual effects - particle and animation constants
@@ -334,34 +279,6 @@ export const GAME_ENGINE_TIMING: GameEngineTiming = {
   notesSyncInterval: 16,
   stateUpdateBatchInterval: 50,
   stateUpdateInterval: 50,
-};
-
-// Game Engine - accuracy point thresholds
-export interface AccuracyThresholds {
-  accuracyPerfectMs: number; // ≤50ms = 300 points
-  accuracyGreatMs: number; // ≤100ms = 200 points
-  accuracyPerfectPoints: number;
-  accuracyGreatPoints: number;
-  accuracyNormalPoints: number;
-}
-export const ACCURACY_THRESHOLDS: AccuracyThresholds = {
-  accuracyPerfectMs: 50,
-  accuracyGreatMs: 100,
-  accuracyPerfectPoints: 300,
-  accuracyGreatPoints: 200,
-  accuracyNormalPoints: 100,
-};
-
-// Hold activation window (already in SOUNDPAD_TIMING)
-
-// Down3D Note Lane - greyscale colors
-export interface GreyscaleColors {
-  fillColor: string; // Greyscale fill for failed notes
-  glowColor: string; // Greyscale glow for failed notes
-}
-export const GREYSCALE_COLORS: GreyscaleColors = {
-  fillColor: 'rgba(80, 80, 80, 0.8)',
-  glowColor: 'rgba(100, 100, 100, 0.4)',
 };
 
 // Hold animation duration (already in FAILURE_ANIMATION_DURATION)
