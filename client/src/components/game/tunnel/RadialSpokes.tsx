@@ -1,5 +1,5 @@
 // src/components/RadialSpokes.tsx
-import React from 'react';
+import React, { memo } from 'react';
 import { RAY_ANGLES, TUNNEL_MAX_DISTANCE } from '@/lib/config/gameConstants';
 
 interface RadialSpokesProps {
@@ -10,16 +10,16 @@ interface RadialSpokesProps {
   hexCenterY: number;
 }
 
-export function RadialSpokes({ rayColor, vpX, vpY, hexCenterX, hexCenterY }: RadialSpokesProps) {
-  const maxRadius = TUNNEL_MAX_DISTANCE; // Assuming TUNNEL_MAX_DISTANCE for spoke length
+const RadialSpokesComponent = ({ rayColor, vpX, vpY, hexCenterX, hexCenterY }: RadialSpokesProps) => {
+  const maxRadius = TUNNEL_MAX_DISTANCE;
   return (
     <>
-      {RAY_ANGLES.map((angle) => {
+      {RAY_ANGLES.map((angle: number) => {
         const rad = (angle * Math.PI) / 180;
         const cornerX = hexCenterX + maxRadius * Math.cos(rad);
         const cornerY = hexCenterY + maxRadius * Math.sin(rad);
         return (
-          <g key={`spoke-group-${angle}`}>
+          <g key={`spoke-group-${angle}`} data-testid={`spoke-${angle}`}>
             {Array.from({ length: 12 }).map((_, segIdx) => {
               const segProgress = (segIdx + 1) / 12;
               const x1 = vpX + (cornerX - vpX) * (segProgress - 1 / 12);
@@ -31,6 +31,7 @@ export function RadialSpokes({ rayColor, vpX, vpY, hexCenterX, hexCenterY }: Rad
               return (
                 <line 
                   key={`segment-${angle}-${segIdx}`} 
+                  data-testid={`segment-${angle}-${segIdx}`}
                   x1={x1} 
                   y1={y1} 
                   x2={x2} 
@@ -47,4 +48,6 @@ export function RadialSpokes({ rayColor, vpX, vpY, hexCenterX, hexCenterY }: Rad
       })}
     </>
   );
-}
+};
+
+export const RadialSpokes = memo(RadialSpokesComponent);

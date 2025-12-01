@@ -43,6 +43,10 @@ export const TUNNEL_GEOMETRY: TunnelGeometry = {
   holdJudgementLineWidth: 45,
 };
 
+// Convenience exports for commonly used tunnel constants
+export const RAY_ANGLES = TUNNEL_GEOMETRY.rayAngles;
+export const TUNNEL_MAX_DISTANCE = TUNNEL_GEOMETRY.tunnelMaxDistance;
+
 // Hold note geometry constants
 export interface HoldNoteGeometry {
   stripWidthMultiplier: number; // Convert duration (ms) to Z-depth
