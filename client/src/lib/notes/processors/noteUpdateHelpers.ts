@@ -31,8 +31,6 @@ export const createSuccessUpdate = (
   updatedNote: {
     ...note,
     hit: true,
-    hitTime: roundTime(currentTime),
-    pressReleaseTime: roundTime(currentTime),
   },
   scoreChange,
   success: true,
@@ -47,8 +45,6 @@ export const createTapHitUpdate = (
   updatedNote: {
     ...note,
     hit: !isTooEarly,
-    hitTime: isTooEarly ? undefined : roundTime(currentTime),
-    pressTime: roundTime(currentTime),
     tapTooEarlyFailure: isTooEarly,
     failureTime: isTooEarly ? roundTime(currentTime) : undefined,
   },
@@ -83,7 +79,6 @@ export const createHoldEndUpdate = (
     hit: isValid,
     holdReleaseFailure: !isValid,
     failureTime: isValid ? undefined : roundTime(currentTime),
-    pressReleaseTime: isValid ? roundTime(currentTime) : undefined,
   },
   scoreChange,
   success: isValid,
