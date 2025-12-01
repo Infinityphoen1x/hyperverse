@@ -1,7 +1,6 @@
 // src/hooks/useHoldProgress.ts
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
-import type { Note } from '@/types/game';
 import { getHoldProgress } from '@/lib/utils/holdMeterUtils';
 import { DECK_METER_COMPLETION_GLOW_DURATION } from '@/lib/config/gameConstants';
 
