@@ -50,6 +50,8 @@ export function useGameLogic({
   setGameState,
   setCurrentTime,
   hitNote,
+  trackHoldStart,
+  trackHoldEnd,
   customNotes,
   engineRef,
   setPauseMenuOpen,
@@ -84,6 +86,8 @@ export function useGameLogic({
     onResume: handleResume,
     onRewind: handleRewind,
     onHitNote: hitNote,
+    onTrackHoldStart: trackHoldStart,
+    onTrackHoldEnd: trackHoldEnd,
   });
 
   // Countdown

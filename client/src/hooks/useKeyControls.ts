@@ -7,6 +7,8 @@ interface UseKeyControlsProps {
   onResume?: () => void;
   onRewind?: () => void;
   onHitNote?: (lane: number) => void;
+  onTrackHoldStart?: (lane: number) => void;
+  onTrackHoldEnd?: (lane: number) => void;
 }
 
 const KEY_LANE_MAP: Record<string, number> = {
@@ -19,8 +21,9 @@ const KEY_LANE_MAP: Record<string, number> = {
 };
 
 const GAMEPLAY_KEYS = new Set(['w', 'W', 'o', 'O', 'i', 'I', 'e', 'E', 'q', 'Q', 'p', 'P']);
+const HOLD_NOTE_LANES = new Set([-1, -2]);
 
-export function useKeyControls({ onPause, onResume, onRewind, onHitNote }: UseKeyControlsProps): void {
+export function useKeyControls({ onPause, onResume, onRewind, onHitNote, onTrackHoldStart, onTrackHoldEnd }: UseKeyControlsProps): void {
   const gameState = useGameStore(state => state.gameState);
   const isPaused = useGameStore(state => state.isPaused);
   const storeHitNote = useGameStore(state => state.hitNote);
@@ -47,15 +50,35 @@ export function useKeyControls({ onPause, onResume, onRewind, onHitNote }: UseKe
       if ((gameState === 'PLAYING' || gameState === 'RESUMING') && !isPaused) {
         const lane = KEY_LANE_MAP[e.key];
         if (lane !== undefined) {
-          hitNote(lane);
+          if (HOLD_NOTE_LANES.has(lane)) {
+            onTrackHoldStart?.(lane);
+          } else {
+            hitNote(lane);
+          }
         }
       }
     },
-    [gameState, isPaused, hitNote, onHitNote, storeHitNote, onPause, onResume, onRewind]
+    [gameState, isPaused, hitNote, onHitNote, storeHitNote, onPause, onResume, onRewind, onTrackHoldStart]
+  );
+
+  const handleKeyUp = useCallback(
+    (e: KeyboardEvent): void => {
+      if ((gameState === 'PLAYING' || gameState === 'RESUMING') && !isPaused) {
+        const lane = KEY_LANE_MAP[e.key];
+        if (lane !== undefined && HOLD_NOTE_LANES.has(lane)) {
+          onTrackHoldEnd?.(lane);
+        }
+      }
+    },
+    [gameState, isPaused, onTrackHoldEnd]
   );
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [handleKeyDown, handleKeyUp]);
 }
