@@ -1,6 +1,7 @@
 // src/hooks/useFadeAnimation.ts
 import { useEffect, useRef } from 'react';
 import { GameState } from '@/lib/engine/gameTypes';
+import { playYouTubeVideo } from '@/lib/youtube';
 
 const FADE_IN_DURATION_MS = 500;
 const ANIMATION_DELAY_MS = 100;
@@ -39,6 +40,7 @@ export function useFadeAnimation({
         console.log('[RESUME-ANIM] Fade complete, unfreezing engine...');
         resumeGame();
         setGameState('PLAYING');
+        playYouTubeVideo().catch(console.error);
         setResumeFadeOpacity(1.0);
         startTimeRef.current = null;
       }
