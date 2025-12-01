@@ -246,6 +246,7 @@ export const YOUTUBE_PREVIEW_EMBED_OPTIONS = {
   modestBranding: true,
   enableJsApi: true
 } as const;
+
 export const YOUTUBE_BACKGROUND_EMBED_OPTIONS = {
   autoplay: false,
   controls: false,
@@ -320,7 +321,9 @@ export const GREYSCALE_COLORS: GreyscaleColors = {
 };
 
 // Hold animation duration (already in FAILURE_ANIMATION_DURATION)
+
 // Top-level exports for backward compatibility and direct access
+// Visual Effects exports
 export const MAX_HEALTH = VISUAL_EFFECTS.maxHealth;
 export const LOW_HEALTH_THRESHOLD = VISUAL_EFFECTS.lowHealthThreshold;
 export const COMBO_MILESTONE = VISUAL_EFFECTS.comboMilestone;
@@ -335,12 +338,20 @@ export const GLITCH_RANDOM_RANGE = VISUAL_EFFECTS.glitchRandomRange;
 export const GLITCH_OPACITY = VISUAL_EFFECTS.glitchOpacity;
 export const PARTICLE_SIZE_MIN = VISUAL_EFFECTS.particleSizeMin;
 export const PARTICLE_SIZE_MAX = VISUAL_EFFECTS.particleSizeMax;
+
+// Tunnel Geometry exports
 export const VANISHING_POINT_X = TUNNEL_GEOMETRY.vanishingPointX;
 export const VANISHING_POINT_Y = TUNNEL_GEOMETRY.vanishingPointY;
 export const TUNNEL_CONTAINER_WIDTH = TUNNEL_GEOMETRY.tunnelContainerWidth;
 export const TUNNEL_CONTAINER_HEIGHT = TUNNEL_GEOMETRY.tunnelContainerHeight;
+
+// Deck Meter exports
 export const DECK_METER_COMPLETION_GLOW_DURATION = DECK_METER.completionGlowDuration;
+
+// Deck Rotation exports
 export const ROTATION_SPEED = DECK_ROTATION.rotationSpeed;
 export const SPIN_THRESHOLD = DECK_ROTATION.spinThreshold;
 export const DRAG_VELOCITY_THRESHOLD = DECK_ROTATION.dragVelocityThreshold;
+
+// Game Engine exports
 export const STATE_UPDATE_INTERVAL = GAME_ENGINE_TIMING.stateUpdateInterval;
