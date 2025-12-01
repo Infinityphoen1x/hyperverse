@@ -13,20 +13,8 @@ interface SoundpadButtonsProps {
 }
 
 export function SoundpadButtons(props: SoundpadButtonsProps = {}) {
-  const { vpX: propVpX, vpY: propVpY, onPadHit = () => {} } = props;
+  const { vpX = 350, vpY = 300, onPadHit = () => {} } = props;
   
-  // Memoize selector to prevent unnecessary store subscriptions
-  const selector = useCallback(
-    (state: any) => ({
-      vpX: propVpX ?? state.vpX,
-      vpY: propVpY ?? state.vpY,
-    }),
-    [propVpX, propVpY]
-  );
-  
-  // Pull from Zustand (fallback to props for testing/flexibility)
-  const { vpX, vpY } = useGameStore(selector);
-
   // Validate viewport values before rendering
   const isValid = typeof vpX === 'number' && typeof vpY === 'number' && vpX >= 0 && vpY >= 0;
   

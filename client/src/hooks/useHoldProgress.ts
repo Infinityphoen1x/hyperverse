@@ -42,29 +42,35 @@ export const useHoldProgress = ({ lane: propLane }: UseHoldProgressProps = {}): 
     }
   }, [notes, lane]);
 
-  useEffect(() => {
-    const result = getHoldProgress(
-      notes,
-      currentTime,
-      lane,
-      prevCompletionRef.current,
-      setIsGlowing,
-      glowTimeoutRef,
-      DECK_METER_COMPLETION_GLOW_DURATION
-    );
-
-    prevCompletionRef.current = result.prevCompletion;
-  }, [notes, currentTime, lane]);
-
-  const { progress } = getHoldProgress(
+  // Calculate progress purely for rendering
+  const progress = getHoldProgress(
     notes,
     currentTime,
     lane,
-    prevCompletionRef.current,
-    setIsGlowing,
-    glowTimeoutRef,
-    DECK_METER_COMPLETION_GLOW_DURATION
+    DECK_METER_COMPLETION_THRESHOLD,
+    DECK_METER_DEFAULT_HOLD_DURATION
   );
+
+  // Handle side effects (glow) in useEffect
+  useEffect(() => {
+    const shouldGlow = progress >= DECK_METER_COMPLETION_THRESHOLD && !prevCompletionRef.current;
+    
+    if (shouldGlow) {
+      setIsGlowing(true);
+      prevCompletionRef.current = true;
+      
+      if (glowTimeoutRef.current) clearTimeout(glowTimeoutRef.current);
+      glowTimeoutRef.current = setTimeout(() => setIsGlowing(false), DECK_METER_COMPLETION_GLOW_DURATION);
+    } else if (progress < DECK_METER_COMPLETION_THRESHOLD) {
+      // Reset completion flag if progress drops (e.g. new note or reset)
+      // Only if we are tracking the same note, which is handled by the other useEffect resetting on note ID change
+      // But we might want to double check here if we need to reset prevCompletion for the same note if it somehow rewinds?
+      // For now, just relying on note ID change is safer to avoid flickering.
+      if (progress === 0) {
+          prevCompletionRef.current = false;
+      }
+    }
+  }, [progress]);
 
   return { progress, isGlowing };
 };

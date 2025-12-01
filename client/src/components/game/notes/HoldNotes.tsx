@@ -10,15 +10,10 @@ interface HoldNotesProps {
 }
 
 const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNotesProps) => {
-  const selector = useCallback(
-    (state: any) => ({
-      visibleNotes: state.getVisibleNotes?.() ?? [],
-      currentTime: state.currentTime,
-    }),
-    []
-  );
+  // Split selectors to prevent unnecessary object creation and re-renders
+  const visibleNotes = useGameStore(state => state.getVisibleNotes?.() ?? []);
+  const currentTime = useGameStore(state => state.currentTime);
 
-  const { visibleNotes, currentTime } = useGameStore(selector);
   const processedNotes = useHoldNotes(visibleNotes, currentTime);
 
   return (

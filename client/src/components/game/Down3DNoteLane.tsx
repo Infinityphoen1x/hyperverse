@@ -19,13 +19,9 @@ const Down3DNoteLaneComponent = ({
   health: propHealth,
   combo: propCombo,
 }: Down3DNoteLaneProps = {}) => {
-  const { 
-    health = 100, 
-    combo = 0,
-  } = useGameStore(state => ({
-    health: propHealth ?? state.health,
-    combo: propCombo ?? state.combo,
-  }));
+  // Select atomic values to prevent unnecessary re-renders
+  const health = useGameStore(state => propHealth ?? state.health);
+  const combo = useGameStore(state => propCombo ?? state.combo);
 
   const vpOffset = useVanishingPointOffset();
   useKeyControls({ setPauseMenuOpen: () => {} });

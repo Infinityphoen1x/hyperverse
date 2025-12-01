@@ -31,19 +31,17 @@ export const getHoldProgress = (
   notes: Note[],
   currentTime: number,
   lane: number,
-  prevCompletion: boolean,
-  setIsGlowing: (glowing: boolean) => void,
-  glowTimeoutRef: { current: NodeJS.Timeout | null },
-  DECK_METER_COMPLETION_GLOW_DURATION: number
-): HoldProgressData => {
+  DECK_METER_COMPLETION_THRESHOLD: number,
+  DECK_METER_DEFAULT_HOLD_DURATION: number
+): number => {
   try {
-    if (!Array.isArray(notes) || !Number.isFinite(currentTime)) return { progress: 0, shouldGlow: false, prevCompletion };
+    if (!Array.isArray(notes) || !Number.isFinite(currentTime)) return 0;
 
     const activeNote = notes.find(n => isActiveHoldNote(n, lane));
 
-    if (!activeNote) return { progress: 0, shouldGlow: false, prevCompletion };
+    if (!activeNote) return 0;
 
-    if (!activeNote.pressHoldTime || activeNote.pressHoldTime <= 0) return { progress: 0, shouldGlow: false, prevCompletion };
+    if (!activeNote.pressHoldTime || activeNote.pressHoldTime <= 0) return 0;
 
     const beatmapHoldDuration = (activeNote.duration && activeNote.duration > 0)
       ? activeNote.duration
@@ -51,26 +49,15 @@ export const getHoldProgress = (
 
     const elapsedFromNoteTime = currentTime - activeNote.time;
 
-    if (elapsedFromNoteTime < 0) return { progress: 0, shouldGlow: false, prevCompletion };
+    if (elapsedFromNoteTime < 0) return 0;
 
     let progress = Math.min(elapsedFromNoteTime / beatmapHoldDuration, 1.0);
 
     if (!Number.isFinite(progress) || progress < 0 || progress > 1) progress = 0;
 
-    // Trigger glow
-    const shouldGlow = progress >= DECK_METER_COMPLETION_THRESHOLD && !prevCompletion;
-    if (shouldGlow) {
-      setIsGlowing(true);
-      if (glowTimeoutRef.current) clearTimeout(glowTimeoutRef.current);
-      glowTimeoutRef.current = setTimeout(() => setIsGlowing(false), DECK_METER_COMPLETION_GLOW_DURATION);
-      return { progress, shouldGlow: true, prevCompletion: true };
-    } else if (progress < DECK_METER_COMPLETION_THRESHOLD) {
-      return { progress, shouldGlow: false, prevCompletion: false };
-    }
-
-    return { progress, shouldGlow: false, prevCompletion };
+    return progress;
   } catch (error) {
     GameErrors.log(`DeckMeter getHoldProgress error for lane ${lane}: ${error instanceof Error ? error.message : 'Unknown'}`);
-    return { progress: 0, shouldGlow: false, prevCompletion };
+    return 0;
   }
 };
