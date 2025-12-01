@@ -27,11 +27,11 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
       if (n.tooEarlyFailure) return noteStartTime <= currentTime + leadTime && noteStartTime >= currentTime - 4000;
       if (n.holdMissFailure || n.holdReleaseFailure) return noteStartTime <= currentTime + leadTime && noteStartTime >= currentTime - 2000;
       
-      // For hold notes: keep visible from far past (vanishing point) through entire duration
-      // Lower bound: leadTime + holdDuration before note start (so it's visible traveling through tunnel)
-      // Upper bound: 500ms after note ends
+      // For hold notes: keep visible from leadTime before start to 500ms after end
+      // Upper bound: leadTime before start (so it appears at vanishing point)
+      // Lower bound: 500ms after it ends (holdDuration past start)
       if (isHoldNote) {
-        return noteStartTime <= currentTime + leadTime && noteEndTime >= currentTime - (leadTime + holdDuration);
+        return noteStartTime <= currentTime + leadTime && noteEndTime >= currentTime - 500;
       }
       
       // For normal tap notes: keep visible from leadTime before start to 500ms after start
