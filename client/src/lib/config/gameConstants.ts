@@ -420,3 +420,67 @@ export const DRAG_VELOCITY_THRESHOLD = DECK_WHEEL_CONFIG.dragVelocityThreshold;
 
 // Game Engine exports
 export const STATE_UPDATE_INTERVAL = GAME_ENGINE_TIMING.stateUpdateInterval;
+export const LEAD_TIME = GAME_ENGINE_TIMING.leadTime;
+
+// ============================================================================
+// TAP NOTE SPECIFIC CONSTANTS
+// ============================================================================
+
+export const TAP_FAILURE_ANIMATIONS = {
+  TOO_EARLY: { duration: 800 },
+  MISS: { duration: 1100 },
+} as const;
+
+export const TAP_HIT_FLASH = {
+  DURATION: 600,
+  FADE_START: 600,
+  FADE_DURATION: 100,
+} as const;
+
+export const TAP_DEPTH = {
+  MIN: 5,
+  MAX: 40,
+  FADE_TIME: 2000,
+} as const;
+
+export const TAP_RAY = {
+  SPREAD_ANGLE: 8,
+} as const;
+
+export const TAP_COLORS = {
+  STROKE_DEFAULT: 'rgba(255,255,255,0.8)',
+  STROKE_FAILED: 'rgba(120, 120, 120, 1)',
+  GLOW_SHADOW: (color: string) => `drop-shadow(0 0 35px ${color}) drop-shadow(0 0 20px ${color}) drop-shadow(0 0 10px ${color})`,
+} as const;
+
+export const TAP_OPACITY = {
+  MIN_BASE: 0.4,
+  MAX_PROGRESSION: 0.6,
+  MIN_FADE: 0.1,
+} as const;
+
+// ============================================================================
+// HOLD NOTE SPECIFIC CONSTANTS
+// ============================================================================
+
+export const HOLD_OPACITY = {
+  MIN_BASE: 0.4,
+  MAX_PROGRESSION: 0.6,
+} as const;
+
+export const HOLD_STROKE = {
+  BASE_WIDTH: 2,
+  APPROACH_MULTIPLIER: 2,
+  COLLAPSE_MULTIPLIER: 2,
+} as const;
+
+export const HOLD_GLOW = {
+  MIN_SHADOW: 20,
+  SHADOW_SCALE: 25,
+  MIN_INNER_SHADOW: 12,
+  INNER_SHADOW_SCALE: 15,
+} as const;
+
+// Greyscale colors for visual effects
+export const GREYSCALE_FILL_COLOR = 'rgba(80, 80, 80, 0.8)';
+export const GREYSCALE_GLOW_COLOR = 'rgba(100, 100, 100, 0.4)';

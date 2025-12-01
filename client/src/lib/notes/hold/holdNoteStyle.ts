@@ -1,4 +1,4 @@
-import { GREYSCALE_GLOW_COLOR, HOLD_ANIMATION_DURATION, HOLD_OPACITY, HOLD_STROKE, HOLD_GLOW } from '@/lib/notes/config/constants';
+import { GREYSCALE_GLOW_COLOR, FAILURE_ANIMATION_DURATION, HOLD_OPACITY, HOLD_STROKE, HOLD_GLOW } from '@/lib/config/gameConstants';
 import { HoldNoteFailureStates } from './holdNoteHelpers';
 import { HoldNoteColors, GreyscaleState } from './holdGreystate';
 
@@ -20,7 +20,7 @@ const getFailureOpacity = (
   if (!failures.hasAnyFailure || !failureTime) return baseOpacity;
   
   const timeSinceFailure = Math.max(0, currentTime - failureTime);
-  const failFadeProgress = Math.min(timeSinceFailure / HOLD_ANIMATION_DURATION, 1.0);
+  const failFadeProgress = Math.min(timeSinceFailure / FAILURE_ANIMATION_DURATION, 1.0);
   return baseOpacity * (1.0 - failFadeProgress);
 };
 

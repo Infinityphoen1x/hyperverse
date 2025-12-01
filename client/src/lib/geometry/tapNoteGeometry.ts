@@ -1,5 +1,4 @@
-import { JUDGEMENT_RADIUS } from '@/lib/config/gameConstants';
-import { TAP_DEPTH, TAP_RAY } from '../notes/config/constants';
+import { JUDGEMENT_RADIUS, TAP_DEPTH, TAP_RAY } from '@/lib/config/gameConstants';
 
 export interface TapNoteGeometry {
   x1: number; y1: number;
