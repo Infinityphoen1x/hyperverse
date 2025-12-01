@@ -160,8 +160,8 @@ function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black opacity-40" />
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
 
-      {/* Pause Menu */}
-      {isPauseMenuOpen && isPaused && (
+      {/* Pause Menu - Show immediately when PAUSED, rely on gameState for sync */}
+      {gameState === 'PAUSED' && (
         <PauseMenu
           onHome={onBackToHome}
           onResume={handleResume}

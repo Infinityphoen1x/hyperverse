@@ -32,21 +32,24 @@ export function usePauseLogic({
     setPauseMenuOpen?.(true);
 
     // Async YouTube pause - fire and forget mainly, don't block UI
-    (async () => {
-      try {
-        await pauseYouTubeVideo();
-        
-        // Simple verification
-        if (gameStateRef.current === 'PAUSED' && getVideoTime) {
-           // Just one quick check after a short delay
-           setTimeout(() => {
-              if (gameStateRef.current === 'PAUSED') getVideoTime();
-           }, 100);
+    // Use setTimeout to ensure UI renders the pause menu BEFORE we touch the heavy YouTube API
+    setTimeout(() => {
+      (async () => {
+        try {
+          await pauseYouTubeVideo();
+          
+          // Simple verification
+          if (gameStateRef.current === 'PAUSED' && getVideoTime) {
+             // Just one quick check after a short delay
+             setTimeout(() => {
+                if (gameStateRef.current === 'PAUSED') getVideoTime();
+             }, 100);
+          }
+        } catch (err) {
+          // Pause failed, continue anyway
         }
-      } catch (err) {
-        // Pause failed, continue anyway
-      }
-    })();
+      })();
+    }, 0);
   }, [getVideoTime, setIsPaused, setGameState, setPauseMenuOpen]);
 
   // Resume handler - triggers countdown
