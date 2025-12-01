@@ -16,7 +16,7 @@ export function BeatmapLoader({ difficulty, isOpen, setIsOpen }: BeatmapLoaderPr
   const {
     beatmapText,
     error,
-    isLoaded,
+    isBeatmapLoaded,
     handleBeatmapTextChange,
     handleLoadBeatmap,
     handleQuickLoadEscapingGravity,
@@ -30,12 +30,12 @@ export function BeatmapLoader({ difficulty, isOpen, setIsOpen }: BeatmapLoaderPr
             variant="outline"
             size="sm"
             className={`border-neon-cyan text-neon-cyan hover:bg-neon-cyan/10 font-rajdhani text-xs gap-1.5 ${
-              isLoaded ? 'bg-neon-cyan/20' : ''
+              isBeatmapLoaded ? 'bg-neon-cyan/20' : ''
             }`}
             data-testid="button-load-beatmap"
           >
             <Music size={14} />
-            {isLoaded ? 'BEATMAP LOADED' : 'LOAD BEATMAP'}
+            {isBeatmapLoaded ? 'BEATMAP LOADED' : 'LOAD BEATMAP'}
           </Button>
         </DialogTrigger>
         <DialogContent className="bg-black/95 border-neon-cyan/50 backdrop-blur-sm max-w-5xl max-h-[80vh] flex flex-col">
@@ -124,4 +124,4 @@ export function BeatmapLoader({ difficulty, isOpen, setIsOpen }: BeatmapLoaderPr
       </Dialog>
     </div>
   );
-}e
+}

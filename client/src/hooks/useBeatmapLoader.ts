@@ -12,6 +12,7 @@ interface UseBeatmapLoaderProps {
 interface UseBeatmapLoaderReturn {
   beatmapText: string;
   error: string;
+  isBeatmapLoaded: boolean;
   setIsOpen: (open: boolean) => void; // For dialog control
   handleBeatmapTextChange: (text: string) => void;
   handleLoadBeatmap: () => void;
@@ -93,6 +94,7 @@ export const useBeatmapLoader = ({ difficulty }: UseBeatmapLoaderProps): UseBeat
   return {
     beatmapText,
     error,
+    isBeatmapLoaded,
     setIsOpen,
     handleBeatmapTextChange,
     handleLoadBeatmap,
