@@ -1,12 +1,11 @@
 // src/hooks/useHoldProgress.ts
 import { useState, useEffect, useRef } from 'react';
-import { useGameStore } from '@/stores/useGameStore'; // Assumes store with game state
-import { Note } from '@/lib/engine/gameTypes';
-import { getHoldProgress, HoldProgressData } from '@/lib/utils/holdMeterUtils';
+import { useGameStore } from '@/stores/useGameStore';
+import type { Note } from '@/types/game';
+import { getHoldProgress } from '@/lib/utils/holdMeterUtils';
 import { DECK_METER_COMPLETION_GLOW_DURATION } from '@/lib/config/gameConstants';
 
 interface UseHoldProgressProps {
-  // Optional overrides; defaults to store for global sync
   lane?: number;
 }
 
@@ -16,19 +15,15 @@ interface HoldProgressReturn {
 }
 
 export const useHoldProgress = ({ lane: propLane }: UseHoldProgressProps = {}): HoldProgressReturn => {
-  // Pull from Zustand (fallback to props for testing/flexibility)
-  const { notes, currentTime } = useGameStore(state => ({
-    notes: state.notes,
-    currentTime: state.currentTime,
-  }));
-  const lane = propLane ?? -1; // Default to left lane if not specified; adjust as needed
+  const notes = useGameStore(state => state.notes);
+  const currentTime = useGameStore(state => state.currentTime);
+  const lane = propLane ?? -1;
 
   const [isGlowing, setIsGlowing] = useState(false);
   const prevCompletionRef = useRef<boolean>(false);
   const prevActiveNoteIdRef = useRef<string>('');
   const glowTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Clean up glow timeout on unmount
   useEffect(() => {
     return () => {
       if (glowTimeoutRef.current) {
@@ -37,11 +32,8 @@ export const useHoldProgress = ({ lane: propLane }: UseHoldProgressProps = {}): 
     };
   }, []);
 
-  // Detect note changes and reset glow
   useEffect(() => {
-    if (!Array.isArray(notes)) return;
-
-    const activeNote = notes.find(n => n.lane === lane && n.pressHoldTime && n.pressHoldTime > 0 && !n.hit);
+    const activeNote = notes.find(n => n.lane === lane && !n.hit);
     const currentNoteId = activeNote?.id || '';
 
     if (prevActiveNoteIdRef.current !== currentNoteId) {
@@ -51,8 +43,21 @@ export const useHoldProgress = ({ lane: propLane }: UseHoldProgressProps = {}): 
     }
   }, [notes, lane]);
 
-  // Compute progress (runs on currentTime/notes changes)
-  const { progress, shouldGlow, prevCompletion } = getHoldProgress(
+  useEffect(() => {
+    const result = getHoldProgress(
+      notes,
+      currentTime,
+      lane,
+      prevCompletionRef.current,
+      setIsGlowing,
+      glowTimeoutRef,
+      DECK_METER_COMPLETION_GLOW_DURATION
+    );
+
+    prevCompletionRef.current = result.prevCompletion;
+  }, [notes, currentTime, lane]);
+
+  const { progress } = getHoldProgress(
     notes,
     currentTime,
     lane,
@@ -61,9 +66,6 @@ export const useHoldProgress = ({ lane: propLane }: UseHoldProgressProps = {}): 
     glowTimeoutRef,
     DECK_METER_COMPLETION_GLOW_DURATION
   );
-
-  // Update ref for next calc
-  prevCompletionRef.current = prevCompletion;
 
   return { progress, isGlowing };
 };
