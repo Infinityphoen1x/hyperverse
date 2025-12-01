@@ -44,9 +44,10 @@ export interface GameDebuggerStoreState {
   updateAnimation: (noteId: string, updates: Partial<AnimationTrackingEntry>) => void;
   updateNoteStats: (notes: any[]) => void;
   updateRenderStats: (rendered: number, preMissed: number) => void;
+  updateHitStats: (stats: Partial<HitStatsType>) => void;
 }
 
-export const useGameDebuggerStore = create<GameDebuggerStoreState>((set, get) => ({
+export const useGameDebuggerStore = create<GameDebuggerStoreState>((set) => ({
   notes: [],
   animations: [],
   noteStats: { total: 0, tap: 0, hold: 0, hit: 0, missed: 0, failed: 0, byLane: {} },
@@ -87,5 +88,11 @@ export const useGameDebuggerStore = create<GameDebuggerStoreState>((set, get) =>
 
   updateRenderStats: (rendered, preMissed) => {
     set({ renderStats: { rendered, preMissed } });
+  },
+
+  updateHitStats: (stats) => {
+    set((state) => ({
+      hitStats: { ...state.hitStats, ...stats },
+    }));
   },
 }));
