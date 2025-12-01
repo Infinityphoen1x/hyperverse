@@ -21,13 +21,21 @@ interface UseBeatmapLoaderReturn {
 
 const defaultBeatmap = `{
   "metadata": {
-    "title": "",
-    "artist": "",
+    "title": "Song Title",
+    "artist": "Artist Name",
     "bpm": 120,
-    "duration": 0,
-    "youtube": ""
+    "duration": 180,
+    "youtube": "https://www.youtube.com/watch?v=VIDEO_ID",
+    "beatmapStart": 0,
+    "beatmapEnd": 180
   },
-  "notes": []
+  "notes": [
+    "500|0|TAP",
+    "1000|1|TAP",
+    "1500|2|HOLD_START",
+    "2500|2|HOLD_END",
+    "3000|3|TAP"
+  ]
 }`;
 
 export const useBeatmapLoader = ({ difficulty, onBeatmapLoad }: UseBeatmapLoaderProps): UseBeatmapLoaderReturn => {

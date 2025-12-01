@@ -62,9 +62,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   
   rewindGame: () => set((state) => ({ 
     currentTime: 0,
-    // Reset note states but keep the notes array and stay in PLAYING state
-    notes: state.notes.map(note => ({
+    // Reset note states - create brand new objects to break stale references
+    notes: state.notes.map((note, idx) => ({
       ...note,
+      id: `${note.time}-${note.lane}-${idx}`, // Regenerate ID to ensure fresh objects
       hit: false,
       missed: false,
       failureTime: undefined,
@@ -86,9 +87,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     gameState: 'IDLE', 
     isPaused: false,
     countdownSeconds: 0,
-    // Reset note states but keep the notes array
-    notes: state.notes.map(note => ({
+    // Reset note states - create brand new objects to ensure all references are cleared
+    notes: state.notes.map((note, idx) => ({
       ...note,
+      id: `${note.time}-${note.lane}-${idx}`, // Regenerate ID to break any stale references
       hit: false,
       missed: false,
       failureTime: undefined,
