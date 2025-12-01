@@ -1,7 +1,9 @@
 // src/hooks/useFadeAnimation.ts
 import { useEffect, useRef } from 'react';
-import { useGameStore } from '@/stores/useGameStore'; // For resume state
 import { GameState } from '@/lib/engine/gameTypes';
+
+const FADE_IN_DURATION_MS = 500;
+const ANIMATION_DELAY_MS = 100;
 
 interface UseFadeAnimationProps {
   gameState: GameState;
@@ -15,51 +17,43 @@ export function useFadeAnimation({
   resumeGame,
   setGameState,
   setResumeFadeOpacity,
-}: UseFadeAnimationProps) {
+}: UseFadeAnimationProps): void {
   const animationFrameIdRef = useRef<number | null>(null);
-  const justResumedRef = useRef(false);
+  const startTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (gameState !== 'RESUMING') return;
 
-    const fadeInDuration = 500;
-    let startTime: number | null = null;
-
-    const animate = (time: number) => {
-      if (!startTime) {
-        startTime = time;
+    const animate = (time: number): void => {
+      if (!startTimeRef.current) {
+        startTimeRef.current = time;
       }
 
-      const elapsed = time - startTime;
-      const progress = Math.min(elapsed / fadeInDuration, 1.0);
+      const elapsed = time - startTimeRef.current;
+      const progress = Math.min(elapsed / FADE_IN_DURATION_MS, 1.0);
       setResumeFadeOpacity(progress);
 
       if (progress < 1.0) {
         animationFrameIdRef.current = requestAnimationFrame(animate);
       } else {
-        // Fade complete - unfreeze engine
         console.log('[RESUME-ANIM] Fade complete, unfreezing engine...');
         resumeGame();
         setGameState('PLAYING');
         setResumeFadeOpacity(1.0);
-        justResumedRef.current = false;
-        startTime = null;
+        startTimeRef.current = null;
       }
     };
 
-    // Delay start for sync
     const timer = setTimeout(() => {
-      if (gameState === 'RESUMING') {
-        justResumedRef.current = true;
-        animationFrameIdRef.current = requestAnimationFrame(animate);
-      }
-    }, 100);
+      animationFrameIdRef.current = requestAnimationFrame(animate);
+    }, ANIMATION_DELAY_MS);
 
     return () => {
       if (animationFrameIdRef.current) {
         cancelAnimationFrame(animationFrameIdRef.current);
       }
       clearTimeout(timer);
+      startTimeRef.current = null;
     };
   }, [gameState, setGameState, resumeGame, setResumeFadeOpacity]);
 }
