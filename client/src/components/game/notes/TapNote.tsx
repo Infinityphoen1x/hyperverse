@@ -1,6 +1,6 @@
 // src/components/TapNote.tsx
 import React, { memo } from 'react';
-import { Note } from '@/lib/engine/gameTypes';
+import type { Note } from '@/lib/engine/gameTypes';
 import { getLaneAngle, getColorForLane } from '@/lib/utils/laneUtils';
 import { calculateTapNoteGeometry } from "@/lib/geometry/tapNoteGeometry";
 import { calculateTapNoteStyle } from "@/lib/notes/tap/tapNoteStyle";
@@ -17,7 +17,7 @@ interface TapNoteProps {
   rawProgress: number;
 }
 
-const TapNoteComponent = ({ note, currentTime, vpX, vpY, state, progressForGeometry, clampedProgress, rawProgress }: TapNoteProps) => {
+const TapNoteComponent = ({ note, currentTime, vpX, vpY, state, progressForGeometry, clampedProgress, rawProgress }: TapNoteProps): React.ReactElement => {
   const tapRayAngle = getLaneAngle(note.lane);
   const noteColor = getColorForLane(note.lane);
   const geometry = calculateTapNoteGeometry(progressForGeometry, tapRayAngle, vpX, vpY, state.isHit, currentTime, state.isFailed, note.time);
@@ -35,4 +35,14 @@ const TapNoteComponent = ({ note, currentTime, vpX, vpY, state, progressForGeome
   );
 };
 
-export const TapNote = memo(TapNoteComponent);
+export const TapNote = memo(TapNoteComponent, (prev, next) => 
+  prev.note.id === next.note.id &&
+  prev.currentTime === next.currentTime &&
+  prev.vpX === next.vpX &&
+  prev.vpY === next.vpY &&
+  prev.state.isHit === next.state.isHit &&
+  prev.state.isFailed === next.state.isFailed &&
+  prev.progressForGeometry === next.progressForGeometry &&
+  prev.clampedProgress === next.clampedProgress &&
+  prev.rawProgress === next.rawProgress
+);

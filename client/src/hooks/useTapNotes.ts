@@ -1,8 +1,9 @@
 // src/hooks/useTapNotes.ts
+import { useCallback } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
-import type { ProcessedTapNote } from '@/lib/engine/gameTypes'; // Or local if not exported
-import { shallow } from 'zustand/shallow';
+import type { Note } from '@/lib/engine/gameTypes';
 
-export function useTapNotes(): ProcessedTapNote[] {
-  return useGameStore((state) => state.getProcessedTapNotes(), shallow); // Memo on array changes
+export function useTapNotes(): Note[] {
+  const selector = useCallback((state: ReturnType<typeof useGameStore.getState>) => state.getProcessedTapNotes(), []);
+  return useGameStore(selector);
 }
