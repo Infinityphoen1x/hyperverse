@@ -42,7 +42,23 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   },
   pauseGame: () => set({ isPaused: true, countdownSeconds: 0 }),
   resumeGame: () => set({ isPaused: false }),
-  rewindGame: () => set({ currentTime: 0 }),
+  rewindGame: () => set((state) => ({ 
+    currentTime: 0,
+    // Reset note states but keep the notes array and stay in PLAYING state
+    notes: state.notes.map(note => ({
+      ...note,
+      hit: false,
+      missed: false,
+      failureTime: undefined,
+      pressHoldTime: undefined,
+      releaseTime: undefined,
+      tapTooEarlyFailure: false,
+      tapMissFailure: false,
+      tooEarlyFailure: false,
+      holdMissFailure: false,
+      holdReleaseFailure: false
+    }))
+  })),
   restartGame: () => set((state) => ({ 
     currentTime: 0, 
     score: 0, 
