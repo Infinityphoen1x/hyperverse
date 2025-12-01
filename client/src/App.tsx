@@ -11,22 +11,12 @@ import Game from "@/pages/Game";
 
 function App() {
   const [gameActive, setGameActive] = useState(false);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
   const playerInitializedRef = useRef(false);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
 
   // Initialize console logging for diagnostics
   useConsoleLogger();
-
-  const handleStartGame = (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => {
-    setSelectedDifficulty(difficulty);
-    setGameActive(true);
-  };
-
-  const handleBackToHome = () => {
-    setGameActive(false);
-  };
 
   // Initialize YouTube player when iframe mounts or videoId changes
   useEffect(() => {
@@ -92,12 +82,11 @@ function App() {
           {/* UI Layer - Home or Game (z-10+) */}
           <div className="absolute inset-0 z-10">
             {!gameActive && (
-              <Home onStartGame={handleStartGame} />
+              <Home onStartGame={() => setGameActive(true)} />
             )}
             {gameActive && (
               <Game 
-                difficulty={selectedDifficulty} 
-                onBackToHome={handleBackToHome}
+                onBackToHome={() => setGameActive(false)}
                 youtubeIframeRef={youtubeIframeRef as React.RefObject<HTMLIFrameElement>}
                 playerInitializedRef={playerInitializedRef}
               />
