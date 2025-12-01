@@ -31,14 +31,26 @@ const getFailureAnimationDuration = (isTooEarly: boolean): number =>
   isTooEarly ? TAP_FAILURE_ANIMATIONS.TOO_EARLY.duration : TAP_FAILURE_ANIMATIONS.MISS.duration;
 
 export const shouldRenderTapNote = (state: TapNoteState, timeUntilHit: number): boolean => {
+  // Don't render if note is too far away or has passed fallthrough window
   if (timeUntilHit > TAP_RENDER_WINDOW_MS || timeUntilHit < -TAP_FALLTHROUGH_WINDOW_MS) return false;
+  
+  // Hide successful hits after hold duration expires
   if (state.isHit && state.timeSinceHit >= TAP_HIT_HOLD_DURATION) return false;
   
-  const failureAnimDuration = state.isTapTooEarlyFailure 
-    ? TAP_FAILURE_ANIMATIONS.TOO_EARLY.duration 
-    : TAP_FAILURE_ANIMATIONS.MISS.duration;
+  // For failed notes, respect the failure animation duration
+  // But also ensure the note stays visible while it's still in the natural render window
+  // (e.g., a note tapped too early at -2000ms should not disappear until it naturally passes the hit line)
+  if (state.isFailed) {
+    const failureAnimDuration = state.isTapTooEarlyFailure 
+      ? TAP_FAILURE_ANIMATIONS.TOO_EARLY.duration 
+      : TAP_FAILURE_ANIMATIONS.MISS.duration;
+    
+    // Only hide after animation completes if the note has already passed its natural window
+    if (state.timeSinceFail > failureAnimDuration && timeUntilHit < -TAP_FALLTHROUGH_WINDOW_MS) {
+      return false;
+    }
+  }
   
-  if (state.isFailed && state.timeSinceFail > failureAnimDuration) return false;
   return true;
 };
 

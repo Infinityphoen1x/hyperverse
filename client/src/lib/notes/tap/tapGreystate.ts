@@ -25,12 +25,13 @@ export const determineTapGreyscaleState = (
     return { isGreyed: false, reason: 'none' };
   }
 
+  // Immediate greyscale for too-early failure
   if (state.isTapTooEarlyFailure) {
     return { isGreyed: true, reason: 'tapTooEarlyImmediate' };
   }
   
-  // Greyscale when miss passes 70% through note (at judgement moment)
-  if (state.isTapMissFailure && progress >= 0.7) {
+  // Immediate greyscale for miss failure (removed progress gate for consistency)
+  if (state.isTapMissFailure) {
     return { isGreyed: true, reason: 'tapMissAtJudgement' };
   }
   
