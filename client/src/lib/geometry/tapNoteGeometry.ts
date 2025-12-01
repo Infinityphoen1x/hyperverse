@@ -16,14 +16,16 @@ const calculateEffectiveProgress = (
   failureTime?: number
 ): number => {
   if (isFailedOrHit && Number.isFinite(noteTime) && Number.isFinite(currentTime)) {
-    // Early failure: note failed before reaching hit line (e.g., tapped too early)
-    // Use normal progress calculation so note continues to approach hit line
+    // Early failure: note failed BEFORE reaching hit line (failureTime < noteTime)
+    // Use the progress value that was calculated at failure time, not current time
+    // This prevents the geometry from morphing based on current time changes
     if (failureTime !== undefined && failureTime < noteTime) {
+      // Use progress as-is (it's already frozen from useTapNotes)
       return Math.max(0, Math.min(1, progress));
     }
     
-    // Late failure or successful hit: note passed hit line
-    // Use fallthrough progress to continue morphing past hit line
+    // Late failure or successful hit: note PASSED hit line (failureTime >= noteTime)
+    // Continue morphing past the hit line using current time
     return Math.max(0, 1 - ((noteTime - currentTime) / TAP_DEPTH.FADE_TIME));
   }
   return Math.max(0, Math.min(1, progress));
