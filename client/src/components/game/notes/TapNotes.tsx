@@ -1,38 +1,29 @@
 // src/components/TapNotes.tsx
-import React from 'react';
-import { Note } from '@/lib/engine/gameTypes';
+import React, { memo, useCallback } from 'react';
 import { TapNote } from './TapNote';
 import { useTapNotes } from '@/hooks/useTapNotes';
-import { useGameStore } from '@/stores/useGameStore'; // Assumes store with game state
+import { useGameStore } from '@/stores/useGameStore';
 import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';
 
 interface TapNotesProps {
-  // Optional overrides; defaults to store for global sync
-  visibleNotes?: Note[];
-  currentTime?: number;
   vpX?: number;
   vpY?: number;
 }
 
-export function TapNotes({ 
-  visibleNotes: propVisibleNotes, 
-  currentTime: propCurrentTime, 
-  vpX: propVpX, 
-  vpY: propVpY 
-}: TapNotesProps = {}) {
-  // Pull from Zustand (fallback to props for testing/flexibility)
-  const { visibleNotes, currentTime, vpX, vpY } = useGameStore(state => ({
-    visibleNotes: propVisibleNotes ?? state.visibleNotes,
-    currentTime: propCurrentTime ?? state.currentTime,
-    vpX: propVpX ?? state.vpX,
-    vpY: propVpY ?? state.vpY,
-  }));
+const TapNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: TapNotesProps) => {
+  // Memoize selector to prevent unnecessary store subscriptions
+  const selector = useCallback(
+    (state: any) => state.currentTime,
+    []
+  );
 
-  const processedNotes = useTapNotes(visibleNotes, currentTime);
+  const currentTime = useGameStore(selector);
+  const processedNotes = useTapNotes();
 
   return (
     <svg 
-      className="absolute inset-0" 
+      className="absolute inset-0"
+      data-testid="tap-notes-container"
       style={{ 
         width: `${TUNNEL_CONTAINER_WIDTH}px`, 
         height: `${TUNNEL_CONTAINER_HEIGHT}px`, 
@@ -41,13 +32,13 @@ export function TapNotes({
         margin: '0 auto' 
       }}
     >
-      {processedNotes.map((noteData) => (
+      {processedNotes.map((noteData: any) => (
         <TapNote
           key={noteData.note.id}
           note={noteData.note}
           currentTime={currentTime}
-          vpX={vpX}
-          vpY={vpY}
+          vpX={propVpX}
+          vpY={propVpY}
           state={noteData.state}
           progressForGeometry={noteData.progressForGeometry}
           clampedProgress={noteData.clampedProgress}
@@ -56,4 +47,6 @@ export function TapNotes({
       ))}
     </svg>
   );
-}
+};
+
+export const TapNotes = memo(TapNotesComponent);

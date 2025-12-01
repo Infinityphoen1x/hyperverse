@@ -1,5 +1,5 @@
 // src/components/TapNote.tsx
-import React from 'react';
+import React, { memo } from 'react';
 import { Note } from '@/lib/engine/gameTypes';
 import { getLaneAngle, getColorForLane } from '@/lib/utils/laneUtils';
 import { calculateTapNoteGeometry } from "@/lib/geometry/tapNoteGeometry";
@@ -17,19 +17,22 @@ interface TapNoteProps {
   rawProgress: number;
 }
 
-export function TapNote({ note, currentTime, vpX, vpY, state, progressForGeometry, clampedProgress, rawProgress }: TapNoteProps) {
+const TapNoteComponent = ({ note, currentTime, vpX, vpY, state, progressForGeometry, clampedProgress, rawProgress }: TapNoteProps) => {
   const tapRayAngle = getLaneAngle(note.lane);
   const noteColor = getColorForLane(note.lane);
   const geometry = calculateTapNoteGeometry(progressForGeometry, tapRayAngle, vpX, vpY, state.isHit, currentTime, state.isFailed, note.time);
   const style = calculateTapNoteStyle(clampedProgress, state, noteColor, rawProgress);
   return (
     <polygon
+      data-testid={`tap-note-${note.id}`}
       points={geometry.points}
       fill={style.fill}
       opacity={style.opacity}
       stroke={style.stroke}
       strokeWidth={1.5}
-      style={{ filter: style.filter, transition: 'all 0.05s linear', mixBlendMode: 'screen' }}
+      style={{ filter: style.filter || 'none', transition: 'all 0.05s linear', mixBlendMode: 'screen' }}
     />
   );
-}
+};
+
+export const TapNote = memo(TapNoteComponent);
