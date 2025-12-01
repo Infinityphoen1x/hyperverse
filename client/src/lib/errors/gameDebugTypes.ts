@@ -1,5 +1,3 @@
-import { Note } from '@/lib/engine/gameTypes';
-
 export type FailureType = 
   | 'tapTooEarlyFailure'
   | 'tapMissFailure'
@@ -12,10 +10,7 @@ export interface AnimationTrackingEntry {
   noteId: string;
   type: FailureType;
   failureTime?: number;
-  renderStart?: number;
-  renderEnd?: number;
-  status: 'pending' | 'rendering' | 'completed' | 'failed';
-  errorMsg?: string;
+  completed: boolean;
 }
 
 export interface NoteStatistics {
