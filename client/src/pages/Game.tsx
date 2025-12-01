@@ -78,7 +78,9 @@ function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
     resumeFadeOpacity,
     gameErrors,
     handleLeftDeckSpin,
-    handleRightDeckSpin
+    handleRightDeckSpin,
+    handleResume,
+    handleRewind
   } = useGameLogic({
     gameState,
     currentTime,
@@ -162,6 +164,8 @@ function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
       {isPauseMenuOpen && isPaused && (
         <PauseMenu
           onHome={onBackToHome}
+          onResume={handleResume}
+          onRewind={handleRewind}
         />
       )}
 

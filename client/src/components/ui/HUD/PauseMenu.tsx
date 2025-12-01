@@ -10,11 +10,19 @@ interface PauseMenuProps {
   onRewind?: () => void;
 }
 
-const PauseMenuComponent = ({ onHome: propOnHome }: PauseMenuProps = {}) => {
+const PauseMenuComponent = ({ 
+  onHome: propOnHome, 
+  onResume, 
+  onRewind 
+}: PauseMenuProps = {}) => {
   const isPaused = useGameStore(state => state.isPaused);
   const countdownSeconds = useGameStore(state => state.countdownSeconds);
-  const resumeGame = useGameStore(state => state.resumeGame);
-  const rewindGame = useGameStore(state => state.rewindGame);
+  const resumeGameStore = useGameStore(state => state.resumeGame);
+  const rewindGameStore = useGameStore(state => state.rewindGame);
+
+  // Prefer props if available for complex logic (countdown, async seek), fallback to store
+  const handleResume = onResume || resumeGameStore;
+  const handleRewind = onRewind || rewindGameStore;
 
   if (!isPaused) return null;
 
@@ -42,7 +50,7 @@ const PauseMenuComponent = ({ onHome: propOnHome }: PauseMenuProps = {}) => {
         )}
         <div className="flex flex-col gap-4 mt-8">
           <button
-            onClick={resumeGame}
+            onClick={handleResume}
             disabled={countdownSeconds > 0}
             className="px-12 py-4 bg-neon-cyan text-black font-bold font-orbitron text-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="button-resume"
@@ -50,7 +58,7 @@ const PauseMenuComponent = ({ onHome: propOnHome }: PauseMenuProps = {}) => {
             {countdownSeconds > 0 ? 'RESUMING...' : 'RESUME'}
           </button>
           <button
-            onClick={rewindGame}
+            onClick={handleRewind}
             className="px-12 py-4 bg-emerald-500 text-black font-bold font-orbitron text-lg hover:bg-white transition-colors border-2 border-emerald-500"
             data-testid="button-rewind"
           >
