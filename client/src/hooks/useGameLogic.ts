@@ -83,6 +83,7 @@ export function useGameLogic({
     onPause: pauseHandler,
     onResume: handleResume,
     onRewind: handleRewind,
+    onHitNote: hitNote,
   });
 
   // Countdown

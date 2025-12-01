@@ -6,6 +6,7 @@ interface UseKeyControlsProps {
   onPause?: () => void;
   onResume?: () => void;
   onRewind?: () => void;
+  onHitNote?: (lane: number) => void;
 }
 
 const KEY_LANE_MAP: Record<string, number> = {
@@ -19,10 +20,11 @@ const KEY_LANE_MAP: Record<string, number> = {
 
 const GAMEPLAY_KEYS = new Set(['w', 'W', 'o', 'O', 'i', 'I', 'e', 'E', 'q', 'Q', 'p', 'P']);
 
-export function useKeyControls({ onPause, onResume, onRewind }: UseKeyControlsProps): void {
+export function useKeyControls({ onPause, onResume, onRewind, onHitNote }: UseKeyControlsProps): void {
   const gameState = useGameStore(state => state.gameState);
   const isPaused = useGameStore(state => state.isPaused);
-  const hitNote = useGameStore(state => state.hitNote);
+  const storeHitNote = useGameStore(state => state.hitNote);
+  const hitNote = onHitNote || storeHitNote;
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent): void => {
@@ -49,7 +51,7 @@ export function useKeyControls({ onPause, onResume, onRewind }: UseKeyControlsPr
         }
       }
     },
-    [gameState, isPaused, hitNote, onPause, onResume, onRewind]
+    [gameState, isPaused, hitNote, onHitNote, storeHitNote, onPause, onResume, onRewind]
   );
 
   useEffect(() => {
