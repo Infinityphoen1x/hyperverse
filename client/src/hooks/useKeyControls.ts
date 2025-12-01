@@ -1,40 +1,43 @@
 // src/hooks/useKeyControls.ts
 import { useEffect, useCallback } from 'react';
-import { useGameStore } from '@/stores/useGameStore'; // Zustand store for game actions/state
-import type { GameState } from '@/lib/engine/gameTypes'; // e.g., 'PLAYING' | 'PAUSED' | 'RESUMING'
+import { useGameStore } from '@/stores/useGameStore';
+import type { GameState } from '@/types/game';
 
 interface UseKeyControlsProps {
-  setPauseMenuOpen: (open: boolean) => void; // Only prop needed now (UI concern)
+  setPauseMenuOpen: (open: boolean) => void;
 }
 
-export function useKeyControls({ setPauseMenuOpen }: UseKeyControlsProps) {
-  const { gameState, isPaused, hitNote, pauseGame, resumeGame, rewindGame } = useGameStore(
-    (state) => ({
-      gameState: state.gameState, // Assumes store has this
-      isPaused: state.isPaused,   // Assumes store has this
-      hitNote: state.hitNote,     // (lane: number) => void
-      pauseGame: state.pauseGame, // () => void
-      resumeGame: state.resumeGame, // () => void
-      rewindGame: state.rewindGame, // () => void (renamed from handleRewind for consistency)
-    })
-  );
+const KEY_LANE_MAP: Record<string, number> = {
+  'w': 0, 'W': 0,
+  'o': 1, 'O': 1,
+  'i': 2, 'I': 2,
+  'e': 3, 'E': 3,
+  'q': -1, 'Q': -1,
+  'p': -2, 'P': -2,
+};
+
+const GAMEPLAY_KEYS = new Set(['w', 'W', 'o', 'O', 'i', 'I', 'e', 'E', 'q', 'Q', 'p', 'P']);
+
+export function useKeyControls({ setPauseMenuOpen }: UseKeyControlsProps): void {
+  const gameState = useGameStore(state => state.gameState);
+  const isPaused = useGameStore(state => state.isPaused);
+  const hitNote = useGameStore(state => state.hitNote);
+  const pauseGame = useGameStore(state => state.pauseGame);
+  const resumeGame = useGameStore(state => state.resumeGame);
+  const rewindGame = useGameStore(state => state.rewindGame);
 
   const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      // Prevent default for gameplay keys to avoid browser shortcuts
-      const gameplayKeys = ['w', 'W', 'o', 'O', 'i', 'I', 'e', 'E', 'q', 'Q', 'p', 'P'];
-      if (gameplayKeys.includes(e.key)) {
+    (e: KeyboardEvent): void => {
+      if (GAMEPLAY_KEYS.has(e.key)) {
         e.preventDefault();
       }
 
       if (e.key === 'Escape') {
         e.preventDefault();
         if (gameState === 'PAUSED' || isPaused) {
-          // Resume if paused
           resumeGame();
           setPauseMenuOpen(false);
         } else if (gameState === 'PLAYING' || gameState === 'RESUMING') {
-          // Pause if playing
           pauseGame();
           setPauseMenuOpen(true);
         }
@@ -43,14 +46,11 @@ export function useKeyControls({ setPauseMenuOpen }: UseKeyControlsProps) {
         rewindGame();
       }
 
-      // Note hit keys (only during active play)
       if ((gameState === 'PLAYING' || gameState === 'RESUMING') && !isPaused) {
-        if (e.key === 'w' || e.key === 'W') hitNote(0);
-        if (e.key === 'o' || e.key === 'O') hitNote(1);
-        if (e.key === 'i' || e.key === 'I') hitNote(2);
-        if (e.key === 'e' || e.key === 'E') hitNote(3);
-        if (e.key === 'q' || e.key === 'Q') hitNote(-1);
-        if (e.key === 'p' || e.key === 'P') hitNote(-2);
+        const lane = KEY_LANE_MAP[e.key];
+        if (lane !== undefined) {
+          hitNote(lane);
+        }
       }
     },
     [gameState, isPaused, hitNote, pauseGame, resumeGame, rewindGame, setPauseMenuOpen]
