@@ -1,5 +1,5 @@
 // src/hooks/usePauseLogic.ts
-import { useCallback } from 'react';
+import { useCallback, useRef, useEffect } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { pauseYouTubeVideo } from '@/lib/youtube';
 
@@ -17,9 +17,15 @@ export function usePauseLogic({
   const setGameState = useGameStore(state => state.setGameState);
   const setCountdownSeconds = useGameStore(state => state.setCountdownSeconds);
 
+  // Keep track of latest game state for async operations
+  const gameStateRef = useRef(gameState);
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
+
   // Pause handler
   const pauseGame = useCallback(() => {
-    if (gameState !== 'PLAYING') return;
+    if (gameStateRef.current !== 'PLAYING') return;
 
     setIsPaused(true);
     setGameState('PAUSED');
@@ -29,10 +35,19 @@ export function usePauseLogic({
     (async () => {
       try {
         await pauseYouTubeVideo();
+        
+        // Check if we're still paused before doing anything else
+        if (gameStateRef.current !== 'PAUSED') return;
+
         await new Promise(resolve => setTimeout(resolve, 150));
         
+        if (gameStateRef.current !== 'PAUSED') return;
+
         if (getVideoTime) {
           for (let i = 0; i < 5; i++) {
+            // Abort if state changed (e.g. user resumed)
+            if (gameStateRef.current !== 'PAUSED') break;
+            
             const youtubeTime = getVideoTime();
             if (youtubeTime !== null) break;
             await new Promise(resolve => setTimeout(resolve, 50));
@@ -42,7 +57,7 @@ export function usePauseLogic({
         // Pause failed, continue anyway
       }
     })();
-  }, [gameState, getVideoTime, setIsPaused, setGameState, setPauseMenuOpen]);
+  }, [getVideoTime, setIsPaused, setGameState, setPauseMenuOpen]);
 
   // Resume handler - triggers countdown
   const handleResume = useCallback((): void => {

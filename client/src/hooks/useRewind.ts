@@ -1,5 +1,5 @@
 // src/hooks/useRewind.ts
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo } from '@/lib/youtube';
 
@@ -10,8 +10,12 @@ interface UseRewindProps {
 export function useRewind({ setPauseMenuOpen }: UseRewindProps): { handleRewind: () => Promise<void> } {
   const restartGame = useGameStore(state => state.restartGame);
   const setGameState = useGameStore(state => state.setGameState);
+  const isRewindingRef = useRef(false);
 
   const handleRewind = useCallback(async (): Promise<void> => {
+    if (isRewindingRef.current) return;
+    isRewindingRef.current = true;
+
     restartGame();
     setPauseMenuOpen(false);
     try {
@@ -20,8 +24,11 @@ export function useRewind({ setPauseMenuOpen }: UseRewindProps): { handleRewind:
       await playYouTubeVideo();
     } catch (err) {
       // Rewind failed, continue anyway
+      console.warn('[REWIND] Async operation failed', err);
+    } finally {
+      setGameState('PLAYING');
+      isRewindingRef.current = false;
     }
-    setGameState('PLAYING');
   }, [restartGame, setGameState, setPauseMenuOpen]);
 
   return { handleRewind };
