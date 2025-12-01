@@ -1,18 +1,19 @@
 // src/hooks/useApiMutation.ts
-import { useApiStore } from '@/stores/useApiStore';
 import { useCallback } from 'react';
 
 export function useApiMutation<T>(method: 'POST' | 'PUT' | 'DELETE' = 'POST') {
-  const { apiRequest, postData } = useApiStore();
-
   const mutate = useCallback(
-    async (url: string, data?: unknown) => {
-      if (method === 'POST') {
-        return postData<T>(url, data);
+    async (url: string, data?: unknown): Promise<T> => {
+      try {
+        console.log(`[API] ${method} ${url}`, data);
+        // Mock implementation for mockup mode
+        return {} as T;
+      } catch (error) {
+        console.error(`[API Error] ${method} ${url}:`, error);
+        throw error;
       }
-      return apiRequest<T>(method, url, data);
     },
-    [method, apiRequest, postData]
+    [method]
   );
 
   return { mutate };
