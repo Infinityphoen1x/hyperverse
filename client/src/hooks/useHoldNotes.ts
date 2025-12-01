@@ -2,16 +2,27 @@
 import { useMemo } from 'react';
 import { Note } from '@/lib/engine/gameTypes';
 import { processSingleHoldNote, HoldNoteProcessedData } from '@/lib/utils/holdNoteUtils';
+import { useGameStore } from '@/stores/useGameStore';
 
 export type { HoldNoteProcessedData };
 
-import { useEffect } from 'react';
-
 export function useHoldNotes(visibleNotes: Note[], currentTime: number): HoldNoteProcessedData[] {
+  const gameState = useGameStore(state => state.gameState);
+  
   return useMemo(() => {
+    // Don't render notes until game is actually playing (YouTube started)
+    if (gameState !== 'PLAYING' && gameState !== 'PAUSED' && gameState !== 'RESUMING') {
+      return [];
+    }
+    
+    // Ensure visibleNotes is an array
+    if (!visibleNotes || !Array.isArray(visibleNotes)) {
+      return [];
+    }
+    
     return visibleNotes
       .filter((n) => n && (n.type === 'HOLD' || n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && n.id)
       .map((note) => processSingleHoldNote(note, currentTime))
       .filter((data): data is HoldNoteProcessedData => data !== null);
-  }, [visibleNotes, currentTime]);
+  }, [visibleNotes, currentTime, gameState]);
 }

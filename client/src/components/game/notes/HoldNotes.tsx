@@ -11,10 +11,11 @@ interface HoldNotesProps {
 
 const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNotesProps) => {
   // Split selectors to prevent unnecessary object creation and re-renders
-  const notes = useGameStore(state => state.notes);
+  const notes = useGameStore(state => state.notes || []);
   const currentTime = useGameStore(state => state.currentTime);
 
   const visibleNotes = React.useMemo(() => {
+    if (!notes || !Array.isArray(notes)) return [];
     const leadTime = 2000;
     return notes.filter(n => n.time <= currentTime + leadTime && n.time >= currentTime - 500);
   }, [notes, currentTime]);

@@ -16,8 +16,19 @@ export interface TapNoteProcessedData {
 export function useTapNotes(): TapNoteProcessedData[] {
   const notes = useGameStore(state => state.notes);
   const currentTime = useGameStore(state => state.currentTime);
+  const gameState = useGameStore(state => state.gameState);
 
   return useMemo(() => {
+    // Don't render notes until game is actually playing (YouTube started)
+    if (gameState !== 'PLAYING' && gameState !== 'PAUSED' && gameState !== 'RESUMING') {
+      return [];
+    }
+    
+    // Ensure notes is an array
+    if (!notes || !Array.isArray(notes)) {
+      return [];
+    }
+
     // Filter visibly relevant notes first to reduce map overhead
     const visibleNotes = notes.filter(n => 
         n.time <= currentTime + LEAD_TIME && 
@@ -53,5 +64,5 @@ export function useTapNotes(): TapNoteProcessedData[] {
       .filter((n): n is TapNoteProcessedData => n !== null);
 
       return processed;
-  }, [notes, currentTime]);
+  }, [notes, currentTime, gameState]);
 }

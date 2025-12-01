@@ -101,8 +101,8 @@ function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
     onHome: onBackToHome
   });
 
-  // Memoized values
-  const missCount = useMemo(() => notes.filter(n => n.missed).length, [notes]);
+  // Memoized values - ensure notes is always an array
+  const missCount = useMemo(() => (notes || []).filter(n => n.missed).length, [notes]);
   const scoreDisplay = useMemo(() => score.toString().padStart(6, '0'), [score]);
 
   // Load beatmap from localStorage
