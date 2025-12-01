@@ -33,7 +33,7 @@ export const getHoldProgress = (
   lane: number,
   prevCompletion: boolean,
   setIsGlowing: (glowing: boolean) => void,
-  glowTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>,
+  glowTimeoutRef: { current: NodeJS.Timeout | null },
   DECK_METER_COMPLETION_GLOW_DURATION: number
 ): HoldProgressData => {
   try {
