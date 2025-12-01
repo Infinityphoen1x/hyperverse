@@ -3,7 +3,7 @@
  * For use in Zustand store and UI-related components
  */
 
-import { Difficulty, GameState } from './game';
+import type { Difficulty, GameState } from './game';
 
 export interface UIState {
   isPauseMenuOpen: boolean;
