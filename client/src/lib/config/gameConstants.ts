@@ -252,27 +252,39 @@ export const DECK_METER: DeckMeter = {
   defaultHoldDuration: 1000,       // If beatmap missing, hold requires 1000ms
 };
 
-// Color palette - consolidated references for UI elements
+/**
+ * UI color palette - hex and HSL colors for all interactive elements
+ * Maps soundpad lanes, deck controls, and particle effects
+ */
 export interface UIColorPalette {
-  deckLeft: string; // Q - green (left deck)
-  deckRight: string; // P - red (right deck)
-  padW: string; // W - pink (bottom-left)
-  padO: string; // O - blue (bottom-right)
-  padI: string; // I - purple (top-right)
-  padE: string; // E - cyan (top-left)
-  particleGreen: string; // Green particles
-  particleRed: string; // Red particles
+  /** Lane -1 (Q) deck control, left turntable */
+  deckLeft: string;
+  /** Lane -2 (P) deck control, right turntable */
+  deckRight: string;
+  /** Lane 0 (W) soundpad, 120° top-left */
+  padW: string;
+  /** Lane 1 (O) soundpad, 60° top-right */
+  padO: string;
+  /** Lane 2 (I) soundpad, 300° bottom-right */
+  padI: string;
+  /** Lane 3 (E) soundpad, 240° bottom-left */
+  padE: string;
+  /** Green particle color for combo effects */
+  particleGreen: string;
+  /** Red particle color for combo effects */
+  particleRed: string;
 }
 export const UI_COLOR_PALETTE: UIColorPalette = {
-  deckLeft: '#00FF00',
-  deckRight: '#FF0000',
-  padW: '#FF007F',
-  padO: '#0096FF',
-  padI: '#BE00FF',
-  padE: '#00FFFF',
-  particleGreen: 'hsl(120, 100%, 50%)',
-  particleRed: 'hsl(0, 100%, 50%)',
+  deckLeft: '#00FF00',              // Lane -1: Green
+  deckRight: '#FF0000',             // Lane -2: Red
+  padW: '#FF007F',                  // Lane 0: Pink
+  padO: '#0096FF',                  // Lane 1: Blue
+  padI: '#BE00FF',                  // Lane 2: Purple
+  padE: '#00FFFF',                  // Lane 3: Cyan
+  particleGreen: 'hsl(120, 100%, 50%)',  // Green particles
+  particleRed: 'hsl(0, 100%, 50%)',      // Red particles
 };
+/** Individual color exports for convenience access */
 export const COLOR_DECK_LEFT = UI_COLOR_PALETTE.deckLeft;
 export const COLOR_DECK_RIGHT = UI_COLOR_PALETTE.deckRight;
 export const COLOR_PAD_W = UI_COLOR_PALETTE.padW;
@@ -282,18 +294,31 @@ export const COLOR_PAD_E = UI_COLOR_PALETTE.padE;
 export const COLOR_PARTICLE_GREEN = UI_COLOR_PALETTE.particleGreen;
 export const COLOR_PARTICLE_RED = UI_COLOR_PALETTE.particleRed;
 
-// YouTube overlay UI strings
+/**
+ * YouTube loader UI strings - dialog and error messages
+ */
 export interface YouTubeUI {
+  /** Main button label to open YouTube loader */
   labelButton: string;
+  /** Dialog title when loading video */
   dialogTitle: string;
+  /** Input field label */
   inputLabel: string;
+  /** Input placeholder text */
   inputPlaceholder: string;
+  /** Error message when URL/ID is empty */
   errorEmpty: string;
+  /** Error message when URL/ID is invalid */
   errorInvalid: string;
+  /** Load button label */
   buttonLoad: string;
+  /** Cancel button label */
   buttonCancel: string;
+  /** Label for video preview panel */
   previewLabel: string;
+  /** Tooltip for preview video */
   previewTitle: string;
+  /** Help text explaining video usage */
   helpText: string;
 }
 export const YOUTUBE_UI: YouTubeUI = {
@@ -310,79 +335,109 @@ export const YOUTUBE_UI: YouTubeUI = {
   helpText: 'The video will play silently in the background. Use its timing for gameplay sync.',
 };
 
-// YouTube overlay UI dimensions and opacity
+/**
+ * YouTube preview panel dimensions and opacity settings
+ */
 export interface YouTubeDimensions {
-  previewWidth: number; // px (w-64 in Tailwind)
-  previewHeight: number; // px (h-36 in Tailwind)
-  previewOpacityDefault: number; // 10%
-  previewOpacityHover: number; // 20%
-  closeIconSize: number; // px
+  /** Preview panel width, pixels (w-64 Tailwind = 256px) */
+  previewWidth: number;
+  /** Preview panel height, pixels (h-36 Tailwind = 144px) */
+  previewHeight: number;
+  /** Default opacity when not hovering, 0-1 */
+  previewOpacityDefault: number;
+  /** Opacity when hovering over preview, 0-1 */
+  previewOpacityHover: number;
+  /** Close button icon size, pixels */
+  closeIconSize: number;
 }
 export const YOUTUBE_DIMENSIONS: YouTubeDimensions = {
-  previewWidth: 256,
-  previewHeight: 144,
-  previewOpacityDefault: 0.1,
-  previewOpacityHover: 0.2,
-  closeIconSize: 14,
+  previewWidth: 256,              // Tailwind w-64
+  previewHeight: 144,             // Tailwind h-36 (16:9 aspect)
+  previewOpacityDefault: 0.1,     // 10% - subtle background video
+  previewOpacityHover: 0.2,       // 20% - more visible on hover
+  closeIconSize: 14,              // Small close button
 };
 
-// YouTube embed options for iframe configuration
+/**
+ * YouTube embed iframe configuration for preview and background players
+ */
 export interface YouTubeEmbedOptions {
+  /** Auto-start video (false = manual play control) */
   autoplay: boolean;
+  /** Show YouTube player controls in iframe */
   controls: boolean;
+  /** Hide YouTube branding in player */
   modestBranding: boolean;
+  /** Enable JS API for player control */
   enableJsApi: boolean;
 }
 export const YOUTUBE_PREVIEW_EMBED_OPTIONS: YouTubeEmbedOptions = {
-  autoplay: false,
-  controls: false,
-  modestBranding: true,
-  enableJsApi: true
+  autoplay: false,              // Player starts paused
+  controls: false,              // No controls in preview
+  modestBranding: true,         // Minimal YouTube UI
+  enableJsApi: true             // Can control via JS
 } as const;
 
 export const YOUTUBE_BACKGROUND_EMBED_OPTIONS: YouTubeEmbedOptions = {
-  autoplay: false,
-  controls: false,
-  modestBranding: true,
-  enableJsApi: true
+  autoplay: false,              // App controls timing
+  controls: false,              // Hidden background player
+  modestBranding: true,         // Minimal UI if visible
+  enableJsApi: true             // Must sync with game timer
 } as const;
 
 // Down3D Note Lane - tunnel geometry constants (already in TUNNEL_GEOMETRY)
 
-// Game Engine - note generation and timing
+/**
+ * Game engine timing - BPM ranges, note generation, and sync intervals
+ */
 export interface GameEngineTiming {
+  /** Easy difficulty target BPM (slowest) */
   easyBpm: number;
+  /** Medium difficulty target BPM */
   mediumBpm: number;
+  /** Hard difficulty target BPM (fastest) */
   hardBpm: number;
-  msPerMinute: number; // Conversion factor for BPM calculations
-  noteStartTime: number; // ms - delay before first note spawns
-  maxGeneratedNotes: number; // Cap for procedural note generation
-  spinFrequency: number; // Generate spin notes every N beats
-  spinAlternation: number; // Alternate left/right spins every N beats
-  leadTime: number; // ms - hold notes appear 4000ms before hit
-  tapRenderWindowMs: number; // ms - TAP notes appear 2000ms before hit
-  tapFallthroughWindowMs: number; // ms - TAP notes visible through full failure animation (HOLD_ANIMATION_DURATION)
-  holdRenderWindowMs: number; // ms - HOLD notes appear 4000ms before hit
-  notesSyncInterval: number; // ms - sync notes for smooth animations (~60fps)
-  stateUpdateBatchInterval: number; // ms - batch state updates to reduce renders
-  stateUpdateInterval: number; // ms - batch state updates
+  /** Conversion constant: milliseconds per minute, for BPM → time conversions */
+  msPerMinute: number;
+  /** Delay before first note spawns, milliseconds */
+  noteStartTime: number;
+  /** Cap on generated notes (procedural generation safety limit) */
+  maxGeneratedNotes: number;
+  /** Generate SPIN notes every N beats (4 = every 4th beat) */
+  spinFrequency: number;
+  /** Alternate SPIN_LEFT and SPIN_RIGHT every N beats */
+  spinAlternation: number;
+  /** HOLD notes appear this many ms before hit (matches TAP_RENDER_WINDOW_MS in TAP_NOTE_GEOMETRY) */
+  leadTime: number;
+  /** TAP notes appear this many ms before hit (currently 2000ms, unused - see TAP_NOTE_GEOMETRY) */
+  tapRenderWindowMs: number;
+  /** TAP notes stay visible this many ms after judgement line passes */
+  tapFallthroughWindowMs: number;
+  /** HOLD notes appear this many ms before hit */
+  holdRenderWindowMs: number;
+  /** Note sync animation update interval, milliseconds (~60fps) */
+  notesSyncInterval: number;
+  /** Batch state updates, milliseconds */
+  stateUpdateBatchInterval: number;
+  /** State update interval, milliseconds */
+  stateUpdateInterval: number;
 }
 export const GAME_ENGINE_TIMING: GameEngineTiming = {
-  easyBpm: 60,
-  mediumBpm: 90,
-  hardBpm: 120,
-  msPerMinute: 60000,
-  noteStartTime: 2000,
-  maxGeneratedNotes: 1000,
-  spinFrequency: 4,
-  spinAlternation: 8,
-  leadTime: 4000,
-  tapRenderWindowMs: 2000,
-  tapFallthroughWindowMs: 1100,
-  holdRenderWindowMs: 4000,
-  notesSyncInterval: 16,
-  stateUpdateBatchInterval: 50,
-  stateUpdateInterval: 50,
+  easyBpm: 60,                   // Slowest difficulty
+  mediumBpm: 90,                 // Medium speed
+  hardBpm: 120,                  // Fastest difficulty (2 beats/sec)
+  msPerMinute: 60000,            // 60 seconds × 1000ms
+  noteStartTime: 2000,           // 2 second delay before first note
+  maxGeneratedNotes: 1000,       // Safety cap to prevent memory issues
+  spinFrequency: 4,              // Generate spin every 4 beats
+  spinAlternation: 8,            // Alternate left/right every 8 beats
+  leadTime: 4000,                // HOLD notes visible 4000ms before hit
+  tapRenderWindowMs: 2000,       // TAP notes appear 2000ms before (unused - see TAP_NOTE_GEOMETRY)
+  tapFallthroughWindowMs: 1100,  // TAP notes last 1100ms past judgement
+  holdRenderWindowMs: 4000,      // HOLD notes visible 4000ms before hit
+  notesSyncInterval: 16,         // ~60fps update rate (1000/60 ≈ 16ms)
+  stateUpdateBatchInterval: 50,  // Batch updates every 50ms
+  stateUpdateInterval: 50,       // 20Hz state updates
 };
 
 // Hold animation duration (already in FAILURE_ANIMATION_DURATION)
@@ -524,38 +579,61 @@ export const DRAG_VELOCITY_THRESHOLD = DECK_WHEEL_CONFIG.dragVelocityThreshold;
 // GAME CONFIG - Single source of truth for all gameplay constants
 // ============================================================================
 
+/**
+ * GAME CONFIG - Single source of truth for all gameplay timing and scoring
+ * Asymmetric windows: narrow before note.time, larger leniency after
+ */
 export interface GameConfigConstants {
+  /** TAP note hit window: ±150ms around note.time for successful hit */
   TAP_HIT_WINDOW: number;
+  /** TAP note failure buffer: extra time after TAP_HIT_WINDOW before auto-miss */
   TAP_FAILURE_BUFFER: number;
+  /** HOLD note start window: ±150ms around note.time to successfully press hold */
   HOLD_HIT_WINDOW: number;
+  /** HOLD note miss timeout: time after note.time before hold auto-fails if not pressed */
   HOLD_MISS_TIMEOUT: number;
+  /** HOLD release offset: extra time before expected release before failure */
   HOLD_RELEASE_OFFSET: number;
+  /** HOLD release window: ±time around expected release time for successful release */
   HOLD_RELEASE_WINDOW: number;
+  /** HOLD activation window: max time after note.time to press hold (same as HIT_WINDOW) */
   HOLD_ACTIVATION_WINDOW: number;
+  /** LEAD_TIME: milliseconds before note.time that notes become visible (appear at VP) */
   LEAD_TIME: number;
+  /** Timing accuracy threshold for "PERFECT" rating, milliseconds */
   ACCURACY_PERFECT_MS: number;
+  /** Timing accuracy threshold for "GREAT" rating, milliseconds */
   ACCURACY_GREAT_MS: number;
+  /** Score points for PERFECT accuracy */
   ACCURACY_PERFECT_POINTS: number;
+  /** Score points for GREAT accuracy */
   ACCURACY_GREAT_POINTS: number;
+  /** Score points for normal hit */
   ACCURACY_NORMAL_POINTS: number;
+  /** Game health system maximum (also MAX_HEALTH export) */
   MAX_HEALTH: number;
 }
 
 export const GAME_CONFIG: GameConfigConstants = {
-  TAP_HIT_WINDOW: 150,
-  TAP_FAILURE_BUFFER: 100,
-  HOLD_HIT_WINDOW: 150,
-  HOLD_MISS_TIMEOUT: 500,
-  HOLD_RELEASE_OFFSET: 200,
-  HOLD_RELEASE_WINDOW: 150,
-  HOLD_ACTIVATION_WINDOW: 150,
-  LEAD_TIME: 4000,
-  ACCURACY_PERFECT_MS: 50,
-  ACCURACY_GREAT_MS: 100,
-  ACCURACY_PERFECT_POINTS: 100,
-  ACCURACY_GREAT_POINTS: 75,
-  ACCURACY_NORMAL_POINTS: 50,
-  MAX_HEALTH: 200,
+  // TAP note timing (tight window around note.time)
+  TAP_HIT_WINDOW: 150,            // ±150ms = 300ms total window
+  TAP_FAILURE_BUFFER: 100,        // Additional 100ms before auto-miss
+  // HOLD note timing (asymmetric: tight before, leniency after)
+  HOLD_HIT_WINDOW: 150,           // ±150ms around note.time to press
+  HOLD_MISS_TIMEOUT: 500,         // 500ms after note.time before auto-fail
+  HOLD_RELEASE_OFFSET: 200,       // Time before expected release
+  HOLD_RELEASE_WINDOW: 150,       // ±150ms around expected release
+  HOLD_ACTIVATION_WINDOW: 150,    // Must match HOLD_HIT_WINDOW for sync verification
+  // Rendering: notes visible this long before note.time
+  LEAD_TIME: 4000,                // 4000ms before hit (notes approach from VP)
+  // Accuracy thresholds for scoring
+  ACCURACY_PERFECT_MS: 50,        // ±50ms = PERFECT
+  ACCURACY_GREAT_MS: 100,         // ±100ms = GREAT
+  ACCURACY_PERFECT_POINTS: 100,   // Points for PERFECT
+  ACCURACY_GREAT_POINTS: 75,      // Points for GREAT
+  ACCURACY_NORMAL_POINTS: 50,     // Points for normal/late hit
+  // Game state
+  MAX_HEALTH: 200,                // Health 0-200
 };
 
 // Game Config exports (individual constants for convenience)
@@ -581,61 +659,75 @@ export const MAX_HEALTH = GAME_CONFIG.MAX_HEALTH;
 // TAP NOTE SPECIFIC CONSTANTS
 // ============================================================================
 
+/** TAP note failure animation durations */
 export const TAP_FAILURE_ANIMATIONS = {
-  TOO_EARLY: { duration: 1200 },
-  MISS: { duration: 1100 },
+  TOO_EARLY: { duration: 1200 },  // Glitch effect when pressed too early
+  MISS: { duration: 1100 },       // Glitch effect when missed
 } as const;
 
+/** TAP note hit flash animation timing */
 export const TAP_HIT_FLASH = {
-  DURATION: 600,
-  FADE_START: 600,
-  FADE_DURATION: 100,
+  DURATION: 600,                  // Total white flash duration
+  FADE_START: 600,                // When fade-out begins (at end)
+  FADE_DURATION: 100,             // Fade-out duration
 } as const;
 
+/** TAP note rendering depth (distance from VP) */
 export const TAP_DEPTH = {
-  MIN: 5,
-  MAX: 40,
-  FADE_TIME: 2000,
+  MIN: 5,                         // Closest visible distance (pixels)
+  MAX: 40,                        // Farthest distance before fade
+  FADE_TIME: 2000,                // Fade-in duration as note approaches
 } as const;
 
+/** TAP note geometry - spread angle for 8° cone from each ray */
 export const TAP_RAY = {
-  SPREAD_ANGLE: 8,
+  SPREAD_ANGLE: 8,                // ±8° spread from lane ray (16° total)
 } as const;
 
+/** TAP note colors - stroke and glow effects */
 export const TAP_COLORS = {
-  STROKE_DEFAULT: 'rgba(255,255,255,0.8)',
-  STROKE_FAILED: 'rgba(120, 120, 120, 1)',
-  GLOW_SHADOW: (color: string) => `drop-shadow(0 0 35px ${color}) drop-shadow(0 0 20px ${color}) drop-shadow(0 0 10px ${color})`,
+  STROKE_DEFAULT: 'rgba(255,255,255,0.8)',  // White outline during approach
+  STROKE_FAILED: 'rgba(120, 120, 120, 1)',  // Grey outline when failed
+  GLOW_SHADOW: (color: string) => `drop-shadow(0 0 35px ${color}) drop-shadow(0 0 20px ${color}) drop-shadow(0 0 10px ${color})`,  // Triple-layer glow
 } as const;
 
+/** TAP note opacity ranges for visual progression */
 export const TAP_OPACITY = {
-  MIN_BASE: 0.4,
-  MAX_PROGRESSION: 0.6,
-  MIN_FADE: 0.1,
+  MIN_BASE: 0.4,                  // Base opacity during approach
+  MAX_PROGRESSION: 0.6,           // Peak opacity near judgement
+  MIN_FADE: 0.1,                  // Opacity at start of approach
 } as const;
 
 // ============================================================================
 // HOLD NOTE SPECIFIC CONSTANTS
 // ============================================================================
 
+/** HOLD note opacity ranges for visual progression through approach and hold */
 export const HOLD_OPACITY = {
-  MIN_BASE: 0.4,
-  MAX_PROGRESSION: 0.6,
+  MIN_BASE: 0.4,                  // Base opacity during approach
+  MAX_PROGRESSION: 0.6,           // Peak opacity near judgement / during hold
 } as const;
 
+/** HOLD note stroke width scaling for perspective effect */
 export const HOLD_STROKE = {
-  BASE_WIDTH: 2,
-  APPROACH_MULTIPLIER: 2,
-  COLLAPSE_MULTIPLIER: 2,
+  BASE_WIDTH: 2,                  // Default stroke width (pixels)
+  APPROACH_MULTIPLIER: 2,         // Stroke gets 2× thicker during approach
+  COLLAPSE_MULTIPLIER: 2,         // Stroke gets 2× thicker when collapsing
 } as const;
 
+/** HOLD note glow effects - shadows and inner glow */
 export const HOLD_GLOW = {
-  MIN_SHADOW: 20,
-  SHADOW_SCALE: 25,
-  MIN_INNER_SHADOW: 12,
-  INNER_SHADOW_SCALE: 15,
+  MIN_SHADOW: 20,                 // Base outer shadow blur (pixels)
+  SHADOW_SCALE: 25,               // Shadow scales 0-25px by distance
+  MIN_INNER_SHADOW: 12,           // Base inner shadow blur
+  INNER_SHADOW_SCALE: 15,         // Inner shadow scales 0-15px by distance
 } as const;
 
-// Greyscale colors for visual effects
-export const GREYSCALE_FILL_COLOR = 'rgba(80, 80, 80, 0.8)';
+// ============================================================================
+// VISUAL EFFECT COLORS
+// ============================================================================
+
+/** Greyscale overlay color - applied when health reaches 0 */
+export const GREYSCALE_FILL_COLOR = 'rgba(80, 80, 80, 0.8)';    // Dark grey fill
+/** Greyscale glow color - complements greyscale effect */
 export const GREYSCALE_GLOW_COLOR = 'rgba(100, 100, 100, 0.4)';
