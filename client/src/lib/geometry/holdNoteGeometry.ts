@@ -12,27 +12,34 @@ export const calculateApproachGeometry = (
   pressHoldTime: number,
   isTooEarlyFailure: boolean,
   holdDuration: number,
-  isHoldMissFailure: boolean = false
+  isHoldMissFailure: boolean = false,
+  useFixedDepth: boolean = true
 ): ApproachGeometry => {
-  // Both near and far ends follow the same approach timing curve
-  // but offset by the hold duration so they stay synchronized with note.time
-  // Near end reaches judgement at note.time
-  // Far end reaches judgement at note.time + holdDuration
+  // NEW: Fixed depth mode - depth is proportional to duration, not approach timing
+  // Near end approaches based on note.time
+  // Far end = near end + fixed offset based on duration
+  // This makes longer holds visually "deeper" (longer strips)
   
   const rawNearProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
   const nearProgress = Math.max(0, rawNearProgress);
-  
-  // Far end lags behind by holdDuration (same timing curve, offset by duration)
-  const timeUntilHitFar = timeUntilHit + holdDuration;
-  const rawFarProgress = (LEAD_TIME - timeUntilHitFar) / LEAD_TIME;
-  const farProgress = Math.max(0, rawFarProgress);
-  
-  // NO CLAMPING - let distances grow freely toward player
-  // Visual window culling (negative coordinate checks) will hide notes when they pass the player
   const nearDistance = Math.max(1, 1 + (nearProgress * (JUDGEMENT_RADIUS - 1)));
-  const farDistance = Math.max(1, 1 + (farProgress * (JUDGEMENT_RADIUS - 1)));
   
-  return { nearDistance, farDistance };
+  if (useFixedDepth) {
+    // Fixed depth: scale hold duration to distance units
+    // 1000ms duration = ~15 pixels of depth (adjustable via scale factor)
+    const DURATION_TO_DISTANCE_SCALE = 0.015; // pixels per millisecond
+    const fixedDepthOffset = Math.max(1, holdDuration * DURATION_TO_DISTANCE_SCALE);
+    const farDistance = Math.max(1, nearDistance + fixedDepthOffset);
+    return { nearDistance, farDistance };
+  } else {
+    // LEGACY: Dynamic depth mode (both ends approach based on timing)
+    // Far end lags behind by holdDuration (same timing curve, offset by duration)
+    const timeUntilHitFar = timeUntilHit + holdDuration;
+    const rawFarProgress = (LEAD_TIME - timeUntilHitFar) / LEAD_TIME;
+    const farProgress = Math.max(0, rawFarProgress);
+    const farDistance = Math.max(1, 1 + (farProgress * (JUDGEMENT_RADIUS - 1)));
+    return { nearDistance, farDistance };
+  }
 };
 
 export interface CollapseGeometry {
