@@ -149,28 +149,39 @@ export const getTrapezoidCorners = (
   // This ensures consistent polygon winding across all lanes
   const needsSwap = normalizedAngle >= 270 || normalizedAngle < 90;
   
-  // Calculate angle spread based on distance to maintain constant visual width (prevent hourglass)
-  // Desired visual strip width: ~60 pixels at screen (slightly wider than TAP notes ~52px)
+  // Calculate angle spread for each end independently based on its distance
+  // This maintains proper perspective projection where each end has desired visual width
   // angleSpread = arctan(stripWidth / (2 * distance)) in radians → degrees
   const desiredStripWidth = 60;
-  const angleSpreadRad = Math.atan(desiredStripWidth / (2 * Math.max(nearDistance, farDistance)));
-  const angleSpreadDeg = angleSpreadRad * (180 / Math.PI);
   
-  const baseLeftAngle = needsSwap ? rayAngle + angleSpreadDeg : rayAngle - angleSpreadDeg;
-  const baseRightAngle = needsSwap ? rayAngle - angleSpreadDeg : rayAngle + angleSpreadDeg;
+  // Far end angle spread (at farDistance)
+  const farAngleSpreadRad = Math.atan(desiredStripWidth / (2 * farDistance));
+  const farAngleSpreadDeg = farAngleSpreadRad * (180 / Math.PI);
   
-  const leftRad = (baseLeftAngle * Math.PI) / 180;
-  const rightRad = (baseRightAngle * Math.PI) / 180;
+  // Near end angle spread (at nearDistance)
+  const nearAngleSpreadRad = Math.atan(desiredStripWidth / (2 * nearDistance));
+  const nearAngleSpreadDeg = nearAngleSpreadRad * (180 / Math.PI);
+  
+  const farLeftAngle = needsSwap ? rayAngle + farAngleSpreadDeg : rayAngle - farAngleSpreadDeg;
+  const farRightAngle = needsSwap ? rayAngle - farAngleSpreadDeg : rayAngle + farAngleSpreadDeg;
+  
+  const nearLeftAngle = needsSwap ? rayAngle + nearAngleSpreadDeg : rayAngle - nearAngleSpreadDeg;
+  const nearRightAngle = needsSwap ? rayAngle - nearAngleSpreadDeg : rayAngle + nearAngleSpreadDeg;
+  
+  const farLeftRad = (farLeftAngle * Math.PI) / 180;
+  const farRightRad = (farRightAngle * Math.PI) / 180;
+  const nearLeftRad = (nearLeftAngle * Math.PI) / 180;
+  const nearRightRad = (nearRightAngle * Math.PI) / 180;
   
   const corners = {
-    x1: vanishingPointX + Math.cos(leftRad) * farDistance,
-    y1: vanishingPointY + Math.sin(leftRad) * farDistance,
-    x2: vanishingPointX + Math.cos(rightRad) * farDistance,
-    y2: vanishingPointY + Math.sin(rightRad) * farDistance,
-    x3: vanishingPointX + Math.cos(rightRad) * nearDistance,
-    y3: vanishingPointY + Math.sin(rightRad) * nearDistance,
-    x4: vanishingPointX + Math.cos(leftRad) * nearDistance,
-    y4: vanishingPointY + Math.sin(leftRad) * nearDistance,
+    x1: vanishingPointX + Math.cos(farLeftRad) * farDistance,
+    y1: vanishingPointY + Math.sin(farLeftRad) * farDistance,
+    x2: vanishingPointX + Math.cos(farRightRad) * farDistance,
+    y2: vanishingPointY + Math.sin(farRightRad) * farDistance,
+    x3: vanishingPointX + Math.cos(nearRightRad) * nearDistance,
+    y3: vanishingPointY + Math.sin(nearRightRad) * nearDistance,
+    x4: vanishingPointX + Math.cos(nearLeftRad) * nearDistance,
+    y4: vanishingPointY + Math.sin(nearLeftRad) * nearDistance,
   };
   
   // Validate all coordinates are finite (no NaN or Infinity)
