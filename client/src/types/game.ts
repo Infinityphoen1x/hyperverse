@@ -81,6 +81,9 @@ export interface GameStoreState {
   // UI state
   countdownSeconds: number;
   
+  // Beatmap metadata
+  beatmapBpm: number;
+  
   // Actions
   setGameState: (state: GameState) => void;
   setDifficulty: (difficulty: Difficulty) => void;
@@ -92,6 +95,7 @@ export interface GameStoreState {
   setCurrentTime: (time: number) => void;
   setIsPaused: (paused: boolean) => void;
   setCountdownSeconds: (seconds: number) => void;
+  setBeatmapBpm: (bpm: number) => void;
   
   // Game actions
   hitNote: (lane: number) => void;

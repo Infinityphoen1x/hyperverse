@@ -1,6 +1,7 @@
 // src/utils/holdNoteUtils.ts
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
+import { useGameStore } from '@/stores/useGameStore';
 import { calculateApproachGeometry, calculateLockedNearDistance, calculateHoldNoteGlow, calculateCollapseGeometry } from "@/lib/geometry/holdNoteGeometry";
 import { calculateHoldNoteColors, determineGreyscaleState } from "@/lib/notes/hold/holdGreystate";
 import { markAnimationCompletedIfDone, trackHoldNoteAnimationLifecycle, getHoldNoteFailureStates } from "@/lib/notes/hold/holdNoteHelpers";
@@ -58,12 +59,13 @@ export function processSingleHoldNote(note: Note, currentTime: number): HoldNote
     // For early failures, calculate approach geometry at the time of failure (frozen, clamped to judgement)
     // For miss failures, calculate at current time allowing extension past judgement
     // For other cases, use current time with clamping
+    const beatmapBpm = useGameStore(state => state.beatmapBpm) || 120;
     let approachGeometry;
     if (failures.isTooEarlyFailure && failureTime) {
       const timeUntilHitAtFailure = note.time - failureTime;
-      approachGeometry = calculateApproachGeometry(timeUntilHitAtFailure, pressHoldTime, failures.isTooEarlyFailure, holdDuration, false);
+      approachGeometry = calculateApproachGeometry(timeUntilHitAtFailure, pressHoldTime, failures.isTooEarlyFailure, holdDuration, false, true, beatmapBpm);
     } else {
-      approachGeometry = calculateApproachGeometry(timeUntilHit, pressHoldTime, failures.isTooEarlyFailure, holdDuration, failures.isHoldMissFailure);
+      approachGeometry = calculateApproachGeometry(timeUntilHit, pressHoldTime, failures.isTooEarlyFailure, holdDuration, failures.isHoldMissFailure, true, beatmapBpm);
     }
     
     const collapseDuration = failures.hasAnyFailure ? FAILURE_ANIMATION_DURATION : holdDuration;

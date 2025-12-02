@@ -14,6 +14,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   maxHealth: 200,
   missCount: 0,
   countdownSeconds: 0,
+  beatmapBpm: 120, // Default BPM - will be updated when beatmap loads
 
   // Setters
   setGameState: (gameState) => set({ gameState }),
@@ -26,6 +27,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setCurrentTime: (currentTime) => set({ currentTime }),
   setIsPaused: (isPaused) => set({ isPaused }),
   setCountdownSeconds: (countdownSeconds) => set({ countdownSeconds }),
+  setBeatmapBpm: (bpm) => set({ beatmapBpm: bpm }),
 
   // Game actions
   hitNote: (lane) => {

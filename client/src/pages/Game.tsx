@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useGameEngine } from "@/hooks/useGameEngine";
+import { useGameStore } from "@/stores/useGameStore";
 import { Difficulty, Note } from "@/lib/engine/gameTypes";
 import { parseBeatmap } from "@/lib/beatmap/beatmapParser";
 import { convertBeatmapNotes } from "@/lib/beatmap/beatmapConverter";
@@ -30,6 +31,7 @@ interface GameProps {
 function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: propYoutubeVideoId }: GameProps) {
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
+  const setBeatmapBpm = useGameStore(state => state.setBeatmapBpm);
 
   // Store startGame in ref for use in callbacks
   const startGameRef = useRef<(() => void) | null>(null);
@@ -143,6 +145,10 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
             const beatmapStartOffset = parsed.metadata?.beatmapStart || 0;
             const convertedNotes = convertBeatmapNotes(parsed.notes, beatmapStartOffset);
             setCustomNotes(convertedNotes);
+            // Update beatmap BPM for geometry calculations
+            if (parsed.metadata?.bpm) {
+              setBeatmapBpm(parsed.metadata.bpm);
+            }
           }
         }
       } catch (error) {
