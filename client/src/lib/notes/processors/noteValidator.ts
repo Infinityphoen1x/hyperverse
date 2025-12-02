@@ -36,6 +36,16 @@ export class NoteValidator {
     return false;
   }
 
+  findPressableTapNote(notes: Note[], lane: number, currentTime: number): Note | null {
+    return notes.find(n => 
+      n.lane === lane &&
+      n.type === 'TAP' &&
+      this.isNoteActive(n) &&
+      currentTime >= n.time - this.config.LEAD_TIME &&
+      currentTime <= n.time + this.config.TAP_HIT_WINDOW
+    ) || null;
+  }
+
   findClosestActiveNote(notes: Note[], lane: number, type: NoteType, currentTime: number): Note | null {
     const candidates = notes.filter(n => 
       n.lane === lane && 

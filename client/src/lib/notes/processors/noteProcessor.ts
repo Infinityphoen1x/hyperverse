@@ -25,8 +25,8 @@ export class NoteProcessor {
   processTapHit(note: Note, currentTime: number): NoteUpdateResult {
     const timeSinceNote = currentTime - note.time;
 
-    // Too early
-    if (timeSinceNote < -this.config.TAP_HIT_WINDOW) {
+    // Too early - pressed before note appears (before LEAD_TIME)
+    if (timeSinceNote < -this.config.LEAD_TIME) {
       GameErrors.updateHitStats({ tapTooEarlyFailures: (GameErrors.hitStats.tapTooEarlyFailures || 0) + 1 });
       GameErrors.log(`[TAP-HIT] noteId=${note.id} tapTooEarlyFailure at ${currentTime}ms`, currentTime);
       return {
@@ -40,8 +40,8 @@ export class NoteProcessor {
       };
     }
 
-    // Valid hit
-    if (Math.abs(timeSinceNote) < this.config.TAP_HIT_WINDOW) {
+    // Valid hit - allow presses from when note appears to leniency buffer after note.time
+    if (timeSinceNote >= -this.config.LEAD_TIME && timeSinceNote <= this.config.TAP_HIT_WINDOW) {
       const scoreChange = this.scorer.recordHit(timeSinceNote);
       GameErrors.updateHitStats({ successfulHits: (GameErrors.hitStats.successfulHits || 0) + 1 });
       GameErrors.log(`[TAP-HIT] noteId=${note.id} successfulHit at ${currentTime}ms (timing: ${timeSinceNote.toFixed(0)}ms)`, currentTime);

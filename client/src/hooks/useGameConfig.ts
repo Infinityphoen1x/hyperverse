@@ -11,7 +11,7 @@ export function useGameConfig(_difficulty: Difficulty): GameConfig {
     HOLD_RELEASE_OFFSET: 200,
     HOLD_RELEASE_WINDOW: 150,
     HOLD_ACTIVATION_WINDOW: 300,
-    LEAD_TIME: 2000,
+    LEAD_TIME: 4000,
     ACCURACY_PERFECT_MS: 50,
     ACCURACY_GREAT_MS: 100,
     ACCURACY_PERFECT_POINTS: 100,
