@@ -14,24 +14,23 @@ export const calculateApproachGeometry = (
   holdDuration: number,
   isHoldMissFailure: boolean = false
 ): ApproachGeometry => {
-  // Cap stripWidth so far end never approaches vanishing point too closely
-  // Max effective stripWidth is JUDGEMENT_RADIUS - 50 (keep far end at distance ~50+)
-  const maxStripWidth = Math.max(JUDGEMENT_RADIUS - 50, 150);
-  const stripWidth = Math.min((holdDuration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER, maxStripWidth);
+  // Both near and far ends follow the same approach timing curve
+  // but offset by the hold duration so they stay synchronized with note.time
+  // Near end reaches judgement at note.time
+  // Far end reaches judgement at note.time + holdDuration
   
-  const rawApproachProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-  // Allow progress beyond 1.0 - let near end extend past judgement and toward player
-  // Distance-based angle spread automatically handles proper perspective as distance changes
+  const rawNearProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+  const nearProgress = Math.max(0, rawNearProgress);
+  
+  // Far end lags behind by holdDuration (same timing curve, offset by duration)
+  const timeUntilHitFar = timeUntilHit + holdDuration;
+  const rawFarProgress = (LEAD_TIME - timeUntilHitFar) / LEAD_TIME;
+  const farProgress = Math.max(0, rawFarProgress);
+  
+  // NO CLAMPING - let distances grow freely toward player
   // Visual window culling (negative coordinate checks) will hide notes when they pass the player
-  const approachProgress = Math.max(0, rawApproachProgress);
-  
-  // NO CLAMPING - let nearDistance grow freely toward player
-  // This maintains proper perspective expansion throughout the entire approach
-  const nearDistance = Math.max(1, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
-  // Far distance is always stripWidth behind nearDistance, creating constant-width strip
-  // Never clamp - farDistance should maintain proper depth even for long holds
-  // This creates the moving strip effect: near end approaches while far end stays fixed depth behind
-  const farDistance = nearDistance - stripWidth;
+  const nearDistance = Math.max(1, 1 + (nearProgress * (JUDGEMENT_RADIUS - 1)));
+  const farDistance = Math.max(1, 1 + (farProgress * (JUDGEMENT_RADIUS - 1)));
   
   return { nearDistance, farDistance };
 };
