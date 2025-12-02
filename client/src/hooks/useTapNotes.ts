@@ -32,24 +32,21 @@ export function useTapNotes(): TapNoteProcessedData[] {
     }
 
     // effectiveLEAD_TIME scales with BPM to prevent note stacking on fast songs
+    // This affects VISUAL density but doesn't change YouTube sync timing
     const effectiveLEAD_TIME = LEAD_TIME * (REFERENCE_BPM / Math.max(1, beatmapBpm));
 
-    // Scale visibility windows by BPM so notes have consistent travel time at all BPMs
-    // At slower BPMs: longer visibility windows (more time for note to reach judgement)
-    // At faster BPMs: shorter visibility windows (notes approach quicker)
-    const bpmScale = REFERENCE_BPM / Math.max(1, beatmapBpm);
-    const tooEarlyFailureVisibilityWindow = 4000 * bpmScale;  // Travel time from failure to judgement
-    const missFailureVisibilityWindow = 2000 * bpmScale;      // Time for miss animation after judgement
-    const hitNoteVisibilityBuffer = 500 * bpmScale;           // Small buffer for hit notes
-
-    // Filter visibly relevant notes first to reduce map overhead
+    // Visibility windows are FIXED (tied to gameplay accuracy and YouTube sync, not BPM)
+    // These windows define when notes must be hit - changing them would break beatmap sync
+    // Animation speeds (visual durations) will be controlled by player-set "note speed" later
+    // 
     // Keep failed notes visible longer to ensure they reach judgement line and greyscale animation completes
-    // tapTooEarlyFailure needs window to travel from failure point to judgement line
-    // tapMissFailure needs window to show failure animation after reaching judgement line
+    // tapTooEarlyFailure: 4000ms window to travel from failure point to judgement line
+    // tapMissFailure: 2000ms window to show failure animation after reaching judgement line
+    // Hit notes: 500ms buffer after judgement (small tail for visual cleanup)
     const visibleNotes = notes.filter(n => {
-      if (n.tapTooEarlyFailure) return n.time <= currentTime + effectiveLEAD_TIME && n.time >= currentTime - tooEarlyFailureVisibilityWindow;
-      if (n.tapMissFailure) return n.time <= currentTime + effectiveLEAD_TIME && n.time >= currentTime - missFailureVisibilityWindow;
-      return n.time <= currentTime + effectiveLEAD_TIME && n.time >= currentTime - hitNoteVisibilityBuffer;
+      if (n.tapTooEarlyFailure) return n.time <= currentTime + effectiveLEAD_TIME && n.time >= currentTime - 4000;
+      if (n.tapMissFailure) return n.time <= currentTime + effectiveLEAD_TIME && n.time >= currentTime - 2000;
+      return n.time <= currentTime + effectiveLEAD_TIME && n.time >= currentTime - 500;
     });
     
     const processed = visibleNotes
