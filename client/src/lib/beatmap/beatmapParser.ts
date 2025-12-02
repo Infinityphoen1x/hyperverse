@@ -1,4 +1,5 @@
 import type { Note } from '@/types/game';
+import { MAX_BEATMAP_BPM } from '@/lib/config/gameConstants';
 
 export interface BeatmapMetadata {
   title?: string;
@@ -48,7 +49,10 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
           const k = key.trim().toLowerCase();
           if (k === 'title') metadata.title = value;
           if (k === 'artist') metadata.artist = value;
-          if (k === 'bpm') metadata.bpm = parseFloat(value);
+          if (k === 'bpm') {
+            const bpm = parseFloat(value);
+            metadata.bpm = bpm > MAX_BEATMAP_BPM ? MAX_BEATMAP_BPM : bpm;
+          }
           if (k === 'duration') metadata.duration = parseInt(value);
           if (k === 'youtube') metadata.youtube = value;
           if (k === 'beatmapstart') metadata.beatmapStart = parseInt(value);

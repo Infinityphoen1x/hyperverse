@@ -1,5 +1,6 @@
 // src/utils/parseBeatmap.ts
 import { GameErrors } from '@/lib/errors/errorLog';
+import { MAX_BEATMAP_BPM } from '@/lib/config/gameConstants';
 
 export interface BeatmapMetadata {
   title: string;
@@ -78,7 +79,7 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
         if (key.toLowerCase() === 'artist') metadata.artist = value;
         if (key.toLowerCase() === 'bpm') {
           const bpm = parseInt(value);
-          if (!isNaN(bpm)) metadata.bpm = bpm;
+          if (!isNaN(bpm)) metadata.bpm = bpm > MAX_BEATMAP_BPM ? MAX_BEATMAP_BPM : bpm;
         }
         if (key.toLowerCase() === 'duration') {
           const dur = parseInt(value);
