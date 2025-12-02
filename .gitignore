@@ -4,3 +4,24 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+# Dependencies
+.env
+build/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Editor dirs
+.vscode/settings.json
+.idea/
