@@ -152,13 +152,13 @@ export default function Home({ onStartGame }: HomeProps) {
           ))}
         </div>
 
-        <div className="flex gap-4 justify-center items-center flex-wrap">
+        <div className="flex gap-4 justify-center items-center flex-nowrap">
           <motion.button 
             onClick={() => onStartGame(selectedDifficulty)}
             disabled={!beatmapLoaded}
             whileHover={beatmapLoaded ? { scale: 1.05 } : {}}
             whileTap={beatmapLoaded ? { scale: 0.95 } : {}}
-            className={`mt-8 px-12 py-6 text-black font-bold text-xl font-orbitron rounded-sm border-2 transition-colors whitespace-nowrap ${
+            className={`px-12 py-6 text-black font-bold text-xl font-orbitron rounded-sm border-2 transition-colors whitespace-nowrap ${
               beatmapLoaded
                 ? 'bg-neon-pink shadow-[0_0_50px_rgba(255,0,127,0.8)] border-neon-pink cursor-pointer'
                 : 'bg-neon-cyan shadow-[0_0_50px_cyan] border-white hover:bg-white opacity-50 cursor-not-allowed'
