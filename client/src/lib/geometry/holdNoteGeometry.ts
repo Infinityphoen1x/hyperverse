@@ -15,20 +15,24 @@ export const calculateApproachGeometry = (
   isHoldMissFailure: boolean = false,
   useFixedDepth: boolean = true
 ): ApproachGeometry => {
-  // NEW: Fixed depth mode - depth is proportional to duration, not approach timing
+  // NEW: Fixed depth mode - depth is proportional to duration AND approach speed
   // Near end approaches based on note.time
-  // Far end = near end + fixed offset based on duration
+  // Far end = near end + fixed offset based on duration scaled by approach speed
   // This makes longer holds visually "deeper" (longer strips)
+  // AND accounts for BPM - faster songs = faster approach = larger depth multiplier
   
   const rawNearProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
   const nearProgress = Math.max(0, rawNearProgress);
   const nearDistance = Math.max(1, 1 + (nearProgress * (JUDGEMENT_RADIUS - 1)));
   
   if (useFixedDepth) {
-    // Fixed depth: scale hold duration to distance units
-    // 1000ms duration = ~15 pixels of depth (adjustable via scale factor)
-    const DURATION_TO_DISTANCE_SCALE = 0.015; // pixels per millisecond
-    const fixedDepthOffset = Math.max(1, holdDuration * DURATION_TO_DISTANCE_SCALE);
+    // Dynamic depth based on approach speed
+    // Approach covers (JUDGEMENT_RADIUS - 1) pixels in LEAD_TIME milliseconds
+    // Speed = (JUDGEMENT_RADIUS - 1) / LEAD_TIME pixels per millisecond
+    // Hold duration in tunnel = holdDuration * speed
+    const TUNNEL_DISTANCE = JUDGEMENT_RADIUS - 1; // 186 pixels
+    const approachSpeed = TUNNEL_DISTANCE / LEAD_TIME; // pixels per millisecond
+    const fixedDepthOffset = Math.max(1, holdDuration * approachSpeed);
     const farDistance = Math.max(1, nearDistance + fixedDepthOffset);
     return { nearDistance, farDistance };
   } else {
