@@ -16,15 +16,10 @@ const calculateEffectiveProgress = (
   failureTime?: number
 ): number => {
   if (isFailedOrHit && Number.isFinite(noteTime) && Number.isFinite(currentTime)) {
-    // Early failure: note failed BEFORE reaching hit line (failureTime < noteTime)
-    // Use the frozen progress value - DO NOT CLAMP to allow smooth flow past judgement line
-    if (failureTime !== undefined && failureTime < noteTime) {
-      return Math.max(0, progress);
-    }
-    
-    // Late failure or successful hit: note PASSED hit line (failureTime >= noteTime)
-    // Continue morphing past the hit line using current time
-    return Math.max(0, 1 - ((noteTime - currentTime) / TAP_DEPTH.FADE_TIME));
+    // Both early and late failures/hits: freeze progress at moment of event
+    // This prevents speed-up effect from switching calculation methods
+    // Progress stays constant while opacity/effects handle visibility
+    return Math.max(0, progress);
   }
   return Math.max(0, Math.min(1, progress));
 };
