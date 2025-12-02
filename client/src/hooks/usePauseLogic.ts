@@ -50,7 +50,9 @@ export function usePauseLogic({
     })();
   }, [getVideoTime, setIsPaused, setGameState, setPauseMenuOpen]);
 
-  // Resume handler - triggers countdown
+  // Resume handler - triggers countdown which leads to YouTube-first resume flow
+  // Flow: setCountdownSeconds(3) → countdown expires → onCountdownComplete (RESUMING) 
+  //       → useFadeAnimation: fade-in + playYouTubeVideo() → resumeGame() → PLAYING
   const handleResume = useCallback((): void => {
     if (gameState !== 'PAUSED') return;
     setCountdownSeconds(3);

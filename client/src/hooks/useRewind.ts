@@ -44,12 +44,14 @@ export function useRewind({ setPauseMenuOpen, engineRef }: UseRewindProps): { ha
       // Seek to 0
       await seekYouTubeVideo(0);
       
-      // Play immediately
+      // YouTube-first flow: Play immediately, then game starts when onPlaying fires
       await playYouTubeVideo();
     } catch (err) {
       console.warn('[REWIND] Async operation failed', err);
     } finally {
-      setGameState('PLAYING');
+      // Go back to IDLE so auto-start re-triggers the YouTube-first flow
+      // This ensures: YouTube plays → onPlaying fires → startGame() called
+      setGameState('IDLE');
       // Short delay to clear lock
       setTimeout(() => {
           isRewindingRef.current = false;

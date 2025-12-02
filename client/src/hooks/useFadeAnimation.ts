@@ -38,11 +38,23 @@ export function useFadeAnimation({
         animationFrameIdRef.current = requestAnimationFrame(animate);
       } else {
         console.log('[RESUME-ANIM] Fade complete, unfreezing engine...');
-        resumeGame();
-        setGameState('PLAYING');
-        playYouTubeVideo().catch(console.error);
-        setResumeFadeOpacity(1.0);
-        startTimeRef.current = null;
+        // YouTube-first resume: play YouTube, then sync game to it
+        playYouTubeVideo()
+          .then(() => {
+            // YouTube is playing, now resume the game engine
+            resumeGame();
+            setGameState('PLAYING');
+          })
+          .catch(err => {
+            console.error('[RESUME-ANIM] YouTube play failed:', err);
+            // Fallback: resume anyway
+            resumeGame();
+            setGameState('PLAYING');
+          })
+          .finally(() => {
+            setResumeFadeOpacity(1.0);
+            startTimeRef.current = null;
+          });
       }
     };
 
