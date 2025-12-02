@@ -41,11 +41,12 @@ export const calculateApproachGeometry = (
     const TUNNEL_DISTANCE = JUDGEMENT_RADIUS - 1; // 186 pixels
     const approachSpeed = TUNNEL_DISTANCE / effectiveLEAD_TIME; // pixels per millisecond
     const fixedDepthOffset = Math.max(1, holdDuration * approachSpeed);
-    // Scale depth offset by perspective to maintain constant z-depth in world space
-    // At vanishing point (nearDistance=1): scaled offset is tiny
-    // At judgement (nearDistance=187): scaled offset is full size
+    // Scale depth offset by approach progress (time-aware) to maintain constant z-depth in world space
+    // perspectiveScale represents how far along the approach we are (0 at VP, 1 at judgement)
+    // This naturally accounts for BPM through effectiveLEAD_TIME
+    // At vanishing point: scaled offset is tiny, at judgement: scaled offset is full size
     // This creates visual growth of depth as note approaches while keeping z-depth constant
-    const perspectiveScale = nearDistance / JUDGEMENT_RADIUS;
+    const perspectiveScale = Math.max(0, (effectiveLEAD_TIME - timeUntilHit) / effectiveLEAD_TIME);
     const scaledDepthOffset = fixedDepthOffset * perspectiveScale;
     // Far end is closer to vanishing point (smaller distance), near end is at judgement
     const farDistance = Math.max(1, nearDistance - scaledDepthOffset);
