@@ -19,33 +19,34 @@ export const calculateApproachGeometry = (
   // Fixed depth mode - depth is proportional to duration AND approach speed
   // Near end approaches based on note.time
   // Far end = near end + fixed offset based on duration scaled by approach speed
-  // Approach speed scales with BPM: higher BPM = faster notes in tunnel = more visual depth per duration
   
-  // LEAD_TIME is fixed visibility window (always 4000ms from vanishing point to judgement)
-  // Approach speed scales with BPM ratio
-  // At reference BPM (120): base speed = 186px / 4000ms
-  // At 240 BPM: speed doubles = 2 × (186px / 4000ms)
-  // Higher BPM naturally makes notes approach faster in the tunnel
+  // LEAD_TIME scales with BPM to prevent note stacking on fast songs
+  // At 120 BPM: LEAD_TIME = 4000ms (baseline)
+  // At 240 BPM: LEAD_TIME = 2000ms (half - snappier, prevents doubled-up notes)
+  // At 60 BPM: LEAD_TIME = 8000ms (double - longer window for slower songs)
+  // Formula: effectiveLEAD_TIME = LEAD_TIME × (REFERENCE_BPM / beatmapBpm)
   
-  const rawNearProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
+  const effectiveLEAD_TIME = LEAD_TIME * (REFERENCE_BPM / Math.max(1, beatmapBpm));
+  
+  const rawNearProgress = (effectiveLEAD_TIME - timeUntilHit) / effectiveLEAD_TIME;
   const nearProgress = Math.max(0, rawNearProgress);
   const nearDistance = Math.max(1, 1 + (nearProgress * (JUDGEMENT_RADIUS - 1)));
   
   if (useFixedDepth) {
-    // Approach speed scales with BPM
-    // Base speed at REFERENCE_BPM (120): 186px / 4000ms
-    // Scale factor: beatmapBpm / REFERENCE_BPM
+    // Approach speed = tunnel distance / effective LEAD_TIME
+    // This automatically scales with BPM since effectiveLEAD_TIME scales inversely
+    // High BPM: shorter window, faster approach speed
+    // Low BPM: longer window, slower approach speed
+    // Hold visual depth = duration × approach speed
     const TUNNEL_DISTANCE = JUDGEMENT_RADIUS - 1; // 186 pixels
-    const baseApproachSpeed = TUNNEL_DISTANCE / LEAD_TIME; // pixels per millisecond at reference BPM
-    const bpmScale = beatmapBpm / Math.max(1, REFERENCE_BPM); // scale factor based on BPM
-    const approachSpeed = baseApproachSpeed * bpmScale; // pixels per millisecond at current BPM
+    const approachSpeed = TUNNEL_DISTANCE / effectiveLEAD_TIME; // pixels per millisecond
     const fixedDepthOffset = Math.max(1, holdDuration * approachSpeed);
     const farDistance = Math.max(1, nearDistance + fixedDepthOffset);
     return { nearDistance, farDistance };
   } else {
     // LEGACY: Dynamic depth mode (both ends approach based on timing)
     const timeUntilHitFar = timeUntilHit + holdDuration;
-    const rawFarProgress = (LEAD_TIME - timeUntilHitFar) / LEAD_TIME;
+    const rawFarProgress = (effectiveLEAD_TIME - timeUntilHitFar) / effectiveLEAD_TIME;
     const farProgress = Math.max(0, rawFarProgress);
     const farDistance = Math.max(1, 1 + (farProgress * (JUDGEMENT_RADIUS - 1)));
     return { nearDistance, farDistance };
