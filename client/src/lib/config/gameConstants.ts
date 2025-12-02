@@ -151,7 +151,7 @@ export const DECK_ROTATION: DeckRotation = {
 export interface VisualEffects {
   /** Game health maximum (also MAX_HEALTH constant) */
   maxHealth: number;
-  /** Health threshold where continuous glitch effect starts (80% of max) */
+  /** Health threshold where continuous glitch effect starts (25% of max) */
   lowHealthThreshold: number;
   /** Spawn particles every N combo count (normal milestone) */
   comboMilestone: number;
@@ -189,7 +189,7 @@ export interface VisualEffects {
 }
 export const VISUAL_EFFECTS: VisualEffects = {
   maxHealth: 200,                  // Health ranges 0-200
-  lowHealthThreshold: 160,         // At ≤160 health (80%), continuous glitch starts
+  lowHealthThreshold: 50,          // At ≤50 health (25%), continuous glitch starts
   comboMilestone: 5,               // Particles spawn at combos 5, 10, 15, etc.
   comboPerfectMilestone: 10,       // Perfect-only particles at 10, 20, 30, etc.
   particlesPerEffect: 12,          // 12 particles per trigger
