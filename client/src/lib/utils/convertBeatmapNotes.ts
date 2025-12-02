@@ -1,7 +1,6 @@
 // src/utils/convertBeatmapNotes.ts (keep original logic, minor refactors for store integration)
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { GAME_ENGINE_TIMING } from '@/lib/config/gameConstants';
 
 export interface BeatmapNote {
   time: number;
@@ -14,6 +13,10 @@ export interface BeatmapNote {
 }
 
 export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
+  // Note: SPIN_LEFT/SPIN_RIGHT are lane positions only, not rotation directions
+  // Lane -1 (Q deck, left) → SPIN_LEFT
+  // Lane -2 (P deck, right) → SPIN_RIGHT
+  // Rotation direction alternates at runtime via user key presses, not beatmap
   if (!Array.isArray(beatmapNotes) || beatmapNotes.length === 0) {
     return [];
   }
@@ -79,12 +82,11 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
     let type: 'TAP' | 'SPIN_LEFT' | 'SPIN_RIGHT';
     
     // Re-apply logic to determine final internal type
-    // Note: spinAlternation is driven by user KEY PRESSES, not beatmap notes
-    // Beatmap only specifies lane (-1/-2 for spins), direction is determined at runtime
+    // SPIN_LEFT/SPIN_RIGHT refer to lane position, not rotation direction
     if (note.lane === -1) {
-        type = 'SPIN_LEFT';
+        type = 'SPIN_LEFT';  // Q deck (left position)
     } else if (note.lane === -2) {
-        type = 'SPIN_RIGHT';
+        type = 'SPIN_RIGHT'; // P deck (right position)
     } else {
         type = 'TAP';
     }
