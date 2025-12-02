@@ -1,4 +1,5 @@
 import { Note, GameConfig, NoteType } from '@/lib/engine/gameTypes';
+import { TAP_RENDER_WINDOW_MS, LEAD_TIME } from '@/lib/config/gameConstants';
 
 // ============================================================================
 // NOTE VALIDATOR - Pure functions for note state validation
@@ -41,8 +42,8 @@ export class NoteValidator {
       n.lane === lane &&
       n.type === 'TAP' &&
       this.isNoteActive(n) &&
-      currentTime >= n.time - this.config.TAP_HIT_WINDOW &&
-      currentTime <= n.time + this.config.LEAD_TIME
+      currentTime >= n.time - TAP_RENDER_WINDOW_MS &&
+      currentTime <= n.time + this.config.TAP_HIT_WINDOW
     ) || null;
   }
 
@@ -66,8 +67,8 @@ export class NoteValidator {
       n.lane === lane &&
       (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') &&
       this.isNoteActive(n) &&
-      currentTime >= n.time - this.config.TAP_HIT_WINDOW &&
-      currentTime <= n.time + this.config.LEAD_TIME
+      currentTime >= n.time - LEAD_TIME &&
+      currentTime <= n.time + this.config.HOLD_ACTIVATION_WINDOW
     ) || null;
   }
 
@@ -120,11 +121,11 @@ export class NoteValidator {
     return notes.map(n => {
       // If note was marked as too early relative to old time,
       // but is now within valid window at new time, reset early flag
-      if (n.tooEarlyFailure && currentTime >= n.time - this.config.TAP_HIT_WINDOW) {
+      if (n.tooEarlyFailure && currentTime >= n.time - LEAD_TIME) {
         return { ...n, tooEarlyFailure: false };
       }
       // Same for TAP notes
-      if (n.tapTooEarlyFailure && currentTime >= n.time - this.config.TAP_HIT_WINDOW) {
+      if (n.tapTooEarlyFailure && currentTime >= n.time - TAP_RENDER_WINDOW_MS) {
         return { ...n, tapTooEarlyFailure: false };
       }
       return n;

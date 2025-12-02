@@ -4,6 +4,7 @@ import { ScoringManager } from '@/lib/managers/scoringManager';
 import { roundTime } from './noteUpdateHelpers';
 import { checkTapAutoFail, checkHoldAutoFail } from './noteAutoFailHelpers';
 import { GameErrors } from '@/lib/errors/errorLog';
+import { TAP_RENDER_WINDOW_MS, LEAD_TIME } from '@/lib/config/gameConstants';
 
 export type NoteUpdateResult = {
   updatedNote: Note;
@@ -25,8 +26,8 @@ export class NoteProcessor {
   processTapHit(note: Note, currentTime: number): NoteUpdateResult {
     const timeSinceNote = currentTime - note.time;
 
-    // Too early - pressed too far before note.time
-    if (timeSinceNote < -this.config.TAP_HIT_WINDOW) {
+    // Too early - pressed too far before note appears (TAP_RENDER_WINDOW_MS before note.time)
+    if (timeSinceNote < -TAP_RENDER_WINDOW_MS) {
       GameErrors.updateHitStats({ tapTooEarlyFailures: (GameErrors.hitStats.tapTooEarlyFailures || 0) + 1 });
       GameErrors.log(`[TAP-HIT] noteId=${note.id} tapTooEarlyFailure at ${currentTime}ms`, currentTime);
       return {
@@ -40,8 +41,8 @@ export class NoteProcessor {
       };
     }
 
-    // Valid hit - allow presses from small window before note.time to large leniency after
-    if (timeSinceNote >= -this.config.TAP_HIT_WINDOW && timeSinceNote <= this.config.LEAD_TIME) {
+    // Valid hit - allow presses from when note appears to small window after note.time
+    if (timeSinceNote >= -TAP_RENDER_WINDOW_MS && timeSinceNote <= this.config.TAP_HIT_WINDOW) {
       const scoreChange = this.scorer.recordHit(timeSinceNote);
       GameErrors.updateHitStats({ successfulHits: (GameErrors.hitStats.successfulHits || 0) + 1 });
       GameErrors.log(`[TAP-HIT] noteId=${note.id} successfulHit at ${currentTime}ms (timing: ${timeSinceNote.toFixed(0)}ms)`, currentTime);
@@ -62,8 +63,8 @@ export class NoteProcessor {
   processHoldStart(note: Note, currentTime: number): NoteUpdateResult {
     const timeSinceNote = currentTime - note.time;
 
-    // Too early - pressed too far before note.time
-    if (timeSinceNote < -this.config.TAP_HIT_WINDOW) {
+    // Too early - pressed too far before note appears (LEAD_TIME before note.time)
+    if (timeSinceNote < -LEAD_TIME) {
       GameErrors.updateHitStats({ tooEarlyFailures: (GameErrors.hitStats.tooEarlyFailures || 0) + 1 });
       GameErrors.log(`[HOLD-HIT] noteId=${note.id} tooEarlyFailure at ${currentTime}ms`, currentTime);
       return {
@@ -79,7 +80,7 @@ export class NoteProcessor {
     }
 
     // Too late - pressed after note has passed (use leniency window)
-    const lateThreshold = this.config.LEAD_TIME;
+    const lateThreshold = this.config.HOLD_ACTIVATION_WINDOW;
     if (timeSinceNote > lateThreshold) {
       GameErrors.updateHitStats({ holdMissFailures: (GameErrors.hitStats.holdMissFailures || 0) + 1 });
       GameErrors.log(`[HOLD-HIT] noteId=${note.id} holdMissFailure at ${currentTime}ms`, currentTime);
