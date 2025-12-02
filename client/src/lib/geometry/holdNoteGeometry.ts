@@ -93,7 +93,8 @@ export const calculateLockedNearDistance = (
   isTooEarlyFailure: boolean,
   approachNearDistance: number,
   failureTime: number | null,
-  isHoldMissFailure: boolean = false
+  isHoldMissFailure: boolean = false,
+  beatmapBpm: number = 120
 ): number | null => {
   if (note.hit) return JUDGEMENT_RADIUS;
   if (!pressHoldTime || pressHoldTime === 0) return null;
@@ -105,7 +106,9 @@ export const calculateLockedNearDistance = (
   if (note.holdReleaseFailure) {
     if (!failureTime) return null;
     const timeUntilHitAtFailure = note.time - failureTime;
-    const approachProgressAtFailure = Math.max((LEAD_TIME - timeUntilHitAtFailure) / LEAD_TIME, 0);
+    // Use effectiveLEAD_TIME scaled by BPM
+    const effectiveLEAD_TIME = LEAD_TIME * (REFERENCE_BPM / Math.max(1, beatmapBpm));
+    const approachProgressAtFailure = Math.max((effectiveLEAD_TIME - timeUntilHitAtFailure) / effectiveLEAD_TIME, 0);
     return Math.max(1, 1 + (approachProgressAtFailure * (JUDGEMENT_RADIUS - 1)));
   }
   

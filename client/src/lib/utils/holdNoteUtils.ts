@@ -67,7 +67,7 @@ export function processSingleHoldNote(note: Note, currentTime: number, beatmapBp
     }
     
     const collapseDuration = failures.hasAnyFailure ? FAILURE_ANIMATION_DURATION : holdDuration;
-    const lockedNearDistance = calculateLockedNearDistance(note, pressHoldTime, failures.isTooEarlyFailure, approachGeometry.nearDistance, failureTime, failures.isHoldMissFailure);
+    const lockedNearDistance = calculateLockedNearDistance(note, pressHoldTime, failures.isTooEarlyFailure, approachGeometry.nearDistance, failureTime, failures.isHoldMissFailure, beatmapBpm);
     const stripWidth = holdDuration * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
     // Use the actual approach geometry's far distance (what was being rendered)
     // not a recalculated value - this prevents discontinuous jumps on hit/press
