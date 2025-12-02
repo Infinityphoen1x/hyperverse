@@ -8,9 +8,11 @@ import { initYouTubePlayer, initYouTubeTimeListener, buildYouTubeEmbedUrl } from
 import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from "@/lib/config/gameConstants";
 import Home from "@/pages/Home";
 import Game from "@/pages/Game";
+import Settings from "@/pages/Settings";
 
 function App() {
   const [gameActive, setGameActive] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
   const playerInitializedRef = useRef<boolean>(false) as React.RefObject<boolean>;
@@ -80,10 +82,13 @@ function App() {
             </div>
           )}
 
-          {/* UI Layer - Home or Game (z-10+) */}
+          {/* UI Layer - Home, Game, or Settings (z-10+) */}
           <div className="absolute inset-0 z-10">
-            {!gameActive && (
-              <Home onStartGame={(difficulty) => { setSelectedDifficulty(difficulty); setGameActive(true); }} />
+            {settingsOpen && (
+              <Settings onBack={() => setSettingsOpen(false)} />
+            )}
+            {!gameActive && !settingsOpen && (
+              <Home onStartGame={(difficulty) => { setSelectedDifficulty(difficulty); setGameActive(true); }} onOpenSettings={() => setSettingsOpen(true)} />
             )}
             {gameActive && (
               <Game 

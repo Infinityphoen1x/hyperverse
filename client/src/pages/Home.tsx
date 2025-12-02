@@ -5,9 +5,10 @@ import { BeatmapData } from "@/lib/beatmap/beatmapParser";
 
 interface HomeProps {
   onStartGame: (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => void;
+  onOpenSettings: () => void;
 }
 
-export default function Home({ onStartGame }: HomeProps) {
+export default function Home({ onStartGame, onOpenSettings }: HomeProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const [isLoaderOpen, setIsLoaderOpen] = useState(false);
   const [beatmapLoaded, setBeatmapLoaded] = useState(false);
@@ -142,7 +143,7 @@ export default function Home({ onStartGame }: HomeProps) {
           ))}
         </div>
 
-        <div className="flex gap-4 justify-center items-center flex-nowrap">
+        <div className="flex gap-4 justify-center items-center flex-nowrap flex-wrap">
           <motion.button 
             onClick={() => onStartGame(selectedDifficulty)}
             disabled={!beatmapLoaded}
@@ -169,6 +170,16 @@ export default function Home({ onStartGame }: HomeProps) {
               LOAD NEW
             </motion.button>
           )}
+
+          <motion.button 
+            onClick={onOpenSettings}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-6 py-6 text-white font-bold font-orbitron rounded-sm border-2 border-white/30 bg-transparent hover:border-neon-cyan hover:text-neon-cyan transition-colors text-sm whitespace-nowrap"
+            data-testid="button-open-settings"
+          >
+            ⚙ SETTINGS
+          </motion.button>
         </div>
       </motion.div>
       

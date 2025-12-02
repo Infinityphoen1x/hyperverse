@@ -16,6 +16,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   missCount: 0,
   countdownSeconds: 0,
   beatmapBpm: DEFAULT_BEATMAP_BPM, // Default BPM - will be updated when beatmap loads
+  noteSpeedMultiplier: 1.0, // Player-controlled note speed (0.5-2.0x)
   spinPressCountPerLane: { '-1': 0, '-2': 0 }, // Track key presses per lane for spin alternation
 
   // Setters
@@ -30,6 +31,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setIsPaused: (isPaused) => set({ isPaused }),
   setCountdownSeconds: (countdownSeconds) => set({ countdownSeconds }),
   setBeatmapBpm: (bpm) => set({ beatmapBpm: bpm }),
+  setNoteSpeedMultiplier: (multiplier) => set({ noteSpeedMultiplier: Math.max(0.5, Math.min(2.0, multiplier)) }),
   incrementSpinPressCount: (lane: number) => set((state) => ({
     spinPressCountPerLane: {
       ...state.spinPressCountPerLane,
