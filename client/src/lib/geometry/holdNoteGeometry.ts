@@ -20,14 +20,14 @@ export const calculateApproachGeometry = (
   const stripWidth = Math.min((holdDuration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER, maxStripWidth);
   
   const rawApproachProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
-  // For hold notes in approach phase, allow progress beyond 1.0 to continue showing far end
-  // Don't clamp to 1.0 - let it go higher so far end stays visible as near end reaches judgement
+  // Allow progress beyond 1.0 - let near end extend past judgement and toward player
+  // Distance-based angle spread automatically handles proper perspective as distance changes
+  // Visual window culling (negative coordinate checks) will hide notes when they pass the player
   const approachProgress = Math.max(0, rawApproachProgress);
   
-  // For holdMissFailure: allow near end to extend PAST judgement radius (moving through user)
-  // For other cases: clamp near distance to judgement radius
-  const maxNearDistance = isHoldMissFailure ? Math.max(JUDGEMENT_RADIUS, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1))) : Math.min(JUDGEMENT_RADIUS, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
-  const nearDistance = Math.max(1, maxNearDistance);
+  // NO CLAMPING - let nearDistance grow freely toward player
+  // This maintains proper perspective expansion throughout the entire approach
+  const nearDistance = Math.max(1, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
   // Far distance is always stripWidth behind nearDistance, creating constant-width strip
   // Never clamp - farDistance should maintain proper depth even for long holds
   // This creates the moving strip effect: near end approaches while far end stays fixed depth behind
