@@ -6,22 +6,8 @@ interface ErrorListSectionProps {
 }
 
 export const ErrorListSection: React.FC<ErrorListSectionProps> = ({ errors }) => {
-  // Filter to show important events (failures, hits, state changes) - not every frame render
-  const importantLogs = errors.filter((entry) => {
-    const msg = typeof entry === 'string' ? entry : entry.message || '';
-    // Show: failures, hits, lifecycle events - hide frame-by-frame render logs
-    return (
-      msg.includes('Failure') ||
-      msg.includes('HIT') ||
-      msg.includes('Lifecycle') ||
-      msg.includes('Success') ||
-      msg.includes('Error') ||
-      msg.includes('CRITICAL') ||
-      (!msg.includes('HOLD-RENDER') && !msg.includes('TAP-RENDER'))
-    );
-  });
-  
-  const displayLogs = importantLogs.length > 0 ? importantLogs : errors.slice(-50); // Show last 50 if no important events
+  // Display last 100 logs to show both render tracking and hit results
+  const displayLogs = errors.slice(-100);
 
   return (
     <div
