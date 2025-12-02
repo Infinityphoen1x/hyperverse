@@ -15,15 +15,22 @@ export default function Home({ onStartGame }: HomeProps) {
   const colors = ["#00FFFF", "#FF00FF", "#00FF00", "#00CCFF", "#FF0080"];
   const [colorIndex, setColorIndex] = useState(0);
 
-  // Check if beatmap is already loaded in localStorage on mount
+  // Check if beatmap is already loaded in localStorage on mount and when returning from game
   useEffect(() => {
     const pendingBeatmap = localStorage.getItem('pendingBeatmap');
     if (pendingBeatmap) {
       try {
-        setBeatmapLoaded(true);
+        const beatmapData = JSON.parse(pendingBeatmap);
+        if (beatmapData.youtubeVideoId && beatmapData.notes) {
+          setBeatmapLoaded(true);
+        } else {
+          setBeatmapLoaded(false);
+        }
       } catch {
         setBeatmapLoaded(false);
       }
+    } else {
+      setBeatmapLoaded(false);
     }
   }, []);
 

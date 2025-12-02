@@ -11,6 +11,7 @@ import Game from "@/pages/Game";
 
 function App() {
   const [gameActive, setGameActive] = useState(false);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
   const playerInitializedRef = useRef<boolean>(false) as React.RefObject<boolean>;
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
@@ -82,11 +83,11 @@ function App() {
           {/* UI Layer - Home or Game (z-10+) */}
           <div className="absolute inset-0 z-10">
             {!gameActive && (
-              <Home onStartGame={() => setGameActive(true)} />
+              <Home onStartGame={(difficulty) => { setSelectedDifficulty(difficulty); setGameActive(true); }} />
             )}
             {gameActive && (
               <Game 
-                difficulty="MEDIUM"
+                difficulty={selectedDifficulty}
                 onBackToHome={() => setGameActive(false)}
                 playerInitializedRef={playerInitializedRef}
               />

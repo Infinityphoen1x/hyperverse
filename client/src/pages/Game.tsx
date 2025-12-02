@@ -106,7 +106,7 @@ function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
   const missCount = useMemo(() => (notes || []).filter(n => n.missed).length, [notes]);
   const scoreDisplay = useMemo(() => score.toString().padStart(6, '0'), [score]);
 
-  // Load beatmap from localStorage
+  // Load beatmap from localStorage (keep it there for re-selection with different difficulty)
   useEffect(() => {
     const pendingBeatmapStr = localStorage.getItem('pendingBeatmap');
     if (pendingBeatmapStr) {
@@ -114,10 +114,8 @@ function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
         const beatmapData = JSON.parse(pendingBeatmapStr);
         setYoutubeVideoId(beatmapData.youtubeVideoId || null);
         setCustomNotes(beatmapData.notes || undefined);
-        localStorage.removeItem('pendingBeatmap');
       } catch (error) {
         console.error('Failed to load pending beatmap:', error);
-        localStorage.removeItem('pendingBeatmap');
       }
     }
   }, []);
