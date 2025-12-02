@@ -87,7 +87,7 @@ function App() {
             )}
             {gameActive && (
               <Game 
-                key={`${youtubeVideoId}-${selectedDifficulty}`}
+                key={`game-${youtubeVideoId}-${selectedDifficulty}-${gameActive}`}
                 difficulty={selectedDifficulty}
                 onBackToHome={() => setGameActive(false)}
                 playerInitializedRef={playerInitializedRef}
