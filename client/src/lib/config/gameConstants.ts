@@ -440,7 +440,6 @@ export const GAME_ENGINE_TIMING: GameEngineTiming = {
 // BPM and tunnel speed calibration
 export const REFERENCE_BPM = 120;               // Reference BPM for LEAD_TIME scaling (hardest difficulty)
 export const DEFAULT_BEATMAP_BPM = 120;        // Default BPM if beatmap metadata missing
-export const MAX_BEATMAP_BPM = 200;            // Maximum allowed BPM for beatmaps
 
 // Hold animation duration (already in FAILURE_ANIMATION_DURATION)
 
