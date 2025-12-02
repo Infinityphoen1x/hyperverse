@@ -7,7 +7,7 @@ import { GameErrors } from '@/lib/errors/errorLog';
 
 interface UseBeatmapLoaderProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-  onBeatmapLoad: (data: BeatmapData) => void;
+  onBeatmapLoad: (data: BeatmapData, beatmapText: string) => void;
 }
 
 interface UseBeatmapLoaderReturn {
@@ -85,14 +85,15 @@ export const useBeatmapLoader = ({ difficulty, onBeatmapLoad }: UseBeatmapLoader
       }
 
       setIsBeatmapLoaded(true);
-      setBeatmapText("");
       
-      // Notify parent with the processed data
+      // Notify parent with the processed data AND raw beatmapText for re-parsing with different difficulties
       onBeatmapLoad({
         ...parsed,
         notes: convertedNotes as any[], // Convert strictly typed notes back to array for storage if needed, or adjust types
         youtubeVideoId
-      });
+      }, beatmapText);
+      
+      setBeatmapText("");
       
     } catch (error) {
       const msg = `Beatmap loading error: ${error instanceof Error ? error.message : 'Unknown error'}`;

@@ -11,7 +11,7 @@ interface BeatmapLoaderProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  onBeatmapLoad: (data: BeatmapData) => void;
+  onBeatmapLoad: (data: BeatmapData, beatmapText: string) => void;
 }
 
 export function BeatmapLoader({ difficulty, isOpen, setIsOpen, onBeatmapLoad }: BeatmapLoaderProps) {

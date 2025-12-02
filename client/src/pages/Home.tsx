@@ -21,7 +21,7 @@ export default function Home({ onStartGame }: HomeProps) {
     if (pendingBeatmap) {
       try {
         const beatmapData = JSON.parse(pendingBeatmap);
-        if (beatmapData.youtubeVideoId && beatmapData.notes) {
+        if (beatmapData.youtubeVideoId && beatmapData.beatmapText) {
           setBeatmapLoaded(true);
         } else {
           setBeatmapLoaded(false);
@@ -33,22 +33,6 @@ export default function Home({ onStartGame }: HomeProps) {
       setBeatmapLoaded(false);
     }
   }, []);
-
-  // Update beatmap difficulty in localStorage when selectedDifficulty changes
-  useEffect(() => {
-    if (beatmapLoaded) {
-      const pendingBeatmap = localStorage.getItem('pendingBeatmap');
-      if (pendingBeatmap) {
-        try {
-          const beatmapData = JSON.parse(pendingBeatmap);
-          beatmapData.difficulty = selectedDifficulty;
-          localStorage.setItem('pendingBeatmap', JSON.stringify(beatmapData));
-        } catch {
-          // Silently fail if parsing fails
-        }
-      }
-    }
-  }, [selectedDifficulty, beatmapLoaded]);
 
   const bannerMessages = [
     { text: "[ENCRYPTING NEURAL PATHWAYS] • QUANTUM SYNC PROTOCOL ACTIVE • SYNCHRONIZING BRAINWAVES", color: "#00FFFF" },
@@ -70,12 +54,11 @@ export default function Home({ onStartGame }: HomeProps) {
     return () => clearInterval(colorInterval);
   }, [colors.length]);
 
-  const handleBeatmapLoad = (data: BeatmapData) => {
-    // Store beatmap data for the game to use
+  const handleBeatmapLoad = (data: BeatmapData, beatmapText: string) => {
+    // Store full beatmap TEXT (not parsed notes) so Game can re-parse with any difficulty
     const beatmapStorageData = { 
-      youtubeVideoId: data.youtubeVideoId, 
-      notes: data.notes, 
-      difficulty: selectedDifficulty 
+      youtubeVideoId: data.youtubeVideoId,
+      beatmapText: beatmapText
     };
     localStorage.setItem('pendingBeatmap', JSON.stringify(beatmapStorageData));
     setBeatmapLoaded(true);

@@ -107,32 +107,48 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
   const missCount = useMemo(() => (notes || []).filter(n => n.missed).length, [notes]);
   const scoreDisplay = useMemo(() => score.toString().padStart(6, '0'), [score]);
 
-  // Reset game state when component mounts (clears old pause state from previous game)
-  useEffect(() => {
-    setGameState('IDLE');
-  }, [difficulty, setGameState]);
-
-  // Load beatmap from localStorage (keep it there for re-selection with different difficulty)
+  // Load beatmap from localStorage and re-parse with new difficulty
   useEffect(() => {
     const pendingBeatmapStr = localStorage.getItem('pendingBeatmap');
     if (pendingBeatmapStr) {
       try {
         const beatmapData = JSON.parse(pendingBeatmapStr);
         setYoutubeVideoId(beatmapData.youtubeVideoId || null);
-        setCustomNotes(beatmapData.notes || undefined);
+        
+        // Re-parse beatmap with the new difficulty to get correct notes
+        if (beatmapData.beatmapText) {
+          const { parseBeatmap } = require('@/lib/beatmap/beatmapParser');
+          const { convertBeatmapNotes } = require('@/lib/beatmap/beatmapConverter');
+          const parsed = parseBeatmap(beatmapData.beatmapText, difficulty);
+          if (!parsed.error && parsed.notes) {
+            const beatmapStartOffset = parsed.metadata?.beatmapStart || 0;
+            const convertedNotes = convertBeatmapNotes(parsed.notes, beatmapStartOffset);
+            setCustomNotes(convertedNotes);
+          }
+        }
       } catch (error) {
         console.error('Failed to load pending beatmap:', error);
       }
     }
+  }, [difficulty]); // Re-parse when difficulty changes
+
+  // Reset game state when component mounts (clears old pause state from previous game)
+  useEffect(() => {
+    setGameState('IDLE');
   }, []);
 
-  // Auto-play YouTube when game starts for first time
+  // Auto-play YouTube only on first START SESSION, not on difficulty changes
+  const gameSessionKeyRef = useRef(`${youtubeVideoId}-${difficulty}`);
   const autoPlayOnceRef = useRef(true);
+  
   useEffect(() => {
-    if (gameState === 'IDLE') {
-      autoPlayOnceRef.current = true; // Reset on game over/reload
+    // Check if we're in a new game session (different video or difficulty)
+    const currentSessionKey = `${youtubeVideoId}-${difficulty}`;
+    if (gameSessionKeyRef.current !== currentSessionKey) {
+      gameSessionKeyRef.current = currentSessionKey;
+      autoPlayOnceRef.current = true; // Reset auto-play for new session
     }
-  }, [gameState]);
+  }, [youtubeVideoId, difficulty]);
 
   useEffect(() => {
     if (gameState === 'PLAYING' && autoPlayOnceRef.current && youtubeVideoId) {
