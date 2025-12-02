@@ -24,24 +24,24 @@ const calculateEffectiveProgress = (
 const calculateDistances = (
   effectiveProgress: number,
   beatmapBpm: number = 120
-): { nearDist: number; farDist: number } => {
-  // Don't clamp perspectiveScale - it must scale proportionally with nearDist
+): { nearDistance: number; farDistance: number } => {
+  // Don't clamp perspectiveScale - it must scale proportionally with nearDistance
   // This prevents rapid depth change when notes approach past judgement
-  // Both nearDist and scaledDepth grow together, maintaining proportional depth
+  // Both nearDistance and scaledDepth grow together, maintaining proportional depth
   const perspectiveScale = Math.max(0, effectiveProgress); // Allow > 1 past judgement
   const scaledDepth = TAP_DEPTH.MAX * perspectiveScale;
   
-  const nearDist = 1 + (Math.max(0, effectiveProgress) * (JUDGEMENT_RADIUS - 1));
-  const farDist = Math.max(1, nearDist - scaledDepth);
-  return { nearDist, farDist };
+  const nearDistance = 1 + (Math.max(0, effectiveProgress) * (JUDGEMENT_RADIUS - 1));
+  const farDistance = Math.max(1, nearDistance - scaledDepth);
+  return { nearDistance, farDistance };
 };
 
 const calculateRayCorners = (
   vpX: number,
   vpY: number,
   rayAngle: number,
-  nearDist: number,
-  farDist: number
+  nearDistance: number,
+  farDistance: number
 ): { x1: number; y1: number; x2: number; y2: number; x3: number; y3: number; x4: number; y4: number } => {
   const leftRayAngle = rayAngle - TAP_RAY.SPREAD_ANGLE;
   const rightRayAngle = rayAngle + TAP_RAY.SPREAD_ANGLE;
@@ -49,14 +49,14 @@ const calculateRayCorners = (
   const rightRad = (rightRayAngle * Math.PI) / 180;
 
   return {
-    x1: vpX + Math.cos(leftRad) * farDist,
-    y1: vpY + Math.sin(leftRad) * farDist,
-    x2: vpX + Math.cos(rightRad) * farDist,
-    y2: vpY + Math.sin(rightRad) * farDist,
-    x3: vpX + Math.cos(rightRad) * nearDist,
-    y3: vpY + Math.sin(rightRad) * nearDist,
-    x4: vpX + Math.cos(leftRad) * nearDist,
-    y4: vpY + Math.sin(leftRad) * nearDist,
+    x1: vpX + Math.cos(leftRad) * farDistance,
+    y1: vpY + Math.sin(leftRad) * farDistance,
+    x2: vpX + Math.cos(rightRad) * farDistance,
+    y2: vpY + Math.sin(rightRad) * farDistance,
+    x3: vpX + Math.cos(rightRad) * nearDistance,
+    y3: vpY + Math.sin(rightRad) * nearDistance,
+    x4: vpX + Math.cos(leftRad) * nearDistance,
+    y4: vpY + Math.sin(leftRad) * nearDistance,
   };
 };
 
@@ -74,8 +74,8 @@ export const calculateTapNoteGeometry = (
 ): TapNoteGeometry => {
   const isFailedOrHit = isFailed || isSuccessfulHit;
   const effectiveProgress = calculateEffectiveProgress(progress, isFailedOrHit, noteTime, currentTime, failureTime);
-  const { nearDist, farDist } = calculateDistances(effectiveProgress, beatmapBpm);
-  const corners = calculateRayCorners(vpX, vpY, tapRayAngle, nearDist, farDist);
+  const { nearDistance, farDistance } = calculateDistances(effectiveProgress, beatmapBpm);
+  const corners = calculateRayCorners(vpX, vpY, tapRayAngle, nearDistance, farDistance);
 
   return {
     ...corners,
