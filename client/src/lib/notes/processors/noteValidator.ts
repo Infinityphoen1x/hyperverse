@@ -56,7 +56,7 @@ export class NoteValidator {
       n.lane === lane &&
       (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') &&
       this.isNoteActive(n) &&
-      currentTime >= n.time - this.config.HOLD_ACTIVATION_WINDOW &&
+      currentTime >= n.time - this.config.LEAD_TIME &&
       currentTime <= n.time + this.config.HOLD_ACTIVATION_WINDOW
     ) || null;
   }
@@ -110,7 +110,7 @@ export class NoteValidator {
     return notes.map(n => {
       // If note was marked as too early relative to old time,
       // but is now within valid window at new time, reset early flag
-      if (n.tooEarlyFailure && currentTime >= n.time - this.config.HOLD_ACTIVATION_WINDOW) {
+      if (n.tooEarlyFailure && currentTime >= n.time - this.config.LEAD_TIME) {
         return { ...n, tooEarlyFailure: false };
       }
       return n;

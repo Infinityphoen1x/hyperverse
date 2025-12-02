@@ -62,8 +62,9 @@ export class NoteProcessor {
   processHoldStart(note: Note, currentTime: number): NoteUpdateResult {
     const timeSinceNote = currentTime - note.time;
 
-    // Too early
-    if (timeSinceNote < -this.config.HOLD_ACTIVATION_WINDOW) {
+    // Too early - pressed before note appears (before LEAD_TIME)
+    // Note appears at note.time - LEAD_TIME, so reject if before that
+    if (timeSinceNote < -this.config.LEAD_TIME) {
       GameErrors.updateHitStats({ tooEarlyFailures: (GameErrors.hitStats.tooEarlyFailures || 0) + 1 });
       GameErrors.log(`[HOLD-HIT] noteId=${note.id} tooEarlyFailure at ${currentTime}ms`, currentTime);
       return {
@@ -78,8 +79,9 @@ export class NoteProcessor {
       };
     }
 
-    // Too late
-    if (timeSinceNote > this.config.HOLD_ACTIVATION_WINDOW) {
+    // Too late - pressed after note has passed (use leniency window)
+    const lateThreshold = this.config.HOLD_ACTIVATION_WINDOW;
+    if (timeSinceNote > lateThreshold) {
       GameErrors.updateHitStats({ holdMissFailures: (GameErrors.hitStats.holdMissFailures || 0) + 1 });
       GameErrors.log(`[HOLD-HIT] noteId=${note.id} holdMissFailure at ${currentTime}ms`, currentTime);
       return {
