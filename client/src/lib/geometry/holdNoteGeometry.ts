@@ -128,10 +128,18 @@ export const getTrapezoidCorners = (
   vanishingPointY: number,
   noteId?: string
 ): { x1: number; y1: number; x2: number; y2: number; x3: number; y3: number; x4: number; y4: number } | null => {
-  const leftRayAngle = rayAngle - 15;
-  const rightRayAngle = rayAngle + 15;
-  const leftRad = (leftRayAngle * Math.PI) / 180;
-  const rightRad = (rightRayAngle * Math.PI) / 180;
+  // Normalize angle to 0-360 range for consistent winding order
+  const normalizedAngle = ((rayAngle % 360) + 360) % 360;
+  
+  // For angles in 270-90 range (right side), we need to swap left/right to maintain clockwise winding
+  // This ensures consistent polygon winding across all lanes
+  const needsSwap = normalizedAngle >= 270 || normalizedAngle < 90;
+  
+  const baseLeftAngle = needsSwap ? rayAngle + 15 : rayAngle - 15;
+  const baseRightAngle = needsSwap ? rayAngle - 15 : rayAngle + 15;
+  
+  const leftRad = (baseLeftAngle * Math.PI) / 180;
+  const rightRad = (baseRightAngle * Math.PI) / 180;
   
   const corners = {
     x1: vanishingPointX + Math.cos(leftRad) * farDistance,
