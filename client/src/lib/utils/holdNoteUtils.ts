@@ -1,7 +1,6 @@
 // src/utils/holdNoteUtils.ts
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { useGameStore } from '@/stores/useGameStore';
 import { calculateApproachGeometry, calculateLockedNearDistance, calculateHoldNoteGlow, calculateCollapseGeometry } from "@/lib/geometry/holdNoteGeometry";
 import { calculateHoldNoteColors, determineGreyscaleState } from "@/lib/notes/hold/holdGreystate";
 import { markAnimationCompletedIfDone, trackHoldNoteAnimationLifecycle, getHoldNoteFailureStates } from "@/lib/notes/hold/holdNoteHelpers";
@@ -24,7 +23,7 @@ export interface HoldNoteProcessedData {
   currentTime: number;
 }
 
-export function processSingleHoldNote(note: Note, currentTime: number): HoldNoteProcessedData | null {
+export function processSingleHoldNote(note: Note, currentTime: number, beatmapBpm: number = 120): HoldNoteProcessedData | null {
   try {
     if (!note || !Number.isFinite(note.time) || !note.id) return null;
 
@@ -59,7 +58,6 @@ export function processSingleHoldNote(note: Note, currentTime: number): HoldNote
     // For early failures, calculate approach geometry at the time of failure (frozen, clamped to judgement)
     // For miss failures, calculate at current time allowing extension past judgement
     // For other cases, use current time with clamping
-    const beatmapBpm = useGameStore(state => state.beatmapBpm) || 120;
     let approachGeometry;
     if (failures.isTooEarlyFailure && failureTime) {
       const timeUntilHitAtFailure = note.time - failureTime;
@@ -92,14 +90,6 @@ export function processSingleHoldNote(note: Note, currentTime: number): HoldNote
     const approachProgress = (approachGeometry.nearDistance - 1) / (JUDGEMENT_RADIUS - 1);
 
     trackHoldNoteAnimationLifecycle(note, failures, currentTime);
-    
-    // Log render tracking with detailed metrics
-    const renderLog = `[HOLD-RENDER] noteId=${note.id} time=${note.time.toFixed(0)}ms lane=${note.lane} ` +
-      `currentTime=${currentTime.toFixed(0)}ms timeUntilHit=${timeUntilHit.toFixed(0)}ms ` +
-      `approachProg=${approachProgress.toFixed(3)} collapseProg=${collapseGeo.collapseProgress.toFixed(3)} ` +
-      `nearDist=${collapseGeo.nearDistance.toFixed(1)} farDist=${collapseGeo.farDistance.toFixed(1)} ` +
-      `duration=${holdDuration}ms pressHoldTime=${pressHoldTime} failures=${JSON.stringify(failures)}`;
-    GameErrors.log(renderLog, currentTime);
 
     return {
       note,

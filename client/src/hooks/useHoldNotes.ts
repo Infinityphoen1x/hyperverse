@@ -8,6 +8,7 @@ export type { HoldNoteProcessedData };
 
 export function useHoldNotes(visibleNotes: Note[], currentTime: number): HoldNoteProcessedData[] {
   const gameState = useGameStore(state => state.gameState);
+  const beatmapBpm = useGameStore(state => state.beatmapBpm) || 120;
   
   return useMemo(() => {
     // Don't render notes until game is actually playing (YouTube started)
@@ -22,7 +23,7 @@ export function useHoldNotes(visibleNotes: Note[], currentTime: number): HoldNot
     
     return visibleNotes
       .filter((n) => n && (n.type === 'HOLD' || n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') && n.id)
-      .map((note) => processSingleHoldNote(note, currentTime))
+      .map((note) => processSingleHoldNote(note, currentTime, beatmapBpm))
       .filter((data): data is HoldNoteProcessedData => data !== null);
-  }, [visibleNotes, currentTime, gameState]);
+  }, [visibleNotes, currentTime, gameState, beatmapBpm]);
 }
