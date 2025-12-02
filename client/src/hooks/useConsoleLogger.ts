@@ -22,19 +22,27 @@ export function useConsoleLogger() {
       );
     };
 
-    const captureLog = (level: string, ...args: any[]) => {
-      const message = args.map(arg =>
-        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-      ).join(' ');
-
-      if (level === 'error' || level === 'warn' || shouldCapture(message)) {
-        useConsoleLogStore.getState().addLog({
-          t: Date.now() - startTime,
-          l: level as 'log' | 'warn' | 'error',
-          m: message
-        });
+const captureLog = (level: string, ...args: any[]) => {
+  const message = args.map(arg => {
+    if (typeof arg === 'object' && arg !== null) {
+      try {
+        return JSON.stringify(arg);
+      } catch (e) {
+        // Fallback for circular refs (e.g., DOM elements, React Fiber)
+        return `[${arg.constructor?.name || 'Object'} - circular reference]`;
       }
-    };
+    }
+    return String(arg);
+  }).join(' ');
+
+  if (level === 'error' || level === 'warn' || shouldCapture(message)) {
+    useConsoleLogStore.getState().addLog({
+      t: Date.now() - startTime,
+      l: level as 'log' | 'warn' | 'error',
+      m: message
+    });
+  }
+};
 
     console.log = (...args) => {
       originalLog(...args);

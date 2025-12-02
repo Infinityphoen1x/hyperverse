@@ -70,7 +70,7 @@ export async function playYouTubeVideo(): Promise<void> {
         if (state === 1) { // Playing confirmed
           console.log(`[YOUTUBE-PLAY] Confirmed playing after ${attempts * 50}ms`);
           // Reset time tracker to mark as "fresh" - restarts 1000ms fallback window
-          const currentTimeSeconds = ytPlayerCheck?.getCurrentTime?.() ?? youtubeCurrentTimeMs / 1000 ?? 0;
+          const currentTimeSeconds = ytPlayerCheck?.getCurrentTime?.() ?? (youtubeCurrentTimeMs / 1000);
           resetYouTubeTimeTracker(currentTimeSeconds);
           resolve();
         } else if (attempts >= maxAttempts) {
