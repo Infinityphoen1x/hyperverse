@@ -63,16 +63,18 @@ export function useGameEngine({
   const setCombo = useGameStore(state => state.setCombo);
   const setHealth = useGameStore(state => state.setHealth);
 
+  const beatmapBpm = useGameStore(state => state.beatmapBpm) || 120;
+
   // Construct GameConfig from single source of truth
   const gameConfig = useMemo<GameConfig>(() => DEFAULT_CONFIG, []);
 
   // Initialize Engine Components
   const { processor, validator, scorer } = useMemo(() => {
     const scorer = new ScoringManager(gameConfig);
-    const validator = new NoteValidator(gameConfig);
-    const processor = new NoteProcessor(gameConfig, validator, scorer);
+    const validator = new NoteValidator(gameConfig, beatmapBpm);
+    const processor = new NoteProcessor(gameConfig, validator, scorer, beatmapBpm);
     return { processor, validator, scorer };
-  }, [gameConfig]);
+  }, [gameConfig, beatmapBpm]);
 
   // Store last frame timestamp for fallback timing
   const lastFrameTimeRef = useRef<number>(performance.now());

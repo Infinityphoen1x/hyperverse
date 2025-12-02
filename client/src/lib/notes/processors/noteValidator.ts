@@ -1,12 +1,17 @@
 import { Note, GameConfig, NoteType } from '@/lib/engine/gameTypes';
-import { TAP_RENDER_WINDOW_MS, LEAD_TIME } from '@/lib/config/gameConstants';
+import { TAP_RENDER_WINDOW_MS, LEAD_TIME, REFERENCE_BPM } from '@/lib/config/gameConstants';
 
 // ============================================================================
 // NOTE VALIDATOR - Pure functions for note state validation
 // ============================================================================
 
 export class NoteValidator {
-  constructor(private config: GameConfig) {}
+  private effectiveLEAD_TIME: number;
+  
+  constructor(private config: GameConfig, beatmapBpm: number = 120) {
+    // Scale LEAD_TIME with BPM to match geometry scaling
+    this.effectiveLEAD_TIME = LEAD_TIME * (REFERENCE_BPM / Math.max(1, beatmapBpm));
+  }
 
   isNoteActive(note: Note): boolean {
     return !note.hit && 
@@ -67,7 +72,7 @@ export class NoteValidator {
       n.lane === lane &&
       (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') &&
       this.isNoteActive(n) &&
-      currentTime >= n.time - LEAD_TIME &&
+      currentTime >= n.time - this.effectiveLEAD_TIME &&
       currentTime <= n.time + this.config.HOLD_ACTIVATION_WINDOW
     ) || null;
   }
@@ -79,7 +84,7 @@ export class NoteValidator {
       n.pressHoldTime !== undefined &&
       n.pressHoldTime > 0 &&
       this.isNoteActive(n) &&
-      currentTime - n.time >= -this.config.LEAD_TIME
+      currentTime - n.time >= -this.effectiveLEAD_TIME
     ) || null;
   }
 
@@ -102,10 +107,9 @@ export class NoteValidator {
    * @returns Notes that should be visible on screen
    */
   getVisibleNotes(notes: Note[], currentTime: number): Note[] {
-    const leadTime = this.config.LEAD_TIME;
     return notes.filter(n => 
       this.isNoteActive(n) &&
-      n.time >= currentTime - leadTime &&
+      n.time >= currentTime - this.effectiveLEAD_TIME &&
       n.time <= currentTime + 1000 // Show notes up to 1 second ahead
     );
   }
@@ -121,7 +125,7 @@ export class NoteValidator {
     return notes.map(n => {
       // If note was marked as too early relative to old time,
       // but is now within valid window at new time, reset early flag
-      if (n.tooEarlyFailure && currentTime >= n.time - LEAD_TIME) {
+      if (n.tooEarlyFailure && currentTime >= n.time - this.effectiveLEAD_TIME) {
         return { ...n, tooEarlyFailure: false };
       }
       // Same for TAP notes

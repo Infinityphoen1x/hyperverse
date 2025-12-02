@@ -4,7 +4,7 @@ import { ScoringManager } from '@/lib/managers/scoringManager';
 import { roundTime } from './noteUpdateHelpers';
 import { checkTapAutoFail, checkHoldAutoFail } from './noteAutoFailHelpers';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { TAP_RENDER_WINDOW_MS, LEAD_TIME } from '@/lib/config/gameConstants';
+import { TAP_RENDER_WINDOW_MS, LEAD_TIME, REFERENCE_BPM } from '@/lib/config/gameConstants';
 
 export type NoteUpdateResult = {
   updatedNote: Note;
@@ -17,11 +17,17 @@ export type NoteUpdateResult = {
 // ============================================================================
 
 export class NoteProcessor {
+  private effectiveLEAD_TIME: number;
+  
   constructor(
     private config: GameConfig,
     private validator: NoteValidator,
-    private scorer: ScoringManager
-  ) {}
+    private scorer: ScoringManager,
+    beatmapBpm: number = 120
+  ) {
+    // Scale LEAD_TIME with BPM to match geometry scaling
+    this.effectiveLEAD_TIME = LEAD_TIME * (REFERENCE_BPM / Math.max(1, beatmapBpm));
+  }
 
   processTapHit(note: Note, currentTime: number): NoteUpdateResult {
     const timeSinceNote = currentTime - note.time;
@@ -63,8 +69,8 @@ export class NoteProcessor {
   processHoldStart(note: Note, currentTime: number): NoteUpdateResult {
     const timeSinceNote = currentTime - note.time;
 
-    // Too early - pressed too far before note appears (LEAD_TIME before note.time)
-    if (timeSinceNote < -LEAD_TIME) {
+    // Too early - pressed too far before note appears (effectiveLEAD_TIME before note.time)
+    if (timeSinceNote < -this.effectiveLEAD_TIME) {
       GameErrors.updateHitStats({ tooEarlyFailures: (GameErrors.hitStats.tooEarlyFailures || 0) + 1 });
       GameErrors.log(`[HOLD-HIT] noteId=${note.id} tooEarlyFailure at ${currentTime}ms`, currentTime);
       return {
