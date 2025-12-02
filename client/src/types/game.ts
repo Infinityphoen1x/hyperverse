@@ -85,7 +85,8 @@ export interface GameStoreState {
   beatmapBpm: number;
   
   // Player settings
-  noteSpeedMultiplier: number; // 0.5 to 2.0, default 1.0 - controls visual approach speed
+  noteSpeedMultiplier: number; // 0.5 to 2.0 - temporary slider value in settings
+  defaultNoteSpeedMultiplier: number; // 0.5 to 2.0 - persisted default used in gameplay
   
   // Spin alternation - tracks key press count per lane for DJ deck direction alternation
   spinPressCountPerLane: { [lane: number]: number };
@@ -103,6 +104,7 @@ export interface GameStoreState {
   setCountdownSeconds: (seconds: number) => void;
   setBeatmapBpm: (bpm: number) => void;
   setNoteSpeedMultiplier: (multiplier: number) => void;
+  setDefaultNoteSpeedMultiplier: (multiplier: number) => void;
   incrementSpinPressCount: (lane: number) => void;
   
   // Game actions

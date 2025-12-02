@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import { useGameStore } from "@/stores/useGameStore";
 import { Slider } from "@/components/ui/slider";
 
@@ -8,10 +9,28 @@ interface SettingsProps {
 
 export default function Settings({ onBack }: SettingsProps) {
   const noteSpeedMultiplier = useGameStore(state => state.noteSpeedMultiplier);
+  const defaultNoteSpeedMultiplier = useGameStore(state => state.defaultNoteSpeedMultiplier);
   const setNoteSpeedMultiplier = useGameStore(state => state.setNoteSpeedMultiplier);
+  const setDefaultNoteSpeedMultiplier = useGameStore(state => state.setDefaultNoteSpeedMultiplier);
+
+  // Initialize slider to current default when settings opens
+  useEffect(() => {
+    setNoteSpeedMultiplier(defaultNoteSpeedMultiplier);
+  }, []);
 
   const handleSpeedChange = (value: number[]) => {
     setNoteSpeedMultiplier(value[0]);
+  };
+
+  const handleApply = () => {
+    setDefaultNoteSpeedMultiplier(noteSpeedMultiplier);
+    onBack();
+  };
+
+  const handleCancel = () => {
+    // Discard slider changes and exit
+    setNoteSpeedMultiplier(defaultNoteSpeedMultiplier);
+    onBack();
   };
 
   return (
@@ -71,7 +90,7 @@ export default function Settings({ onBack }: SettingsProps) {
 
         <div className="flex gap-4 justify-center">
           <motion.button 
-            onClick={onBack}
+            onClick={handleApply}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="px-12 py-4 bg-neon-pink text-black font-bold text-lg font-orbitron rounded-sm border-2 border-neon-pink shadow-[0_0_50px_rgba(255,0,127,0.8)] transition-colors whitespace-nowrap"
@@ -81,7 +100,7 @@ export default function Settings({ onBack }: SettingsProps) {
           </motion.button>
           
           <motion.button 
-            onClick={onBack}
+            onClick={handleCancel}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="px-12 py-4 bg-transparent text-white font-bold text-lg font-orbitron rounded-sm border-2 border-white/30 hover:border-neon-cyan hover:text-neon-cyan transition-colors whitespace-nowrap"
