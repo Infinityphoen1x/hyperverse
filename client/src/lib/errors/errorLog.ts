@@ -39,6 +39,11 @@ export const GameErrors = {
     this.renderStats = useGameDebuggerStore.getState().renderStats;
   },
 
+  updateHitStats(stats: any) {
+    useGameDebuggerStore.getState().updateHitStats(stats);
+    this.hitStats = useGameDebuggerStore.getState().hitStats;
+  },
+
   getAnimationStats() {
     const animations = useGameDebuggerStore.getState().animations;
     const total = animations.length;
