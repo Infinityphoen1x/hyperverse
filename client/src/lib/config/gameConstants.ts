@@ -26,12 +26,14 @@ export interface ButtonConfig {
 }
 
 export const BUTTON_CONFIG: ButtonConfig[] = [
-  { lane: 0, key: 'W', angle: 120, color: '#FF007F' }, // Soundpad W - top-left
-  { lane: 1, key: 'O', angle: 60, color: '#0096FF' },  // Soundpad O - top-right
-  { lane: 2, key: 'I', angle: 300, color: '#BE00FF' }, // Soundpad I - bottom-right
-  { lane: 3, key: 'E', angle: 240, color: '#00FFFF' }, // Soundpad E - bottom-left
-  { lane: -1, key: 'Q', angle: 180, color: '#00FF00' }, // Deck left
-  { lane: -2, key: 'P', angle: 0, color: '#FF0000' },  // Deck right
+  // SOUNDPAD LANES (tunnel): 4 hexagon rays, 60° apart, clockwise from top
+  { lane: 0, key: 'W', angle: 120, color: '#FF007F' }, // Lane 0 (W): 120° top-left, pink
+  { lane: 1, key: 'O', angle: 60, color: '#0096FF' },  // Lane 1 (O): 60° top-right, blue
+  { lane: 2, key: 'I', angle: 300, color: '#BE00FF' }, // Lane 2 (I): 300° bottom-right, purple
+  { lane: 3, key: 'E', angle: 240, color: '#00FFFF' }, // Lane 3 (E): 240° bottom-left, cyan
+  // DECK CONTROL LANES (turntable): outside tunnel, opposite sides
+  { lane: -1, key: 'Q', angle: 180, color: '#00FF00' }, // Lane -1 (Q): 180° left deck, green
+  { lane: -2, key: 'P', angle: 0, color: '#FF0000' },   // Lane -2 (P): 0° right deck, red
 ];
 
 // 3D tunnel geometry constants
