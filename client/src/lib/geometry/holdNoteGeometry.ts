@@ -1,6 +1,6 @@
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { LEAD_TIME, JUDGEMENT_RADIUS, HOLD_NOTE_STRIP_WIDTH_MULTIPLIER, REFERENCE_BPM } from '@/lib/config/gameConstants';
+import { LEAD_TIME, JUDGEMENT_RADIUS, HOLD_NOTE_STRIP_WIDTH_MULTIPLIER, REFERENCE_BPM, HOLD_RAY } from '@/lib/config/gameConstants';
 
 export interface ApproachGeometry {
   nearDistance: number;
@@ -185,10 +185,9 @@ export const getTrapezoidCorners = (
   // Both left and right rays follow the same angle, creating proper perspective convergence
   // Width scales naturally with distance: width = 2 * distance * tan(angleSpread)
   // This ensures synchronized rate of change between near and far ends
-  const HOLD_RAY_SPREAD_ANGLE = 18; // degrees per side (much wider than TAP's 8° for better visibility)
   
-  const leftAngle = needsSwap ? rayAngle + HOLD_RAY_SPREAD_ANGLE : rayAngle - HOLD_RAY_SPREAD_ANGLE;
-  const rightAngle = needsSwap ? rayAngle - HOLD_RAY_SPREAD_ANGLE : rayAngle + HOLD_RAY_SPREAD_ANGLE;
+  const leftAngle = needsSwap ? rayAngle + HOLD_RAY.SPREAD_ANGLE : rayAngle - HOLD_RAY.SPREAD_ANGLE;
+  const rightAngle = needsSwap ? rayAngle - HOLD_RAY.SPREAD_ANGLE : rayAngle + HOLD_RAY.SPREAD_ANGLE;
   
   const leftRad = (leftAngle * Math.PI) / 180;
   const rightRad = (rightAngle * Math.PI) / 180;

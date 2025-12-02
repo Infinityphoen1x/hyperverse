@@ -723,6 +723,11 @@ export const HOLD_GLOW = {
   INNER_SHADOW_SCALE: 15,         // Inner shadow scales 0-15px by distance
 } as const;
 
+/** HOLD note geometry - spread angle for wider cone than TAP notes */
+export const HOLD_RAY = {
+  SPREAD_ANGLE: 18,               // ±18° spread from lane ray (36° total) - wider than TAP's 8° for visibility
+} as const;
+
 // ============================================================================
 // VISUAL EFFECT COLORS
 // ============================================================================
