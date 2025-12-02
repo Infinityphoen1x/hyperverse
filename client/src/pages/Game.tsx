@@ -38,9 +38,13 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
   // YouTube hook first – provides getVideoTime with caching
   const { getVideoTime, resetTime, seek, isReady } = useYouTubePlayer({
     videoId: youtubeVideoId,
-    playerInitializedRef,
-    onPlaying: () => startGameRef.current?.()
+    playerInitializedRef
   });
+  
+  // Callback when YouTube confirms playing - triggers game start
+  const handleYouTubePlaying = useCallback(() => {
+    startGameRef.current?.();
+  }, []);
 
   // Game engine - receives YouTube time via hook (with caching)
   const { 
@@ -81,11 +85,13 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
     try {
       const { playYouTubeVideo } = await import('@/lib/youtube');
       await playYouTubeVideo();
-      console.log('[AUTO-START] YouTube video playing');
+      console.log('[AUTO-START] YouTube video playing - calling onPlaying callback');
+      // YouTube is confirmed playing - trigger game start
+      handleYouTubePlaying();
     } catch (err) {
       console.error('[AUTO-START] YouTube play failed:', err);
     }
-  }, []);
+  }, [handleYouTubePlaying]);
 
   // Game logic hooks (pause, keys, sync, errors)
   const {
