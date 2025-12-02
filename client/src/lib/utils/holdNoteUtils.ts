@@ -69,7 +69,9 @@ export function processSingleHoldNote(note: Note, currentTime: number): HoldNote
     const collapseDuration = failures.hasAnyFailure ? FAILURE_ANIMATION_DURATION : holdDuration;
     const lockedNearDistance = calculateLockedNearDistance(note, pressHoldTime, failures.isTooEarlyFailure, approachGeometry.nearDistance, failureTime, failures.isHoldMissFailure);
     const stripWidth = holdDuration * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
-    const farDistanceAtPress = lockedNearDistance ? Math.max(1, lockedNearDistance - stripWidth) : approachGeometry.farDistance;
+    // Use the actual approach geometry's far distance (what was being rendered)
+    // not a recalculated value - this prevents discontinuous jumps on hit/press
+    const farDistanceAtPress = approachGeometry.farDistance;
     
     // isActiveHold: true if pressed with no failure (collapse starts from noteTime to match meter fill)
     const isActiveHold = pressHoldTime > 0 && !failures.hasAnyFailure;
