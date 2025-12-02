@@ -41,8 +41,16 @@ export function useYouTubePlayer({ videoId, playerInitializedRef, onPlaying }: U
 
   useEffect(() => {
     if (!videoId || !playerInitializedRef.current || initRef.current) return;
-    setIsReady(true);
+    
+    // Delay setting isReady to allow YouTube iframe to fully initialize
+    // Without this, game starts before YouTube API is ready, causing note desync
+    const timeoutId = setTimeout(() => {
+      setIsReady(true);
+    }, 800); // 800ms buffer for YouTube initialization
+    
     initRef.current = true;
+    
+    return () => clearTimeout(timeoutId);
   }, [videoId]);
 
   return {
