@@ -36,30 +36,50 @@ export const BUTTON_CONFIG: ButtonConfig[] = [
   { lane: -2, key: 'P', angle: 0, color: '#FF0000' },   // Lane -2 (P): 0° right deck, red
 ];
 
-// 3D tunnel geometry constants
+/**
+ * 2D polar coordinate tunnel geometry for perspective rendering
+ * Uses 6 lanes (0-3 soundpads, -1 to -2 decks) radiating from vanishing point
+ */
 export interface TunnelGeometry {
+  /** Center X coordinate of tunnel perspective (vanishing point) */
   vanishingPointX: number;
+  /** Center Y coordinate of tunnel perspective (vanishing point) */
   vanishingPointY: number;
+  /** Max distance (from vanishing point) before notes despawn, pixels */
   tunnelMaxDistance: number;
+  /** SVG container width in pixels */
   tunnelContainerWidth: number;
+  /** SVG container height in pixels */
   tunnelContainerHeight: number;
+  /** Distance where notes are scored (judgement line), pixels from vanishing point */
   judgementRadius: number;
+  /** 6 concentric hexagon radii for visual layering (inner to outer), pixels */
   hexagonRadii: number[];
+  /** 6 ray angles (lanes) at 60° intervals: 0°, 60°, 120°, 180°, 240°, 300° */
   rayAngles: number[];
+  /** Thickness of TAP note hit zone around judgement line, pixels */
   tapJudgementLineWidth: number;
+  /** Thickness of HOLD note hit zone around judgement line, pixels */
   holdJudgementLineWidth: number;
 }
+
 export const TUNNEL_GEOMETRY: TunnelGeometry = {
-  vanishingPointX: 350,
-  vanishingPointY: 300,
-  tunnelMaxDistance: 260,
-  tunnelContainerWidth: 700,
-  tunnelContainerHeight: 600,
-  judgementRadius: 187,
-  hexagonRadii: [22, 52, 89, 135, 187, 248],
-  rayAngles: [0, 60, 120, 180, 240, 300],
-  tapJudgementLineWidth: 35,
-  holdJudgementLineWidth: 45,
+  // Vanishing point: center of perspective (where all rays converge)
+  vanishingPointX: 350,    // Center X of 700px wide container
+  vanishingPointY: 300,    // Center Y of 600px tall container
+  // Rendering range
+  tunnelMaxDistance: 260,  // Notes visible from VP to 260px (at distance=1 to distance=187)
+  tunnelContainerWidth: 700,   // SVG viewport width
+  tunnelContainerHeight: 600,  // SVG viewport height
+  // Scoring zone: where notes must reach to be hit
+  judgementRadius: 187,    // Matches 5th hexagon radius (notes are scored here)
+  // 6 concentric hexagon layers for visual hierarchy and depth illusion
+  hexagonRadii: [22, 52, 89, 135, 187, 248],  // Inner → Outer (pixel distances from VP)
+  // 6 lanes (soundpads + decks) evenly spaced 60° apart
+  rayAngles: [0, 60, 120, 180, 240, 300],     // Degrees from VP center
+  // Hit zones: thickness of scoring window around judgement line
+  tapJudgementLineWidth: 35,   // ±17.5px from judgement line
+  holdJudgementLineWidth: 45,  // ±22.5px from judgement line
 };
 
 // Convenience exports for commonly used tunnel constants
