@@ -1,4 +1,4 @@
-import { JUDGEMENT_RADIUS, TAP_DEPTH, TAP_RAY, LEAD_TIME, REFERENCE_BPM } from '@/lib/config/gameConstants';
+import { JUDGEMENT_RADIUS, TAP_DEPTH, TAP_RAY } from '@/lib/config/gameConstants';
 
 export interface TapNoteGeometry {
   x1: number; y1: number;
@@ -31,18 +31,15 @@ const calculateEffectiveProgress = (
 
 const calculateDistances = (
   effectiveProgress: number,
-  worldSpaceDepth: number,
   beatmapBpm: number = 120
 ): { nearDist: number; farDist: number } => {
   const clampedProgress = Math.max(0, Math.min(1, effectiveProgress));
   
-  // Scale world-space depth by approach progress and BPM
+  // Scale world-space depth by approach progress
   // At vanishing point (progress=0): scaled depth is tiny
-  // At judgement (progress=1): scaled depth is full size
-  const effectiveLEAD_TIME = LEAD_TIME * (REFERENCE_BPM / Math.max(1, beatmapBpm));
-  // Use effectiveProgress to scale with approach speed
+  // At judgement (progress=1): scaled depth is full size (TAP_DEPTH.MAX)
   const perspectiveScale = clampedProgress; // 0 at VP, 1 at judgement
-  const scaledDepth = worldSpaceDepth * perspectiveScale;
+  const scaledDepth = TAP_DEPTH.MAX * perspectiveScale;
   
   const nearDist = 1 + (effectiveProgress * (JUDGEMENT_RADIUS - 1));
   const farDist = Math.max(1, nearDist - scaledDepth);
@@ -83,12 +80,11 @@ export const calculateTapNoteGeometry = (
   isFailed: boolean = false,
   noteTime: number = 0,
   failureTime?: number,
-  beatmapBpm: number = 120,
-  worldSpaceDepth: number = 40
+  beatmapBpm: number = 120
 ): TapNoteGeometry => {
   const isFailedOrHit = isFailed || isSuccessfulHit;
   const effectiveProgress = calculateEffectiveProgress(progress, isFailedOrHit, noteTime, currentTime, failureTime);
-  const { nearDist, farDist } = calculateDistances(effectiveProgress, worldSpaceDepth, beatmapBpm);
+  const { nearDist, farDist } = calculateDistances(effectiveProgress, beatmapBpm);
   const corners = calculateRayCorners(vpX, vpY, tapRayAngle, nearDist, farDist);
 
   return {

@@ -105,20 +105,16 @@ export const HOLD_NOTE_GEOMETRY: HoldNoteGeometry = {
 
 /**
  * TAP note visual timing - controls when notes appear and disappear
- * TAP notes have a world-space z-depth representing how much tunnel they occupy
  */
 export interface TapNoteGeometry {
   /** Time before note.time that TAP note becomes visible (appears at VP), milliseconds */
   renderWindowMs: number;
   /** Time after judgement line passes before TAP note despawns, milliseconds */
   fallthroughWindowMs: number;
-  /** World-space z-depth of TAP note at judgement (pixels along z-axis) - scales with approach/BPM */
-  worldSpaceDepth: number;
 }
 export const TAP_NOTE_GEOMETRY: TapNoteGeometry = {
   renderWindowMs: 4000,      // TAP notes visible 4000ms before hit (matches LEAD_TIME)
   fallthroughWindowMs: 200,  // Notes visible 200ms past judgement line before disappearing
-  worldSpaceDepth: 40,       // TAP notes occupy ~40px z-depth at judgement (scales with approach/BPM)
 };
 
 /** RGB colors for 4 soundpad lanes (index = lane number) */
