@@ -91,16 +91,25 @@ HYPERVERSE is a 3D rhythm game with beatmap loading, YouTube music sync, and dec
 - **Now uses**: `TAP_HIT_FLASH.DURATION` (600ms) for successful hit rendering
 - **Impact**: Notes stay visible for entire white flash animation (previously disappeared at 200ms, cutting flash short)
 
-### 3. YouTube Sync - Two-Phase Protection
-- **Issue**: Game starting before YouTube iframe initialized → notes jumped backwards as YouTube time synced
-- **Fix 1**: Added 800ms delay before `youtubeIsReady` flag in `useYouTubePlayer`
-  - Allows YouTube API initialization without rushing game start
-  - Conservative buffer ensures iframe fully loaded before any timing operations
+### 3. YouTube Sync - YouTube-First Flow (Optimal)
+- **Strategy**: YouTube plays FIRST, then game starts (not the other way around)
+  - Ensures video is playing before any note timing begins
+  - Eliminates timing mismatches from delayed YouTube startup
 
-- **Fix 2**: `onPlaying` callback confirms YouTube actually playing after `playYouTubeVideo()`
-  - `playYouTubeVideo()` polls for `state === 1` (playing) confirmation
-  - Only when both conditions met: iframe ready (800ms) + YouTube confirmed playing → timer syncs
-  - Prevents note sync from starting before YouTube playback actually begins
+**Implementation:**
+- **Auto-start trigger** (when IDLE + notes loaded + YouTube ready):
+  - **With YouTube video**: Calls `onPlayYouTube()` → `playYouTubeVideo()` → waits for playing
+  - **Without YouTube**: Calls `startGame()` directly
+  
+- **YouTube playback confirmation** (`onPlaying` callback):
+  - Fires AFTER `playYouTubeVideo()` confirms `state === 1` (playing)
+  - Then calls `startGame()` → game timer syncs to YouTube time
+  - Flow: `onPlayYouTube()` → YouTube plays → `onPlaying` fires → `startGame()`
+
+- **Protection layers**:
+  - 800ms buffer in `useYouTubePlayer` before `youtubeIsReady` (iframe init)
+  - `playYouTubeVideo()` polls for playing confirmation (not just ready)
+  - Double-check prevents game starting before actual playback
 
 ---
 
@@ -193,16 +202,17 @@ client/src/
 
 ---
 
-## Session Context (Latest Work - Gameplay Tuning & YouTube Sync)
+## Session Context (Latest Work - Gameplay Tuning & YouTube Sync Optimization)
 
 ### Gameplay Balance
 - ✅ Reduced low health glitch threshold from 80% → 25% for better game feel
 - ✅ Fixed TAP note flash visibility (now shows full 600ms animation, not cut at 200ms)
 
-### YouTube Synchronization
-- ✅ Added 800ms initialization buffer before YouTube auto-start
-- ✅ Disabled auto-start for YouTube games - waits for explicit playback confirmation
-- ✅ Flow now: User clicks START → playYouTubeVideo() confirms playing → onPlaying fires → game starts in sync
+### YouTube Synchronization - Optimal Flow
+- ✅ Restructured to YouTube-first: video plays before game starts
+- ✅ Auto-start now triggers YouTube playback (not game start)
+- ✅ Game starts via onPlaying callback AFTER YouTube confirms playing
+- ✅ Flow: Auto-start → YouTube plays → onPlaying confirms → game starts (perfectly synced)
 
 ### Previous Sessions
 - ✅ Fixed difficulty switching: Game component remounts with new key while iFrame persists

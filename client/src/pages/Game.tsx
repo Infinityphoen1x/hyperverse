@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useGameEngine } from "@/hooks/useGameEngine";
 import { Difficulty, Note } from "@/lib/engine/gameTypes";
 import { parseBeatmap } from "@/lib/beatmap/beatmapParser";
@@ -76,6 +76,17 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
     };
   }, [currentTime, resetTime]);
 
+  // Function to play YouTube when auto-start triggers (before game starts)
+  const onPlayYouTube = useCallback(async () => {
+    try {
+      const { playYouTubeVideo } = await import('@/lib/youtube');
+      await playYouTubeVideo();
+      console.log('[AUTO-START] YouTube video playing');
+    } catch (err) {
+      console.error('[AUTO-START] YouTube play failed:', err);
+    }
+  }, []);
+
   // Game logic hooks (pause, keys, sync, errors)
   const {
     isPauseMenuOpen,
@@ -102,7 +113,9 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
     customNotes,
     engineRef: engineRefForLogic,
     onHome: onBackToHome,
-    youtubeIsReady: youtubeVideoId ? isReady : true // If no YouTube video, consider ready; otherwise wait for YouTube
+    youtubeIsReady: youtubeVideoId ? isReady : true, // If no YouTube video, consider ready; otherwise wait for YouTube
+    youtubeVideoId,
+    onPlayYouTube
   });
 
   // Memoized values - ensure notes is always an array
@@ -146,35 +159,6 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
       // Silently fail on seek errors - game can continue
     });
   }, [difficulty, restartGame, resetTime, seek]);
-
-  // Auto-play YouTube only on first START SESSION, not on difficulty changes
-  const gameSessionKeyRef = useRef(`${youtubeVideoId}-${difficulty}`);
-  const autoPlayOnceRef = useRef(true);
-  
-  useEffect(() => {
-    // Check if we're in a new game session (different video or difficulty)
-    const currentSessionKey = `${youtubeVideoId}-${difficulty}`;
-    if (gameSessionKeyRef.current !== currentSessionKey) {
-      gameSessionKeyRef.current = currentSessionKey;
-      autoPlayOnceRef.current = true; // Reset auto-play for new session
-    }
-  }, [youtubeVideoId, difficulty]);
-
-  useEffect(() => {
-    if (gameState === 'PLAYING' && autoPlayOnceRef.current && youtubeVideoId) {
-      autoPlayOnceRef.current = false;
-      const playVideo = async () => {
-        try {
-          const { playYouTubeVideo } = await import('@/lib/youtube');
-          await playYouTubeVideo();
-          console.log('[START-SESSION] Video playing');
-        } catch (err) {
-          console.error('[START-SESSION] Play failed:', err);
-        }
-      };
-      playVideo();
-    }
-  }, [gameState, youtubeVideoId]);
 
   if (gameState === 'GAME_OVER') {
     return <GameOverScreen onRestart={() => window.location.reload()} />;

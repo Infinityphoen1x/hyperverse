@@ -27,6 +27,8 @@ interface UseGameLogicProps {
   setPauseMenuOpen?: (open: boolean) => void;
   onHome?: () => void;
   youtubeIsReady?: boolean;
+  youtubeVideoId?: string | null;
+  onPlayYouTube?: () => Promise<void>;
 }
 
 interface UseGameLogicReturn {
@@ -57,6 +59,8 @@ export function useGameLogic({
   engineRef,
   setPauseMenuOpen,
   youtubeIsReady = true,
+  youtubeVideoId,
+  onPlayYouTube,
 }: UseGameLogicProps): UseGameLogicReturn {
   const [isPauseMenuOpen, setIsPauseMenuOpenLocal] = useState(false);
   const [resumeFadeOpacity, setResumeFadeOpacity] = useState(0);
@@ -107,8 +111,8 @@ export function useGameLogic({
     setResumeFadeOpacity,
   });
 
-  // Auto-start (YouTube sync protection: 800ms buffer + onPlaying callback confirm playback)
-  useAutoStart({ customNotes: customNotes ?? [], startGame, youtubeIsReady });
+  // Auto-start (YouTube: play first via callback, then game starts via onPlaying | Non-YouTube: start directly)
+  useAutoStart({ customNotes: customNotes ?? [], startGame, youtubeIsReady, youtubeVideoId, onPlayYouTube });
 
   // Reset on game state changes
   useEffect(() => {
