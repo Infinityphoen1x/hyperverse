@@ -2,7 +2,7 @@ import React, { memo, useCallback } from 'react';
 import { HoldNote } from './HoldNote';
 import { useHoldNotes } from '@/hooks/useHoldNotes';
 import { useGameStore } from '@/stores/useGameStore';
-import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';
+import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT, LEAD_TIME } from '@/lib/config/gameConstants';
 
 interface HoldNotesProps {
   vpX?: number;
@@ -16,7 +16,6 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
 
   const visibleNotes = React.useMemo(() => {
     if (!notes || !Array.isArray(notes)) return [];
-    const leadTime = 2000;
     const holdNotes = notes.filter(n => n.type === 'HOLD' || n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT');
     const tapNotes = notes.filter(n => n.type === 'TAP');
     
@@ -27,19 +26,19 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
       const noteStartTime = n.time;
       const noteEndTime = isHoldNote ? n.time + holdDuration : n.time;
       
-      if (n.tooEarlyFailure) return noteStartTime <= currentTime + leadTime && noteStartTime >= currentTime - 4000;
-      if (n.holdMissFailure || n.holdReleaseFailure) return noteStartTime <= currentTime + leadTime && noteStartTime >= currentTime - 2000;
+      if (n.tooEarlyFailure) return noteStartTime <= currentTime + LEAD_TIME && noteStartTime >= currentTime - 4000;
+      if (n.holdMissFailure || n.holdReleaseFailure) return noteStartTime <= currentTime + LEAD_TIME && noteStartTime >= currentTime - 2000;
       
-      // For hold notes: keep visible from leadTime before start to 500ms after end
-      // Upper bound: leadTime before start (so it appears at vanishing point)
+      // For hold notes: keep visible from LEAD_TIME before start to 500ms after end
+      // Upper bound: LEAD_TIME before start (so it appears at vanishing point)
       // Lower bound: 500ms after it ends (holdDuration past start)
       if (isHoldNote) {
-        const isVisible = noteStartTime <= currentTime + leadTime && noteEndTime >= currentTime - 500;
+        const isVisible = noteStartTime <= currentTime + LEAD_TIME && noteEndTime >= currentTime - 500;
         return isVisible;
       }
       
-      // For normal tap notes: keep visible from leadTime before start to 500ms after start
-      return noteStartTime <= currentTime + leadTime && noteStartTime >= currentTime - 500;
+      // For normal tap notes: keep visible from LEAD_TIME before start to 500ms after start
+      return noteStartTime <= currentTime + LEAD_TIME && noteStartTime >= currentTime - 500;
     });
   }, [notes, currentTime]);
 
