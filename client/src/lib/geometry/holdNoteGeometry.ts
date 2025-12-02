@@ -120,7 +120,9 @@ export const calculateLockedNearDistance = (
     return Math.max(1, 1 + (approachProgressAtFailure * (JUDGEMENT_RADIUS - 1)));
   }
   
-  return approachNearDistance;
+  // For active holds (pressed with no failure), lock near distance at judgement line during collapse
+  // The near end should remain fixed at the hit point (JUDGEMENT_RADIUS) while far end collapses inward
+  return JUDGEMENT_RADIUS;
 };
 
 export interface GlowCalculation {
