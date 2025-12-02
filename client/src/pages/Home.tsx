@@ -15,6 +15,18 @@ export default function Home({ onStartGame }: HomeProps) {
   const colors = ["#00FFFF", "#FF00FF", "#00FF00", "#00CCFF", "#FF0080"];
   const [colorIndex, setColorIndex] = useState(0);
 
+  // Check if beatmap is already loaded in localStorage on mount
+  useEffect(() => {
+    const pendingBeatmap = localStorage.getItem('pendingBeatmap');
+    if (pendingBeatmap) {
+      try {
+        setBeatmapLoaded(true);
+      } catch {
+        setBeatmapLoaded(false);
+      }
+    }
+  }, []);
+
   const bannerMessages = [
     { text: "[ENCRYPTING NEURAL PATHWAYS] • QUANTUM SYNC PROTOCOL ACTIVE • SYNCHRONIZING BRAINWAVES", color: "#00FFFF" },
     { text: "[NEURAL INTERFACE ONLINE] • FREQUENCY LOCKED • HARMONIC RESONANCE DETECTED", color: "#FF00FF" },
@@ -124,20 +136,34 @@ export default function Home({ onStartGame }: HomeProps) {
           ))}
         </div>
 
-        <motion.button 
-          onClick={() => onStartGame(selectedDifficulty)}
-          disabled={!beatmapLoaded}
-          whileHover={beatmapLoaded ? { scale: 1.05 } : {}}
-          whileTap={beatmapLoaded ? { scale: 0.95 } : {}}
-          className={`mt-8 px-12 py-6 text-black font-bold text-2xl font-orbitron rounded-sm border-2 transition-colors ${
-            beatmapLoaded
-              ? 'bg-neon-pink shadow-[0_0_50px_rgba(255,0,127,0.8)] border-neon-pink cursor-pointer'
-              : 'bg-neon-cyan shadow-[0_0_50px_cyan] border-white hover:bg-white opacity-50 cursor-not-allowed'
-          }`}
-          data-testid="button-start-session"
-        >
-          START SESSION {beatmapLoaded && '● BEATMAP READY'}
-        </motion.button>
+        <div className="flex flex-col gap-4 w-64 mx-auto">
+          <motion.button 
+            onClick={() => onStartGame(selectedDifficulty)}
+            disabled={!beatmapLoaded}
+            whileHover={beatmapLoaded ? { scale: 1.05 } : {}}
+            whileTap={beatmapLoaded ? { scale: 0.95 } : {}}
+            className={`mt-8 px-12 py-6 text-black font-bold text-2xl font-orbitron rounded-sm border-2 transition-colors ${
+              beatmapLoaded
+                ? 'bg-neon-pink shadow-[0_0_50px_rgba(255,0,127,0.8)] border-neon-pink cursor-pointer'
+                : 'bg-neon-cyan shadow-[0_0_50px_cyan] border-white hover:bg-white opacity-50 cursor-not-allowed'
+            }`}
+            data-testid="button-start-session"
+          >
+            START SESSION {beatmapLoaded && '● BEATMAP READY'}
+          </motion.button>
+          
+          {beatmapLoaded && (
+            <motion.button 
+              onClick={() => { setIsLoaderOpen(true); }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-8 py-3 text-white font-bold font-orbitron rounded-sm border-2 border-neon-cyan bg-transparent hover:bg-neon-cyan/10 transition-colors text-sm"
+              data-testid="button-load-new-beatmap"
+            >
+              LOAD NEW BEATMAP
+            </motion.button>
+          )}
+        </div>
       </motion.div>
       
       {/* Footer */}
