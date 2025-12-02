@@ -55,8 +55,9 @@ export function useTapNotes(): TapNoteProcessedData[] {
         const rawProgress = 1 - ((note.time - currentTime) / effectiveLEAD_TIME);
         const clampedProgress = Math.max(0, Math.min(1, rawProgress));
         
-        // For geometry, we allow it to go > 1 to show it falling through/passing judgement line
-        const progressForGeometry = rawProgress;
+        // For geometry: cap failed notes at 1.0 to prevent rapid depth change
+        // tapMissFailure notes already reached judgement when they failed, don't let progress > 1
+        const progressForGeometry = (state.isFailed) ? Math.max(0, Math.min(1, rawProgress)) : rawProgress;
 
         if (!shouldRenderTapNote(state, note.time - currentTime, beatmapBpm)) {
             return null;
