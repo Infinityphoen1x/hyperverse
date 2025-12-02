@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useGameEngine } from "@/hooks/useGameEngine";
 import { Difficulty, Note } from "@/lib/engine/gameTypes";
+import { parseBeatmap } from "@/lib/beatmap/beatmapParser";
+import { convertBeatmapNotes } from "@/lib/beatmap/beatmapConverter";
 
 import { useYouTubePlayer } from "@/hooks/useYoutubePlayer";
 import { useGameLogic } from "@/hooks/useGameLogic";
@@ -117,8 +119,6 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
         
         // Re-parse beatmap with the new difficulty to get correct notes
         if (beatmapData.beatmapText) {
-          const { parseBeatmap } = require('@/lib/beatmap/beatmapParser');
-          const { convertBeatmapNotes } = require('@/lib/beatmap/beatmapConverter');
           const parsed = parseBeatmap(beatmapData.beatmapText, difficulty);
           if (!parsed.error && parsed.notes) {
             const beatmapStartOffset = parsed.metadata?.beatmapStart || 0;
