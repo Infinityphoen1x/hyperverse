@@ -1,20 +1,37 @@
 // src/lib/config/gameConstants.ts
 // Shared game constants used across components
 
-// Button configuration - all 6 lanes (4 soundpads + 2 deck controls)
+/**
+ * Button configuration for all 6 lanes (4 soundpads + 2 deck controls)
+ * 
+ * SOUNDPAD LANES (0-3): Hexagonal tunnel, clockwise from top
+ *  - Lane 0 (W): 120° top-left pink - SOUNDPAD_W
+ *  - Lane 1 (O): 60° top-right blue - SOUNDPAD_O
+ *  - Lane 2 (I): 300° bottom-right purple - SOUNDPAD_I
+ *  - Lane 3 (E): 240° bottom-left cyan - SOUNDPAD_E
+ * 
+ * DECK CONTROL LANES (negative): Turntable controls outside tunnel
+ *  - Lane -1 (Q): 180° left deck green - DECK_LEFT
+ *  - Lane -2 (P): 0° right deck red - DECK_RIGHT
+ */
 export interface ButtonConfig {
+  /** Lane ID: 0-3 for soundpads, negative for deck controls (-1, -2) */
   lane: number;
+  /** Keyboard key binding for this button */
   key: string;
+  /** Angle in degrees from center (0-360), used for hexagon positioning and deck rotation */
   angle: number;
+  /** Hex color code for button and note rendering */
   color: string;
 }
+
 export const BUTTON_CONFIG: ButtonConfig[] = [
-  { lane: 0, key: 'W', angle: 120, color: '#FF007F' }, // W - top-left pink
-  { lane: 1, key: 'O', angle: 60, color: '#0096FF' }, // O - top-right blue
-  { lane: 2, key: 'I', angle: 300, color: '#BE00FF' }, // I - bottom-right purple
-  { lane: 3, key: 'E', angle: 240, color: '#00FFFF' }, // E - bottom-left cyan
-  { lane: -1, key: 'Q', angle: 180, color: '#00FF00' }, // Q - left deck green
-  { lane: -2, key: 'P', angle: 0, color: '#FF0000' }, // P - right deck red
+  { lane: 0, key: 'W', angle: 120, color: '#FF007F' }, // Soundpad W - top-left
+  { lane: 1, key: 'O', angle: 60, color: '#0096FF' },  // Soundpad O - top-right
+  { lane: 2, key: 'I', angle: 300, color: '#BE00FF' }, // Soundpad I - bottom-right
+  { lane: 3, key: 'E', angle: 240, color: '#00FFFF' }, // Soundpad E - bottom-left
+  { lane: -1, key: 'Q', angle: 180, color: '#00FF00' }, // Deck left
+  { lane: -2, key: 'P', angle: 0, color: '#FF0000' },  // Deck right
 ];
 
 // 3D tunnel geometry constants
