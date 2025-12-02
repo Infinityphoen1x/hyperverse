@@ -153,7 +153,7 @@ export const getTrapezoidCorners = (
   // Both left and right rays follow the same angle, creating proper perspective convergence
   // Width scales naturally with distance: width = 2 * distance * tan(angleSpread)
   // This ensures synchronized rate of change between near and far ends
-  const HOLD_RAY_SPREAD_ANGLE = 10; // degrees per side (wider than TAP's 8° for better visibility)
+  const HOLD_RAY_SPREAD_ANGLE = 18; // degrees per side (much wider than TAP's 8° for better visibility)
   
   const leftAngle = needsSwap ? rayAngle + HOLD_RAY_SPREAD_ANGLE : rayAngle - HOLD_RAY_SPREAD_ANGLE;
   const rightAngle = needsSwap ? rayAngle - HOLD_RAY_SPREAD_ANGLE : rayAngle + HOLD_RAY_SPREAD_ANGLE;
