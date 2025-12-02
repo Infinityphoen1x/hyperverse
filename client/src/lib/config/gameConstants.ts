@@ -437,6 +437,10 @@ export const GAME_ENGINE_TIMING: GameEngineTiming = {
   stateUpdateInterval: 50,       // 20Hz state updates
 };
 
+// BPM and tunnel speed calibration
+export const REFERENCE_BPM = 120;               // Reference BPM for LEAD_TIME scaling (hardest difficulty)
+export const DEFAULT_BEATMAP_BPM = 120;        // Default BPM if beatmap metadata missing
+
 // Hold animation duration (already in FAILURE_ANIMATION_DURATION)
 
 // Grouped convenience interfaces for related visual effects

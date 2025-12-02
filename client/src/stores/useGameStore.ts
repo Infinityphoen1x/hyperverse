@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { GameStoreState } from '@/types/game';
+import { DEFAULT_BEATMAP_BPM } from '@/lib/config/gameConstants';
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
   // Initial state
@@ -14,7 +15,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   maxHealth: 200,
   missCount: 0,
   countdownSeconds: 0,
-  beatmapBpm: 120, // Default BPM - will be updated when beatmap loads
+  beatmapBpm: DEFAULT_BEATMAP_BPM, // Default BPM - will be updated when beatmap loads
 
   // Setters
   setGameState: (gameState) => set({ gameState }),

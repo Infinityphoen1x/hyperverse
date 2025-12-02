@@ -1,6 +1,6 @@
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { LEAD_TIME, JUDGEMENT_RADIUS, HOLD_NOTE_STRIP_WIDTH_MULTIPLIER } from '@/lib/config/gameConstants';
+import { LEAD_TIME, JUDGEMENT_RADIUS, HOLD_NOTE_STRIP_WIDTH_MULTIPLIER, REFERENCE_BPM } from '@/lib/config/gameConstants';
 
 export interface ApproachGeometry {
   nearDistance: number;
@@ -24,7 +24,6 @@ export const calculateApproachGeometry = (
   // Calculate effective LEAD_TIME based on BPM
   // At reference BPM (120), LEAD_TIME = 4000ms
   // At higher BPM, notes approach faster, so visual window shrinks proportionally
-  const REFERENCE_BPM = 120;
   const effectiveLEAD_TIME = LEAD_TIME * (REFERENCE_BPM / Math.max(1, beatmapBpm));
   
   const rawNearProgress = (effectiveLEAD_TIME - timeUntilHit) / effectiveLEAD_TIME;
