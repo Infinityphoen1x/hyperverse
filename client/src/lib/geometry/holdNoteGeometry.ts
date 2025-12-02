@@ -137,6 +137,11 @@ export const getTrapezoidCorners = (
   vanishingPointY: number,
   noteId?: string
 ): { x1: number; y1: number; x2: number; y2: number; x3: number; y3: number; x4: number; y4: number } | null => {
+  // Prevent rendering notes with negative or very close-to-zero distance (not in valid visual window)
+  if (nearDistance < 1 || farDistance < 1) {
+    return null;
+  }
+  
   // Normalize angle to 0-360 range for consistent winding order
   const normalizedAngle = ((rayAngle % 360) + 360) % 360;
   
@@ -144,8 +149,15 @@ export const getTrapezoidCorners = (
   // This ensures consistent polygon winding across all lanes
   const needsSwap = normalizedAngle >= 270 || normalizedAngle < 90;
   
-  const baseLeftAngle = needsSwap ? rayAngle + 15 : rayAngle - 15;
-  const baseRightAngle = needsSwap ? rayAngle - 15 : rayAngle + 15;
+  // Calculate angle spread based on distance to maintain constant visual width (prevent hourglass)
+  // Desired visual strip width: ~40 pixels at screen
+  // angleSpread = arctan(stripWidth / (2 * distance)) in radians → degrees
+  const desiredStripWidth = 40;
+  const angleSpreadRad = Math.atan(desiredStripWidth / (2 * Math.max(nearDistance, farDistance)));
+  const angleSpreadDeg = angleSpreadRad * (180 / Math.PI);
+  
+  const baseLeftAngle = needsSwap ? rayAngle + angleSpreadDeg : rayAngle - angleSpreadDeg;
+  const baseRightAngle = needsSwap ? rayAngle - angleSpreadDeg : rayAngle + angleSpreadDeg;
   
   const leftRad = (baseLeftAngle * Math.PI) / 180;
   const rightRad = (baseRightAngle * Math.PI) / 180;
@@ -161,10 +173,20 @@ export const getTrapezoidCorners = (
     y4: vanishingPointY + Math.sin(leftRad) * nearDistance,
   };
   
+  // Validate all coordinates are finite (no NaN or Infinity)
   const allFinite = Object.values(corners).every(v => Number.isFinite(v));
   if (!allFinite) {
     if (noteId) {
       GameErrors.log(`getTrapezoidCorners: Invalid coordinates for note ${noteId}: ${JSON.stringify(corners)}`);
+    }
+    return null;
+  }
+  
+  // Prevent rendering if any corner has negative coordinates (outside valid window)
+  const allNonNegative = Object.values(corners).every(v => v >= 0);
+  if (!allNonNegative) {
+    if (noteId) {
+      GameErrors.log(`getTrapezoidCorners: Negative coordinates for note ${noteId}: ${JSON.stringify(corners)}`);
     }
     return null;
   }
