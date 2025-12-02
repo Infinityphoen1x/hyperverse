@@ -28,14 +28,12 @@ export function useAutoStart({
 
     // For YouTube videos: play first, then game starts via onPlaying callback
     if (youtubeVideoId && onPlayYouTube) {
-      console.log('[AUTO-START] YouTube video detected - initiating playback');
       onPlayYouTube().catch(err => console.error('[AUTO-START] YouTube play failed:', err));
       // Game will start via onPlaying callback after YouTube confirms playback
       return;
     }
 
     // For non-YouTube: start game immediately
-    console.log('[AUTO-START] No YouTube video - starting game directly');
     startGame();
   }, [customNotes, gameState, startGame, youtubeIsReady, youtubeVideoId, onPlayYouTube]);
 }

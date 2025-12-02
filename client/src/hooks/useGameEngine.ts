@@ -79,7 +79,6 @@ export function useGameEngine({
 
   useEffect(() => {
     if (customNotes && customNotes.length > 0) {
-        console.log(`[GAME-ENGINE] Loading ${customNotes.length} custom notes`);
         setNotes(customNotes);
         GameErrors.updateNoteStats(customNotes);
     }
