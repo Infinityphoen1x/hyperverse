@@ -41,7 +41,8 @@ export const calculateApproachGeometry = (
     const TUNNEL_DISTANCE = JUDGEMENT_RADIUS - 1; // 186 pixels
     const approachSpeed = TUNNEL_DISTANCE / effectiveLEAD_TIME; // pixels per millisecond
     const fixedDepthOffset = Math.max(1, holdDuration * approachSpeed);
-    const farDistance = Math.max(1, nearDistance + fixedDepthOffset);
+    // Far end is closer to vanishing point (smaller distance), near end is at judgement
+    const farDistance = Math.max(1, nearDistance - fixedDepthOffset);
     return { nearDistance, farDistance };
   } else {
     // LEGACY: Dynamic depth mode (both ends approach based on timing)
