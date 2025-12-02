@@ -15,12 +15,9 @@ const calculateEffectiveProgress = (
   currentTime: number,
   failureTime?: number
 ): number => {
-  if (isFailedOrHit && Number.isFinite(noteTime) && Number.isFinite(currentTime)) {
-    // Both early and late failures/hits: freeze progress at moment of event
-    // This prevents speed-up effect from switching calculation methods
-    // Progress stays constant while opacity/effects handle visibility
-    return Math.max(0, progress);
-  }
+  // Use same approach speed regardless of hit/failure state
+  // This prevents speed-up when switching calculation methods
+  // Note continues approaching at normal rate, opacity/effects handle visibility
   return Math.max(0, Math.min(1, progress));
 };
 
