@@ -78,30 +78,32 @@ HYPERVERSE is a 3D rhythm game with beatmap loading, YouTube music sync, and dec
 
 ---
 
-## Recent Changes (Hold Note Geometry Refinement)
+## Recent Changes (Latest Session - Gameplay Tuning & YouTube Sync)
 
-### Issue Identified
-- Hold notes had incorrect depth rendering
-- Far end was collapsing into vanishing point instead of maintaining proper 3D strip appearance
-- Near end was stopping at judgement instead of continuing through on miss
+### 1. Gameplay Balance Adjustments
+- **LOW_HEALTH_THRESHOLD**: 160 → 50 (25% health)
+  - Glitch effect now only triggers when player in danger zone (last quarter health)
+  - Prevents visual noise during normal gameplay
+  - Glitch intensity still scales smoothly from 50→0 health via `glitchOpacityMultiplier`
 
-### Fixes Applied
+### 2. TAP Note Visibility Fix
+- **Removed**: `TAP_HIT_HOLD_DURATION` (confusing nomenclature - TAP notes aren't "held")
+- **Now uses**: `TAP_HIT_FLASH.DURATION` (600ms) for successful hit rendering
+- **Impact**: Notes stay visible for entire white flash animation (previously disappeared at 200ms, cutting flash short)
 
-1. **Depth Calculation** (`lib/geometry/holdNoteGeometry.ts`)
-   - Changed from expanding triangle → trapezoid to **constant-width moving strip**
-   - Formula: `farDistance = nearDistance - stripWidth` (no clamping)
-   - stripWidth capped at `max(JUDGEMENT_RADIUS - 50, 150)` to prevent vanishing point collision
+### 3. YouTube Sync - Buffer Phase
+- **Issue**: Game auto-started before YouTube iframe fully initialized → notes jumped backwards as YouTube time synced
+- **Fix 1**: Added 800ms delay before `youtubeIsReady` flag in `useYouTubePlayer`
+  - Allows YouTube API initialization without rushing game start
+  - Conservative buffer ensures iframe fully loaded before any timing operations
 
-2. **Miss Failure Behavior** 
-   - Added `isHoldMissFailure` flag to `calculateApproachGeometry`
-   - When true: near end extends PAST JUDGEMENT_RADIUS (visual "moving through" effect)
-   - When false: near end clamped at JUDGEMENT_RADIUS (normal approach)
-   - `calculateLockedNearDistance` returns null for misses (unlocks the geometry)
-
-3. **Greyscale State** (`lib/notes/hold/holdGreystate.ts`)
-   - `holdReleaseFailure`: Immediate greyscale
-   - `tooEarlyFailure`: Immediate greyscale  
-   - `holdMissFailure`: Greyscale at 70% of judgement radius (~judgement moment)
+### 4. YouTube Sync - Auto-start Prevention
+- **Issue**: Game started via auto-start logic before explicit user play command → YouTube hadn't begun playback
+- **Fix 2**: Modified `useAutoStart` to skip for YouTube videos
+  - When `youtubeVideoId` is present, auto-start is bypassed
+  - Game now waits for `onPlaying` callback (fires AFTER `playYouTubeVideo()` confirms player ready)
+  - `playYouTubeVideo()` polls for `state === 1` (playing) confirmation before allowing game to proceed
+  - Ensures beatmap timer always syncs to YouTube's actual playback time (not local timer)
 
 ---
 
@@ -121,11 +123,20 @@ HYPERVERSE is a 3D rhythm game with beatmap loading, YouTube music sync, and dec
 - Collapse animation timing may need tuning
 - Deck interaction system (left/right spin notes) - basic framework exists
 
-### Key Constants
+### Key Constants (See `lib/config/gameConstants.ts` for full annotations)
 - **JUDGEMENT_RADIUS**: 187 (distance where notes are judged)
-- **LEAD_TIME**: 2000ms (approach window)
-- **HOLD_NOTE_STRIP_WIDTH_MULTIPLIER**: 0.15 (duration → depth)
-- **FAILURE_ANIMATION_DURATION**: 1100ms (how long miss animates)
+- **LEAD_TIME**: 4000ms (notes visible 4s before hit, appear at vanishing point)
+- **TAP_RENDER_WINDOW_MS**: 4000ms (TAP notes visible 4s before)
+- **TAP_FALLTHROUGH_WINDOW_MS**: 200ms (visible 200ms past judgement line)
+- **TAP_HIT_FLASH.DURATION**: 600ms (successful hit white flash visibility)
+- **HOLD_NOTE_STRIP_WIDTH_MULTIPLIER**: 0.15 (duration ms → visual width px)
+- **FAILURE_ANIMATION_DURATION**: 1100ms (glitch effect on missed hold)
+- **TAP_HIT_WINDOW**: ±150ms (successful tap window around note.time)
+- **HOLD_HIT_WINDOW**: ±150ms (successful hold press window)
+- **HOLD_MISS_TIMEOUT**: 500ms (after note.time before auto-fail)
+- **LOW_HEALTH_THRESHOLD**: 50 (25% health - triggers glitch effect)
+- **MAX_HEALTH**: 200
+- **YOUTUBE_BUFFER**: 800ms (delay before auto-start for YouTube initialization)
 
 ---
 
@@ -185,8 +196,19 @@ client/src/
 
 ---
 
-## Session Context (Latest Work)
-- Fixed difficulty switching: Game component remounts with new key while iFrame persists
-- Fixed YouTube seek on difficulty change: Now properly awaits async seek(0)
-- Fixed hold note geometry: Constant-width strip instead of collapsing triangle
-- Fixed miss failure: Near end extends past judgement, far end maintains depth
+## Session Context (Latest Work - Gameplay Tuning & YouTube Sync)
+
+### Gameplay Balance
+- ✅ Reduced low health glitch threshold from 80% → 25% for better game feel
+- ✅ Fixed TAP note flash visibility (now shows full 600ms animation, not cut at 200ms)
+
+### YouTube Synchronization
+- ✅ Added 800ms initialization buffer before YouTube auto-start
+- ✅ Disabled auto-start for YouTube games - waits for explicit playback confirmation
+- ✅ Flow now: User clicks START → playYouTubeVideo() confirms playing → onPlaying fires → game starts in sync
+
+### Previous Sessions
+- ✅ Fixed difficulty switching: Game component remounts with new key while iFrame persists
+- ✅ Fixed YouTube seek on difficulty change: Now properly awaits async seek(0)
+- ✅ Fixed hold note geometry: Constant-width strip instead of collapsing triangle
+- ✅ Fixed miss failure: Near end extends past judgement, far end maintains depth
