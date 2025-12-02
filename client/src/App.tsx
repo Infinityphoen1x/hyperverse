@@ -87,6 +87,7 @@ function App() {
             )}
             {gameActive && (
               <Game 
+                key={selectedDifficulty}
                 difficulty={selectedDifficulty}
                 onBackToHome={() => setGameActive(false)}
                 playerInitializedRef={playerInitializedRef}
