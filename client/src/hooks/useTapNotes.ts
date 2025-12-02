@@ -58,7 +58,7 @@ export function useTapNotes(): TapNoteProcessedData[] {
         // For geometry, we allow it to go > 1 to show it falling through/passing judgement line
         const progressForGeometry = rawProgress;
 
-        if (!shouldRenderTapNote(state, note.time - currentTime)) {
+        if (!shouldRenderTapNote(state, note.time - currentTime, beatmapBpm)) {
             return null;
         }
 

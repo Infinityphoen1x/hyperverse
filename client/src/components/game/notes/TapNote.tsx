@@ -5,6 +5,7 @@ import { getLaneAngle, getColorForLane } from '@/lib/utils/laneUtils';
 import { calculateTapNoteGeometry } from "@/lib/geometry/tapNoteGeometry";
 import { calculateTapNoteStyle } from "@/lib/notes/tap/tapNoteStyle";
 import { TapNoteState } from '@/lib/notes/tap/tapNoteHelpers';
+import { TAP_NOTE_GEOMETRY } from '@/lib/config/gameConstants';
 
 interface TapNoteProps {
   note: Note;
@@ -15,12 +16,13 @@ interface TapNoteProps {
   progressForGeometry: number;
   clampedProgress: number;
   rawProgress: number;
+  beatmapBpm?: number;
 }
 
-const TapNoteComponent = ({ note, currentTime, vpX, vpY, state, progressForGeometry, clampedProgress, rawProgress }: TapNoteProps): React.ReactElement => {
+const TapNoteComponent = ({ note, currentTime, vpX, vpY, state, progressForGeometry, clampedProgress, rawProgress, beatmapBpm = 120 }: TapNoteProps): React.ReactElement => {
   const tapRayAngle = getLaneAngle(note.lane);
   const noteColor = getColorForLane(note.lane);
-  const geometry = calculateTapNoteGeometry(progressForGeometry, tapRayAngle, vpX, vpY, state.isHit, currentTime, state.isFailed, note.time, state.failureTime);
+  const geometry = calculateTapNoteGeometry(progressForGeometry, tapRayAngle, vpX, vpY, state.isHit, currentTime, state.isFailed, note.time, state.failureTime, beatmapBpm, TAP_NOTE_GEOMETRY.worldSpaceDepth);
   const style = calculateTapNoteStyle(clampedProgress, state, noteColor, rawProgress, note.lane);
   return (
     <polygon
