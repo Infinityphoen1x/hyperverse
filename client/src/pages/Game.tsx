@@ -36,7 +36,7 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
   const engineRefForLogic = useRef<any>(null);
 
   // YouTube hook first – provides getVideoTime with caching
-  const { getVideoTime, resetTime, isReady } = useYouTubePlayer({
+  const { getVideoTime, resetTime, seek, isReady } = useYouTubePlayer({
     videoId: youtubeVideoId,
     playerInitializedRef,
     onPlaying: () => startGameRef.current?.()
@@ -132,10 +132,14 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
     }
   }, [difficulty]); // Re-parse when difficulty changes
 
-  // Reset game state when component mounts (clears old pause state from previous game)
+  // Reset ALL game state and YouTube player when difficulty changes
   useEffect(() => {
-    setGameState('IDLE');
-  }, []);
+    // Full game state reset: score, combo, health, isPaused, notes, currentTime
+    restartGame();
+    // Reset YouTube player to time 0
+    resetTime();
+    seek(0);
+  }, [difficulty, restartGame, resetTime, seek]);
 
   // Auto-play YouTube only on first START SESSION, not on difficulty changes
   const gameSessionKeyRef = useRef(`${youtubeVideoId}-${difficulty}`);
