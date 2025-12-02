@@ -22,12 +22,10 @@ export const calculateApproachGeometry = (
   
   // Keep near distance clamped to judgement radius (max approach)
   const nearDistance = Math.max(1, Math.min(JUDGEMENT_RADIUS, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1))));
-  // Far distance grows outward as note approaches, then stabilizes
-  // Creates a constant-width strip that maintains depth as it approaches
-  // At progress=0: farDistance = 1 (point-like at vanishing point)
-  // At progress=1+: farDistance = 1 + stripWidth * 0.1 (fixed distance, gap is locked)
-  // The gap between nearDistance and farDistance remains constant after progress=1
-  const farDistance = Math.max(1, 1 + (stripWidth * 0.1 * Math.min(approachProgress, 1)));
+  // Far distance is always stripWidth behind nearDistance, creating constant-width strip
+  // farDistance = nearDistance - stripWidth, but maintain minimum distance of 1 from vanishing point
+  // This creates the moving strip effect: near end approaches while far end stays fixed depth behind
+  const farDistance = Math.max(1, nearDistance - stripWidth);
   
   return { nearDistance, farDistance };
 };
