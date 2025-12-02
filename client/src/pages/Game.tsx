@@ -134,11 +134,17 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
 
   // Reset ALL game state and YouTube player when difficulty changes
   useEffect(() => {
-    // Full game state reset: score, combo, health, isPaused, notes, currentTime
-    restartGame();
-    // Reset YouTube player to time 0
-    resetTime();
-    seek(0);
+    const resetAll = async () => {
+      // Full game state reset: score, combo, health, isPaused, notes, currentTime
+      restartGame();
+      // Reset YouTube player to time 0
+      resetTime();
+      // Seek player to beginning (seekYouTubeVideo is async)
+      await seek(0);
+    };
+    resetAll().catch(() => {
+      // Silently fail on seek errors - game can continue
+    });
   }, [difficulty, restartGame, resetTime, seek]);
 
   // Auto-play YouTube only on first START SESSION, not on difficulty changes
