@@ -115,48 +115,6 @@ export const calculateHoldNoteGlow = (
   return { glowScale, collapseGlow, finalGlowScale };
 };
 
-export interface TrapezoidCorners {
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  x3: number;
-  y3: number;
-  x4: number;
-  y4: number;
-}
-
-export const getTrapezoidCorners = (
-  rayAngle: number,
-  nearDistance: number,
-  farDistance: number,
-  vanishingPointX: number,
-  vanishingPointY: number,
-  noteId?: string
-): TrapezoidCorners | null => {
-  const leftRayAngle = rayAngle - 15;
-  const rightRayAngle = rayAngle + 15;
-  const leftRad = (leftRayAngle * Math.PI) / 180;
-  const rightRad = (rightRayAngle * Math.PI) / 180;
-
-  const corners: TrapezoidCorners = {
-    x1: vanishingPointX + Math.cos(leftRad) * farDistance,
-    y1: vanishingPointY + Math.sin(leftRad) * farDistance,
-    x2: vanishingPointX + Math.cos(rightRad) * farDistance,
-    y2: vanishingPointY + Math.sin(rightRad) * farDistance,
-    x3: vanishingPointX + Math.cos(rightRad) * nearDistance,
-    y3: vanishingPointY + Math.sin(rightRad) * nearDistance,
-    x4: vanishingPointX + Math.cos(leftRad) * nearDistance,
-    y4: vanishingPointY + Math.sin(leftRad) * nearDistance,
-  };
-
-  const allFinite = Object.values(corners).every(v => Number.isFinite(v));
-  if (!allFinite) {
-    if (noteId) {
-      GameErrors.log(`getTrapezoidCorners: Invalid coordinates for note ${noteId}: ${JSON.stringify(corners)}`);
-    }
-    return null;
-  }
-
-  return corners;
-};
+// NOTE: getTrapezoidCorners has been moved to lib/geometry/holdNoteGeometry.ts
+// This file is kept for historical reference but is no longer used.
+// Import from lib/geometry/holdNoteGeometry instead.
