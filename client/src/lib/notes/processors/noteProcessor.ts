@@ -79,9 +79,8 @@ export class NoteProcessor {
       };
     }
 
-    // Too late - pressed after note has passed (use leniency window)
-    const lateThreshold = this.config.HOLD_ACTIVATION_WINDOW;
-    if (timeSinceNote > lateThreshold) {
+    // Too late - pressed after leniency window
+    if (timeSinceNote > this.config.HOLD_ACTIVATION_WINDOW) {
       GameErrors.updateHitStats({ holdMissFailures: (GameErrors.hitStats.holdMissFailures || 0) + 1 });
       GameErrors.log(`[HOLD-HIT] noteId=${note.id} holdMissFailure at ${currentTime}ms`, currentTime);
       return {
@@ -96,14 +95,19 @@ export class NoteProcessor {
       };
     }
 
-    // Valid hold start
-    return {
-      updatedNote: {
-        ...note,
-        pressHoldTime: roundTime(currentTime),
-      },
-      success: true,
-    };
+    // Successful press - must be within HOLD_HIT_WINDOW of note.time
+    if (Math.abs(timeSinceNote) <= this.config.HOLD_HIT_WINDOW) {
+      return {
+        updatedNote: {
+          ...note,
+          pressHoldTime: roundTime(currentTime),
+        },
+        success: true,
+      };
+    }
+
+    // Within leniency window but not successful (late press)
+    return { updatedNote: note, success: false };
   }
 
   processHoldEnd(note: Note, currentTime: number): NoteUpdateResult {

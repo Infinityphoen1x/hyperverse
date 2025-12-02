@@ -31,6 +31,7 @@ export interface Note {
 export interface GameConfig {
   TAP_HIT_WINDOW: number;
   TAP_FAILURE_BUFFER: number;
+  HOLD_HIT_WINDOW: number;
   HOLD_MISS_TIMEOUT: number;
   HOLD_RELEASE_OFFSET: number;
   HOLD_RELEASE_WINDOW: number;

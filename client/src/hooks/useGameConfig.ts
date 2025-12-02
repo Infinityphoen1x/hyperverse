@@ -7,6 +7,7 @@ export function useGameConfig(_difficulty: Difficulty): GameConfig {
   return {
     TAP_HIT_WINDOW: 150,
     TAP_FAILURE_BUFFER: 100,
+    HOLD_HIT_WINDOW: 150,
     HOLD_MISS_TIMEOUT: 500,
     HOLD_RELEASE_OFFSET: 200,
     HOLD_RELEASE_WINDOW: 150,
