@@ -72,14 +72,14 @@ export default function Settings({ onBack }: SettingsProps) {
                 value={[noteSpeedMultiplier]}
                 onValueChange={handleSpeedChange}
                 min={0.5}
-                max={2.0}
+                max={1.5}
                 step={0.1}
                 className="w-full"
               />
               <div className="flex justify-between text-xs font-rajdhani text-white/60">
                 <span>0.5x</span>
                 <span className="text-neon-pink font-bold">{noteSpeedMultiplier.toFixed(1)}x</span>
-                <span>2.0x</span>
+                <span>1.5x</span>
               </div>
             </div>
             <p className="text-xs text-white/40 font-rajdhani mt-2">
