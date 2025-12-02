@@ -75,7 +75,17 @@ export default function Settings({ onBack }: SettingsProps) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="px-12 py-4 bg-neon-pink text-black font-bold text-lg font-orbitron rounded-sm border-2 border-neon-pink shadow-[0_0_50px_rgba(255,0,127,0.8)] transition-colors whitespace-nowrap"
-            data-testid="button-back-home"
+            data-testid="button-apply-settings"
+          >
+            APPLY
+          </motion.button>
+          
+          <motion.button 
+            onClick={onBack}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-12 py-4 bg-transparent text-white font-bold text-lg font-orbitron rounded-sm border-2 border-white/30 hover:border-neon-cyan hover:text-neon-cyan transition-colors whitespace-nowrap"
+            data-testid="button-cancel-settings"
           >
             BACK
           </motion.button>
