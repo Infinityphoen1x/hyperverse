@@ -80,7 +80,7 @@ export function processSingleHoldNote(note: Note, currentTime: number): HoldNote
       return null;
     }
 
-    const greyscaleState = determineGreyscaleState(failures, pressHoldTime, approachGeometry.nearDistance, note.hit || false);
+    const greyscaleState = determineGreyscaleState(failures, pressHoldTime, collapseGeo.nearDistance, note.hit || false);
     const glowCalc = calculateHoldNoteGlow(pressHoldTime, currentTime, collapseDuration, approachGeometry.nearDistance > 0 ? (approachGeometry.nearDistance - 1) / (JUDGEMENT_RADIUS - 1) : 0, note, isActiveHold, note.time);
     const baseColor = getColorForLane(note.lane);
     const colors = calculateHoldNoteColors(greyscaleState.isGreyed, note.lane, baseColor);
