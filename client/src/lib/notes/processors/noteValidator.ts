@@ -41,8 +41,8 @@ export class NoteValidator {
       n.lane === lane &&
       n.type === 'TAP' &&
       this.isNoteActive(n) &&
-      currentTime >= n.time - this.config.LEAD_TIME &&
-      currentTime <= n.time + this.config.TAP_HIT_WINDOW
+      currentTime >= n.time - this.config.TAP_HIT_WINDOW &&
+      currentTime <= n.time + this.config.LEAD_TIME
     ) || null;
   }
 
@@ -66,8 +66,8 @@ export class NoteValidator {
       n.lane === lane &&
       (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') &&
       this.isNoteActive(n) &&
-      currentTime >= n.time - this.config.LEAD_TIME &&
-      currentTime <= n.time + this.config.HOLD_ACTIVATION_WINDOW
+      currentTime >= n.time - this.config.TAP_HIT_WINDOW &&
+      currentTime <= n.time + this.config.LEAD_TIME
     ) || null;
   }
 
@@ -120,11 +120,11 @@ export class NoteValidator {
     return notes.map(n => {
       // If note was marked as too early relative to old time,
       // but is now within valid window at new time, reset early flag
-      if (n.tooEarlyFailure && currentTime >= n.time - this.config.LEAD_TIME) {
+      if (n.tooEarlyFailure && currentTime >= n.time - this.config.TAP_HIT_WINDOW) {
         return { ...n, tooEarlyFailure: false };
       }
       // Same for TAP notes
-      if (n.tapTooEarlyFailure && currentTime >= n.time - this.config.LEAD_TIME) {
+      if (n.tapTooEarlyFailure && currentTime >= n.time - this.config.TAP_HIT_WINDOW) {
         return { ...n, tapTooEarlyFailure: false };
       }
       return n;
