@@ -34,14 +34,22 @@ export function useTapNotes(): TapNoteProcessedData[] {
     // effectiveLEAD_TIME scales with BPM to prevent note stacking on fast songs
     const effectiveLEAD_TIME = LEAD_TIME * (REFERENCE_BPM / Math.max(1, beatmapBpm));
 
+    // Scale visibility windows by BPM so notes have consistent travel time at all BPMs
+    // At slower BPMs: longer visibility windows (more time for note to reach judgement)
+    // At faster BPMs: shorter visibility windows (notes approach quicker)
+    const bpmScale = REFERENCE_BPM / Math.max(1, beatmapBpm);
+    const tooEarlyFailureVisibilityWindow = 4000 * bpmScale;  // Travel time from failure to judgement
+    const missFailureVisibilityWindow = 2000 * bpmScale;      // Time for miss animation after judgement
+    const hitNoteVisibilityBuffer = 500 * bpmScale;           // Small buffer for hit notes
+
     // Filter visibly relevant notes first to reduce map overhead
     // Keep failed notes visible longer to ensure they reach judgement line and greyscale animation completes
-    // tapTooEarlyFailure needs very long window (4000ms) to travel from failure point to judgement line
-    // tapMissFailure needs moderate window (2000ms) since they already reached judgement line
+    // tapTooEarlyFailure needs window to travel from failure point to judgement line
+    // tapMissFailure needs window to show failure animation after reaching judgement line
     const visibleNotes = notes.filter(n => {
-      if (n.tapTooEarlyFailure) return n.time <= currentTime + effectiveLEAD_TIME && n.time >= currentTime - 4000;
-      if (n.tapMissFailure) return n.time <= currentTime + effectiveLEAD_TIME && n.time >= currentTime - 2000;
-      return n.time <= currentTime + effectiveLEAD_TIME && n.time >= currentTime - 500;
+      if (n.tapTooEarlyFailure) return n.time <= currentTime + effectiveLEAD_TIME && n.time >= currentTime - tooEarlyFailureVisibilityWindow;
+      if (n.tapMissFailure) return n.time <= currentTime + effectiveLEAD_TIME && n.time >= currentTime - missFailureVisibilityWindow;
+      return n.time <= currentTime + effectiveLEAD_TIME && n.time >= currentTime - hitNoteVisibilityBuffer;
     });
     
     const processed = visibleNotes
