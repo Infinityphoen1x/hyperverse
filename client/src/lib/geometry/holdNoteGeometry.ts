@@ -150,9 +150,9 @@ export const getTrapezoidCorners = (
   const needsSwap = normalizedAngle >= 270 || normalizedAngle < 90;
   
   // Calculate angle spread based on distance to maintain constant visual width (prevent hourglass)
-  // Desired visual strip width: ~40 pixels at screen
+  // Desired visual strip width: ~60 pixels at screen (slightly wider than TAP notes ~52px)
   // angleSpread = arctan(stripWidth / (2 * distance)) in radians → degrees
-  const desiredStripWidth = 40;
+  const desiredStripWidth = 60;
   const angleSpreadRad = Math.atan(desiredStripWidth / (2 * Math.max(nearDistance, farDistance)));
   const angleSpreadDeg = angleSpreadRad * (180 / Math.PI);
   
