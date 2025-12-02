@@ -41,8 +41,8 @@ export class NoteProcessor {
       };
     }
 
-    // Valid hit - allow presses from when note appears to small window after note.time
-    if (timeSinceNote >= -TAP_RENDER_WINDOW_MS && timeSinceNote <= this.config.TAP_HIT_WINDOW) {
+    // Valid hit - small window around note.time (TAP_HIT_WINDOW on both sides)
+    if (timeSinceNote >= -this.config.TAP_HIT_WINDOW && timeSinceNote <= this.config.TAP_HIT_WINDOW) {
       const scoreChange = this.scorer.recordHit(timeSinceNote);
       GameErrors.updateHitStats({ successfulHits: (GameErrors.hitStats.successfulHits || 0) + 1 });
       GameErrors.log(`[TAP-HIT] noteId=${note.id} successfulHit at ${currentTime}ms (timing: ${timeSinceNote.toFixed(0)}ms)`, currentTime);

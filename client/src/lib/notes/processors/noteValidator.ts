@@ -42,7 +42,7 @@ export class NoteValidator {
       n.lane === lane &&
       n.type === 'TAP' &&
       this.isNoteActive(n) &&
-      currentTime >= n.time - TAP_RENDER_WINDOW_MS &&
+      currentTime >= n.time - this.config.TAP_HIT_WINDOW &&
       currentTime <= n.time + this.config.TAP_HIT_WINDOW
     ) || null;
   }
