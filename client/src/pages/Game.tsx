@@ -106,6 +106,11 @@ function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
   const missCount = useMemo(() => (notes || []).filter(n => n.missed).length, [notes]);
   const scoreDisplay = useMemo(() => score.toString().padStart(6, '0'), [score]);
 
+  // Reset game state when component mounts (clears old pause state from previous game)
+  useEffect(() => {
+    setGameState('IDLE');
+  }, [difficulty, setGameState]);
+
   // Load beatmap from localStorage (keep it there for re-selection with different difficulty)
   useEffect(() => {
     const pendingBeatmapStr = localStorage.getItem('pendingBeatmap');
