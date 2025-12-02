@@ -23,13 +23,14 @@ const calculateEffectiveProgress = (
 
 const calculateDistances = (
   effectiveProgress: number,
-  beatmapBpm: number = 120
+  beatmapBpm: number = 120,
+  noteSpeedMultiplier: number = 1.0
 ): { nearDistance: number; farDistance: number } => {
   // Don't clamp perspectiveScale - it must scale proportionally with nearDistance
   // This prevents rapid depth change when notes approach past judgement
   // Both nearDistance and scaledDepth grow together, maintaining proportional depth
   const perspectiveScale = Math.max(0, effectiveProgress); // Allow > 1 past judgement
-  const scaledDepth = TAP_DEPTH.MAX * perspectiveScale;
+  const scaledDepth = (TAP_DEPTH.MAX * noteSpeedMultiplier) * perspectiveScale;
   
   const nearDistance = 1 + (Math.max(0, effectiveProgress) * (JUDGEMENT_RADIUS - 1));
   const farDistance = Math.max(1, nearDistance - scaledDepth);
@@ -70,11 +71,12 @@ export const calculateTapNoteGeometry = (
   isFailed: boolean = false,
   noteTime: number = 0,
   failureTime?: number,
-  beatmapBpm: number = 120
+  beatmapBpm: number = 120,
+  noteSpeedMultiplier: number = 1.0
 ): TapNoteGeometry => {
   const isFailedOrHit = isFailed || isSuccessfulHit;
   const effectiveProgress = calculateEffectiveProgress(progress, isFailedOrHit, noteTime, currentTime, failureTime);
-  const { nearDistance, farDistance } = calculateDistances(effectiveProgress, beatmapBpm);
+  const { nearDistance, farDistance } = calculateDistances(effectiveProgress, beatmapBpm, noteSpeedMultiplier);
   const corners = calculateRayCorners(vpX, vpY, tapRayAngle, nearDistance, farDistance);
 
   return {

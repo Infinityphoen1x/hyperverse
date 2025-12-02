@@ -14,7 +14,8 @@ export const calculateApproachGeometry = (
   holdDuration: number,
   isHoldMissFailure: boolean = false,
   useFixedDepth: boolean = true,
-  beatmapBpm: number = 120
+  beatmapBpm: number = 120,
+  noteSpeedMultiplier: number = 1.0
 ): ApproachGeometry => {
   // Fixed depth mode - depth is proportional to duration AND approach speed
   // Near end approaches based on note.time
@@ -37,10 +38,12 @@ export const calculateApproachGeometry = (
     // This automatically scales with BPM since effectiveLEAD_TIME scales inversely
     // High BPM: shorter window, faster approach speed
     // Low BPM: longer window, slower approach speed
-    // Hold visual depth = duration × approach speed
+    // Hold visual depth = duration × approach speed × noteSpeedMultiplier
+    // Note speed scales how fast notes travel, so depth must scale proportionally
     const TUNNEL_DISTANCE = JUDGEMENT_RADIUS - 1; // 186 pixels
     const approachSpeed = TUNNEL_DISTANCE / effectiveLEAD_TIME; // pixels per millisecond
-    const fixedDepthOffset = Math.max(1, holdDuration * approachSpeed);
+    const baseDepthOffset = Math.max(1, holdDuration * approachSpeed);
+    const fixedDepthOffset = baseDepthOffset * noteSpeedMultiplier; // Scale by note speed
     // Scale depth offset by approach progress (time-aware) to maintain constant z-depth in world space
     // perspectiveScale represents how far along the approach we are (0 at VP, 1 at judgement)
     // This naturally accounts for BPM through effectiveLEAD_TIME

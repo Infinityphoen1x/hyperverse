@@ -669,10 +669,14 @@ export const TAP_HIT_FLASH = {
   FADE_DURATION: 100,             // Fade-out duration
 } as const;
 
-/** TAP note rendering depth (distance from VP) */
+/** TAP note rendering depth (distance from VP)
+ * MAX is kept small (15px baseline) so it scales appropriately with noteSpeedMultiplier
+ * At 2.0x speed: 15px × 2.0 = 30px (still reasonable)
+ * At 0.5x speed: 15px × 0.5 = 7.5px (compact, high density)
+ */
 export const TAP_DEPTH = {
   MIN: 5,                         // Closest visible distance (pixels)
-  MAX: 40,                        // Farthest distance before fade
+  MAX: 15,                        // Baseline depth (scales with noteSpeedMultiplier)
   FADE_TIME: 2000,                // Fade-in duration as note approaches
 } as const;
 
