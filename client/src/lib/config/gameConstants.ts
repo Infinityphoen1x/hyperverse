@@ -88,121 +88,168 @@ export const TUNNEL_MAX_DISTANCE = TUNNEL_GEOMETRY.tunnelMaxDistance;
 export const TAP_JUDGEMENT_LINE_WIDTH = TUNNEL_GEOMETRY.tapJudgementLineWidth;
 export const JUDGEMENT_RADIUS = TUNNEL_GEOMETRY.judgementRadius;
 
-// Hold note geometry constants
+/**
+ * HOLD note visual geometry - controls strip rendering and failure animation
+ * HOLD notes render as strips with duration mapped to visual width
+ */
 export interface HoldNoteGeometry {
-  stripWidthMultiplier: number; // Convert duration (ms) to Z-depth
-  failureAnimationDuration: number; // ms - time for failure animations
+  /** Multiplier: duration (ms) × this value = visual width in pixels at judgement */
+  stripWidthMultiplier: number;
+  /** Time for failure animation (glitch effect) to play, milliseconds */
+  failureAnimationDuration: number;
 }
 export const HOLD_NOTE_GEOMETRY: HoldNoteGeometry = {
-  stripWidthMultiplier: 0.15,
-  failureAnimationDuration: 1100,
+  stripWidthMultiplier: 0.15,        // 1000ms duration → 150px strip width
+  failureAnimationDuration: 1100,    // Glitch effect duration on missed hold
 };
 
-// Tap note timing constants
+/**
+ * TAP note visual timing - controls when notes appear, disappear, and hit feedback
+ */
 export interface TapNoteGeometry {
-  renderWindowMs: number; // Time to render note before judgement line
-  fallthroughWindowMs: number; // Time after judgement line before miss
-  hitHoldDurationMs: number; // Duration to show hit state
+  /** Time before note.time that TAP note becomes visible (appears at VP), milliseconds */
+  renderWindowMs: number;
+  /** Time after judgement line passes before TAP note despawns, milliseconds */
+  fallthroughWindowMs: number;
+  /** Duration to show hit flash animation after successful hit, milliseconds */
+  hitHoldDurationMs: number;
 }
 export const TAP_NOTE_GEOMETRY: TapNoteGeometry = {
-  renderWindowMs: 4000, // Match LEAD_TIME so notes appear at vanishing point
-  fallthroughWindowMs: 200,
-  hitHoldDurationMs: 200,
+  renderWindowMs: 4000,      // TAP notes visible 4000ms before hit (matches LEAD_TIME)
+  fallthroughWindowMs: 200,  // Notes visible 200ms past judgement line before disappearing
+  hitHoldDurationMs: 200,    // White flash on successful hit lasts 200ms
 };
 
-// Soundpad colors - RGB values for dynamic styling
+/** RGB colors for 4 soundpad lanes (index = lane number) */
 export const SOUNDPAD_COLORS = [
-  'rgb(255,0,127)', // Lane 0 (W) - pink
-  'rgb(0,150,255)', // Lane 1 (O) - blue
-  'rgb(190,0,255)', // Lane 2 (I) - purple
-  'rgb(0,255,255)' // Lane 3 (E) - cyan
+  'rgb(255,0,127)',   // Lane 0 (W): 120° top-left, pink
+  'rgb(0,150,255)',   // Lane 1 (O): 60° top-right, blue
+  'rgb(190,0,255)',   // Lane 2 (I): 300° bottom-right, purple
+  'rgb(0,255,255)'    // Lane 3 (E): 240° bottom-left, cyan
 ];
 
-// Deck wheel rotation constants
+/**
+ * Deck (turntable) rotation mechanics - for deck wheel (lanes -1 and -2)
+ */
 export interface DeckRotation {
-  rotationSpeed: number; // degrees per frame
-  spinThreshold: number; // degrees - trigger onSpin after this rotation
-  dragVelocityThreshold: number; // px/s - minimum velocity for drag spin
+  /** Base rotation increment per frame, degrees */
+  rotationSpeed: number;
+  /** Total rotation required to trigger spin note activation, degrees */
+  spinThreshold: number;
+  /** Min drag speed to count as spin input, pixels per second */
+  dragVelocityThreshold: number;
 }
 export const DECK_ROTATION: DeckRotation = {
-  rotationSpeed: 2.0,
-  spinThreshold: 30,
-  dragVelocityThreshold: 100,
+  rotationSpeed: 2.0,              // 2° per frame at ~60fps ≈ 120°/sec
+  spinThreshold: 30,               // Hold note activates after 30° total rotation
+  dragVelocityThreshold: 100,      // Drag must be ≥100px/s to register as spin
 };
 
-// Visual effects - particle and animation constants
+/**
+ * Visual effects - particle spawning, screen effects, and health state animations
+ */
 export interface VisualEffects {
-  maxHealth: number; // Game health system max
-  lowHealthThreshold: number; // 80% of MAX_HEALTH - triggers continuous glitch
-  comboMilestone: number; // Trigger particle effect every N combos
-  comboPerfectMilestone: number; // Trigger perfect pulse every N combos
-  particlesPerEffect: number; // Number of particles spawned per combo milestone
-  maxParticlesBuffer: number; // Max particles to keep alive at once
-  particleSizeMin: number; // px
-  particleSizeMax: number; // px
-  shakeInterval: number; // ms - how often to update shake offset
-  shakeOffsetMultiplier: number; // pixels - max random offset
-  shakeDuration: number; // ms - how long shake lasts
-  chromaticDuration: number; // ms - how long chromatic aberration lasts
-  chromaticIntensity: number; // 0-1, strength of effect
-  chromaticOffsetPx: number; // pixels - aberration offset
-  glitchBaseInterval: number; // ms - base glitch interval
-  glitchRandomRange: number; // ms - additional random time
-  glitchOpacity: number; // 0-1, base opacity of glitch lines
-  greyscaleIntensity: number; // 0-1, max greyscale when health is 0
-  glitchBackgroundSize: number; // px - height of glitch scan lines
+  /** Game health maximum (also MAX_HEALTH constant) */
+  maxHealth: number;
+  /** Health threshold where continuous glitch effect starts (80% of max) */
+  lowHealthThreshold: number;
+  /** Spawn particles every N combo count (normal milestone) */
+  comboMilestone: number;
+  /** Spawn particles every N combo count (perfect-only milestone) */
+  comboPerfectMilestone: number;
+  /** Particles spawned per combo milestone trigger */
+  particlesPerEffect: number;
+  /** Max particles allowed alive at once (buffer pool size) */
+  maxParticlesBuffer: number;
+  /** Particle sprite size range, pixels */
+  particleSizeMin: number;
+  particleSizeMax: number;
+  /** Screen shake: update interval between offset changes, milliseconds */
+  shakeInterval: number;
+  /** Screen shake: max random offset per update, pixels */
+  shakeOffsetMultiplier: number;
+  /** Screen shake: total duration, milliseconds */
+  shakeDuration: number;
+  /** Chromatic aberration (RGB split): duration, milliseconds */
+  chromaticDuration: number;
+  /** Chromatic aberration: effect strength, 0-1 */
+  chromaticIntensity: number;
+  /** Chromatic aberration: RGB channel offset, pixels */
+  chromaticOffsetPx: number;
+  /** Glitch effect: base interval between glitch pulses, milliseconds */
+  glitchBaseInterval: number;
+  /** Glitch effect: random variance added to interval, milliseconds */
+  glitchRandomRange: number;
+  /** Glitch effect: base opacity of glitch scan lines, 0-1 */
+  glitchOpacity: number;
+  /** Greyscale filter: max intensity at 0 health, 0-1 */
+  greyscaleIntensity: number;
+  /** Glitch effect: height of scan line effect, pixels */
+  glitchBackgroundSize: number;
 }
 export const VISUAL_EFFECTS: VisualEffects = {
-  maxHealth: 200,
-  lowHealthThreshold: 160,
-  comboMilestone: 5,
-  comboPerfectMilestone: 10,
-  particlesPerEffect: 12,
-  maxParticlesBuffer: 60,
-  particleSizeMin: 4,
-  particleSizeMax: 12,
-  shakeInterval: 50,
-  shakeOffsetMultiplier: 16,
-  shakeDuration: 300,
-  chromaticDuration: 400,
-  chromaticIntensity: 0.8,
-  chromaticOffsetPx: 15,
-  glitchBaseInterval: 400,
-  glitchRandomRange: 200,
-  glitchOpacity: 0.3,
-  greyscaleIntensity: 0.8,
-  glitchBackgroundSize: 60,
+  maxHealth: 200,                  // Health ranges 0-200
+  lowHealthThreshold: 160,         // At ≤160 health (80%), continuous glitch starts
+  comboMilestone: 5,               // Particles spawn at combos 5, 10, 15, etc.
+  comboPerfectMilestone: 10,       // Perfect-only particles at 10, 20, 30, etc.
+  particlesPerEffect: 12,          // 12 particles per trigger
+  maxParticlesBuffer: 60,          // Max 60 particles total on screen
+  particleSizeMin: 4,              // Smallest particle sprite: 4px
+  particleSizeMax: 12,             // Largest particle sprite: 12px
+  shakeInterval: 50,               // Screen shake updates every 50ms (~20Hz)
+  shakeOffsetMultiplier: 16,       // Max ±16px shake per frame
+  shakeDuration: 300,              // Screen shake lasts 300ms total
+  chromaticDuration: 400,          // RGB aberration lasts 400ms
+  chromaticIntensity: 0.8,         // 80% strength aberration (strong effect)
+  chromaticOffsetPx: 15,           // RGB channels offset 15px apart
+  glitchBaseInterval: 400,         // Glitch pulses every 400ms
+  glitchRandomRange: 200,          // Plus 0-200ms random variance
+  glitchOpacity: 0.3,              // Glitch lines at 30% opacity
+  greyscaleIntensity: 0.8,         // Full greyscale at 0 health (80%)
+  glitchBackgroundSize: 60,        // Scan lines 60px tall
 };
 
-// Visual effects - color palette for particle effects
+/**
+ * Color palette for particle effects (spawned on combo milestones)
+ */
 export interface ParticleColorPalette {
+  /** Array of HSL color strings for particle variety */
   colors: string[];
 }
 export const PARTICLE_COLOR_PALETTE: ParticleColorPalette = {
   colors: [
-    'hsl(120, 100%, 50%)', // Green
-    'hsl(0, 100%, 50%)', // Red
-    'hsl(180, 100%, 50%)', // Cyan
-    'hsl(280, 100%, 60%)', // Purple
-    'hsl(320, 100%, 60%)', // Magenta
+    'hsl(120, 100%, 50%)',   // Bright green
+    'hsl(0, 100%, 50%)',     // Bright red
+    'hsl(180, 100%, 50%)',   // Bright cyan
+    'hsl(280, 100%, 60%)',   // Bright purple
+    'hsl(320, 100%, 60%)',   // Bright magenta
   ],
 };
+/** Convenience export: direct reference to particle colors */
 export const PARTICLE_COLORS = PARTICLE_COLOR_PALETTE.colors;
 
-// Deck hold meter constants
+/**
+ * Deck hold meter display - shows progress for SPIN_LEFT/SPIN_RIGHT hold notes
+ * Meter fills as player holds rotation, glows when complete
+ */
 export interface DeckMeter {
-  segments: number; // Number of visual segments in meter
-  segmentWidth: number; // px - width of each segment
-  completionThreshold: number; // 0-1, progress needed to trigger glow
-  completionGlowDuration: number; // ms - how long glow animation lasts
-  defaultHoldDuration: number; // ms - default duration if beatmap doesn't specify
+  /** Number of visual segments in the meter bar */
+  segments: number;
+  /** Width of each segment, pixels */
+  segmentWidth: number;
+  /** Progress threshold to trigger completion glow, 0-1 (1 = 100%) */
+  completionThreshold: number;
+  /** Duration of glow pulse when meter completes, milliseconds */
+  completionGlowDuration: number;
+  /** Default hold duration if beatmap doesn't specify, milliseconds */
+  defaultHoldDuration: number;
 }
 export const DECK_METER: DeckMeter = {
-  segments: 16,
-  segmentWidth: 60,
-  completionThreshold: 0.95,
-  completionGlowDuration: 400,
-  defaultHoldDuration: 1000,
+  segments: 16,                    // 16 segments = 16 × 60px = 960px total width
+  segmentWidth: 60,                // Each segment fills independently as hold progresses
+  completionThreshold: 0.95,       // Glow at 95% full (allows 5% tolerance)
+  completionGlowDuration: 400,     // Glow pulse lasts 400ms
+  defaultHoldDuration: 1000,       // If beatmap missing, hold requires 1000ms
 };
 
 // Color palette - consolidated references for UI elements
