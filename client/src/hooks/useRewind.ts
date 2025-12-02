@@ -6,11 +6,11 @@ import { seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo } from '@/lib/you
 interface UseRewindProps {
   setPauseMenuOpen: (open: boolean) => void;
   engineRef?: React.RefObject<any>;
+  startGame?: () => void;
 }
 
-export function useRewind({ setPauseMenuOpen, engineRef }: UseRewindProps): { handleRewind: () => Promise<void> } {
+export function useRewind({ setPauseMenuOpen, engineRef, startGame }: UseRewindProps): { handleRewind: () => Promise<void> } {
   const restartGame = useGameStore(state => state.restartGame);
-  const setGameState = useGameStore(state => state.setGameState);
   const isRewindingRef = useRef(false);
   const lastRewindTimeRef = useRef(0);
 
@@ -47,8 +47,10 @@ export function useRewind({ setPauseMenuOpen, engineRef }: UseRewindProps): { ha
       // YouTube-first flow: Play immediately
       await playYouTubeVideo();
       
-      // After YouTube plays, explicitly start game
-      setGameState('PLAYING');
+      // After YouTube plays, call startGame to reset frame timer and set PLAYING state
+      if (startGame) {
+        startGame();
+      }
     } catch (err) {
       console.warn('[REWIND] Async operation failed', err);
     } finally {
@@ -57,7 +59,7 @@ export function useRewind({ setPauseMenuOpen, engineRef }: UseRewindProps): { ha
           isRewindingRef.current = false;
       }, 100);
     }
-  }, [restartGame, setGameState, setPauseMenuOpen, engineRef]);
+  }, [restartGame, setPauseMenuOpen, engineRef, startGame]);
 
   return { handleRewind };
 }

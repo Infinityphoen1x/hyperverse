@@ -83,7 +83,8 @@ export function useGameLogic({
   // Rewind (must be declared before useKeyControls)
   const { handleRewind } = useRewind({ 
     setPauseMenuOpen: setPauseMenuOpenHandler,
-    engineRef 
+    engineRef,
+    startGame
   });
 
   // Key controls
