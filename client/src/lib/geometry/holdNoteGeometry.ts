@@ -147,8 +147,10 @@ export const getTrapezoidCorners = (
   vanishingPointY: number,
   noteId?: string
 ): { x1: number; y1: number; x2: number; y2: number; x3: number; y3: number; x4: number; y4: number } | null => {
-  // Prevent rendering notes with negative or very close-to-zero distance (not in valid visual window)
-  if (nearDistance < 1 || farDistance < 1) {
+  // Allow partial rendering: notes can span from behind vanishing point (negative z) to in front (positive z)
+  // Both ends must be at least slightly valid (distance > 0), but not necessarily both > 1
+  // The SVG viewport will naturally clip negative x/y coordinates
+  if (Math.max(nearDistance, farDistance) < 1) {
     return null;
   }
   
@@ -191,14 +193,8 @@ export const getTrapezoidCorners = (
     return null;
   }
   
-  // Prevent rendering if any corner has negative coordinates (outside valid window)
-  const allNonNegative = Object.values(corners).every(v => v >= 0);
-  if (!allNonNegative) {
-    if (noteId) {
-      GameErrors.log(`getTrapezoidCorners: Negative coordinates for note ${noteId}: ${JSON.stringify(corners)}`);
-    }
-    return null;
-  }
+  // Allow negative coordinates - SVG viewport will clip them naturally
+  // This allows hold notes to render partially when they span across the vanishing point
   
   return corners;
 };
