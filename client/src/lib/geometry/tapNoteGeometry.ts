@@ -25,15 +25,13 @@ const calculateDistances = (
   effectiveProgress: number,
   beatmapBpm: number = 120
 ): { nearDist: number; farDist: number } => {
-  const clampedProgress = Math.max(0, Math.min(1, effectiveProgress));
-  
-  // Scale world-space depth by approach progress
-  // At vanishing point (progress=0): scaled depth is tiny
-  // At judgement (progress=1): scaled depth is full size (TAP_DEPTH.MAX)
-  const perspectiveScale = clampedProgress; // 0 at VP, 1 at judgement
+  // Don't clamp perspectiveScale - it must scale proportionally with nearDist
+  // This prevents rapid depth change when notes approach past judgement
+  // Both nearDist and scaledDepth grow together, maintaining proportional depth
+  const perspectiveScale = Math.max(0, effectiveProgress); // Allow > 1 past judgement
   const scaledDepth = TAP_DEPTH.MAX * perspectiveScale;
   
-  const nearDist = 1 + (effectiveProgress * (JUDGEMENT_RADIUS - 1));
+  const nearDist = 1 + (Math.max(0, effectiveProgress) * (JUDGEMENT_RADIUS - 1));
   const farDist = Math.max(1, nearDist - scaledDepth);
   return { nearDist, farDist };
 };
