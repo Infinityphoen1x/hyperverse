@@ -55,18 +55,19 @@ export function processSingleHoldNote(note: Note, currentTime: number): HoldNote
       return null;
     }
 
-    // For early failures, calculate approach geometry at the time of failure (frozen)
-    // For other cases, use current time
+    // For early failures, calculate approach geometry at the time of failure (frozen, clamped to judgement)
+    // For miss failures, calculate at current time allowing extension past judgement
+    // For other cases, use current time with clamping
     let approachGeometry;
     if (failures.isTooEarlyFailure && failureTime) {
       const timeUntilHitAtFailure = note.time - failureTime;
-      approachGeometry = calculateApproachGeometry(timeUntilHitAtFailure, pressHoldTime, failures.isTooEarlyFailure, holdDuration);
+      approachGeometry = calculateApproachGeometry(timeUntilHitAtFailure, pressHoldTime, failures.isTooEarlyFailure, holdDuration, false);
     } else {
-      approachGeometry = calculateApproachGeometry(timeUntilHit, pressHoldTime, failures.isTooEarlyFailure, holdDuration);
+      approachGeometry = calculateApproachGeometry(timeUntilHit, pressHoldTime, failures.isTooEarlyFailure, holdDuration, failures.isHoldMissFailure);
     }
     
     const collapseDuration = failures.hasAnyFailure ? FAILURE_ANIMATION_DURATION : holdDuration;
-    const lockedNearDistance = calculateLockedNearDistance(note, pressHoldTime, failures.isTooEarlyFailure, approachGeometry.nearDistance, failureTime);
+    const lockedNearDistance = calculateLockedNearDistance(note, pressHoldTime, failures.isTooEarlyFailure, approachGeometry.nearDistance, failureTime, failures.isHoldMissFailure);
     const stripWidth = holdDuration * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
     const farDistanceAtPress = lockedNearDistance ? Math.max(1, lockedNearDistance - stripWidth) : approachGeometry.farDistance;
     

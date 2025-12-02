@@ -11,7 +11,8 @@ export const calculateApproachGeometry = (
   timeUntilHit: number,
   pressHoldTime: number,
   isTooEarlyFailure: boolean,
-  holdDuration: number
+  holdDuration: number,
+  isHoldMissFailure: boolean = false
 ): ApproachGeometry => {
   const stripWidth = (holdDuration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
   
@@ -20,8 +21,10 @@ export const calculateApproachGeometry = (
   // Don't clamp to 1.0 - let it go higher so far end stays visible as near end reaches judgement
   const approachProgress = Math.max(0, rawApproachProgress);
   
-  // Keep near distance clamped to judgement radius (max approach)
-  const nearDistance = Math.max(1, Math.min(JUDGEMENT_RADIUS, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1))));
+  // For holdMissFailure: allow near end to extend PAST judgement radius (moving through user)
+  // For other cases: clamp near distance to judgement radius
+  const maxNearDistance = isHoldMissFailure ? Math.max(JUDGEMENT_RADIUS, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1))) : Math.min(JUDGEMENT_RADIUS, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
+  const nearDistance = Math.max(1, maxNearDistance);
   // Far distance is always stripWidth behind nearDistance, creating constant-width strip
   // farDistance = nearDistance - stripWidth, but maintain minimum distance of 1 from vanishing point
   // This creates the moving strip effect: near end approaches while far end stays fixed depth behind
@@ -69,11 +72,15 @@ export const calculateLockedNearDistance = (
   pressHoldTime: number,
   isTooEarlyFailure: boolean,
   approachNearDistance: number,
-  failureTime: number | null
+  failureTime: number | null,
+  isHoldMissFailure: boolean = false
 ): number | null => {
   if (note.hit) return JUDGEMENT_RADIUS;
   if (!pressHoldTime || pressHoldTime === 0) return null;
   if (isTooEarlyFailure) return null;
+  
+  // For holdMissFailure, don't lock near distance - let approach geometry continue extending past judgement
+  if (isHoldMissFailure) return null;
   
   if (note.holdReleaseFailure) {
     if (!failureTime) return null;
