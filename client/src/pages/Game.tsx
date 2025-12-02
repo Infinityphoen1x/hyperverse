@@ -102,8 +102,7 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
     customNotes,
     engineRef: engineRefForLogic,
     onHome: onBackToHome,
-    youtubeIsReady: youtubeVideoId ? isReady : true, // If no YouTube video, consider ready; otherwise wait for YouTube
-    youtubeVideoId // Pass videoId so useAutoStart can skip for YouTube games
+    youtubeIsReady: youtubeVideoId ? isReady : true // If no YouTube video, consider ready; otherwise wait for YouTube
   });
 
   // Memoized values - ensure notes is always an array

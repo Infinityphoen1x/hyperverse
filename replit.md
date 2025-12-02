@@ -91,19 +91,16 @@ HYPERVERSE is a 3D rhythm game with beatmap loading, YouTube music sync, and dec
 - **Now uses**: `TAP_HIT_FLASH.DURATION` (600ms) for successful hit rendering
 - **Impact**: Notes stay visible for entire white flash animation (previously disappeared at 200ms, cutting flash short)
 
-### 3. YouTube Sync - Buffer Phase
-- **Issue**: Game auto-started before YouTube iframe fully initialized → notes jumped backwards as YouTube time synced
+### 3. YouTube Sync - Two-Phase Protection
+- **Issue**: Game starting before YouTube iframe initialized → notes jumped backwards as YouTube time synced
 - **Fix 1**: Added 800ms delay before `youtubeIsReady` flag in `useYouTubePlayer`
   - Allows YouTube API initialization without rushing game start
   - Conservative buffer ensures iframe fully loaded before any timing operations
 
-### 4. YouTube Sync - Auto-start Prevention
-- **Issue**: Game started via auto-start logic before explicit user play command → YouTube hadn't begun playback
-- **Fix 2**: Modified `useAutoStart` to skip for YouTube videos
-  - When `youtubeVideoId` is present, auto-start is bypassed
-  - Game now waits for `onPlaying` callback (fires AFTER `playYouTubeVideo()` confirms player ready)
-  - `playYouTubeVideo()` polls for `state === 1` (playing) confirmation before allowing game to proceed
-  - Ensures beatmap timer always syncs to YouTube's actual playback time (not local timer)
+- **Fix 2**: `onPlaying` callback confirms YouTube actually playing after `playYouTubeVideo()`
+  - `playYouTubeVideo()` polls for `state === 1` (playing) confirmation
+  - Only when both conditions met: iframe ready (800ms) + YouTube confirmed playing → timer syncs
+  - Prevents note sync from starting before YouTube playback actually begins
 
 ---
 
