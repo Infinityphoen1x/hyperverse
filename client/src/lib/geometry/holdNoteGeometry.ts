@@ -14,7 +14,10 @@ export const calculateApproachGeometry = (
   holdDuration: number,
   isHoldMissFailure: boolean = false
 ): ApproachGeometry => {
-  const stripWidth = (holdDuration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
+  // Cap stripWidth so far end never approaches vanishing point too closely
+  // Max effective stripWidth is JUDGEMENT_RADIUS - 50 (keep far end at distance ~50+)
+  const maxStripWidth = Math.max(JUDGEMENT_RADIUS - 50, 150);
+  const stripWidth = Math.min((holdDuration || 1000) * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER, maxStripWidth);
   
   const rawApproachProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
   // For hold notes in approach phase, allow progress beyond 1.0 to continue showing far end
@@ -26,9 +29,9 @@ export const calculateApproachGeometry = (
   const maxNearDistance = isHoldMissFailure ? Math.max(JUDGEMENT_RADIUS, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1))) : Math.min(JUDGEMENT_RADIUS, 1 + (approachProgress * (JUDGEMENT_RADIUS - 1)));
   const nearDistance = Math.max(1, maxNearDistance);
   // Far distance is always stripWidth behind nearDistance, creating constant-width strip
-  // farDistance = nearDistance - stripWidth, but maintain minimum distance of 1 from vanishing point
+  // Never clamp - farDistance should maintain proper depth even for long holds
   // This creates the moving strip effect: near end approaches while far end stays fixed depth behind
-  const farDistance = Math.max(1, nearDistance - stripWidth);
+  const farDistance = nearDistance - stripWidth;
   
   return { nearDistance, farDistance };
 };
