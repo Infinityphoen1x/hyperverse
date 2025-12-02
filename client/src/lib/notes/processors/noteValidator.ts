@@ -123,6 +123,10 @@ export class NoteValidator {
       if (n.tooEarlyFailure && currentTime >= n.time - this.config.LEAD_TIME) {
         return { ...n, tooEarlyFailure: false };
       }
+      // Same for TAP notes
+      if (n.tapTooEarlyFailure && currentTime >= n.time - this.config.LEAD_TIME) {
+        return { ...n, tapTooEarlyFailure: false };
+      }
       return n;
     });
   }
