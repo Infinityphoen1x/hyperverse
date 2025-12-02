@@ -400,8 +400,6 @@ export interface GameEngineTiming {
   noteStartTime: number;
   /** Cap on generated notes (procedural generation safety limit) */
   maxGeneratedNotes: number;
-  /** Generate SPIN notes every N beats (4 = every 4th beat) */
-  spinFrequency: number;
   /** Alternate SPIN_LEFT and SPIN_RIGHT every N beats */
   spinAlternation: number;
   /** HOLD notes appear this many ms before hit (matches TAP_RENDER_WINDOW_MS in TAP_NOTE_GEOMETRY) */
@@ -426,8 +424,7 @@ export const GAME_ENGINE_TIMING: GameEngineTiming = {
   msPerMinute: 60000,            // 60 seconds × 1000ms
   noteStartTime: 2000,           // 2 second delay before first note
   maxGeneratedNotes: 1000,       // Safety cap to prevent memory issues
-  spinFrequency: 4,              // Generate spin every 4 beats
-  spinAlternation: 8,            // Alternate left/right every 8 beats
+  spinAlternation: 8,            // Alternate SPIN_LEFT/SPIN_RIGHT every 8 beats
   leadTime: 4000,                // HOLD notes visible 4000ms before hit
   tapRenderWindowMs: 2000,       // TAP notes appear 2000ms before (unused - see TAP_NOTE_GEOMETRY)
   tapFallthroughWindowMs: 1100,  // TAP notes last 1100ms past judgement

@@ -1,6 +1,7 @@
 // src/utils/convertBeatmapNotes.ts (keep original logic, minor refactors for store integration)
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
+import { GAME_ENGINE_TIMING, REFERENCE_BPM } from '@/lib/config/gameConstants';
 
 export interface BeatmapNote {
   time: number;
@@ -78,10 +79,22 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
     let type: 'TAP' | 'SPIN_LEFT' | 'SPIN_RIGHT';
     
     // Re-apply logic to determine final internal type
-    if (note.lane === -1) {
-        type = 'SPIN_LEFT';
-    } else if (note.lane === -2) {
-        type = 'SPIN_RIGHT';
+    if (note.lane === -1 || note.lane === -2) {
+      // Determine base spin type from lane
+      let baseSpinType: 'SPIN_LEFT' | 'SPIN_RIGHT' = note.lane === -1 ? 'SPIN_LEFT' : 'SPIN_RIGHT';
+      
+      // Apply spinAlternation pattern: swap types every N beats
+      // Calculate which beat block this note falls into (at reference BPM 120)
+      const msPerBeat = (GAME_ENGINE_TIMING.msPerMinute / REFERENCE_BPM);
+      const beatPosition = Math.floor(note.time / msPerBeat);
+      const beatBlock = Math.floor(beatPosition / GAME_ENGINE_TIMING.spinAlternation);
+      
+      // Odd beat blocks swap SPIN types
+      if (beatBlock % 2 === 1) {
+        type = baseSpinType === 'SPIN_LEFT' ? 'SPIN_RIGHT' : 'SPIN_LEFT';
+      } else {
+        type = baseSpinType;
+      }
     } else {
         type = 'TAP';
     }
