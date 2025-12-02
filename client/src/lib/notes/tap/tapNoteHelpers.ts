@@ -1,6 +1,6 @@
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { TAP_FAILURE_ANIMATIONS, TAP_RENDER_WINDOW_MS, TAP_FALLTHROUGH_WINDOW_MS, TAP_HIT_HOLD_DURATION } from '@/lib/config/gameConstants';
+import { TAP_FAILURE_ANIMATIONS, TAP_RENDER_WINDOW_MS, TAP_FALLTHROUGH_WINDOW_MS, TAP_HIT_FLASH } from '@/lib/config/gameConstants';
 
 export interface TapNoteState {
   isHit: boolean;
@@ -48,8 +48,8 @@ export const shouldRenderTapNote = (state: TapNoteState, timeUntilHit: number): 
   // For non-failed notes, apply normal render/fallthrough window checks
   if (timeUntilHit > TAP_RENDER_WINDOW_MS || timeUntilHit < -TAP_FALLTHROUGH_WINDOW_MS) return false;
   
-  // Hide successful hits after hold duration expires
-  if (state.isHit && state.timeSinceHit >= TAP_HIT_HOLD_DURATION) return false;
+  // Hide successful hits after flash animation completes
+  if (state.isHit && state.timeSinceHit >= TAP_HIT_FLASH.DURATION) return false;
   
   return true;
 };

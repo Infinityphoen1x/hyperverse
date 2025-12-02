@@ -104,20 +104,17 @@ export const HOLD_NOTE_GEOMETRY: HoldNoteGeometry = {
 };
 
 /**
- * TAP note visual timing - controls when notes appear, disappear, and hit feedback
+ * TAP note visual timing - controls when notes appear and disappear
  */
 export interface TapNoteGeometry {
   /** Time before note.time that TAP note becomes visible (appears at VP), milliseconds */
   renderWindowMs: number;
   /** Time after judgement line passes before TAP note despawns, milliseconds */
   fallthroughWindowMs: number;
-  /** Duration to show hit flash animation after successful hit, milliseconds */
-  hitHoldDurationMs: number;
 }
 export const TAP_NOTE_GEOMETRY: TapNoteGeometry = {
   renderWindowMs: 4000,      // TAP notes visible 4000ms before hit (matches LEAD_TIME)
   fallthroughWindowMs: 200,  // Notes visible 200ms past judgement line before disappearing
-  hitHoldDurationMs: 200,    // White flash on successful hit lasts 200ms
 };
 
 /** RGB colors for 4 soundpad lanes (index = lane number) */
@@ -561,7 +558,6 @@ export const FAILURE_ANIMATION_DURATION = HOLD_NOTE_GEOMETRY.failureAnimationDur
 // Tap Note Geometry exports
 export const TAP_RENDER_WINDOW_MS = TAP_NOTE_GEOMETRY.renderWindowMs;
 export const TAP_FALLTHROUGH_WINDOW_MS = TAP_NOTE_GEOMETRY.fallthroughWindowMs;
-export const TAP_HIT_HOLD_DURATION = TAP_NOTE_GEOMETRY.hitHoldDurationMs;
 
 // Deck Meter exports
 export const DECK_METER_SEGMENTS = DECK_METER.segments;
