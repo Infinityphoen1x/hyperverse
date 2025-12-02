@@ -27,6 +27,22 @@ export default function Home({ onStartGame }: HomeProps) {
     }
   }, []);
 
+  // Update beatmap difficulty in localStorage when selectedDifficulty changes
+  useEffect(() => {
+    if (beatmapLoaded) {
+      const pendingBeatmap = localStorage.getItem('pendingBeatmap');
+      if (pendingBeatmap) {
+        try {
+          const beatmapData = JSON.parse(pendingBeatmap);
+          beatmapData.difficulty = selectedDifficulty;
+          localStorage.setItem('pendingBeatmap', JSON.stringify(beatmapData));
+        } catch {
+          // Silently fail if parsing fails
+        }
+      }
+    }
+  }, [selectedDifficulty, beatmapLoaded]);
+
   const bannerMessages = [
     { text: "[ENCRYPTING NEURAL PATHWAYS] • QUANTUM SYNC PROTOCOL ACTIVE • SYNCHRONIZING BRAINWAVES", color: "#00FFFF" },
     { text: "[NEURAL INTERFACE ONLINE] • FREQUENCY LOCKED • HARMONIC RESONANCE DETECTED", color: "#FF00FF" },
@@ -136,20 +152,20 @@ export default function Home({ onStartGame }: HomeProps) {
           ))}
         </div>
 
-        <div className="flex flex-col gap-4 w-64 mx-auto">
+        <div className="flex gap-4 justify-center items-center flex-wrap">
           <motion.button 
             onClick={() => onStartGame(selectedDifficulty)}
             disabled={!beatmapLoaded}
             whileHover={beatmapLoaded ? { scale: 1.05 } : {}}
             whileTap={beatmapLoaded ? { scale: 0.95 } : {}}
-            className={`mt-8 px-12 py-6 text-black font-bold text-2xl font-orbitron rounded-sm border-2 transition-colors ${
+            className={`mt-8 px-12 py-6 text-black font-bold text-xl font-orbitron rounded-sm border-2 transition-colors whitespace-nowrap ${
               beatmapLoaded
                 ? 'bg-neon-pink shadow-[0_0_50px_rgba(255,0,127,0.8)] border-neon-pink cursor-pointer'
                 : 'bg-neon-cyan shadow-[0_0_50px_cyan] border-white hover:bg-white opacity-50 cursor-not-allowed'
             }`}
             data-testid="button-start-session"
           >
-            START SESSION {beatmapLoaded && '● BEATMAP READY'}
+            START SESSION
           </motion.button>
           
           {beatmapLoaded && (
@@ -157,10 +173,10 @@ export default function Home({ onStartGame }: HomeProps) {
               onClick={() => { setIsLoaderOpen(true); }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-8 py-3 text-white font-bold font-orbitron rounded-sm border-2 border-neon-cyan bg-transparent hover:bg-neon-cyan/10 transition-colors text-sm"
+              className="px-6 py-6 text-white font-bold font-orbitron rounded-sm border-2 border-neon-cyan bg-transparent hover:bg-neon-cyan/10 transition-colors text-sm whitespace-nowrap"
               data-testid="button-load-new-beatmap"
             >
-              LOAD NEW BEATMAP
+              LOAD NEW
             </motion.button>
           )}
         </div>
