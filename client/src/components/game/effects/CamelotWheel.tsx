@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import wheelImg from "@assets/generated_images/neon_glowing_cyber_turntable_interface.png";
 import { GameErrors } from '@/lib/errors/errorLog';
 import { ROTATION_SPEED, SPIN_THRESHOLD, STATE_UPDATE_INTERVAL, DRAG_VELOCITY_THRESHOLD } from '@/lib/config/gameConstants';
+import { useGameStore } from '@/stores/useGameStore';
 
 interface CamelotWheelProps {
   side: "left" | "right";
@@ -26,6 +27,7 @@ export function CamelotWheel({
   const lastSpinRotationRef = useRef(0);
   const lastStateUpdateTimeRef = useRef(0);
   const wheelLane = side === 'left' ? -1 : -2;
+  const incrementSpinPressCount = useGameStore(state => state.incrementSpinPressCount);
 
   // Sync refs when state changes
   useEffect(() => {
@@ -42,6 +44,8 @@ export function CamelotWheel({
     if (isLeftDeckKey || isRightDeckKey) {
       setIsKeyPressed(true);
       onHoldStart(wheelLane);
+      // Track key press for spin alternation (every press toggles direction)
+      incrementSpinPressCount(wheelLane);
     }
   }, [side, wheelLane, onHoldStart]);
 

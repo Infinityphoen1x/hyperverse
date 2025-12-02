@@ -14,9 +14,6 @@ export interface BeatmapNote {
 }
 
 export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
-  // Track hold note count per lane for spinAlternation
-  // Lane -1 (Q deck) and -2 (P deck) alternate independently
-  const holdNoteCountPerLane: { [lane: number]: number } = {};
   if (!Array.isArray(beatmapNotes) || beatmapNotes.length === 0) {
     return [];
   }
@@ -82,27 +79,12 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
     let type: 'TAP' | 'SPIN_LEFT' | 'SPIN_RIGHT';
     
     // Re-apply logic to determine final internal type
-    if (note.lane === -1 || note.lane === -2) {
-      // Determine base spin type from lane
-      let baseSpinType: 'SPIN_LEFT' | 'SPIN_RIGHT' = note.lane === -1 ? 'SPIN_LEFT' : 'SPIN_RIGHT';
-      
-      // Apply spinAlternation pattern: alternate spin direction every N hold notes per lane
-      // 1st hold note on lane: baseSpinType (e.g., -1 → SPIN_LEFT)
-      // 2nd hold note on lane: swapped (e.g., -1 → SPIN_RIGHT)
-      // 3rd hold note on lane: back to baseSpinType
-      // Independent for each lane (-1 and -2)
-      const holdCount = holdNoteCountPerLane[note.lane] ?? 0;
-      holdNoteCountPerLane[note.lane] = holdCount + 1;
-      
-      // Every spinAlternation-th hold note triggers a direction swap
-      // e.g., spinAlternation=8: notes 0-7 normal, 8-15 swapped, 16-23 normal, etc.
-      const shouldSwap = Math.floor(holdCount / GAME_ENGINE_TIMING.spinAlternation) % 2 === 1;
-      
-      if (shouldSwap) {
-        type = baseSpinType === 'SPIN_LEFT' ? 'SPIN_RIGHT' : 'SPIN_LEFT';
-      } else {
-        type = baseSpinType;
-      }
+    // Note: spinAlternation is driven by user KEY PRESSES, not beatmap notes
+    // Beatmap only specifies lane (-1/-2 for spins), direction is determined at runtime
+    if (note.lane === -1) {
+        type = 'SPIN_LEFT';
+    } else if (note.lane === -2) {
+        type = 'SPIN_RIGHT';
     } else {
         type = 'TAP';
     }

@@ -16,6 +16,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   missCount: 0,
   countdownSeconds: 0,
   beatmapBpm: DEFAULT_BEATMAP_BPM, // Default BPM - will be updated when beatmap loads
+  spinPressCountPerLane: { '-1': 0, '-2': 0 }, // Track key presses per lane for spin alternation
 
   // Setters
   setGameState: (gameState) => set({ gameState }),
@@ -29,6 +30,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setIsPaused: (isPaused) => set({ isPaused }),
   setCountdownSeconds: (countdownSeconds) => set({ countdownSeconds }),
   setBeatmapBpm: (bpm) => set({ beatmapBpm: bpm }),
+  incrementSpinPressCount: (lane: number) => set((state) => ({
+    spinPressCountPerLane: {
+      ...state.spinPressCountPerLane,
+      [lane]: (state.spinPressCountPerLane[lane] ?? 0) + 1
+    }
+  })),
 
   // Game actions
   hitNote: (lane) => {
@@ -65,6 +72,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   
   rewindGame: () => set((state) => ({ 
     currentTime: 0,
+    spinPressCountPerLane: { '-1': 0, '-2': 0 }, // Reset spin alternation
     // Reset note states - create brand new objects to break stale references
     notes: state.notes.map((note, idx) => ({
       ...note,
@@ -90,6 +98,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     gameState: 'IDLE', 
     isPaused: false,
     countdownSeconds: 0,
+    spinPressCountPerLane: { '-1': 0, '-2': 0 }, // Reset spin alternation
     // Reset note states - create brand new objects to ensure all references are cleared
     notes: state.notes.map((note, idx) => ({
       ...note,

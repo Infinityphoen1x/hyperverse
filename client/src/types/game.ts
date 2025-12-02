@@ -84,6 +84,9 @@ export interface GameStoreState {
   // Beatmap metadata
   beatmapBpm: number;
   
+  // Spin alternation - tracks key press count per lane for DJ deck direction alternation
+  spinPressCountPerLane: { [lane: number]: number };
+  
   // Actions
   setGameState: (state: GameState) => void;
   setDifficulty: (difficulty: Difficulty) => void;
@@ -96,6 +99,7 @@ export interface GameStoreState {
   setIsPaused: (paused: boolean) => void;
   setCountdownSeconds: (seconds: number) => void;
   setBeatmapBpm: (bpm: number) => void;
+  incrementSpinPressCount: (lane: number) => void;
   
   // Game actions
   hitNote: (lane: number) => void;
