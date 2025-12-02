@@ -5,28 +5,10 @@ import { NoteProcessor } from '@/lib/notes/processors/noteProcessor';
 import { NoteValidator } from '@/lib/notes/processors/noteValidator';
 import { ScoringManager } from '@/lib/managers/scoringManager';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { 
-  LEAD_TIME, 
-  MAX_HEALTH
-} from '@/lib/config/gameConstants';
+import { GAME_CONFIG } from '@/lib/config/gameConstants';
 
-// Default config if constants are missing
-const DEFAULT_CONFIG: GameConfig = {
-  TAP_HIT_WINDOW: 150,
-  TAP_FAILURE_BUFFER: 50,
-  HOLD_HIT_WINDOW: 150,
-  HOLD_MISS_TIMEOUT: 150,
-  HOLD_RELEASE_OFFSET: 100,
-  HOLD_RELEASE_WINDOW: 150,
-  HOLD_ACTIVATION_WINDOW: 150,
-  LEAD_TIME: 4000,
-  ACCURACY_PERFECT_MS: 25,
-  ACCURACY_GREAT_MS: 50,
-  ACCURACY_PERFECT_POINTS: 300,
-  ACCURACY_GREAT_POINTS: 100,
-  ACCURACY_NORMAL_POINTS: 50,
-  MAX_HEALTH: 200,
-};
+// Default config from single source of truth
+const DEFAULT_CONFIG: GameConfig = GAME_CONFIG as GameConfig;
 
 interface UseGameEngineProps {
   difficulty: Difficulty;
@@ -81,13 +63,8 @@ export function useGameEngine({
   const setCombo = useGameStore(state => state.setCombo);
   const setHealth = useGameStore(state => state.setHealth);
 
-  // Construct GameConfig
-  const gameConfig = useMemo<GameConfig>(() => ({
-    ...DEFAULT_CONFIG,
-    LEAD_TIME: LEAD_TIME || DEFAULT_CONFIG.LEAD_TIME,
-    MAX_HEALTH: MAX_HEALTH || DEFAULT_CONFIG.MAX_HEALTH,
-    // Map other constants if they exist, otherwise fallback
-  }), []);
+  // Construct GameConfig from single source of truth
+  const gameConfig = useMemo<GameConfig>(() => DEFAULT_CONFIG, []);
 
   // Initialize Engine Components
   const { processor, validator, scorer } = useMemo(() => {

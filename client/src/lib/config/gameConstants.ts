@@ -379,7 +379,6 @@ export const DECK_WHEEL_CONFIG: DeckWheelConfig = {
 
 // Top-level exports for backward compatibility and direct access
 // Health exports
-export const MAX_HEALTH = HEALTH_THRESHOLDS.max;
 export const LOW_HEALTH_THRESHOLD = HEALTH_THRESHOLDS.lowThreshold;
 
 // Combo exports
@@ -435,9 +434,62 @@ export const ROTATION_SPEED = DECK_WHEEL_CONFIG.rotationSpeed;
 export const SPIN_THRESHOLD = DECK_WHEEL_CONFIG.spinThreshold;
 export const DRAG_VELOCITY_THRESHOLD = DECK_WHEEL_CONFIG.dragVelocityThreshold;
 
+// ============================================================================
+// GAME CONFIG - Single source of truth for all gameplay constants
+// ============================================================================
+
+export interface GameConfigConstants {
+  TAP_HIT_WINDOW: number;
+  TAP_FAILURE_BUFFER: number;
+  HOLD_HIT_WINDOW: number;
+  HOLD_MISS_TIMEOUT: number;
+  HOLD_RELEASE_OFFSET: number;
+  HOLD_RELEASE_WINDOW: number;
+  HOLD_ACTIVATION_WINDOW: number;
+  LEAD_TIME: number;
+  ACCURACY_PERFECT_MS: number;
+  ACCURACY_GREAT_MS: number;
+  ACCURACY_PERFECT_POINTS: number;
+  ACCURACY_GREAT_POINTS: number;
+  ACCURACY_NORMAL_POINTS: number;
+  MAX_HEALTH: number;
+}
+
+export const GAME_CONFIG: GameConfigConstants = {
+  TAP_HIT_WINDOW: 150,
+  TAP_FAILURE_BUFFER: 100,
+  HOLD_HIT_WINDOW: 150,
+  HOLD_MISS_TIMEOUT: 500,
+  HOLD_RELEASE_OFFSET: 200,
+  HOLD_RELEASE_WINDOW: 150,
+  HOLD_ACTIVATION_WINDOW: 150,
+  LEAD_TIME: 4000,
+  ACCURACY_PERFECT_MS: 50,
+  ACCURACY_GREAT_MS: 100,
+  ACCURACY_PERFECT_POINTS: 100,
+  ACCURACY_GREAT_POINTS: 75,
+  ACCURACY_NORMAL_POINTS: 50,
+  MAX_HEALTH: 200,
+};
+
+// Game Config exports (individual constants for convenience)
+export const TAP_HIT_WINDOW = GAME_CONFIG.TAP_HIT_WINDOW;
+export const TAP_FAILURE_BUFFER = GAME_CONFIG.TAP_FAILURE_BUFFER;
+export const HOLD_HIT_WINDOW = GAME_CONFIG.HOLD_HIT_WINDOW;
+export const HOLD_MISS_TIMEOUT = GAME_CONFIG.HOLD_MISS_TIMEOUT;
+export const HOLD_RELEASE_OFFSET = GAME_CONFIG.HOLD_RELEASE_OFFSET;
+export const HOLD_RELEASE_WINDOW = GAME_CONFIG.HOLD_RELEASE_WINDOW;
+export const HOLD_ACTIVATION_WINDOW = GAME_CONFIG.HOLD_ACTIVATION_WINDOW;
+export const LEAD_TIME = GAME_CONFIG.LEAD_TIME;
+export const ACCURACY_PERFECT_MS = GAME_CONFIG.ACCURACY_PERFECT_MS;
+export const ACCURACY_GREAT_MS = GAME_CONFIG.ACCURACY_GREAT_MS;
+export const ACCURACY_PERFECT_POINTS = GAME_CONFIG.ACCURACY_PERFECT_POINTS;
+export const ACCURACY_GREAT_POINTS = GAME_CONFIG.ACCURACY_GREAT_POINTS;
+export const ACCURACY_NORMAL_POINTS = GAME_CONFIG.ACCURACY_NORMAL_POINTS;
+
 // Game Engine exports
 export const STATE_UPDATE_INTERVAL = GAME_ENGINE_TIMING.stateUpdateInterval;
-export const LEAD_TIME = GAME_ENGINE_TIMING.leadTime;
+export const MAX_HEALTH = GAME_CONFIG.MAX_HEALTH;
 
 // ============================================================================
 // TAP NOTE SPECIFIC CONSTANTS
