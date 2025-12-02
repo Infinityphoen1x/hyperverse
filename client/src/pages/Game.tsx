@@ -22,9 +22,10 @@ interface GameProps {
   difficulty: Difficulty;
   onBackToHome?: () => void;
   playerInitializedRef: React.RefObject<boolean>;
+  youtubeVideoId?: string | null;
 }
 
-function Game({ difficulty, onBackToHome, playerInitializedRef }: GameProps) {
+function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: propYoutubeVideoId }: GameProps) {
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
 
