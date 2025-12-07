@@ -12,9 +12,10 @@ interface BeatmapLoaderProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   onBeatmapLoad: (data: BeatmapData, beatmapText: string) => void;
+  onUnloadBeatmap?: () => void;
 }
 
-export function BeatmapLoader({ difficulty, isOpen, setIsOpen, onBeatmapLoad }: BeatmapLoaderProps) {
+export function BeatmapLoader({ difficulty, isOpen, setIsOpen, onBeatmapLoad, onUnloadBeatmap }: BeatmapLoaderProps) {
   const {
     beatmapText,
     error,
@@ -22,6 +23,7 @@ export function BeatmapLoader({ difficulty, isOpen, setIsOpen, onBeatmapLoad }: 
     handleBeatmapTextChange,
     handleLoadBeatmap,
     handleQuickLoadEscapingGravity,
+    handleUnloadBeatmap,
   } = useBeatmapLoader({ difficulty, onBeatmapLoad });
 
   return (
@@ -112,6 +114,20 @@ export function BeatmapLoader({ difficulty, isOpen, setIsOpen, onBeatmapLoad }: 
               >
                 ESCAPING GRAVITY
               </Button>
+              {isBeatmapLoaded && onUnloadBeatmap && (
+                <Button
+                  onClick={() => {
+                    handleUnloadBeatmap();
+                    onUnloadBeatmap();
+                    setIsOpen(false);
+                  }}
+                  variant="outline"
+                  className="border-neon-pink text-neon-pink hover:bg-neon-pink/10 font-rajdhani"
+                  data-testid="button-unload-beatmap"
+                >
+                  UNLOAD
+                </Button>
+              )}
               <Button
                 variant="outline"
                 onClick={() => setIsOpen(false)}

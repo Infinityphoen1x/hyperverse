@@ -66,6 +66,11 @@ export default function Home({ onStartGame, onOpenSettings }: HomeProps) {
     setIsLoaderOpen(false); // Auto-close the loader
   };
 
+  const handleUnloadBeatmap = () => {
+    localStorage.removeItem('pendingBeatmap');
+    setBeatmapLoaded(false);
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center relative overflow-hidden">
       {/* Beatmap Loader */}
@@ -74,6 +79,7 @@ export default function Home({ onStartGame, onOpenSettings }: HomeProps) {
         isOpen={isLoaderOpen}
         setIsOpen={setIsLoaderOpen}
         onBeatmapLoad={handleBeatmapLoad}
+        onUnloadBeatmap={handleUnloadBeatmap}
       />
       {/* Semi-transparent overlay to show video behind */}
       <div className="absolute inset-0 bg-black/40 pointer-events-none z-0" />

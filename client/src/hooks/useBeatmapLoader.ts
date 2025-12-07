@@ -17,6 +17,7 @@ interface UseBeatmapLoaderReturn {
   handleBeatmapTextChange: (text: string) => void;
   handleLoadBeatmap: () => void;
   handleQuickLoadEscapingGravity: () => Promise<void>;
+  handleUnloadBeatmap: () => void;
 }
 
 const defaultBeatmap = `[METADATA]
@@ -116,6 +117,12 @@ export const useBeatmapLoader = ({ difficulty, onBeatmapLoad }: UseBeatmapLoader
     }
   };
 
+  const handleUnloadBeatmap = () => {
+    setError("");
+    setBeatmapText(defaultBeatmap);
+    setIsBeatmapLoaded(false);
+  };
+
   return {
     beatmapText,
     error,
@@ -123,5 +130,6 @@ export const useBeatmapLoader = ({ difficulty, onBeatmapLoad }: UseBeatmapLoader
     handleBeatmapTextChange,
     handleLoadBeatmap,
     handleQuickLoadEscapingGravity,
+    handleUnloadBeatmap,
   };
 };
