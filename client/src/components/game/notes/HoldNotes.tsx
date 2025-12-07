@@ -2,7 +2,7 @@ import React, { memo, useCallback } from 'react';
 import { HoldNote } from './HoldNote';
 import { useHoldNotes } from '@/hooks/useHoldNotes';
 import { useGameStore } from '@/stores/useGameStore';
-import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT, LEAD_TIME, REFERENCE_BPM } from '@/lib/config/gameConstants';
+import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT, LEAD_TIME } from '@/lib/config/gameConstants';
 
 interface HoldNotesProps {
   vpX?: number;
@@ -13,13 +13,21 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
   // Split selectors to prevent unnecessary object creation and re-renders
   const notes = useGameStore(state => state.notes || []);
   const currentTime = useGameStore(state => state.currentTime);
-  const beatmapBpm = useGameStore(state => state.beatmapBpm) || 120;
+  const noteSpeedMultiplier = useGameStore(state => state.noteSpeedMultiplier) || 1.0;
 
   const visibleNotes = React.useMemo(() => {
     if (!notes || !Array.isArray(notes)) return [];
     
-    // effectiveLEAD_TIME scales with BPM to prevent note stacking on fast songs
-    const effectiveLEAD_TIME = LEAD_TIME * (REFERENCE_BPM / Math.max(1, beatmapBpm));
+    // Scale render window inversely to note speed for velocity adjustment
+    // 2.0x speed: notes spawn at -2000ms (travel faster, less upcoming notes)
+    // 0.5x speed: notes spawn at -8000ms (travel slower, more upcoming notes)
+    const effectiveLeadTime = LEAD_TIME / noteSpeedMultiplier;
+    
+    // Scale failure visibility windows to match note speed
+    // These ensure greyscale animations complete before note cleanup
+    const failureWindowTooEarly = effectiveLeadTime; // Full approach duration
+    const failureWindowMiss = effectiveLeadTime / 2; // Half approach duration (post-judgement)
+    const hitCleanupWindow = 500 / noteSpeedMultiplier; // Brief cleanup period
     
     const holdNotes = notes.filter(n => n.type === 'HOLD' || n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT');
     const tapNotes = notes.filter(n => n.type === 'TAP');
@@ -31,21 +39,21 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
       const noteStartTime = n.time;
       const noteEndTime = isHoldNote ? n.time + holdDuration : n.time;
       
-      if (n.tooEarlyFailure) return noteStartTime <= currentTime + effectiveLEAD_TIME && noteStartTime >= currentTime - 4000;
-      if (n.holdMissFailure || n.holdReleaseFailure) return noteStartTime <= currentTime + effectiveLEAD_TIME && noteStartTime >= currentTime - 2000;
+      if (n.tooEarlyFailure) return noteStartTime <= currentTime + effectiveLeadTime && noteStartTime >= currentTime - failureWindowTooEarly;
+      if (n.holdMissFailure || n.holdReleaseFailure) return noteStartTime <= currentTime + effectiveLeadTime && noteStartTime >= currentTime - failureWindowMiss;
       
-      // For hold notes: keep visible from effectiveLEAD_TIME before start to 500ms after end
-      // Upper bound: effectiveLEAD_TIME before start (so it appears at vanishing point)
-      // Lower bound: 500ms after it ends (holdDuration past start)
+      // For hold notes: keep visible from effectiveLeadTime before start to hitCleanupWindow after end
+      // Upper bound: effectiveLeadTime before start (so it appears at vanishing point)
+      // Lower bound: hitCleanupWindow after it ends (holdDuration past start)
       if (isHoldNote) {
-        const isVisible = noteStartTime <= currentTime + effectiveLEAD_TIME && noteEndTime >= currentTime - 500;
+        const isVisible = noteStartTime <= currentTime + effectiveLeadTime && noteEndTime >= currentTime - hitCleanupWindow;
         return isVisible;
       }
       
-      // For normal tap notes: keep visible from effectiveLEAD_TIME before start to 500ms after start
-      return noteStartTime <= currentTime + effectiveLEAD_TIME && noteStartTime >= currentTime - 500;
+      // For normal tap notes: keep visible from effectiveLeadTime before start to hitCleanupWindow after start
+      return noteStartTime <= currentTime + effectiveLeadTime && noteStartTime >= currentTime - hitCleanupWindow;
     });
-  }, [notes, currentTime, beatmapBpm]);
+  }, [notes, currentTime, noteSpeedMultiplier]);
 
   const processedNotes = useHoldNotes(visibleNotes, currentTime);
 

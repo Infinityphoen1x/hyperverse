@@ -85,14 +85,17 @@ app.use((req, res, next) => {
 // this serves both the API and the client.
 // It is the only port that is not firewalled.
 const port = parseInt(process.env.PORT || "5001", 10);
+// Bind to 0.0.0.0 to allow external access (Codespaces port forwarding)
+// 127.0.0.1 only allows localhost, blocking forwarded ports
+const host = "0.0.0.0";
 httpServer.listen(
   {
     port,
-    host: "127.0.0.1",
+    host,
     // reusePort: true,  // ← Comment out or delete: Linux-only, causes ENOTSUP on macOS
   },
   () => {
-    log(`serving on port ${port}`);
+    log(`serving on ${host}:${port}`);
   },
 );
 })();

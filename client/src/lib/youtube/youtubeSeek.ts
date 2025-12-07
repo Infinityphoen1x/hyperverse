@@ -36,7 +36,7 @@ export async function seekYouTubeVideo(timeSeconds: number, signal?: AbortSignal
           func: 'seekTo',
           args: [clampedTime, true]
         }),
-        '*'
+        'https://www.youtube.com'
       );
       console.log(`[YOUTUBE-SEEK] PostMessage fallback: Seeking to ${minutes}:${seconds}`);
     } else {

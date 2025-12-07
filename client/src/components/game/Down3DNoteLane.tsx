@@ -2,6 +2,7 @@
 import React, { memo, useEffect } from "react";
 import { VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config/gameConstants';
 import { useVanishingPointOffset } from '@/hooks/useVanishingPointOffset';
+import { useVanishingPointStore } from '@/stores/useVanishingPointStore';
 import { useGameStore } from '@/stores/useGameStore';
 import { TunnelBackground } from './tunnel/TunnelBackground';
 import { SoundpadButtons } from './hud/SoundpadButtons';
@@ -23,6 +24,7 @@ const Down3DNoteLaneComponent = ({
   // Select atomic values to prevent unnecessary re-renders
   const health = useGameStore(state => propHealth ?? state.health);
   const combo = useGameStore(state => propCombo ?? state.combo);
+  const setVPOffset = useVanishingPointStore(state => state.setVPOffset);
 
   const vpOffset = useVanishingPointOffset();
   
@@ -30,6 +32,31 @@ const Down3DNoteLaneComponent = ({
   const vpY = VANISHING_POINT_Y + vpOffset.y;
   const hexCenterX = VANISHING_POINT_X;
   const hexCenterY = VANISHING_POINT_Y;
+
+  // Dynamic vanishing point: smooth circular motion for 3D perspective wobble
+  useEffect(() => {
+    const VP_AMPLITUDE = 15; // ±15px offset from center
+    const VP_CYCLE_DURATION = 8000; // 8 seconds per full cycle
+    const VP_UPDATE_INTERVAL = 16; // ~60fps
+    
+    const intervalId = setInterval(() => {
+      const elapsed = Date.now() % VP_CYCLE_DURATION;
+      const progress = elapsed / VP_CYCLE_DURATION; // 0 to 1
+      
+      // Smooth circular motion using sine/cosine
+      // Creates path: (x, -y) → (-x, -y) → (-x, y) → (x, y) → (0, 0)
+      const angle = progress * Math.PI * 2; // 0 to 2π
+      const x = Math.cos(angle) * VP_AMPLITUDE;
+      const y = Math.sin(angle) * VP_AMPLITUDE;
+      
+      setVPOffset({ x, y });
+    }, VP_UPDATE_INTERVAL);
+    
+    return () => {
+      clearInterval(intervalId);
+      setVPOffset({ x: 0, y: 0 }); // Reset on unmount
+    };
+  }, [setVPOffset]);
 
   useEffect(() => {
     if (combo > 0 && combo % 5 === 0) {

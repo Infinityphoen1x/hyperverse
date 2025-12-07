@@ -68,13 +68,12 @@ export function useGameEngine({
   // Construct GameConfig from single source of truth
   const gameConfig = useMemo<GameConfig>(() => DEFAULT_CONFIG, []);
 
-  // Initialize Engine Components
   const { processor, validator, scorer } = useMemo(() => {
     const scorer = new ScoringManager(gameConfig);
-    const validator = new NoteValidator(gameConfig, beatmapBpm);
-    const processor = new NoteProcessor(gameConfig, validator, scorer, beatmapBpm);
+    const validator = new NoteValidator(gameConfig);
+    const processor = new NoteProcessor(gameConfig, validator, scorer);
     return { processor, validator, scorer };
-  }, [gameConfig, beatmapBpm]);
+  }, [gameConfig]);
 
   // Store last frame timestamp for fallback timing
   const lastFrameTimeRef = useRef<number>(performance.now());

@@ -63,8 +63,8 @@ export const determineGreyscaleState = (
     return { isGreyed: true, reason: 'tooEarlyImmediate' };
   }
   
-  // Greyscale when miss reaches 70% of judgement radius (at judgement moment)
-  if (failures.isHoldMissFailure && approachNearDistance >= JUDGEMENT_RADIUS * 0.7) {
+  // Immediate greyscale for hold miss (consistent with tap miss and other hold failures)
+  if (failures.isHoldMissFailure) {
     return { isGreyed: true, reason: 'holdMissAtJudgement' };
   }
   

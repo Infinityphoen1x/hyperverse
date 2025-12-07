@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import type { Note } from '@/lib/engine/gameTypes';
 import { getTapNoteState, TapNoteState, shouldRenderTapNote } from '@/lib/notes/tap/tapNoteHelpers';
-import { LEAD_TIME, REFERENCE_BPM } from '@/lib/config/gameConstants';
+import { LEAD_TIME } from '@/lib/config/gameConstants';
 import { GameErrors } from '@/lib/errors/errorLog';
 
 export interface TapNoteProcessedData {
@@ -18,7 +18,7 @@ export function useTapNotes(): TapNoteProcessedData[] {
   const notes = useGameStore(state => state.notes);
   const currentTime = useGameStore(state => state.currentTime);
   const gameState = useGameStore(state => state.gameState);
-  const beatmapBpm = useGameStore(state => state.beatmapBpm) || 120;
+  const noteSpeedMultiplier = useGameStore(state => state.noteSpeedMultiplier) || 1.0;
 
   return useMemo(() => {
     // Don't render notes until game is actually playing (YouTube started)
@@ -31,22 +31,28 @@ export function useTapNotes(): TapNoteProcessedData[] {
       return [];
     }
 
-    // effectiveLEAD_TIME scales with BPM to prevent note stacking on fast songs
-    // This affects VISUAL density but doesn't change YouTube sync timing
-    const effectiveLEAD_TIME = LEAD_TIME * (REFERENCE_BPM / Math.max(1, beatmapBpm));
-
-    // Visibility windows are FIXED (tied to gameplay accuracy and YouTube sync, not BPM)
-    // These windows define when notes must be hit - changing them would break beatmap sync
-    // Animation speeds (visual durations) will be controlled by player-set "note speed" later
+    // Scale render window inversely to note speed for velocity adjustment
+    // 2.0x speed: notes spawn at -2000ms (travel faster, less upcoming notes)
+    // 0.5x speed: notes spawn at -8000ms (travel slower, more upcoming notes)
+    const effectiveLeadTime = LEAD_TIME / noteSpeedMultiplier;
+    
+    // Scale failure visibility windows to match note speed
+    // These ensure greyscale animations complete before note cleanup
+    const failureWindowTooEarly = effectiveLeadTime; // Full approach duration
+    const failureWindowMiss = effectiveLeadTime / 2; // Half approach duration (post-judgement)
+    const hitCleanupWindow = 500 / noteSpeedMultiplier; // Brief cleanup period
+    
+    // Visibility windows are scaled by noteSpeedMultiplier to affect note velocity
+    // noteSpeedMultiplier changes WHEN notes spawn, not their visual depth
     // 
     // Keep failed notes visible longer to ensure they reach judgement line and greyscale animation completes
-    // tapTooEarlyFailure: 4000ms window to travel from failure point to judgement line
-    // tapMissFailure: 2000ms window to show failure animation after reaching judgement line
-    // Hit notes: 500ms buffer after judgement (small tail for visual cleanup)
+    // tapTooEarlyFailure: effectiveLeadTime window to travel from failure point to judgement line
+    // tapMissFailure: effectiveLeadTime/2 window to show failure animation after reaching judgement line
+    // Hit notes: scaled brief buffer after judgement (small tail for visual cleanup)
     const visibleNotes = notes.filter(n => {
-      if (n.tapTooEarlyFailure) return n.time <= currentTime + effectiveLEAD_TIME && n.time >= currentTime - 4000;
-      if (n.tapMissFailure) return n.time <= currentTime + effectiveLEAD_TIME && n.time >= currentTime - 2000;
-      return n.time <= currentTime + effectiveLEAD_TIME && n.time >= currentTime - 500;
+      if (n.tapTooEarlyFailure) return n.time <= currentTime + effectiveLeadTime && n.time >= currentTime - failureWindowTooEarly;
+      if (n.tapMissFailure) return n.time <= currentTime + effectiveLeadTime && n.time >= currentTime - failureWindowMiss;
+      return n.time <= currentTime + effectiveLeadTime && n.time >= currentTime - hitCleanupWindow;
     });
     
     const processed = visibleNotes
@@ -54,16 +60,16 @@ export function useTapNotes(): TapNoteProcessedData[] {
       .map(note => {
         const state = getTapNoteState(note, currentTime);
         
-        // Calculate progress
+        // Calculate progress using scaled lead time (affects velocity)
         // progress 0 = spawn (far away)
         // progress 1 = hit line (near)
-        const rawProgress = 1 - ((note.time - currentTime) / effectiveLEAD_TIME);
+        const rawProgress = 1 - ((note.time - currentTime) / effectiveLeadTime);
         const clampedProgress = Math.max(0, Math.min(1, rawProgress));
         
         // For geometry, allow all notes (hit/failed) to go > 1 to show approach through judgement line
         const progressForGeometry = rawProgress;
 
-        if (!shouldRenderTapNote(state, note.time - currentTime, beatmapBpm)) {
+        if (!shouldRenderTapNote(state, note.time - currentTime, noteSpeedMultiplier)) {
             return null;
         }
 
@@ -78,5 +84,5 @@ export function useTapNotes(): TapNoteProcessedData[] {
       .filter((n): n is TapNoteProcessedData => n !== null);
 
       return processed;
-  }, [notes, currentTime, gameState, beatmapBpm]);
+  }, [notes, currentTime, gameState, noteSpeedMultiplier]);
 }

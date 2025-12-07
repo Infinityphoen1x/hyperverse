@@ -1,6 +1,6 @@
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { TAP_FAILURE_ANIMATIONS, TAP_RENDER_WINDOW_MS, TAP_FALLTHROUGH_WINDOW_MS, TAP_HIT_FLASH, LEAD_TIME, REFERENCE_BPM } from '@/lib/config/gameConstants';
+import { TAP_FAILURE_ANIMATIONS, TAP_RENDER_WINDOW_MS, TAP_FALLTHROUGH_WINDOW_MS, TAP_HIT_FLASH, LEAD_TIME } from '@/lib/config/gameConstants';
 
 export interface TapNoteState {
   isHit: boolean;
@@ -30,9 +30,9 @@ export const getTapNoteState = (note: Note, currentTime: number): TapNoteState =
 const getFailureAnimationDuration = (isTooEarly: boolean): number =>
   isTooEarly ? TAP_FAILURE_ANIMATIONS.TOO_EARLY.duration : TAP_FAILURE_ANIMATIONS.MISS.duration;
 
-export const shouldRenderTapNote = (state: TapNoteState, timeUntilHit: number, beatmapBpm: number = 120): boolean => {
-  // Calculate effective TAP render window based on BPM
-  const effectiveLEAD_TIME = LEAD_TIME * (REFERENCE_BPM / Math.max(1, beatmapBpm));
+export const shouldRenderTapNote = (state: TapNoteState, timeUntilHit: number, noteSpeedMultiplier: number = 1.0): boolean => {
+  // Use fixed LEAD_TIME for render window (BPM no longer affects visibility)
+  // noteSpeedMultiplier affects visual speed only, not timing windows
   
   // For failed notes, only check animation duration, not render window
   // Failed notes need to stay visible longer than normal notes (visibility handled in useTapNotes)
@@ -48,8 +48,8 @@ export const shouldRenderTapNote = (state: TapNoteState, timeUntilHit: number, b
     return true;
   }
   
-  // For non-failed notes, apply normal render/fallthrough window checks using BPM-scaled window
-  if (timeUntilHit > effectiveLEAD_TIME || timeUntilHit < -TAP_FALLTHROUGH_WINDOW_MS) return false;
+  // For non-failed notes, apply normal render/fallthrough window checks using fixed LEAD_TIME
+  if (timeUntilHit > LEAD_TIME || timeUntilHit < -TAP_FALLTHROUGH_WINDOW_MS) return false;
   
   // Hide successful hits after flash animation completes
   if (state.isHit && state.timeSinceHit >= TAP_HIT_FLASH.DURATION) return false;

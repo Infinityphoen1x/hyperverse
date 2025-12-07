@@ -4,7 +4,7 @@ import { ScoringManager } from '@/lib/managers/scoringManager';
 import { roundTime } from './noteUpdateHelpers';
 import { checkTapAutoFail, checkHoldAutoFail } from './noteAutoFailHelpers';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { TAP_RENDER_WINDOW_MS, LEAD_TIME, REFERENCE_BPM } from '@/lib/config/gameConstants';
+import { TAP_RENDER_WINDOW_MS, LEAD_TIME } from '@/lib/config/gameConstants';
 
 export type NoteUpdateResult = {
   updatedNote: Note;
@@ -17,25 +17,23 @@ export type NoteUpdateResult = {
 // ============================================================================
 
 export class NoteProcessor {
-  private effectiveLEAD_TIME: number;
-  
   constructor(
     private config: GameConfig,
     private validator: NoteValidator,
-    private scorer: ScoringManager,
-    beatmapBpm: number = 120
+    private scorer: ScoringManager
   ) {
-    // Scale LEAD_TIME with BPM to match geometry scaling
-    this.effectiveLEAD_TIME = LEAD_TIME * (REFERENCE_BPM / Math.max(1, beatmapBpm));
+    // Note: LEAD_TIME is now fixed regardless of BPM
+    // Note speed multiplier handles visual rendering speed only
   }
 
   processTapHit(note: Note, currentTime: number): NoteUpdateResult {
     const timeSinceNote = currentTime - note.time;
 
-    // Too early - pressed too far before note appears (TAP_RENDER_WINDOW_MS before note.time)
-    if (timeSinceNote < -TAP_RENDER_WINDOW_MS) {
+    // Too early - pressed before hit window but after note spawned
+    // Check range: -TAP_RENDER_WINDOW_MS to -TAP_HIT_WINDOW (e.g., -4000ms to -151ms)
+    if (timeSinceNote < -this.config.TAP_HIT_WINDOW && timeSinceNote >= -TAP_RENDER_WINDOW_MS) {
       GameErrors.updateHitStats({ tapTooEarlyFailures: (GameErrors.hitStats.tapTooEarlyFailures || 0) + 1 });
-      GameErrors.log(`[TAP-HIT] noteId=${note.id} tapTooEarlyFailure at ${currentTime}ms`, currentTime);
+      GameErrors.log(`[TAP-HIT] noteId=${note.id} tapTooEarlyFailure at ${currentTime}ms (timing: ${timeSinceNote.toFixed(0)}ms)`, currentTime);
       return {
         updatedNote: {
           ...note,
@@ -69,10 +67,11 @@ export class NoteProcessor {
   processHoldStart(note: Note, currentTime: number): NoteUpdateResult {
     const timeSinceNote = currentTime - note.time;
 
-    // Too early - pressed too far before note appears (effectiveLEAD_TIME before note.time)
-    if (timeSinceNote < -this.effectiveLEAD_TIME) {
+    // Too early - pressed before hit window but after note spawned
+    // Check range: -LEAD_TIME to -HOLD_HIT_WINDOW (e.g., -4000ms to -151ms)
+    if (timeSinceNote < -this.config.HOLD_HIT_WINDOW && timeSinceNote >= -LEAD_TIME) {
       GameErrors.updateHitStats({ tooEarlyFailures: (GameErrors.hitStats.tooEarlyFailures || 0) + 1 });
-      GameErrors.log(`[HOLD-HIT] noteId=${note.id} tooEarlyFailure at ${currentTime}ms`, currentTime);
+      GameErrors.log(`[HOLD-HIT] noteId=${note.id} tooEarlyFailure at ${currentTime}ms (timing: ${timeSinceNote.toFixed(0)}ms)`, currentTime);
       return {
         updatedNote: {
           ...note,

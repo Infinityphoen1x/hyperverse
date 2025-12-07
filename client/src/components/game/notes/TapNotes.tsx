@@ -13,7 +13,6 @@ interface TapNotesProps {
 const TapNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: TapNotesProps) => {
   // Memoize selectors to prevent unnecessary store subscriptions
   const currentTime = useGameStore(state => state.currentTime);
-  const beatmapBpm = useGameStore(state => state.beatmapBpm) || 120;
   const processedNotes = useTapNotes();
 
   return (
@@ -39,7 +38,6 @@ const TapNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: TapNotesP
           progressForGeometry={noteData.progressForGeometry}
           clampedProgress={noteData.clampedProgress}
           rawProgress={noteData.rawProgress}
-          beatmapBpm={beatmapBpm}
         />
       ))}
     </svg>

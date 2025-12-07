@@ -23,7 +23,7 @@ export interface HoldNoteProcessedData {
   currentTime: number;
 }
 
-export function processSingleHoldNote(note: Note, currentTime: number, beatmapBpm: number = 120): HoldNoteProcessedData | null {
+export function processSingleHoldNote(note: Note, currentTime: number, noteSpeedMultiplier: number = 1.0): HoldNoteProcessedData | null {
   try {
     if (!note || !Number.isFinite(note.time) || !note.id) return null;
 
@@ -58,16 +58,17 @@ export function processSingleHoldNote(note: Note, currentTime: number, beatmapBp
     // For early failures, calculate approach geometry at the time of failure (frozen, clamped to judgement)
     // For miss failures, calculate at current time allowing extension past judgement
     // For other cases, use current time with clamping
+    // NOTE: Geometry is now independent of noteSpeedMultiplier (depth is constant)
     let approachGeometry;
     if (failures.isTooEarlyFailure && failureTime) {
       const timeUntilHitAtFailure = note.time - failureTime;
-      approachGeometry = calculateApproachGeometry(timeUntilHitAtFailure, pressHoldTime, failures.isTooEarlyFailure, holdDuration, false, true, beatmapBpm);
+      approachGeometry = calculateApproachGeometry(timeUntilHitAtFailure, pressHoldTime, failures.isTooEarlyFailure, holdDuration, false, true);
     } else {
-      approachGeometry = calculateApproachGeometry(timeUntilHit, pressHoldTime, failures.isTooEarlyFailure, holdDuration, failures.isHoldMissFailure, true, beatmapBpm);
+      approachGeometry = calculateApproachGeometry(timeUntilHit, pressHoldTime, failures.isTooEarlyFailure, holdDuration, failures.isHoldMissFailure, true);
     }
     
     const collapseDuration = failures.hasAnyFailure ? FAILURE_ANIMATION_DURATION : holdDuration;
-    const lockedNearDistance = calculateLockedNearDistance(note, pressHoldTime, failures.isTooEarlyFailure, approachGeometry.nearDistance, failureTime, failures.isHoldMissFailure, beatmapBpm);
+    const lockedNearDistance = calculateLockedNearDistance(note, pressHoldTime, failures.isTooEarlyFailure, approachGeometry.nearDistance, failureTime, failures.isHoldMissFailure);
     const stripWidth = holdDuration * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
     // Use the actual approach geometry's far distance (what was being rendered)
     // not a recalculated value - this prevents discontinuous jumps on hit/press

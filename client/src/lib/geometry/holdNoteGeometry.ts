@@ -1,6 +1,6 @@
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { LEAD_TIME, JUDGEMENT_RADIUS, HOLD_NOTE_STRIP_WIDTH_MULTIPLIER, REFERENCE_BPM, HOLD_RAY } from '@/lib/config/gameConstants';
+import { LEAD_TIME, JUDGEMENT_RADIUS, HOLD_NOTE_STRIP_WIDTH_MULTIPLIER, HOLD_RAY } from '@/lib/config/gameConstants';
 
 export interface ApproachGeometry {
   nearDistance: number;
@@ -13,51 +13,38 @@ export const calculateApproachGeometry = (
   isTooEarlyFailure: boolean,
   holdDuration: number,
   isHoldMissFailure: boolean = false,
-  useFixedDepth: boolean = true,
-  beatmapBpm: number = 120,
-  noteSpeedMultiplier: number = 1.0
+  useFixedDepth: boolean = true
 ): ApproachGeometry => {
-  // Fixed depth mode - depth is proportional to duration AND approach speed
+  // Fixed depth mode - depth is proportional to duration
   // Near end approaches based on note.time
-  // Far end = near end + fixed offset based on duration scaled by approach speed
+  // Far end = near end + fixed offset based on duration
   
-  // LEAD_TIME scales with BPM to prevent note stacking on fast songs
-  // At 120 BPM: LEAD_TIME = 4000ms (baseline)
-  // At 240 BPM: LEAD_TIME = 2000ms (half - snappier, prevents doubled-up notes)
-  // At 60 BPM: LEAD_TIME = 8000ms (double - longer window for slower songs)
-  // Formula: effectiveLEAD_TIME = LEAD_TIME × (REFERENCE_BPM / beatmapBpm)
+  // LEAD_TIME is now fixed (4000ms) regardless of BPM
+  // noteSpeedMultiplier controls render window duration, not geometry
   
-  const effectiveLEAD_TIME = LEAD_TIME * (REFERENCE_BPM / Math.max(1, beatmapBpm));
-  
-  const rawNearProgress = (effectiveLEAD_TIME - timeUntilHit) / effectiveLEAD_TIME;
+  const rawNearProgress = (LEAD_TIME - timeUntilHit) / LEAD_TIME;
   const nearProgress = Math.max(0, rawNearProgress);
   const nearDistance = Math.max(1, 1 + (nearProgress * (JUDGEMENT_RADIUS - 1)));
   
   if (useFixedDepth) {
-    // Approach speed = tunnel distance / effective LEAD_TIME
-    // This automatically scales with BPM since effectiveLEAD_TIME scales inversely
-    // High BPM: shorter window, faster approach speed
-    // Low BPM: longer window, slower approach speed
-    // Hold visual depth = duration × approach speed × noteSpeedMultiplier
-    // Note speed scales how fast notes travel, so depth must scale proportionally
+    // Approach speed is FIXED - render window duration changes with noteSpeedMultiplier instead
+    // Hold visual depth = duration × base approach speed (constant)
     const TUNNEL_DISTANCE = JUDGEMENT_RADIUS - 1; // 186 pixels
-    const approachSpeed = TUNNEL_DISTANCE / effectiveLEAD_TIME; // pixels per millisecond
-    const baseDepthOffset = Math.max(1, holdDuration * approachSpeed);
-    const fixedDepthOffset = baseDepthOffset * noteSpeedMultiplier; // Scale by note speed
+    const baseApproachSpeed = TUNNEL_DISTANCE / LEAD_TIME; // pixels per millisecond (constant)
+    const baseDepthOffset = Math.max(1, holdDuration * baseApproachSpeed);
     // Scale depth offset by approach progress (time-aware) to maintain constant z-depth in world space
     // perspectiveScale represents how far along the approach we are (0 at VP, 1 at judgement)
-    // This naturally accounts for BPM through effectiveLEAD_TIME
     // At vanishing point: scaled offset is tiny, at judgement: scaled offset is full size
     // This creates visual growth of depth as note approaches while keeping z-depth constant
-    const perspectiveScale = Math.max(0, (effectiveLEAD_TIME - timeUntilHit) / effectiveLEAD_TIME);
-    const scaledDepthOffset = fixedDepthOffset * perspectiveScale;
+    const perspectiveScale = Math.max(0, (LEAD_TIME - timeUntilHit) / LEAD_TIME);
+    const scaledDepthOffset = baseDepthOffset * perspectiveScale;
     // Far end is closer to vanishing point (smaller distance), near end is at judgement
     const farDistance = Math.max(1, nearDistance - scaledDepthOffset);
     return { nearDistance, farDistance };
   } else {
     // LEGACY: Dynamic depth mode (both ends approach based on timing)
     const timeUntilHitFar = timeUntilHit + holdDuration;
-    const rawFarProgress = (effectiveLEAD_TIME - timeUntilHitFar) / effectiveLEAD_TIME;
+    const rawFarProgress = (LEAD_TIME - timeUntilHitFar) / LEAD_TIME;
     const farProgress = Math.max(0, rawFarProgress);
     const farDistance = Math.max(1, 1 + (farProgress * (JUDGEMENT_RADIUS - 1)));
     return { nearDistance, farDistance };
@@ -104,8 +91,7 @@ export const calculateLockedNearDistance = (
   isTooEarlyFailure: boolean,
   approachNearDistance: number,
   failureTime: number | null,
-  isHoldMissFailure: boolean = false,
-  beatmapBpm: number = 120
+  isHoldMissFailure: boolean = false
 ): number | null => {
   if (note.hit) return JUDGEMENT_RADIUS;
   if (!pressHoldTime || pressHoldTime === 0) return null;
@@ -117,9 +103,8 @@ export const calculateLockedNearDistance = (
   if (note.holdReleaseFailure) {
     if (!failureTime) return null;
     const timeUntilHitAtFailure = note.time - failureTime;
-    // Use effectiveLEAD_TIME scaled by BPM
-    const effectiveLEAD_TIME = LEAD_TIME * (REFERENCE_BPM / Math.max(1, beatmapBpm));
-    const approachProgressAtFailure = Math.max((effectiveLEAD_TIME - timeUntilHitAtFailure) / effectiveLEAD_TIME, 0);
+    // Use fixed LEAD_TIME (no BPM scaling)
+    const approachProgressAtFailure = Math.max((LEAD_TIME - timeUntilHitAtFailure) / LEAD_TIME, 0);
     return Math.max(1, 1 + (approachProgressAtFailure * (JUDGEMENT_RADIUS - 1)));
   }
   

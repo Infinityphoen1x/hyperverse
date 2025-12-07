@@ -59,9 +59,13 @@ export function buildYouTubeEmbedUrl(videoId: string, options: {
   if (typeof options.start === 'number' && options.start > 0) {
     params.append('start', Math.floor(options.start).toString());
   }
-  // Origin for postMessage security (default to current domain; set via env in prod)
+  // Origin for postMessage security (default to current domain)
   const origin = options.origin || window.location.origin;
   params.append('origin', origin);
+  
+  const url = `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+  console.log('[YOUTUBE-EMBED] Building URL with origin:', origin);
+  console.log('[YOUTUBE-EMBED] Full URL:', url);
 
-  return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+  return url;
 }

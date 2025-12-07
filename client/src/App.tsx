@@ -4,8 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useConsoleLogger } from "@/hooks/useConsoleLogger";
-import { initYouTubePlayer, initYouTubeTimeListener, buildYouTubeEmbedUrl } from "@/lib/youtube";
-import { YOUTUBE_BACKGROUND_EMBED_OPTIONS } from "@/lib/config/gameConstants";
+import { initYouTubePlayer, initYouTubeTimeListener } from "@/lib/youtube";
 import Home from "@/pages/Home";
 import Game from "@/pages/Game";
 import Settings from "@/pages/Settings";
@@ -14,21 +13,26 @@ function App() {
   const [gameActive, setGameActive] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
-  const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
+  const youtubeContainerRef = useRef<HTMLDivElement>(null);
   const playerInitializedRef = useRef<boolean>(false) as React.RefObject<boolean>;
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
 
   // Initialize console logging for diagnostics
   useConsoleLogger();
 
-  // Initialize YouTube player when iframe mounts or videoId changes
+  // Clear stale beatmap data on initial app mount (prevents auto-load from previous sessions)
   useEffect(() => {
-    if (!youtubeIframeRef.current || !window.YT) return;
+    localStorage.removeItem('pendingBeatmap');
+  }, []); // Empty deps = runs once on mount
+
+  // Initialize YouTube player when container mounts and videoId changes
+  useEffect(() => {
+    if (!youtubeContainerRef.current || !youtubeVideoId || !window.YT) return;
 
     console.log('[APP-YOUTUBE-INIT] Initializing YouTube player for videoId:', youtubeVideoId);
     playerInitializedRef.current = false; // Reset for new video
     
-    initYouTubePlayer(youtubeIframeRef.current, () => {
+    initYouTubePlayer(youtubeContainerRef.current, youtubeVideoId, () => {
       console.log('[APP-YOUTUBE-INIT] Player ready for videoId:', youtubeVideoId);
       playerInitializedRef.current = true;
     });
@@ -61,25 +65,13 @@ function App() {
         <Toaster />
         {/* Persistent background container - never remounts */}
         <div className="fixed inset-0 w-full h-full bg-black overflow-hidden">
-          
           {/* YouTube player - PERSISTENT background (z-0) */}
           {youtubeVideoId && (
-            <div className="absolute inset-0 pointer-events-none z-0">
-              <iframe
-                key={`youtube-${youtubeVideoId}`}
-                ref={youtubeIframeRef}
-                width="100%"
-                height="100%"
-                src={buildYouTubeEmbedUrl(youtubeVideoId, {
-                  ...YOUTUBE_BACKGROUND_EMBED_OPTIONS,
-                  autoplay: false
-                })}
-                title="YouTube background audio/video sync"
-                allow="autoplay; encrypted-media"
-                style={{ display: 'block', opacity: 0.05, width: '100%', height: '100%', objectFit: 'cover' as const }}
-                data-testid="iframe-youtube-background"
-              />
-            </div>
+            <div 
+              className="absolute inset-0 pointer-events-none z-0"
+              ref={youtubeContainerRef}
+              style={{ display: 'block', opacity: 0.05, width: '100%', height: '100%' }}
+            />
           )}
 
           {/* UI Layer - Home, Game, or Settings (z-10+) */}

@@ -42,7 +42,7 @@ export function getYouTubeVideoTime(): number | null {
     console.log('[YOUTUBE-TIME-READ] Querying via postMessage (one-shot)...');
     youtubeIframeElement.contentWindow.postMessage(
       JSON.stringify({ event: 'command', func: 'getCurrentTime', args: [] }),
-      '*'
+      'https://www.youtube.com'
     );
     // Critical: Return last good time instead of null to prevent note desync
     if (lastGoodTimeMs !== null) {
