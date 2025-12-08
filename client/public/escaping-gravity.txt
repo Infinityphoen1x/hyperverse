@@ -7,7 +7,7 @@ youtube: xfGrN3ZsPLA
 beatmapStart: 0
 beatmapEnd: 108000
 
-[EASY]
+[MEDIUM]
 3000|0|TAP
 4000|1|TAP
 5000|2|TAP
@@ -91,7 +91,7 @@ beatmapEnd: 108000
 106000|2|TAP
 107000|3|TAP
 
-[MEDIUM]
+[EASY]
 2500|0|TAP
 3500|1|TAP
 4500|2|TAP

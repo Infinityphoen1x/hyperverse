@@ -21,6 +21,7 @@ export function useRotationTrigger(): RotationTrigger | null {
   const notes = useGameStore(state => state.notes);
   const currentTime = useGameStore(state => state.currentTime);
   const tunnelRotation = useGameStore(state => state.tunnelRotation);
+  const noteSpeedMultiplier = useGameStore(state => state.noteSpeedMultiplier);
   
   return useMemo(() => {
     if (!notes || notes.length === 0) return null;
@@ -40,9 +41,12 @@ export function useRotationTrigger(): RotationTrigger | null {
     upcomingHolds.sort((a, b) => a.time - b.time);
     const nextHold = upcomingHolds[0];
     
+    // Scale lead time by note speed to match note velocity
+    const effectiveLeadTime = LEAD_TIME / noteSpeedMultiplier;
+    
     // Calculate when rotation should start
-    // rotationStart = noteTime - LEAD_TIME - ROTATION_DURATION - SETTLE_TIME
-    const rotationStartTime = nextHold.time - LEAD_TIME - ROTATION_CONFIG.ROTATION_TRIGGER_ADVANCE;
+    // rotationStart = noteTime - effectiveLeadTime - ROTATION_DURATION - SETTLE_TIME
+    const rotationStartTime = nextHold.time - effectiveLeadTime - ROTATION_CONFIG.ROTATION_TRIGGER_ADVANCE;
     
     // Only trigger if we're at or past the rotation start time
     if (currentTime < rotationStartTime) return null;
@@ -54,5 +58,5 @@ export function useRotationTrigger(): RotationTrigger | null {
       noteId: nextHold.id,
       lane: nextHold.lane,
     };
-  }, [notes, currentTime, tunnelRotation]);
+  }, [notes, currentTime, tunnelRotation, noteSpeedMultiplier]);
 }

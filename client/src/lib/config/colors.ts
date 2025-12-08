@@ -13,7 +13,7 @@ export interface ButtonConfig {
 }
 
 export const BUTTON_CONFIG: ButtonConfig[] = [
-  { lane: 0, key: 'W', angle: 120, color: '#FF007F' },
+  { lane: 0, key: 'W', angle: 120, color: '#FF6600' }, // Neon orange (was pink #FF007F)
   { lane: 1, key: 'O', angle: 60, color: '#0096FF' },
   { lane: 2, key: 'I', angle: 300, color: '#BE00FF' },
   { lane: 3, key: 'E', angle: 240, color: '#00FFFF' },
@@ -22,7 +22,7 @@ export const BUTTON_CONFIG: ButtonConfig[] = [
 ];
 
 export const SOUNDPAD_COLORS = [
-  'rgb(255,0,127)',
+  'rgb(255,102,0)', // Neon orange (was rgb(255,0,127))
   'rgb(0,150,255)',
   'rgb(190,0,255)',
   'rgb(0,255,255)'
@@ -42,7 +42,7 @@ export interface UIColorPalette {
 export const UI_COLOR_PALETTE: UIColorPalette = {
   deckLeft: '#00FF00',
   deckRight: '#FF0000',
-  padW: '#FF007F',
+  padW: '#FF6600', // Neon orange (was pink #FF007F)
   padO: '#0096FF',
   padI: '#BE00FF',
   padE: '#00FFFF',

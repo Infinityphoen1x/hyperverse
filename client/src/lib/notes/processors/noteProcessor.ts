@@ -121,8 +121,8 @@ export class NoteProcessor {
     const timeSinceExpectedRelease = currentTime - expectedReleaseTime;
     const totalHoldTime = currentTime - note.time;
 
-    // Released too early
-    if (totalHoldTime < holdDuration) {
+    // Released too early (with offset leniency)
+    if (totalHoldTime < holdDuration - this.config.HOLD_RELEASE_OFFSET) {
       return {
         updatedNote: {
           ...note,
@@ -135,8 +135,8 @@ export class NoteProcessor {
       };
     }
 
-    // Valid release
-    if (Math.abs(timeSinceExpectedRelease) <= this.config.HOLD_RELEASE_WINDOW) {
+    // Valid release (with offset applied to both sides)
+    if (Math.abs(timeSinceExpectedRelease) <= this.config.HOLD_RELEASE_WINDOW + this.config.HOLD_RELEASE_OFFSET) {
       const scoreChange = this.scorer.recordHit(timeSinceExpectedRelease);
       return {
         updatedNote: {

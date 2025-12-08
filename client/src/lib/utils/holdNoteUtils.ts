@@ -55,19 +55,24 @@ export function processSingleHoldNote(note: Note, currentTime: number, noteSpeed
       return null;
     }
 
+    // Calculate effectiveLeadTime scaled by noteSpeedMultiplier to match tap note velocity
+    const effectiveLeadTime = LEAD_TIME / noteSpeedMultiplier;
+
     // For early failures, calculate approach geometry at the time of failure (frozen, clamped to judgement)
     // For miss failures, calculate at current time allowing extension past judgement
     // For other cases, use current time with clamping
-    // NOTE: Geometry is now independent of noteSpeedMultiplier (depth is constant)
     let approachGeometry;
     if (failures.isTooEarlyFailure && failureTime) {
       const timeUntilHitAtFailure = note.time - failureTime;
-      approachGeometry = calculateApproachGeometry(timeUntilHitAtFailure, pressHoldTime, failures.isTooEarlyFailure, holdDuration, false, true);
+      approachGeometry = calculateApproachGeometry(timeUntilHitAtFailure, pressHoldTime, failures.isTooEarlyFailure, holdDuration, false, false, effectiveLeadTime);
     } else {
-      approachGeometry = calculateApproachGeometry(timeUntilHit, pressHoldTime, failures.isTooEarlyFailure, holdDuration, failures.isHoldMissFailure, true);
+      approachGeometry = calculateApproachGeometry(timeUntilHit, pressHoldTime, failures.isTooEarlyFailure, holdDuration, failures.isHoldMissFailure, false, effectiveLeadTime);
     }
     
-    const collapseDuration = failures.hasAnyFailure ? FAILURE_ANIMATION_DURATION : holdDuration;
+    // Scale collapse duration by noteSpeedMultiplier to match note velocity
+    // This ensures the collapse speed matches the approach speed
+    const baseCollapseDuration = failures.hasAnyFailure ? FAILURE_ANIMATION_DURATION : holdDuration;
+    const collapseDuration = baseCollapseDuration / noteSpeedMultiplier;
     const lockedNearDistance = calculateLockedNearDistance(note, pressHoldTime, failures.isTooEarlyFailure, approachGeometry.nearDistance, failureTime, failures.isHoldMissFailure);
     const stripWidth = holdDuration * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
     // Use the actual approach geometry's far distance (what was being rendered)

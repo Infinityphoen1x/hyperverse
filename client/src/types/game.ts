@@ -92,6 +92,7 @@ export interface GameStoreState {
   tunnelRotation: number; // Current rotation angle in degrees
   targetTunnelRotation: number; // Target rotation angle for animation
   animatedTunnelRotation: number; // Current animated rotation value (shared globally)
+  idleRotation: number; // Idle sway animation angle
   
   // Spin alternation - tracks key press count per lane for DJ deck direction alternation
   spinPressCountPerLane: { [lane: number]: number };
@@ -113,6 +114,7 @@ export interface GameStoreState {
   setTunnelRotation: (angle: number) => void;
   setTargetTunnelRotation: (angle: number) => void;
   setAnimatedTunnelRotation: (angle: number) => void;
+  setIdleRotation: (angle: number) => void;
   incrementSpinPressCount: (lane: number) => void;
   
   // Game actions

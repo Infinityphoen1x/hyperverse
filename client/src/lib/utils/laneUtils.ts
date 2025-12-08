@@ -26,7 +26,7 @@ export const getColorForLane = (lane: number, health: number = MAX_HEALTH): stri
     switch (lane) {
       case -1: return '#00FF00'; // Q - green
       case -2: return '#FF0000'; // P - red
-      case 0: return '#FF007F'; // W - pink
+      case 0: return '#FF6600'; // W - neon orange (was pink #FF007F)
       case 1: return '#0096FF'; // O - blue
       case 2: return '#BE00FF'; // I - purple
       case 3: return '#00FFFF'; // E - cyan

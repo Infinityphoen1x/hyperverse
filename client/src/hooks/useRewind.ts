@@ -38,8 +38,18 @@ export function useRewind({ setPauseMenuOpen, engineRef, startGame }: UseRewindP
     }
     
     // CRITICAL: Reset the scorer to prevent stale health values
+    console.log('[REWIND] Attempting to reset scorer, engineRef exists:', !!engineRef?.current, 'resetScorer exists:', !!engineRef?.current?.resetScorer);
     if (engineRef?.current?.resetScorer) {
+        console.log('[REWIND] Calling resetScorer');
         engineRef.current.resetScorer();
+        console.log('[REWIND] resetScorer called');
+    } else {
+        console.warn('[REWIND] resetScorer not available!');
+    }
+    
+    // CRITICAL: Reset the rotation manager to prevent stale rotation state
+    if (engineRef?.current?.resetRotation) {
+        engineRef.current.resetRotation();
     }
     
     try {

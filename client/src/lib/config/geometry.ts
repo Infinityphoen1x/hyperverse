@@ -124,8 +124,8 @@ export const TAP_HIT_FLASH = {
 } as const;
 
 export const TAP_DEPTH = {
-  MIN: 5,
-  MAX: 15,
+  MIN: 10,
+  MAX: 30,
   FADE_TIME: 2000,
 } as const;
 

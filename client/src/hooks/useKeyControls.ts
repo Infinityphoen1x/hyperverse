@@ -24,7 +24,7 @@ const GAMEPLAY_KEYS = new Set(['w', 'W', 'o', 'O', 'i', 'I', 'e', 'E', 'q', 'Q',
 
 // Helper to check if there's a HOLD note approaching or active on a lane
 function hasApproachingOrActiveHoldNote(lane: number, notes: any[], currentTime: number): boolean {
-  const HOLD_DETECTION_WINDOW = 500; // ms - detect holds within 500ms
+  const HOLD_DETECTION_WINDOW = 200; // ms - detect holds within 200ms (slightly more lenient than 150ms hit window)
   return notes.some(n => 
     n.lane === lane &&
     n.type === 'HOLD' &&
@@ -72,10 +72,14 @@ export function useKeyControls({ onPause, onResume, onRewind, onHitNote, onTrack
         const lane = KEY_LANE_MAP[e.key];
         if (lane !== undefined) {
           // Check if there's a HOLD note approaching or already active on this lane
-          if (hasApproachingOrActiveHoldNote(lane, notes, currentTime)) {
+          const hasHoldNote = hasApproachingOrActiveHoldNote(lane, notes, currentTime);
+          console.log('[KEY-DOWN]', e.key, 'lane:', lane, 'hasHoldNote:', hasHoldNote, 'currentTime:', currentTime);
+          if (hasHoldNote) {
+            console.log('[KEY-DOWN] Calling trackHoldStart for lane:', lane);
             onTrackHoldStart?.(lane);
           } else {
             // Otherwise treat as TAP note
+            console.log('[KEY-DOWN] Calling hitNote for lane:', lane);
             hitNote(lane);
           }
         }

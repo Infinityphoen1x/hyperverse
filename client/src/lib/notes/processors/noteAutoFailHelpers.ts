@@ -51,7 +51,8 @@ export const checkHoldAutoFail = (
   // Pressed but never released (timeout)
   if (note.pressHoldTime && note.pressHoldTime > 0 && !note.hit) {
     const noteHoldDuration = note.duration || 1000;
-    const releaseFailThreshold = note.pressHoldTime + noteHoldDuration + config.HOLD_RELEASE_OFFSET;
+    // Apply offset to late side for auto-fail threshold
+    const releaseFailThreshold = note.pressHoldTime + noteHoldDuration + config.HOLD_RELEASE_WINDOW + config.HOLD_RELEASE_OFFSET;
     if (currentTime > releaseFailThreshold) {
       GameErrors.updateHitStats({ holdReleaseFailures: (GameErrors.hitStats.holdReleaseFailures || 0) + 1 });
       GameErrors.log(`[HOLD-RELEASE] noteId=${note.id} holdReleaseFailure at ${currentTime}ms`, currentTime);

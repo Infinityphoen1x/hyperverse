@@ -6,7 +6,7 @@ import { NoteValidator } from '@/lib/notes/processors/noteValidator';
 import { ScoringManager } from '@/lib/managers/scoringManager';
 import { RotationManager } from '@/lib/managers/rotationManager';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { GAME_CONFIG } from '@/lib/config';
+import { GAME_CONFIG, LEAD_TIME } from '@/lib/config';
 import { requiresRotation, getTargetRotation } from '@/lib/config/rotationConstants';
 
 // Default config from single source of truth
@@ -66,6 +66,7 @@ export interface UseGameEngineReturn {
   markNoteMissed: (noteId: string) => void;
   getReleaseTime: (noteId: string) => number | undefined;
   resetScorer: () => void;
+  resetRotation: () => void;
 }
 
 export function useGameEngine({
@@ -135,11 +136,16 @@ export function useGameEngine({
     scorer.reset();
   }, [scorer]);
 
+  const resetRotation = useCallback(() => {
+    rotationManager.reset();
+  }, [rotationManager]);
+
   const restartGame = useCallback(() => {
     scorer.reset();
+    rotationManager.reset();
     restartGameStore();
     lastFrameTimeRef.current = performance.now();
-  }, [scorer, restartGameStore]);
+  }, [scorer, rotationManager, restartGameStore]);
 
   // IMPLEMENTATION OF HIT NOTE
   const handleHitNote = useCallback((lane: number) => {
@@ -253,7 +259,8 @@ export function useGameEngine({
          // Handle rotation reset on HOLD release
          if (requiresRotation(targetNote.lane)) {
              const setTunnelRotation = useGameStore.getState().setTunnelRotation;
-             const shouldRotate = rotationManager.onHoldRelease(targetNote.id, currentTime);
+             const currentTunnelRotation = useGameStore.getState().tunnelRotation;
+             const shouldRotate = rotationManager.onHoldRelease(targetNote.id, currentTime, currentTunnelRotation);
              if (shouldRotate) {
                  const rotState = rotationManager.getState();
                  setTunnelRotation(rotState.targetAngle);
@@ -303,10 +310,11 @@ export function useGameEngine({
           upcomingHolds.sort((a, b) => a.time - b.time);
           const nextHold = upcomingHolds[0];
           
-          // Calculate when rotation should start
-          const LEAD_TIME = 2000; // Import this from constants
+          // Calculate when rotation should start, using effectiveLeadTime to match note velocity
+          const noteSpeedMultiplier = useGameStore.getState().noteSpeedMultiplier || 1.0;
+          const effectiveLeadTime = LEAD_TIME / noteSpeedMultiplier;
           const ROTATION_TRIGGER_ADVANCE = 1700; // ROTATION_DURATION + SETTLE_TIME
-          const rotationStartTime = nextHold.time - LEAD_TIME - ROTATION_TRIGGER_ADVANCE;
+          const rotationStartTime = nextHold.time - effectiveLeadTime - ROTATION_TRIGGER_ADVANCE;
           
           // Trigger rotation if we've reached start time
           if (timeToUse >= rotationStartTime) {
@@ -361,5 +369,6 @@ export function useGameEngine({
     markNoteMissed,
     getReleaseTime,
     resetScorer,
+    resetRotation,
   };
 }

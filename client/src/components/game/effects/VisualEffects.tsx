@@ -2,7 +2,6 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useGameStore } from '@/stores/useGameStore'; // Your game store (e.g., with combo, health, missCount)
 import { useParticles } from '@/hooks/useParticles';
-import { useShake } from '@/hooks/useShake';
 import { useChromatic } from '@/hooks/useChromatic';
 import { useGlitch } from '@/hooks/useGlitch';
 import { ParticleSystem } from '@/components/game/effects/ParticleSystem';
@@ -21,13 +20,16 @@ interface VisualEffectsProps {
 
 export function VisualEffects({ combo: propCombo, health: propHealth, missCount: propMissCount }: VisualEffectsProps = {}) {
   // Refs to track previous values
-  const prevMissCountRef = useRef(0);
   const prevComboRef = useRef(0);
+
+  console.log('[VISUAL-EFFECTS] Props received - combo:', propCombo, 'health:', propHealth, 'missCount:', propMissCount);
 
   // Pull from Zustand individually to prevent unnecessary re-renders
   const combo = useGameStore(state => propCombo ?? state.combo);
   const health = useGameStore(state => propHealth ?? state.health);
   const missCount = useGameStore(state => propMissCount ?? state.missCount);
+  
+  console.log('[VISUAL-EFFECTS] Final values - combo:', combo, 'health:', health, 'missCount:', missCount);
 
   // Validation (runs on prop/store changes)
   useEffect(() => {
@@ -37,12 +39,13 @@ export function VisualEffects({ combo: propCombo, health: propHealth, missCount:
   }, [combo, health, missCount]);
 
   const particles = useParticles();
-  const shakeOffset = useShake();
   const chromaticIntensity = useChromatic({ combo });
+  
+  console.log('[VISUAL-EFFECTS] Calling useGlitch - missCount:', missCount);
+  
   const { glitch, glitchPhase, glitchOpacityMultiplier } = useGlitch({ 
     missCount, 
-    health, 
-    prevMissCount: prevMissCountRef.current
+    health
   });
 
   // Track perfect pulse trigger - keep visible for animation duration
@@ -67,11 +70,7 @@ export function VisualEffects({ combo: propCombo, health: propHealth, missCount:
     }
   }, [combo]);
 
-  // Update refs after each render to track changes
-  useEffect(() => {
-    prevMissCountRef.current = missCount;
-  }, [missCount]);
-
+  // Update combo ref after each render to track changes
   useEffect(() => {
     prevComboRef.current = combo;
   }, [combo]);
@@ -108,7 +107,6 @@ export function VisualEffects({ combo: propCombo, health: propHealth, missCount:
       className="fixed inset-0 pointer-events-none z-50 overflow-hidden"
       style={{ 
         filter: `grayscale(${greyscaleIntensity})`,
-        transform: `translate(${shakeOffset.x}px, ${shakeOffset.y}px)`,
       }}
     >
       <ParticleSystem particles={particles} />

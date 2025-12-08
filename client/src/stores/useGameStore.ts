@@ -22,6 +22,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   tunnelRotation: 0, // Current tunnel rotation in degrees
   targetTunnelRotation: 0, // Target rotation for animation
   animatedTunnelRotation: 0, // Current animated rotation value (shared across all components)
+  idleRotation: 0, // Idle sway animation angle
   spinPressCountPerLane: { '-1': 0, '-2': 0 }, // Track key presses per lane for spin alternation
 
   // Setters
@@ -41,6 +42,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setTunnelRotation: (angle) => set({ tunnelRotation: angle }),
   setTargetTunnelRotation: (angle) => set({ targetTunnelRotation: angle }),
   setAnimatedTunnelRotation: (angle) => set({ animatedTunnelRotation: angle }),
+  setIdleRotation: (angle) => set({ idleRotation: angle }),
   incrementSpinPressCount: (lane: number) => set((state) => ({
     spinPressCountPerLane: {
       ...state.spinPressCountPerLane,

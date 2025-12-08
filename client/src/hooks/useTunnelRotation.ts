@@ -1,20 +1,26 @@
 // src/hooks/useTunnelRotation.ts
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
+import { useIdleRotation } from './useIdleRotation';
 
 /**
  * Hook that provides smoothly animated tunnel rotation
+ * Combines gameplay-driven rotation with idle sway animation
  * Interpolates between rotation changes over 1.5s with ease-in-out
  * Handles shortest rotation path and prevents animation stacking
  * Animation state is shared globally via Zustand store
+ * @param depthFactor 0-1 value for idle rotation scaling (1.0 = foreground, 0.3 = background)
  */
-export function useTunnelRotation(): number {
+export function useTunnelRotation(depthFactor: number = 1.0): number {
   const targetRotation = useGameStore(state => state.tunnelRotation);
   const animatedRotation = useGameStore(state => state.animatedTunnelRotation);
   const setAnimatedRotation = useGameStore(state => state.setAnimatedTunnelRotation);
   const animationRef = useRef<number | null>(null);
   const startRotationRef = useRef(animatedRotation);
   const startTimeRef = useRef(0);
+  
+  // Get idle rotation sway animation with depth factor
+  const idleRotation = useIdleRotation(depthFactor);
   
   useEffect(() => {
     // Get current animated value at effect start
@@ -76,5 +82,6 @@ export function useTunnelRotation(): number {
     };
   }, [targetRotation, setAnimatedRotation]); // Remove animatedRotation from dependencies!
   
-  return animatedRotation;
+  // Combine gameplay rotation with idle sway
+  return animatedRotation + idleRotation;
 }

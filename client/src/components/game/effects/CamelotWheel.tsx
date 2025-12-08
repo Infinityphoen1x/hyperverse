@@ -95,13 +95,21 @@ export function CamelotWheel({
 
   // Single key toggle for spin direction - stable listeners
   useEffect(() => {
+    // Force release on window blur to prevent stuck keys
+    const handleBlur = () => {
+      setIsKeyPressed(false);
+      onHoldEnd();
+    };
+    
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
     };
-  }, [handleKeyDown, handleKeyUp]);
+  }, [handleKeyDown, handleKeyUp, onHoldEnd]);
 
   // Continuous rotation loop using RAF - batches callbacks
   useEffect(() => {

@@ -3,7 +3,9 @@ import React, { memo } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { getHealthBasedRayColor } from '@/lib/utils/tunnelUtils';
 import { HexagonLayers } from './HexagonLayers';
+import { ParallaxHexagonLayers } from './ParallaxHexagonLayers';
 import { RadialSpokes } from './RadialSpokes';
+import { SyncLineHexagons } from './SyncLineHexagons';
 import { useTunnelRotation } from '@/hooks/useTunnelRotation';
 import { VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config';
 
@@ -26,7 +28,7 @@ const TunnelBackgroundComponent = ({
   const health = propHealth ?? storeHealth;
 
   const rayColor = getHealthBasedRayColor(health);
-  const animatedRotation = useTunnelRotation();
+  const tunnelRotation = useTunnelRotation(1.0); // Get base rotation with full idle speed
 
   return (
     <div 
@@ -36,11 +38,24 @@ const TunnelBackgroundComponent = ({
     >
       <svg className="absolute inset-0 w-full h-full" style={{ opacity: 1 }} data-testid="tunnel-background-svg">
         <circle cx={vpX} cy={vpY} r="6" fill="rgba(0,255,255,0.05)" data-testid="vanishing-point-circle" />
-        <HexagonLayers rayColor={rayColor} vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} rotationOffset={animatedRotation} />
-        <RadialSpokes rayColor={rayColor} vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} rotationOffset={animatedRotation} />
+        {/* Parallax background layer - per-layer depth scaling with delays */}
+        <ParallaxHexagonLayers rayColor={rayColor} vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} rotationOffset={tunnelRotation} />
+        {/* Main foreground tunnel - full speed */}
+        <HexagonLayers rayColor={rayColor} vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} rotationOffset={tunnelRotation} />
+        <RadialSpokes rayColor={rayColor} vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} rotationOffset={tunnelRotation} />
+        <SyncLineHexagons vpX={vpX} vpY={vpY} rotationOffset={tunnelRotation} />
       </svg>
     </div>
   );
 };
 
-export const TunnelBackground = memo(TunnelBackgroundComponent);
+export const TunnelBackground = memo(TunnelBackgroundComponent, (prevProps, nextProps) => {
+  // Custom comparison - only re-render if these props actually change
+  return (
+    prevProps.vpX === nextProps.vpX &&
+    prevProps.vpY === nextProps.vpY &&
+    prevProps.hexCenterX === nextProps.hexCenterX &&
+    prevProps.hexCenterY === nextProps.hexCenterY &&
+    prevProps.health === nextProps.health
+  );
+});

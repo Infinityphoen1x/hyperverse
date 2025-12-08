@@ -199,17 +199,23 @@ if (hasOverlappingHolds && !areOpposite) → Error
 
 ## Implementation Priority
 
-### Phase 1 - Low-Hanging Fruit
-1. **Parallax Effect** - Quick visual impact, no gameplay changes
-2. **Sync Lines** - High value for pattern readability
+### Phase 1 - Visual Enhancements ✅ COMPLETE
+1. ✅ **Parallax Effect** - Background hexagon layer with 300ms transformation delay
+2. ✅ **Sync Lines** - Glowing hexagons connecting synchronized notes
 
-### Phase 2 - Core Rotation System
-3. **Rotating Tunnel (cosmetic)** - Build rotation infrastructure, test performance
-4. **Upgrade All Lanes for Hold Notes** - Extend hold detection to lanes 0, 1, 2, 3
-5. **HOLD Pairing Validation** - Add parser checks for opposite-lane constraint
-6. **Pre-Rotation for HOLD Notes** - Tunnel rotates before notes arrive at judgment
+**Completion Date:** December 8, 2025  
+**See:** `PARALLAX_EFFECT_IMPLEMENTATION.md` for parallax details
 
-### Phase 3 - Visual Polish
+### Phase 2 - Core Rotation System ✅ COMPLETE
+3. ✅ **Rotating Tunnel (cosmetic)** - Dynamic rotation infrastructure implemented
+4. ✅ **Upgrade All Lanes for Hold Notes** - All 6 lanes support HOLD notes
+5. ✅ **HOLD Pairing Validation** - Opposite-lane constraint validated in parser
+6. ✅ **Pre-Rotation for HOLD Notes** - Dynamic rotation chooses closest deck
+
+**Completion Date:** December 8, 2025  
+**See:** `TUNNEL_ROTATION_DYNAMIC.md` for full implementation details
+
+### Phase 3 - Visual Polish ⏳
 7. **ZOOM Effect** - Add after rotation system is stable
 
 ---

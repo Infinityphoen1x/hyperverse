@@ -20,11 +20,13 @@ export class ScoringManager {
   }
 
   reset(): void {
+    console.log('[SCORING-MANAGER] Resetting - MAX_HEALTH:', this.config.MAX_HEALTH);
     this.state = {
       score: 0,
       combo: 0,
       health: this.config.MAX_HEALTH,
     };
+    console.log('[SCORING-MANAGER] Reset complete - health now:', this.state.health);
   }
 
   calculateHitScore(timingError: number): number {
@@ -40,15 +42,19 @@ export class ScoringManager {
 
   recordHit(timingError: number): ScoreState {
     const points = this.calculateHitScore(timingError);
+    console.log('[SCORING-MANAGER] recordHit - current health:', this.state.health, 'adding +1');
     this.state.score += points;
     this.state.combo += 1;
     this.state.health = Math.min(this.config.MAX_HEALTH, this.state.health + 1);
+    console.log('[SCORING-MANAGER] recordHit - new health:', this.state.health);
     return this.getState();
   }
 
   recordMiss(): ScoreState {
+    console.log('[SCORING-MANAGER] recordMiss - current health:', this.state.health, 'removing -2');
     this.state.combo = 0;
     this.state.health = Math.max(0, this.state.health - 2);
+    console.log('[SCORING-MANAGER] recordMiss - new health:', this.state.health);
     return this.getState();
   }
 

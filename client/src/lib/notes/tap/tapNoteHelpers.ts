@@ -31,8 +31,8 @@ const getFailureAnimationDuration = (isTooEarly: boolean): number =>
   isTooEarly ? TAP_FAILURE_ANIMATIONS.TOO_EARLY.duration : TAP_FAILURE_ANIMATIONS.MISS.duration;
 
 export const shouldRenderTapNote = (state: TapNoteState, timeUntilHit: number, noteSpeedMultiplier: number = 1.0): boolean => {
-  // Use fixed LEAD_TIME for render window (BPM no longer affects visibility)
-  // noteSpeedMultiplier affects visual speed only, not timing windows
+  // Scale lead time by noteSpeedMultiplier to match note velocity
+  const effectiveLeadTime = LEAD_TIME / noteSpeedMultiplier;
   
   // For failed notes, only check animation duration, not render window
   // Failed notes need to stay visible longer than normal notes (visibility handled in useTapNotes)
@@ -48,8 +48,8 @@ export const shouldRenderTapNote = (state: TapNoteState, timeUntilHit: number, n
     return true;
   }
   
-  // For non-failed notes, apply normal render/fallthrough window checks using fixed LEAD_TIME
-  if (timeUntilHit > LEAD_TIME || timeUntilHit < -TAP_FALLTHROUGH_WINDOW_MS) return false;
+  // For non-failed notes, apply normal render/fallthrough window checks using effectiveLeadTime
+  if (timeUntilHit > effectiveLeadTime || timeUntilHit < -TAP_FALLTHROUGH_WINDOW_MS) return false;
   
   // Hide successful hits after flash animation completes
   if (state.isHit && state.timeSinceHit >= TAP_HIT_FLASH.DURATION) return false;

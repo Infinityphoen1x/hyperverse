@@ -8,6 +8,7 @@ import { convertBeatmapNotes } from "@/lib/beatmap/beatmapConverter";
 import { useYouTubePlayer } from "@/hooks/useYoutubePlayer";
 import { useGameLogic } from "@/hooks/useGameLogic";
 import { useShake } from "@/hooks/useShake";
+import { useIdleRotationManager } from "@/hooks/useIdleRotation";
 import { GameOverScreen } from "@/components/screens/GameOverScreen";
 import { PauseMenu } from "@/components/ui/HUD/PauseMenu";
 import { ResumeOverlay } from "@/components/screens/ResumeOverlay";
@@ -34,6 +35,9 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
   const setBeatmapBpm = useGameStore(state => state.setBeatmapBpm);
 
+  // Initialize idle rotation animation
+  useIdleRotationManager();
+
   // Store startGame in ref for use in callbacks
   const startGameRef = useRef<(() => void) | null>(null);
   const engineRefForLogic = useRef<any>(null);
@@ -53,7 +57,7 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
   }, []);
 
   // Game engine - receives YouTube time via hook (with caching)
-  const { 
+  const {
     gameState, 
     score, 
     combo, 
@@ -67,8 +71,10 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
     trackHoldEnd,
     resumeGame,
     restartGame,
-    setGameState
-  } = useGameEngine({ 
+    setGameState,
+    resetScorer,
+    resetRotation
+  } = useGameEngine({
     difficulty, 
     customNotes, 
     getVideoTime
@@ -82,9 +88,11 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
   useEffect(() => {
     engineRefForLogic.current = { 
       getCurrentTime: () => currentTime,
-      resetTime: resetTime // Expose resetTime to logic
+      resetTime: resetTime, // Expose resetTime to logic
+      resetScorer: resetScorer, // Expose resetScorer for rewind
+      resetRotation: resetRotation // Expose resetRotation for rewind
     };
-  }, [currentTime, resetTime]);
+  }, [currentTime, resetTime, resetScorer, resetRotation]);
 
   // Function to play YouTube when auto-start triggers (before game starts)
   const onPlayYouTube = useCallback(async () => {
@@ -131,7 +139,17 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
   });
 
   // Memoized values - ensure notes is always an array
-  const missCount = useMemo(() => (notes || []).filter(n => n.missed).length, [notes]);
+  const missCount = useMemo(() => {
+    const missedNotes = (notes || []).filter(n => 
+      n.missed || n.tapMissFailure || n.holdMissFailure || n.tapTooEarlyFailure || n.tooEarlyFailure || n.holdReleaseFailure
+    );
+    const count = missedNotes.length;
+    console.log('[GAME] missCount calculation - total notes:', notes?.length, 'missed:', count);
+    if (count > 0) {
+      console.log('[GAME] Missed notes:', missedNotes.map(n => ({ id: n.id, lane: n.lane, flags: { missed: n.missed, tapMiss: n.tapMissFailure, holdMiss: n.holdMissFailure } })));
+    }
+    return count;
+  }, [notes]);
   const scoreDisplay = useMemo(() => score.toString().padStart(6, '0'), [score]);
 
   // Load beatmap from localStorage and re-parse with new difficulty

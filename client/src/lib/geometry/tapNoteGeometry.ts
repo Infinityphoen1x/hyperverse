@@ -1,4 +1,4 @@
-import { JUDGEMENT_RADIUS, TAP_DEPTH, TAP_RAY } from '@/lib/config';
+import { JUDGEMENT_RADIUS, TAP_DEPTH, TAP_RAY, VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_MAX_DISTANCE } from '@/lib/config';
 
 export interface TapNoteGeometry {
   x1: number; y1: number;
@@ -48,22 +48,34 @@ const calculateRayCorners = (
   vpY: number,
   rayAngle: number,
   nearDistance: number,
-  farDistance: number
+  farDistance: number,
+  hexCenterX: number = VANISHING_POINT_X,
+  hexCenterY: number = VANISHING_POINT_Y
 ): { x1: number; y1: number; x2: number; y2: number; x3: number; y3: number; x4: number; y4: number } => {
   const leftRayAngle = rayAngle - TAP_RAY.SPREAD_ANGLE;
   const rightRayAngle = rayAngle + TAP_RAY.SPREAD_ANGLE;
+  
+  // Calculate fixed outer corner positions for left and right spread rays
   const leftRad = (leftRayAngle * Math.PI) / 180;
   const rightRad = (rightRayAngle * Math.PI) / 180;
+  const leftOuterX = hexCenterX + TUNNEL_MAX_DISTANCE * Math.cos(leftRad);
+  const leftOuterY = hexCenterY + TUNNEL_MAX_DISTANCE * Math.sin(leftRad);
+  const rightOuterX = hexCenterX + TUNNEL_MAX_DISTANCE * Math.cos(rightRad);
+  const rightOuterY = hexCenterY + TUNNEL_MAX_DISTANCE * Math.sin(rightRad);
+  
+  // Position corners along rays from VP to outer corners
+  const farProgress = farDistance / TUNNEL_MAX_DISTANCE;
+  const nearProgress = nearDistance / TUNNEL_MAX_DISTANCE;
 
   return {
-    x1: vpX + Math.cos(leftRad) * farDistance,
-    y1: vpY + Math.sin(leftRad) * farDistance,
-    x2: vpX + Math.cos(rightRad) * farDistance,
-    y2: vpY + Math.sin(rightRad) * farDistance,
-    x3: vpX + Math.cos(rightRad) * nearDistance,
-    y3: vpY + Math.sin(rightRad) * nearDistance,
-    x4: vpX + Math.cos(leftRad) * nearDistance,
-    y4: vpY + Math.sin(leftRad) * nearDistance,
+    x1: vpX + (leftOuterX - vpX) * farProgress,
+    y1: vpY + (leftOuterY - vpY) * farProgress,
+    x2: vpX + (rightOuterX - vpX) * farProgress,
+    y2: vpY + (rightOuterY - vpY) * farProgress,
+    x3: vpX + (rightOuterX - vpX) * nearProgress,
+    y3: vpY + (rightOuterY - vpY) * nearProgress,
+    x4: vpX + (leftOuterX - vpX) * nearProgress,
+    y4: vpY + (leftOuterY - vpY) * nearProgress,
   };
 };
 

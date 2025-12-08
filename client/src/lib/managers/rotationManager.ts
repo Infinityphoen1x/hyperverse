@@ -1,5 +1,6 @@
 // Rotation state manager - tracks and coordinates tunnel rotations
 import { Note } from '@/lib/engine/gameTypes';
+import { getRotationToNeutral } from '@/lib/config/rotationConstants';
 
 export interface RotationState {
   status: 'idle' | 'rotating' | 'settled';
@@ -59,7 +60,7 @@ export class RotationManager {
   /**
    * Handle HOLD note release - decide if we should rotate back to neutral
    */
-  onHoldRelease(noteId: string, currentTime: number): boolean {
+  onHoldRelease(noteId: string, currentTime: number, currentRotation: number = 0): boolean {
     // Only reset if this was the note that triggered rotation
     if (this.state.currentTargetNote !== noteId) return false;
     
@@ -71,11 +72,15 @@ export class RotationManager {
       return true;
     }
     
-    // Reset to neutral (0°)
+    // Calculate shortest rotation back to neutral using dynamic logic
+    const rotationDelta = getRotationToNeutral(currentRotation);
+    const targetAngle = currentRotation + rotationDelta;
+    
+    // Reset to neutral (0°) using shortest path
     this.state = {
       status: 'rotating',
       currentTargetNote: null,
-      targetAngle: 0,
+      targetAngle: targetAngle,
       rotationStartTime: currentTime,
       nextQueuedRotation: null,
     };

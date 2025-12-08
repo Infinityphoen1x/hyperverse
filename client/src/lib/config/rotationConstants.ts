@@ -53,6 +53,12 @@ function normalizeAngle(angle: number): number {
   return normalized < 0 ? normalized + 360 : normalized;
 }
 
+// Get shortest rotation delta to return to neutral (0°)
+export function getRotationToNeutral(currentRotation: number): number {
+  const normalized = normalizeAngle(currentRotation);
+  return shortestAngularDistance(normalized, 0);
+}
+
 // Check if a lane requires rotation for HOLD notes
 export function requiresRotation(lane: number): boolean {
   return lane >= 0 && lane <= 3;
