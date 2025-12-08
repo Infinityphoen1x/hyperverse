@@ -65,6 +65,7 @@ export interface UseGameEngineReturn {
   trackHoldEnd: (lane: number) => void;
   markNoteMissed: (noteId: string) => void;
   getReleaseTime: (noteId: string) => number | undefined;
+  resetScorer: () => void;
 }
 
 export function useGameEngine({
@@ -129,6 +130,10 @@ export function useGameEngine({
   const getReleaseTime = (noteId: string): number | undefined => {
     return undefined;
   };
+
+  const resetScorer = useCallback(() => {
+    scorer.reset();
+  }, [scorer]);
 
   const restartGame = useCallback(() => {
     scorer.reset();
@@ -306,7 +311,8 @@ export function useGameEngine({
           // Trigger rotation if we've reached start time
           if (timeToUse >= rotationStartTime) {
             const currentTunnelRotation = useGameStore.getState().tunnelRotation;
-            const targetAngle = getTargetRotation(nextHold.lane, currentTunnelRotation);
+            const rotationDelta = getTargetRotation(nextHold.lane, currentTunnelRotation);
+            const targetAngle = currentTunnelRotation + rotationDelta;
             const rotState = rotationManager.getState();
             
             // Only trigger if we need a new rotation
@@ -354,5 +360,6 @@ export function useGameEngine({
     trackHoldEnd: handleTrackHoldEnd,
     markNoteMissed,
     getReleaseTime,
+    resetScorer,
   };
 }

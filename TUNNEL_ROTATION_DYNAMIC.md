@@ -1,7 +1,25 @@
 # Dynamic Tunnel Rotation Implementation
 
 **Date:** 2025-12-08  
-**Status:** ✅ Complete
+**Status:** ✅ Complete (Fixed delta application bug)
+
+## Latest Fix (Dec 8, 2025)
+
+**Bug:** `getTargetRotation()` returns a rotation **delta**, but was being applied as an **absolute angle**.
+
+**Symptom:** Rotations accumulated incorrectly, causing misalignment.
+
+**Fix:** 
+```typescript
+// Before (WRONG)
+const targetAngle = getTargetRotation(lane, currentRotation);
+setTunnelRotation(targetAngle);
+
+// After (CORRECT)
+const rotationDelta = getTargetRotation(lane, currentRotation);
+const targetAngle = currentRotation + rotationDelta;
+setTunnelRotation(targetAngle);
+```
 
 ## Overview
 

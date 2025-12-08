@@ -37,6 +37,11 @@ export function useRewind({ setPauseMenuOpen, engineRef, startGame }: UseRewindP
         engineRef.current.resetTime();
     }
     
+    // CRITICAL: Reset the scorer to prevent stale health values
+    if (engineRef?.current?.resetScorer) {
+        engineRef.current.resetScorer();
+    }
+    
     try {
       // Fire and forget pause to ensure we don't get weird audio artifacts
       pauseYouTubeVideo().catch(() => {});

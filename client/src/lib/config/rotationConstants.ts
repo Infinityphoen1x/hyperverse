@@ -58,7 +58,8 @@ export function requiresRotation(lane: number): boolean {
   return lane >= 0 && lane <= 3;
 }
 
-// Get target rotation angle for a lane (DYNAMIC - considers current rotation)
+// Get target rotation delta for a lane (DYNAMIC - considers current rotation)
+// Returns the shortest angular distance to rotate to align with closest deck
 export function getTargetRotation(lane: number, currentRotation: number = 0): number {
   // Deck lanes don't need rotation
   if (lane === -1 || lane === -2) return 0;
@@ -74,7 +75,7 @@ export function getTargetRotation(lane: number, currentRotation: number = 0): nu
   const toQ = shortestAngularDistance(currentLaneAngle, DECK_ANGLES.Q);
   const toP = shortestAngularDistance(currentLaneAngle, DECK_ANGLES.P);
   
-  // Return rotation to closest deck
+  // Return rotation delta to closest deck
   return Math.abs(toQ) < Math.abs(toP) ? toQ : toP;
 }
 
