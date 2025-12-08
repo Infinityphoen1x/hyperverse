@@ -17,6 +17,8 @@ export interface TunnelGeometry {
   rayAngles: number[];
   tapJudgementLineWidth: number;
   holdJudgementLineWidth: number;
+  buttonRadius?: number;
+  buttonRadiusOffset?: number;
 }
 
 export const TUNNEL_GEOMETRY: TunnelGeometry = {
@@ -30,6 +32,8 @@ export const TUNNEL_GEOMETRY: TunnelGeometry = {
   rayAngles: [0, 60, 120, 180, 240, 300],
   tapJudgementLineWidth: 35,
   holdJudgementLineWidth: 45,
+  buttonRadius: 278,
+  buttonRadiusOffset: 30,
 };
 
 export const RAY_ANGLES = TUNNEL_GEOMETRY.rayAngles;
@@ -38,6 +42,8 @@ export const TAP_JUDGEMENT_LINE_WIDTH = TUNNEL_GEOMETRY.tapJudgementLineWidth;
 export const JUDGEMENT_RADIUS = TUNNEL_GEOMETRY.judgementRadius;
 export const HEXAGON_RADII = TUNNEL_GEOMETRY.hexagonRadii;
 export const HOLD_JUDGEMENT_LINE_WIDTH = TUNNEL_GEOMETRY.holdJudgementLineWidth;
+export const BUTTON_RADIUS = TUNNEL_GEOMETRY.buttonRadius;
+export const buttonRadiusOffset = TUNNEL_GEOMETRY.buttonRadiusOffset || 0;
 
 export interface TunnelViewport {
   vanishingPointX: number;
