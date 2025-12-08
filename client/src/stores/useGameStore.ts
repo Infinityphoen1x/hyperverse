@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { GameStoreState } from '@/types/game';
 import { DEFAULT_BEATMAP_BPM } from '@/lib/config';
 import { useShakeStore } from '@/stores/useShakeStore';
+import { destroyYouTubePlayer } from '@/lib/youtube';
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
   // Initial state
@@ -67,6 +68,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   resumeGame: () => set({ isPaused: false }),
   
   unloadBeatmap: () => {
+    // Destroy YouTube player properly before clearing references
+    destroyYouTubePlayer();
+    
     localStorage.removeItem('pendingBeatmap');
     set({ 
       notes: [],

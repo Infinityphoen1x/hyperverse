@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useConsoleLogger } from "@/hooks/useConsoleLogger";
-import { initYouTubePlayer, initYouTubeTimeListener } from "@/lib/youtube";
+import { initYouTubePlayer, initYouTubeTimeListener, destroyYouTubePlayer } from "@/lib/youtube";
 import Home from "@/pages/Home";
 import Game from "@/pages/Game";
 import Settings from "@/pages/Settings";
@@ -37,6 +37,12 @@ function App() {
       playerInitializedRef.current = true;
     });
     initYouTubeTimeListener();
+
+    // Cleanup: destroy player when videoId changes or component unmounts
+    return () => {
+      console.log('[APP-YOUTUBE-CLEANUP] Cleaning up YouTube player for videoId:', youtubeVideoId);
+      destroyYouTubePlayer();
+    };
   }, [youtubeVideoId]);
 
   // Get YouTube video ID from localStorage (set by Game component)
@@ -52,6 +58,9 @@ function App() {
         } catch (e) {
           console.warn('[APP-YOUTUBE] Failed to parse beatmap');
         }
+      } else {
+        // No beatmap in localStorage - clear video ID to unmount iframe
+        setYoutubeVideoId(null);
       }
     };
     loadVideoId();
