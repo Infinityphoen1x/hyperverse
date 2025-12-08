@@ -97,8 +97,8 @@ function App() {
                 difficulty={selectedDifficulty}
                 onBackToHome={() => {
                   setGameActive(false);
-                  setYoutubeVideoId(null); // Clear video ID to unmount iframe
-                  localStorage.removeItem('pendingBeatmap'); // Clear pending beatmap
+                  // Keep iframe mounted - don't clear youtubeVideoId
+                  // It will only be cleared when UNLOAD is pressed
                 }}
                 playerInitializedRef={playerInitializedRef}
                 youtubeVideoId={youtubeVideoId}

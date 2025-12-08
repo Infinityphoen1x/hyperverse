@@ -9,6 +9,18 @@ export function destroyYouTubePlayer(): void {
   
   const state = useYoutubeStore.getState();
   const ytPlayer = state.ytPlayer;
+  const iframeElement = state.youtubeIframeElement;
+  
+  // Manually remove the iframe from DOM before calling destroy() to prevent removeChild errors
+  if (iframeElement && iframeElement.parentNode) {
+    try {
+      console.log('[YOUTUBE-CLEANUP] Manually removing iframe from DOM');
+      iframeElement.parentNode.removeChild(iframeElement);
+      console.log('[YOUTUBE-CLEANUP] Iframe removed successfully');
+    } catch (error) {
+      console.warn('[YOUTUBE-CLEANUP] Error manually removing iframe:', error);
+    }
+  }
   
   // Call destroy on the YouTube Player API if it exists
   if (ytPlayer && typeof ytPlayer.destroy === 'function') {
