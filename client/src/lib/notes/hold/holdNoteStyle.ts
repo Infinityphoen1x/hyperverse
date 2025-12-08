@@ -1,4 +1,4 @@
-import { GREYSCALE_GLOW_COLOR, FAILURE_ANIMATION_DURATION, HOLD_OPACITY, HOLD_STROKE, HOLD_GLOW } from '@/lib/config/gameConstants';
+import { GREYSCALE_GLOW_COLOR, FAILURE_ANIMATION_DURATION, HOLD_OPACITY, HOLD_STROKE, HOLD_GLOW } from '@/lib/config';
 import { HoldNoteFailureStates } from './holdNoteHelpers';
 import { HoldNoteColors, GreyscaleState } from './holdGreystate';
 

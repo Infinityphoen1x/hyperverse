@@ -1,6 +1,6 @@
 // src/components/PerfectPulse.tsx
 import { motion } from 'framer-motion';
-import { COMBO_PERFECT_MILESTONE, COLOR_PARTICLE_GREEN, COLOR_PARTICLE_RED } from '@/lib/config/gameConstants';
+import { COMBO_PERFECT_MILESTONE, COLOR_PARTICLE_GREEN, COLOR_PARTICLE_RED } from '@/lib/config';
 
 interface PerfectPulseProps { combo: number; }
 

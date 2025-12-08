@@ -4,7 +4,7 @@ import {
   JUDGEMENT_RADIUS,
   TAP_DEPTH, // Assume { MIN: number, MAX: number, FADE_TIME: number }
   TAP_RAY, // Assume { SPREAD_ANGLE: number }
-} from '@/lib/config/gameConstants';
+} from '@/lib/config';
 
 export interface TapNoteGeometry {
   x1: number; y1: number;

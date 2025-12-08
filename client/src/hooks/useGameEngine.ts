@@ -4,11 +4,42 @@ import type { GameState, Note, Difficulty, GameConfig } from '@/types/game';
 import { NoteProcessor } from '@/lib/notes/processors/noteProcessor';
 import { NoteValidator } from '@/lib/notes/processors/noteValidator';
 import { ScoringManager } from '@/lib/managers/scoringManager';
+import { RotationManager } from '@/lib/managers/rotationManager';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { GAME_CONFIG } from '@/lib/config/gameConstants';
+import { GAME_CONFIG } from '@/lib/config';
+import { requiresRotation, getTargetRotation } from '@/lib/config/rotationConstants';
 
 // Default config from single source of truth
 const DEFAULT_CONFIG: GameConfig = GAME_CONFIG as GameConfig;
+
+// Helper: Find which original lane is currently aligned with the target deck lane due to rotation
+function findRotatedLaneForDeck(deckLane: number, tunnelRotation: number): number | null {
+  if (deckLane !== -1 && deckLane !== -2) return null; // Only applies to deck lanes
+  
+  // Lane angles (before rotation): -2: 60°, -1: 120°, 0: 180°, 1: 240°, 2: 300°, 3: 0°
+  const targetAngle = deckLane === -1 ? 120 : 60; // Where the deck lane is positioned
+  
+  // Check which lane is rotated to match this angle
+  // Normalize rotation to 0-360
+  const normalizedRotation = ((tunnelRotation % 360) + 360) % 360;
+  
+  // Lane 0 (W) is at 180°, rotating by -60° puts it at 120° (lane -1 position)
+  // Lane 1 (O) is at 240°, rotating by -120° puts it at 120° (lane -1 position)
+  // etc.
+  
+  const laneBaseAngles = { 0: 180, 1: 240, 2: 300, 3: 0 };
+  
+  for (const [lane, baseAngle] of Object.entries(laneBaseAngles)) {
+    const rotatedAngle = (baseAngle + normalizedRotation) % 360;
+    // Check if this lane is now aligned with the target deck position (within 5° tolerance)
+    if (Math.abs(rotatedAngle - targetAngle) < 5 || Math.abs(rotatedAngle - targetAngle) > 355) {
+      return parseInt(lane);
+    }
+  }
+  
+  return null;
+}
+
 
 interface UseGameEngineProps {
   difficulty: Difficulty;
@@ -68,11 +99,12 @@ export function useGameEngine({
   // Construct GameConfig from single source of truth
   const gameConfig = useMemo<GameConfig>(() => DEFAULT_CONFIG, []);
 
-  const { processor, validator, scorer } = useMemo(() => {
+  const { processor, validator, scorer, rotationManager } = useMemo(() => {
     const scorer = new ScoringManager(gameConfig);
     const validator = new NoteValidator(gameConfig);
     const processor = new NoteProcessor(gameConfig, validator, scorer);
-    return { processor, validator, scorer };
+    const rotationManager = new RotationManager();
+    return { processor, validator, scorer, rotationManager };
   }, [gameConfig]);
 
   // Store last frame timestamp for fallback timing
@@ -145,9 +177,19 @@ export function useGameEngine({
   }, [validator, processor, setNotes, setScore, setCombo, setHealth]);
 
   const handleTrackHoldStart = useCallback((lane: number) => {
-     const { notes, currentTime } = useGameStore.getState();
+     const { notes, currentTime, tunnelRotation } = useGameStore.getState();
      
-     const targetNote = validator.findPressableHoldNote(notes, lane, currentTime);
+     // Try finding note on the pressed lane
+     let targetNote = validator.findPressableHoldNote(notes, lane, currentTime);
+     
+     // If pressing a deck lane and no note found, check if a rotated lane is aligned with this deck
+     if (!targetNote && (lane === -1 || lane === -2)) {
+       const rotatedLane = findRotatedLaneForDeck(lane, tunnelRotation);
+       if (rotatedLane !== null) {
+         targetNote = validator.findPressableHoldNote(notes, rotatedLane, currentTime);
+         console.log(`[GAME-ENGINE] Checking rotated lane ${rotatedLane} for deck ${lane}, found:`, !!targetNote);
+       }
+     }
      
      if (targetNote) {
          const result = processor.processHoldStart(targetNote, currentTime);
@@ -177,9 +219,19 @@ export function useGameEngine({
   }, [validator, processor, setNotes, setScore, setCombo, setHealth, startDeckHold]);
 
   const handleTrackHoldEnd = useCallback((lane: number) => {
-     const { notes, currentTime } = useGameStore.getState();
+     const { notes, currentTime, tunnelRotation } = useGameStore.getState();
      
-     const targetNote = validator.findActiveHoldNote(notes, lane, currentTime);
+     // Try finding note on the pressed lane
+     let targetNote = validator.findActiveHoldNote(notes, lane, currentTime);
+     
+     // If releasing a deck lane and no note found, check if a rotated lane is aligned with this deck
+     if (!targetNote && (lane === -1 || lane === -2)) {
+       const rotatedLane = findRotatedLaneForDeck(lane, tunnelRotation);
+       if (rotatedLane !== null) {
+         targetNote = validator.findActiveHoldNote(notes, rotatedLane, currentTime);
+         console.log(`[GAME-ENGINE] Checking rotated lane ${rotatedLane} for deck ${lane} release, found:`, !!targetNote);
+       }
+     }
      
      if (targetNote) {
          const result = processor.processHoldEnd(targetNote, currentTime);
@@ -192,9 +244,19 @@ export function useGameEngine({
              setCombo(result.scoreChange.combo);
              setHealth(result.scoreChange.health);
          }
+         
+         // Handle rotation reset on HOLD release
+         if (requiresRotation(targetNote.lane)) {
+             const setTunnelRotation = useGameStore.getState().setTunnelRotation;
+             const shouldRotate = rotationManager.onHoldRelease(targetNote.id, currentTime);
+             if (shouldRotate) {
+                 const rotState = rotationManager.getState();
+                 setTunnelRotation(rotState.targetAngle);
+             }
+         }
      }
      endDeckHold(lane);
-  }, [validator, processor, setNotes, endDeckHold, setScore, setCombo, setHealth]);
+  }, [validator, processor, rotationManager, setNotes, endDeckHold, setScore, setCombo, setHealth]);
 
   useEffect(() => {
     if (gameState !== 'PLAYING' || isPaused) {
@@ -221,7 +283,41 @@ export function useGameEngine({
       if (timeToUse !== null) {
         setCurrentTime(timeToUse);
         
+        // Check for rotation triggers
         const currentNotes = useGameStore.getState().notes;
+        const upcomingHolds = currentNotes.filter(n =>
+          n.type === 'HOLD' &&
+          requiresRotation(n.lane) &&
+          !n.hit &&
+          !n.holdMissFailure &&
+          n.time > timeToUse
+        );
+        
+        if (upcomingHolds.length > 0) {
+          // Sort by time, get the closest one
+          upcomingHolds.sort((a, b) => a.time - b.time);
+          const nextHold = upcomingHolds[0];
+          
+          // Calculate when rotation should start
+          const LEAD_TIME = 2000; // Import this from constants
+          const ROTATION_TRIGGER_ADVANCE = 1700; // ROTATION_DURATION + SETTLE_TIME
+          const rotationStartTime = nextHold.time - LEAD_TIME - ROTATION_TRIGGER_ADVANCE;
+          
+          // Trigger rotation if we've reached start time
+          if (timeToUse >= rotationStartTime) {
+            const currentTunnelRotation = useGameStore.getState().tunnelRotation;
+            const targetAngle = getTargetRotation(nextHold.lane, currentTunnelRotation);
+            const rotState = rotationManager.getState();
+            
+            // Only trigger if we need a new rotation
+            if (rotationManager.shouldOverride(targetAngle)) {
+              const setTunnelRotation = useGameStore.getState().setTunnelRotation;
+              setTunnelRotation(targetAngle);
+              rotationManager.triggerRotation(nextHold.id, targetAngle, timeToUse);
+            }
+          }
+        }
+        
         const result = processor.processNotesFrame(currentNotes, timeToUse);
         
         if (result.scoreState) {

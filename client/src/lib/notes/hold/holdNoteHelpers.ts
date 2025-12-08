@@ -1,6 +1,6 @@
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { FAILURE_ANIMATION_DURATION } from '@/lib/config/gameConstants';
+import { FAILURE_ANIMATION_DURATION } from '@/lib/config';
 
 export interface HoldNoteFailureStates {
   isTooEarlyFailure: boolean;

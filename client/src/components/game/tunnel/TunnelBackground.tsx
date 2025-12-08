@@ -4,7 +4,8 @@ import { useGameStore } from '@/stores/useGameStore';
 import { getHealthBasedRayColor } from '@/lib/utils/tunnelUtils';
 import { HexagonLayers } from './HexagonLayers';
 import { RadialSpokes } from './RadialSpokes';
-import { VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';
+import { useTunnelRotation } from '@/hooks/useTunnelRotation';
+import { VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config';
 
 interface TunnelBackgroundProps {
   vpX?: number;
@@ -25,6 +26,7 @@ const TunnelBackgroundComponent = ({
   const health = propHealth ?? storeHealth;
 
   const rayColor = getHealthBasedRayColor(health);
+  const animatedRotation = useTunnelRotation();
 
   return (
     <div 
@@ -34,8 +36,8 @@ const TunnelBackgroundComponent = ({
     >
       <svg className="absolute inset-0 w-full h-full" style={{ opacity: 1 }} data-testid="tunnel-background-svg">
         <circle cx={vpX} cy={vpY} r="6" fill="rgba(0,255,255,0.05)" data-testid="vanishing-point-circle" />
-        <HexagonLayers rayColor={rayColor} vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} />
-        <RadialSpokes rayColor={rayColor} vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} />
+        <HexagonLayers rayColor={rayColor} vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} rotationOffset={animatedRotation} />
+        <RadialSpokes rayColor={rayColor} vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} rotationOffset={animatedRotation} />
       </svg>
     </div>
   );

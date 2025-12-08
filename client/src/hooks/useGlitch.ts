@@ -1,7 +1,7 @@
 // src/hooks/useGlitch.ts
 import { useState, useEffect, useRef } from 'react';
 import { GlitchState } from '@/types/visualEffects';
-import { LOW_HEALTH_THRESHOLD, GLITCH_BASE_INTERVAL, GLITCH_RANDOM_RANGE, GLITCH_OPACITY, GREYSCALE_INTENSITY } from '@/lib/config/gameConstants';
+import { LOW_HEALTH_THRESHOLD, GLITCH_BASE_INTERVAL, GLITCH_RANDOM_RANGE, GLITCH_OPACITY, GREYSCALE_INTENSITY } from '@/lib/config';
 import { toggleGlitchState } from '@/lib/utils/visualEffectsUtils';
 import { useShakeStore } from '@/stores/useShakeStore';
 
@@ -20,6 +20,28 @@ export const useGlitch = ({ missCount, health, prevMissCount }: UseGlitchProps):
   const shakeIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   const setShakeOffset = useShakeStore(state => state.setShakeOffset);
+
+  // Reset effect when missCount drops to 0 (restart/rewind)
+  useEffect(() => {
+    if (missCount === 0) {
+      setGlitch(0);
+      setGlitchPhase(0);
+      setPrevMiss(0);
+      // Clear all intervals
+      if (missIntervalRef.current) {
+        clearInterval(missIntervalRef.current);
+        missIntervalRef.current = null;
+      }
+      if (shakeIntervalRef.current) {
+        clearInterval(shakeIntervalRef.current);
+        shakeIntervalRef.current = null;
+      }
+      if (lowHealthIntervalRef.current) {
+        clearInterval(lowHealthIntervalRef.current);
+        lowHealthIntervalRef.current = null;
+      }
+    }
+  }, [missCount]);
 
   // Miss glitch + screen shake
   useEffect(() => {

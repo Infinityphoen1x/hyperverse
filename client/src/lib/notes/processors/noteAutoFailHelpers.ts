@@ -10,7 +10,8 @@ export const checkTapAutoFail = (
   config: GameConfig,
   scorer: ScoringManager
 ): NoteUpdateResult | null => {
-  const autoFailThreshold = note.time + config.TAP_HIT_WINDOW + config.TAP_FAILURE_BUFFER;
+  // Trigger miss immediately after hit window expires (no extra buffer delay)
+  const autoFailThreshold = note.time + config.TAP_HIT_WINDOW;
   if (currentTime <= autoFailThreshold) return null;
 
   GameErrors.updateHitStats({ tapMissFailures: (GameErrors.hitStats.tapMissFailures || 0) + 1 });

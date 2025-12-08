@@ -1,5 +1,5 @@
 import { Note, GameConfig, NoteType } from '@/lib/engine/gameTypes';
-import { TAP_RENDER_WINDOW_MS, LEAD_TIME } from '@/lib/config/gameConstants';
+import { TAP_RENDER_WINDOW_MS, LEAD_TIME } from '@/lib/config';
 
 // ============================================================================
 // NOTE VALIDATOR - Pure functions for note state validation
@@ -32,7 +32,7 @@ export class NoteValidator {
   shouldCleanupNote(note: Note, currentTime: number): boolean {
     const CLEANUP_DELAY = 700;
     
-    if ((note.type === 'SPIN_LEFT' || note.type === 'SPIN_RIGHT') && 
+    if (note.type === 'HOLD' && 
         note.holdMissFailure && note.failureTime) {
       return currentTime > note.failureTime + CLEANUP_DELAY;
     }
@@ -68,7 +68,7 @@ export class NoteValidator {
   findPressableHoldNote(notes: Note[], lane: number, currentTime: number): Note | null {
     return notes.find(n => 
       n.lane === lane &&
-      (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') &&
+      n.type === 'HOLD' &&
       this.isNoteActive(n) &&
       currentTime >= n.time - LEAD_TIME &&
       currentTime <= n.time + this.config.HOLD_ACTIVATION_WINDOW
@@ -78,7 +78,7 @@ export class NoteValidator {
   findActiveHoldNote(notes: Note[], lane: number, currentTime: number): Note | null {
     return notes.find(n => 
       n.lane === lane &&
-      (n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT') &&
+      n.type === 'HOLD' &&
       n.pressHoldTime !== undefined &&
       n.pressHoldTime > 0 &&
       this.isNoteActive(n) &&

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { GameStoreState } from '@/types/game';
-import { DEFAULT_BEATMAP_BPM } from '@/lib/config/gameConstants';
+import { DEFAULT_BEATMAP_BPM } from '@/lib/config';
+import { useShakeStore } from '@/stores/useShakeStore';
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
   // Initial state
@@ -18,6 +19,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   beatmapBpm: DEFAULT_BEATMAP_BPM, // Default BPM - will be updated when beatmap loads
   noteSpeedMultiplier: 1.0, // Temporary slider value in settings
   defaultNoteSpeedMultiplier: 1.0, // Persisted default used in gameplay
+  tunnelRotation: 0, // Current tunnel rotation in degrees
+  targetTunnelRotation: 0, // Target rotation for animation
+  animatedTunnelRotation: 0, // Current animated rotation value (shared across all components)
   spinPressCountPerLane: { '-1': 0, '-2': 0 }, // Track key presses per lane for spin alternation
 
   // Setters
@@ -34,6 +38,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setBeatmapBpm: (bpm) => set({ beatmapBpm: bpm }),
   setNoteSpeedMultiplier: (multiplier) => set({ noteSpeedMultiplier: Math.max(0.5, Math.min(2.0, multiplier)) }),
   setDefaultNoteSpeedMultiplier: (multiplier) => set({ defaultNoteSpeedMultiplier: Math.max(0.5, Math.min(2.0, multiplier)) }),
+  setTunnelRotation: (angle) => set({ tunnelRotation: angle }),
+  setTargetTunnelRotation: (angle) => set({ targetTunnelRotation: angle }),
+  setAnimatedTunnelRotation: (angle) => set({ animatedTunnelRotation: angle }),
   incrementSpinPressCount: (lane: number) => set((state) => ({
     spinPressCountPerLane: {
       ...state.spinPressCountPerLane,
@@ -56,6 +63,23 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   },
   pauseGame: () => set({ isPaused: true, countdownSeconds: 0 }),
   resumeGame: () => set({ isPaused: false }),
+  
+  unloadBeatmap: () => {
+    localStorage.removeItem('pendingBeatmap');
+    set({ 
+      notes: [],
+      currentTime: 0,
+      score: 0,
+      combo: 0,
+      health: 200,
+      missCount: 0,
+      gameState: 'IDLE',
+      isPaused: false,
+      countdownSeconds: 0,
+      beatmapBpm: DEFAULT_BEATMAP_BPM,
+      spinPressCountPerLane: { '-1': 0, '-2': 0 }
+    });
+  },
   
   resetGameState: () => set((state) => ({ 
     // Reset note states but keep the notes array
@@ -94,31 +118,41 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     }))
   })),
   
-  restartGame: () => set((state) => ({ 
-    currentTime: 0, 
-    score: 0, 
-    combo: 0, 
-    health: 200, 
-    gameState: 'IDLE', 
-    isPaused: false,
-    countdownSeconds: 0,
-    spinPressCountPerLane: { '-1': 0, '-2': 0 }, // Reset spin alternation
-    // Reset note states - create brand new objects to ensure all references are cleared
-    notes: state.notes.map((note, idx) => ({
-      ...note,
-      id: `${note.time}-${note.lane}-${idx}`, // Regenerate ID to break any stale references
-      hit: false,
-      missed: false,
-      failureTime: undefined,
-      pressHoldTime: undefined,
-      releaseTime: undefined,
-      tapTooEarlyFailure: false,
-      tapMissFailure: false,
-      tooEarlyFailure: false,
-      holdMissFailure: false,
-      holdReleaseFailure: false
-    }))
-  })),
+  restartGame: () => {
+    // Reset visual effects
+    useShakeStore.getState().resetShake();
+    
+    // Reset game state
+    set((state) => ({ 
+      currentTime: 0, 
+      score: 0, 
+      combo: 0, 
+      health: 200,
+      missCount: 0,
+      gameState: 'IDLE', 
+      isPaused: false,
+      countdownSeconds: 0,
+      tunnelRotation: 0,
+      targetTunnelRotation: 0,
+      animatedTunnelRotation: 0,
+      spinPressCountPerLane: { '-1': 0, '-2': 0 }, // Reset spin alternation
+      // Reset note states - create brand new objects to ensure all references are cleared
+      notes: state.notes.map((note, idx) => ({
+        ...note,
+        id: `note-${idx}`, // Use same ID format as initial load
+        hit: false,
+        missed: false,
+        failureTime: undefined,
+        pressHoldTime: undefined,
+        releaseTime: undefined,
+        tapTooEarlyFailure: false,
+        tapMissFailure: false,
+        tooEarlyFailure: false,
+        holdMissFailure: false,
+        holdReleaseFailure: false
+      }))
+    }));
+  },
 
   // Selectors
   getVisibleNotes: () => {
@@ -132,7 +166,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   },
   getHoldNotes: () => {
     const { getVisibleNotes } = get();
-    return getVisibleNotes().filter(n => n.type === 'HOLD' || n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT');
+    return getVisibleNotes().filter(n => n.type === 'HOLD');
   },
   getActiveNotes: () => {
     return get().getVisibleNotes();

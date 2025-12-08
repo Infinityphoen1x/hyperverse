@@ -7,6 +7,7 @@ import { convertBeatmapNotes } from "@/lib/beatmap/beatmapConverter";
 
 import { useYouTubePlayer } from "@/hooks/useYoutubePlayer";
 import { useGameLogic } from "@/hooks/useGameLogic";
+import { useShake } from "@/hooks/useShake";
 import { GameOverScreen } from "@/components/screens/GameOverScreen";
 import { PauseMenu } from "@/components/ui/HUD/PauseMenu";
 import { ResumeOverlay } from "@/components/screens/ResumeOverlay";
@@ -36,6 +37,9 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
   // Store startGame in ref for use in callbacks
   const startGameRef = useRef<(() => void) | null>(null);
   const engineRefForLogic = useRef<any>(null);
+
+  // Screen shake offset
+  const shakeOffset = useShake();
 
   // YouTube hook first – provides getVideoTime with caching
   const { getVideoTime, resetTime, seek, isReady } = useYouTubePlayer({
@@ -138,12 +142,15 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
         const beatmapData = JSON.parse(pendingBeatmapStr);
         setYoutubeVideoId(beatmapData.youtubeVideoId || null);
         
+        console.log('[GAME] Parsing beatmap with difficulty:', difficulty);
+        
         // Re-parse beatmap with the new difficulty to get correct notes
         if (beatmapData.beatmapText) {
           const parsed = parseBeatmap(beatmapData.beatmapText, difficulty);
           if (!parsed.error && parsed.notes) {
             const beatmapStartOffset = parsed.metadata?.beatmapStart || 0;
             const convertedNotes = convertBeatmapNotes(parsed.notes, beatmapStartOffset);
+            console.log('[GAME] Loaded', convertedNotes.length, 'notes for difficulty:', difficulty);
             setCustomNotes(convertedNotes);
             // Update beatmap BPM for geometry calculations
             if (parsed.metadata?.bpm) {
@@ -184,54 +191,62 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
       {/* Visual Effects */}
       <VisualEffects combo={combo} health={health} missCount={missCount} />
 
-      {/* Background */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black opacity-40" />
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
+      {/* Main game container with screen shake applied */}
+      <div 
+        className="absolute inset-0 flex flex-col"
+        style={{
+          transform: `translate(${shakeOffset.x}px, ${shakeOffset.y}px)`,
+        }}
+      >
+        {/* Background */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 via-black to-black opacity-40" />
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 mix-blend-overlay" />
 
-      {/* Pause Menu - Show immediately when PAUSED, rely on gameState for sync */}
-      {gameState === 'PAUSED' && (
-        <PauseMenu
-          onHome={onBackToHome}
-          onResume={handleResume}
-          onRewind={handleRewind}
-        />
-      )}
-
-      {/* HUD Header */}
-      <header className="relative z-10 flex justify-between items-center p-6 border-b border-white/10 bg-black/50 backdrop-blur-sm">
-        <div className="flex items-center gap-4">
-          <HealthDisplay health={health} />
-          <ErrorIndicator count={gameErrors.length} />
-        </div>
-        <ScoreDisplay score={scoreDisplay} />
-        <ComboDisplay combo={combo} />
-      </header>
-
-      {/* Main Game Area */}
-      <main className="flex-1 relative z-10 flex items-center justify-center px-4">
-        <div className="absolute left-8">
-          <CamelotWheel side="left" onSpin={handleLeftDeckSpin} />
-        </div>
-        <div className="absolute left-[200px] right-[200px] top-1/2 -translate-y-1/2 h-48">
-          <DeckHoldMeters notes={notes} currentTime={Math.round(currentTime)} />
-        </div>
-        <div className="relative flex-1 flex items-center justify-center">
-          <Down3DNoteLane 
-            health={health}
-            combo={combo}
-            onPadHit={hitNote}
+        {/* Pause Menu - Show immediately when PAUSED, rely on gameState for sync */}
+        {gameState === 'PAUSED' && (
+          <PauseMenu
+            onHome={onBackToHome}
+            onResume={handleResume}
+            onRewind={handleRewind}
           />
-        </div>
-        <div className="absolute right-8">
-          <CamelotWheel side="right" onSpin={handleRightDeckSpin} />
-        </div>
-      </main>
+        )}
 
-      {/* Controls Hint */}
-      <ControlsHint />
+        {/* HUD Header */}
+        <header className="relative z-10 flex justify-between items-center p-6 border-b border-white/10 bg-black/50 backdrop-blur-sm">
+          <div className="flex items-center gap-4">
+            <HealthDisplay health={health} />
+            <ErrorIndicator count={gameErrors.length} />
+          </div>
+          <ScoreDisplay score={scoreDisplay} />
+          <ComboDisplay combo={combo} />
+        </header>
 
-      {/* Error Log */}
-      <ErrorLogViewer />
+        {/* Main Game Area */}
+        <main className="flex-1 relative z-10 flex items-center justify-center px-4">
+          <div className="absolute left-8">
+            <CamelotWheel side="left" onSpin={handleLeftDeckSpin} />
+          </div>
+          <div className="absolute left-[200px] right-[200px] top-1/2 -translate-y-1/2 h-48">
+            <DeckHoldMeters notes={notes} currentTime={Math.round(currentTime)} />
+          </div>
+          <div className="relative flex-1 flex items-center justify-center">
+            <Down3DNoteLane 
+              health={health}
+              combo={combo}
+              onPadHit={hitNote}
+            />
+          </div>
+          <div className="absolute right-8">
+            <CamelotWheel side="right" onSpin={handleRightDeckSpin} />
+          </div>
+        </main>
+
+        {/* Controls Hint */}
+        <ControlsHint />
+
+        {/* Error Log */}
+        <ErrorLogViewer />
+      </div>
     </div>
   );
 }

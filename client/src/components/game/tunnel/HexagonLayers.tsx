@@ -1,6 +1,6 @@
 // src/components/HexagonLayers.tsx
 import React from 'react';
-import { HEXAGON_RADII } from '@/lib/config/gameConstants';
+import { HEXAGON_RADII } from '@/lib/config';
 
 interface HexagonLayersProps {
   rayColor: string;
@@ -8,9 +8,10 @@ interface HexagonLayersProps {
   vpY: number;
   hexCenterX: number;
   hexCenterY: number;
+  rotationOffset?: number; // Rotation offset in degrees
 }
 
-export function HexagonLayers({ rayColor, vpX, vpY, hexCenterX, hexCenterY }: HexagonLayersProps) {
+export function HexagonLayers({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rotationOffset = 0 }: HexagonLayersProps) {
   const maxRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1];
   return (
     <>
@@ -19,7 +20,8 @@ export function HexagonLayers({ rayColor, vpX, vpY, hexCenterX, hexCenterY }: He
         const centerX = idx === HEXAGON_RADII.length - 1 ? hexCenterX : vpX;
         const centerY = idx === HEXAGON_RADII.length - 1 ? hexCenterY : vpY;
         const points = Array.from({ length: 6 }).map((_, i) => {
-          const angle = (i * 60 * Math.PI) / 180;
+          // Add rotation offset to base angle
+          const angle = ((i * 60 + rotationOffset) * Math.PI) / 180;
           const x = centerX + radius * Math.cos(angle);
           const y = centerY + radius * Math.sin(angle);
           return `${x},${y}`;

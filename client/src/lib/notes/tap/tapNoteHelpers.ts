@@ -1,6 +1,6 @@
 import { Note } from '@/lib/engine/gameTypes';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { TAP_FAILURE_ANIMATIONS, TAP_RENDER_WINDOW_MS, TAP_FALLTHROUGH_WINDOW_MS, TAP_HIT_FLASH, LEAD_TIME } from '@/lib/config/gameConstants';
+import { TAP_FAILURE_ANIMATIONS, TAP_RENDER_WINDOW_MS, TAP_FALLTHROUGH_WINDOW_MS, TAP_HIT_FLASH, LEAD_TIME } from '@/lib/config';
 
 export interface TapNoteState {
   isHit: boolean;

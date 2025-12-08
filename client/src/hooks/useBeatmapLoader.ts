@@ -4,6 +4,7 @@ import { parseBeatmap, BeatmapData } from "@/lib/beatmap/beatmapParser";
 import { convertBeatmapNotes } from "@/lib/beatmap/beatmapConverter";
 import { extractYouTubeId } from '@/lib/youtube';
 import { GameErrors } from '@/lib/errors/errorLog';
+import { validateBeatmap } from '@/lib/parsers/beatmapValidation';
 
 interface UseBeatmapLoaderProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
@@ -82,6 +83,31 @@ export const useBeatmapLoader = ({ difficulty, onBeatmapLoad }: UseBeatmapLoader
         setError(msg);
         GameErrors.log(`BeatmapLoader: ${msg}`);
         return;
+      }
+
+      // Validate HOLD note pairings
+      const validation = validateBeatmap(convertedNotes as any[]);
+      if (!validation.valid) {
+        const errorMessages = validation.errors
+          .filter(e => e.type === 'error')
+          .map(e => e.message)
+          .join('; ');
+        const msg = `Beatmap validation failed: ${errorMessages}`;
+        setError(msg);
+        GameErrors.log(`BeatmapLoader: ${msg}`);
+        // Log individual errors for debugging
+        validation.errors.forEach(e => {
+          GameErrors.log(`  - ${e.message} at ${e.timestamp}ms`);
+        });
+        return;
+      }
+      
+      // Log warnings (non-blocking)
+      const warnings = validation.errors.filter(e => e.type === 'warning');
+      if (warnings.length > 0) {
+        warnings.forEach(w => {
+          GameErrors.log(`[WARNING] ${w.message} at ${w.timestamp}ms`);
+        });
       }
 
       setIsBeatmapLoaded(true);

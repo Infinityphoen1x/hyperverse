@@ -4,14 +4,14 @@ import { GameErrors } from '@/lib/errors/errorLog';
 import {
   DECK_METER_COMPLETION_THRESHOLD,
   DECK_METER_DEFAULT_HOLD_DURATION,
-} from '@/lib/config/gameConstants';
+} from '@/lib/config';
 
 // Helper: Check if a note is an active (pressed, not failed) hold note on a specific lane
 export const isActiveHoldNote = (note: Note, lane: number): boolean => {
   return !!(
     note &&
     note.lane === lane &&
-    (note.type === 'SPIN_LEFT' || note.type === 'SPIN_RIGHT') &&
+    note.type === 'HOLD' &&
     !note.hit &&
     !note.tooEarlyFailure &&
     !note.holdMissFailure &&

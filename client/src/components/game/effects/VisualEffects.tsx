@@ -1,5 +1,5 @@
 // src/components/VisualEffects.tsx
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useGameStore } from '@/stores/useGameStore'; // Your game store (e.g., with combo, health, missCount)
 import { useParticles } from '@/hooks/useParticles';
 import { useShake } from '@/hooks/useShake';
@@ -9,7 +9,7 @@ import { ParticleSystem } from '@/components/game/effects/ParticleSystem';
 import { GlitchOverlay } from '@/components/game/effects/GlitchOverlay';
 import { ChromaticAberration } from '@/components/game/effects/ChromaticAberration';
 import { PerfectPulse } from '@/components/game/effects/PerfectPulse';
-import { MAX_HEALTH, LOW_HEALTH_THRESHOLD, COMBO_PERFECT_MILESTONE, GREYSCALE_INTENSITY, GLITCH_BACKGROUND_SIZE } from '@/lib/config/gameConstants';
+import { MAX_HEALTH, LOW_HEALTH_THRESHOLD, COMBO_PERFECT_MILESTONE, GREYSCALE_INTENSITY, GLITCH_BACKGROUND_SIZE } from '@/lib/config';
 import { GameErrors } from '@/lib/errors/errorLog';
 
 interface VisualEffectsProps {
@@ -45,8 +45,27 @@ export function VisualEffects({ combo: propCombo, health: propHealth, missCount:
     prevMissCount: prevMissCountRef.current
   });
 
-  // Track perfect pulse trigger by detecting milestone crossing
-  const showPerfectPulse = combo > 0 && combo % COMBO_PERFECT_MILESTONE === 0 && combo !== prevComboRef.current;
+  // Track perfect pulse trigger - keep visible for animation duration
+  const [showPerfectPulse, setShowPerfectPulse] = useState(false);
+  const perfectPulseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Detect milestone crossing and trigger pulse
+  useEffect(() => {
+    const isMilestone = combo > 0 && combo % COMBO_PERFECT_MILESTONE === 0 && combo !== prevComboRef.current;
+    if (isMilestone) {
+      setShowPerfectPulse(true);
+      
+      // Clear any existing timeout
+      if (perfectPulseTimeoutRef.current) {
+        clearTimeout(perfectPulseTimeoutRef.current);
+      }
+      
+      // Hide after animation completes (600ms duration)
+      perfectPulseTimeoutRef.current = setTimeout(() => {
+        setShowPerfectPulse(false);
+      }, 600);
+    }
+  }, [combo]);
 
   // Update refs after each render to track changes
   useEffect(() => {
@@ -56,6 +75,15 @@ export function VisualEffects({ combo: propCombo, health: propHealth, missCount:
   useEffect(() => {
     prevComboRef.current = combo;
   }, [combo]);
+  
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (perfectPulseTimeoutRef.current) {
+        clearTimeout(perfectPulseTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const greyscaleIntensity = Math.max(0, (MAX_HEALTH - health) / MAX_HEALTH) * GREYSCALE_INTENSITY;
 

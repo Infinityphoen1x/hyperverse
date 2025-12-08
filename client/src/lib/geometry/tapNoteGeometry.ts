@@ -1,4 +1,4 @@
-import { JUDGEMENT_RADIUS, TAP_DEPTH, TAP_RAY } from '@/lib/config/gameConstants';
+import { JUDGEMENT_RADIUS, TAP_DEPTH, TAP_RAY } from '@/lib/config';
 
 export interface TapNoteGeometry {
   x1: number; y1: number;
@@ -13,11 +13,17 @@ const calculateEffectiveProgress = (
   isFailedOrHit: boolean,
   noteTime: number,
   currentTime: number,
-  failureTime?: number
+  failureTime?: number,
+  isMissFailure?: boolean
 ): number => {
-  // Use same approach speed regardless of hit/failure state
-  // This prevents speed-up when switching calculation methods
-  // Note continues approaching at normal rate, opacity/effects handle visibility
+  // For miss failures: allow extending past judgement line (progress > 1)
+  // This creates the same "fall through" effect as hold notes
+  if (isMissFailure && failureTime) {
+    // Continue past judgement line during miss failure animation
+    return Math.max(0, progress); // No upper clamp
+  }
+  
+  // For hits and too-early failures: clamp at judgement line
   return Math.max(0, Math.min(1, progress));
 };
 
@@ -70,10 +76,11 @@ export const calculateTapNoteGeometry = (
   currentTime: number = 0,
   isFailed: boolean = false,
   noteTime: number = 0,
-  failureTime?: number
+  failureTime?: number,
+  isMissFailure?: boolean
 ): TapNoteGeometry => {
   const isFailedOrHit = isFailed || isSuccessfulHit;
-  const effectiveProgress = calculateEffectiveProgress(progress, isFailedOrHit, noteTime, currentTime, failureTime);
+  const effectiveProgress = calculateEffectiveProgress(progress, isFailedOrHit, noteTime, currentTime, failureTime, isMissFailure);
   const { nearDistance, farDistance } = calculateDistances(effectiveProgress, 1.0);
   const corners = calculateRayCorners(vpX, vpY, tapRayAngle, nearDistance, farDistance);
 

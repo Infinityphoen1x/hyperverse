@@ -6,7 +6,7 @@ import {
   DECK_METER_COMPLETION_GLOW_DURATION,
   DECK_METER_COMPLETION_THRESHOLD,
   DECK_METER_DEFAULT_HOLD_DURATION
-} from '@/lib/config/gameConstants';
+} from '@/lib/config';
 
 interface UseHoldProgressProps {
   lane?: number;

@@ -1,4 +1,4 @@
-import { GREYSCALE_GLOW_COLOR, TAP_FAILURE_ANIMATIONS, TAP_HIT_FLASH, TAP_COLORS, TAP_OPACITY } from '@/lib/config/gameConstants';
+import { GREYSCALE_GLOW_COLOR, TAP_FAILURE_ANIMATIONS, TAP_HIT_FLASH, TAP_COLORS, TAP_OPACITY } from '@/lib/config';
 import { TapNoteState } from './tapNoteHelpers';
 import { TapNoteColors, TapGreyscaleState, determineTapGreyscaleState, calculateTapNoteColors } from './tapGreystate';
 

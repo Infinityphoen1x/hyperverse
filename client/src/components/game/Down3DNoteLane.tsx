@@ -1,6 +1,6 @@
 // src/components/Down3DNoteLane.tsx
 import React, { memo, useEffect } from "react";
-import { VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config/gameConstants';
+import { VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config';
 import { useVanishingPointOffset } from '@/hooks/useVanishingPointOffset';
 import { useVanishingPointStore } from '@/stores/useVanishingPointStore';
 import { useGameStore } from '@/stores/useGameStore';

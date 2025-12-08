@@ -4,7 +4,7 @@ import { ScoringManager } from '@/lib/managers/scoringManager';
 import { roundTime } from './noteUpdateHelpers';
 import { checkTapAutoFail, checkHoldAutoFail } from './noteAutoFailHelpers';
 import { GameErrors } from '@/lib/errors/errorLog';
-import { TAP_RENDER_WINDOW_MS, LEAD_TIME } from '@/lib/config/gameConstants';
+import { TAP_RENDER_WINDOW_MS, LEAD_TIME } from '@/lib/config';
 
 export type NoteUpdateResult = {
   updatedNote: Note;
@@ -169,7 +169,7 @@ export class NoteProcessor {
       return checkTapAutoFail(note, currentTime, this.config, this.scorer);
     }
 
-    if (note.type === 'SPIN_LEFT' || note.type === 'SPIN_RIGHT' || note.type === 'HOLD') {
+    if (note.type === 'HOLD') {
       return checkHoldAutoFail(note, currentTime, this.config, this.scorer);
     }
 

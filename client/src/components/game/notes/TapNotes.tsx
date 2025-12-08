@@ -3,7 +3,7 @@ import React, { memo, useCallback } from 'react';
 import { TapNote } from './TapNote';
 import { useTapNotes } from '@/hooks/useTapNotes';
 import { useGameStore } from '@/stores/useGameStore';
-import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';
+import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config';
 
 interface TapNotesProps {
   vpX?: number;
@@ -13,7 +13,12 @@ interface TapNotesProps {
 const TapNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: TapNotesProps) => {
   // Memoize selectors to prevent unnecessary store subscriptions
   const currentTime = useGameStore(state => state.currentTime);
+  const tunnelRotation = useGameStore(state => state.tunnelRotation);
   const processedNotes = useTapNotes();
+  
+  // Use vanishing point as rotation center
+  const rotationCenterX = propVpX;
+  const rotationCenterY = propVpY;
 
   return (
     <svg 

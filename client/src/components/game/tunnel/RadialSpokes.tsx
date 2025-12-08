@@ -1,6 +1,6 @@
 // src/components/RadialSpokes.tsx
 import React, { memo } from 'react';
-import { RAY_ANGLES, TUNNEL_MAX_DISTANCE } from '@/lib/config/gameConstants';
+import { RAY_ANGLES, TUNNEL_MAX_DISTANCE } from '@/lib/config';
 
 interface RadialSpokesProps {
   rayColor: string;
@@ -8,14 +8,16 @@ interface RadialSpokesProps {
   vpY: number;
   hexCenterX: number;
   hexCenterY: number;
+  rotationOffset?: number; // Rotation offset in degrees
 }
 
-const RadialSpokesComponent = ({ rayColor, vpX, vpY, hexCenterX, hexCenterY }: RadialSpokesProps) => {
+const RadialSpokesComponent = ({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rotationOffset = 0 }: RadialSpokesProps) => {
   const maxRadius = TUNNEL_MAX_DISTANCE;
   return (
     <>
       {RAY_ANGLES.map((angle: number) => {
-        const rad = (angle * Math.PI) / 180;
+        // Add rotation offset to ray angle
+        const rad = ((angle + rotationOffset) * Math.PI) / 180;
         const cornerX = hexCenterX + maxRadius * Math.cos(rad);
         const cornerY = hexCenterY + maxRadius * Math.sin(rad);
         return (

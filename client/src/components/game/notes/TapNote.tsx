@@ -5,6 +5,7 @@ import { getLaneAngle, getColorForLane } from '@/lib/utils/laneUtils';
 import { calculateTapNoteGeometry } from "@/lib/geometry/tapNoteGeometry";
 import { calculateTapNoteStyle } from "@/lib/notes/tap/tapNoteStyle";
 import { TapNoteState } from '@/lib/notes/tap/tapNoteHelpers';
+import { useTunnelRotation } from '@/hooks/useTunnelRotation';
 
 interface TapNoteProps {
   note: Note;
@@ -18,9 +19,10 @@ interface TapNoteProps {
 }
 
 const TapNoteComponent = ({ note, currentTime, vpX, vpY, state, progressForGeometry, clampedProgress, rawProgress }: TapNoteProps): React.ReactElement => {
-  const tapRayAngle = getLaneAngle(note.lane);
+  const tunnelRotation = useTunnelRotation();
+  const tapRayAngle = getLaneAngle(note.lane, tunnelRotation);
   const noteColor = getColorForLane(note.lane);
-  const geometry = calculateTapNoteGeometry(progressForGeometry, tapRayAngle, vpX, vpY, state.isHit, currentTime, state.isFailed, note.time, state.failureTime);
+  const geometry = calculateTapNoteGeometry(progressForGeometry, tapRayAngle, vpX, vpY, state.isHit, currentTime, state.isFailed, note.time, state.failureTime, state.isTapMissFailure);
   const style = calculateTapNoteStyle(clampedProgress, state, noteColor, rawProgress, note.lane);
   return (
     <polygon

@@ -2,7 +2,7 @@ import React, { memo, useCallback } from 'react';
 import { HoldNote } from './HoldNote';
 import { useHoldNotes } from '@/hooks/useHoldNotes';
 import { useGameStore } from '@/stores/useGameStore';
-import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT, LEAD_TIME } from '@/lib/config/gameConstants';
+import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT, LEAD_TIME } from '@/lib/config';
 
 interface HoldNotesProps {
   vpX?: number;
@@ -13,7 +13,12 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
   // Split selectors to prevent unnecessary object creation and re-renders
   const notes = useGameStore(state => state.notes || []);
   const currentTime = useGameStore(state => state.currentTime);
+  const tunnelRotation = useGameStore(state => state.tunnelRotation);
   const noteSpeedMultiplier = useGameStore(state => state.noteSpeedMultiplier) || 1.0;
+  
+  // Use vanishing point as rotation center
+  const rotationCenterX = propVpX;
+  const rotationCenterY = propVpY;
 
   const visibleNotes = React.useMemo(() => {
     if (!notes || !Array.isArray(notes)) return [];
@@ -29,12 +34,12 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
     const failureWindowMiss = effectiveLeadTime / 2; // Half approach duration (post-judgement)
     const hitCleanupWindow = 500 / noteSpeedMultiplier; // Brief cleanup period
     
-    const holdNotes = notes.filter(n => n.type === 'HOLD' || n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT');
+    const holdNotes = notes.filter(n => n.type === 'HOLD');
     const tapNotes = notes.filter(n => n.type === 'TAP');
     
     return notes.filter(n => {
       // For hold notes, check visibility based on note.time + note.duration, not just note.time
-      const isHoldNote = n.type === 'HOLD' || n.type === 'SPIN_LEFT' || n.type === 'SPIN_RIGHT';
+      const isHoldNote = n.type === 'HOLD';
       const holdDuration = isHoldNote ? (n.duration || 1000) : 0;
       const noteStartTime = n.time;
       const noteEndTime = isHoldNote ? n.time + holdDuration : n.time;

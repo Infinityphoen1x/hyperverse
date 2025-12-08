@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import type { Note } from '@/lib/engine/gameTypes';
 import { getTapNoteState, TapNoteState, shouldRenderTapNote } from '@/lib/notes/tap/tapNoteHelpers';
-import { LEAD_TIME } from '@/lib/config/gameConstants';
+import { LEAD_TIME } from '@/lib/config';
 import { GameErrors } from '@/lib/errors/errorLog';
 
 export interface TapNoteProcessedData {

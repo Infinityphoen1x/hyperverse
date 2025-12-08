@@ -8,7 +8,7 @@ import {
   DECK_METER_COMPLETION_THRESHOLD,
   COLOR_DECK_LEFT,
   COLOR_DECK_RIGHT,
-} from '@/lib/config/gameConstants';
+} from '@/lib/config';
 
 const getRectangleMeterColor = (lane: number): string => {
   if (lane === -1) return COLOR_DECK_LEFT; // Q - green

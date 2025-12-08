@@ -226,7 +226,7 @@ export const PARTICLE_COLOR_PALETTE: ParticleColorPalette = {
 export const PARTICLE_COLORS = PARTICLE_COLOR_PALETTE.colors;
 
 /**
- * Deck hold meter display - shows progress for SPIN_LEFT/SPIN_RIGHT hold notes
+ * Deck hold meter display - shows progress for HOLD notes
  * Meter fills as player holds rotation, glows when complete
  */
 export interface DeckMeter {
@@ -400,7 +400,7 @@ export interface GameEngineTiming {
   noteStartTime: number;
   /** Cap on generated notes (procedural generation safety limit) */
   maxGeneratedNotes: number;
-  /** Alternate SPIN_LEFT and SPIN_RIGHT every N beats */
+  /** Alternate HOLD notes between decks every N beats */
   spinAlternation: number;
   /** HOLD notes appear this many ms before hit (matches TAP_RENDER_WINDOW_MS in TAP_NOTE_GEOMETRY) */
   leadTime: number;

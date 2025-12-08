@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import wheelImg from "/assets/generated_images/neon_glowing_cyber_turntable_interface.png";
 import { GameErrors } from '@/lib/errors/errorLog';
-import { ROTATION_SPEED, SPIN_THRESHOLD, STATE_UPDATE_INTERVAL, DRAG_VELOCITY_THRESHOLD } from '@/lib/config/gameConstants';
+import { ROTATION_SPEED, SPIN_THRESHOLD, STATE_UPDATE_INTERVAL, DRAG_VELOCITY_THRESHOLD } from '@/lib/config';
 import { useGameStore } from '@/stores/useGameStore';
+import { getLaneAngle, getColorForLane } from '@/lib/utils/laneUtils';
 
 interface CamelotWheelProps {
   side: "left" | "right";
@@ -11,6 +12,28 @@ interface CamelotWheelProps {
   onHoldStart?: (lane: number) => void;
   onHoldEnd?: () => void;
   onRotationChange?: (rotation: number) => void;
+}
+
+// Get which lane is aligned with this deck position
+function getAlignedLane(side: "left" | "right", tunnelRotation: number): number {
+  const targetAngle = side === 'left' ? 180 : 0;
+  const lanes = [0, 1, 2, 3, -1, -2];
+  
+  for (const lane of lanes) {
+    const laneAngle = getLaneAngle(lane, tunnelRotation);
+    const normalized = ((laneAngle % 360) + 360) % 360;
+    
+    // Check if aligned with deck position
+    if (side === 'left' && Math.abs(normalized - 180) < 5) {
+      return lane;
+    }
+    if (side === 'right' && (normalized < 5 || normalized > 355)) {
+      return lane;
+    }
+  }
+  
+  // Default to original deck lanes
+  return side === 'left' ? -1 : -2;
 }
 
 export function CamelotWheel({ 
@@ -28,6 +51,16 @@ export function CamelotWheel({
   const lastStateUpdateTimeRef = useRef(0);
   const wheelLane = side === 'left' ? -1 : -2;
   const incrementSpinPressCount = useGameStore(state => state.incrementSpinPressCount);
+  const tunnelRotation = useGameStore(state => state.tunnelRotation);
+  
+  // Determine which lane is currently aligned with this deck
+  const alignedLane = useMemo(
+    () => getAlignedLane(side, tunnelRotation),
+    [side, tunnelRotation]
+  );
+  
+  // Get color for the aligned lane
+  const laneColor = getColorForLane(alignedLane);
 
   // Sync refs when state changes
   useEffect(() => {
@@ -122,15 +155,23 @@ export function CamelotWheel({
     }
   }, [onRotationChange, onSpin]);
 
-  // Hitline color class
-  const hitlineColorClass = side === 'left' ? 'bg-neon-green/70 shadow-[0_0_20px_rgb(0,255,0)]' : 'bg-neon-red/70 shadow-[0_0_20px_rgb(255,0,0)]';
-  const borderColorClass = side === 'left' ? 'border-neon-green/50 shadow-[0_0_30px_rgba(0,255,0,0.3)]' : 'border-neon-red/50 shadow-[0_0_30px_rgba(255,0,0,0.3)]';
+  // Hitline and border colors based on aligned lane
+  const hitlineStyle = {
+    backgroundColor: laneColor,
+    boxShadow: `0 0 20px ${laneColor}`,
+    opacity: 0.7
+  };
+  
+  const borderStyle = {
+    borderColor: `${laneColor}80`, // 50% opacity
+    boxShadow: `0 0 30px ${laneColor}4D` // 30% opacity
+  };
 
   return (
     <div className="flex flex-col items-center gap-6 relative">
       {/* Hitline at top edge - scales with wheel */}
       <div className={`absolute z-40 -top-8 md:-top-10 ${side === 'left' ? 'left-1/2 -translate-x-1/4' : 'right-1/2 translate-x-1/4'}`}>
-        <div className={`w-1 h-8 md:h-10 ${hitlineColorClass}`} />
+        <div className="w-1 h-8 md:h-10" style={hitlineStyle} />
       </div>
 
       {/* Semicircle Container */}
@@ -141,8 +182,8 @@ export function CamelotWheel({
         >
           {/* The Interactive Wheel (Spins) */}
           <motion.div
-            className={`w-full h-full rounded-full border-4 overflow-hidden relative bg-black cursor-grab active:cursor-grabbing ${borderColorClass}`}
-            style={{ rotate: internalRotation }}
+            className="w-full h-full rounded-full border-4 overflow-hidden relative bg-black cursor-grab active:cursor-grabbing"
+            style={{ rotate: internalRotation, ...borderStyle }}
             drag="x"
             dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
             dragElastic={0}

@@ -1,7 +1,7 @@
 // src/components/HealthDisplay.tsx
 import React from 'react';
 import { useGameStore } from '@/stores/useGameStore'; // Assumes store with game stats
-import { MAX_HEALTH } from '@/lib/config/gameConstants'; // Assuming MAX_HEALTH=200 from prior
+import { MAX_HEALTH } from '@/lib/config'; // Assuming MAX_HEALTH=200 from prior
 
 interface HealthDisplayProps {
   // Optional override; defaults to store for global sync

@@ -3,7 +3,7 @@
 
 export type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 export type GameState = 'IDLE' | 'PLAYING' | 'PAUSED' | 'RESUMING' | 'REWINDING' | 'GAME_OVER';
-export type NoteType = 'TAP' | 'HOLD' | 'SPIN_LEFT' | 'SPIN_RIGHT';
+export type NoteType = 'TAP' | 'HOLD';
 export type FailureType = 'tapTooEarlyFailure' | 'tapMissFailure' | 'tooEarlyFailure' | 'holdMissFailure' | 'holdReleaseFailure' | 'successful';
 
 // Note structure
@@ -88,6 +88,11 @@ export interface GameStoreState {
   noteSpeedMultiplier: number; // 0.5 to 2.0 - temporary slider value in settings
   defaultNoteSpeedMultiplier: number; // 0.5 to 2.0 - persisted default used in gameplay
   
+  // Tunnel rotation
+  tunnelRotation: number; // Current rotation angle in degrees
+  targetTunnelRotation: number; // Target rotation angle for animation
+  animatedTunnelRotation: number; // Current animated rotation value (shared globally)
+  
   // Spin alternation - tracks key press count per lane for DJ deck direction alternation
   spinPressCountPerLane: { [lane: number]: number };
   
@@ -105,6 +110,9 @@ export interface GameStoreState {
   setBeatmapBpm: (bpm: number) => void;
   setNoteSpeedMultiplier: (multiplier: number) => void;
   setDefaultNoteSpeedMultiplier: (multiplier: number) => void;
+  setTunnelRotation: (angle: number) => void;
+  setTargetTunnelRotation: (angle: number) => void;
+  setAnimatedTunnelRotation: (angle: number) => void;
   incrementSpinPressCount: (lane: number) => void;
   
   // Game actions
@@ -114,6 +122,7 @@ export interface GameStoreState {
   endDeckHold: (lane: number) => void;
   pauseGame: () => void;
   resumeGame: () => void;
+  unloadBeatmap: () => void;
   resetGameState: () => void;
   rewindGame: () => void;
   restartGame: () => void;

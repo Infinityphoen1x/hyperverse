@@ -1,5 +1,5 @@
 // src/utils/judgementLineUtils.ts
-import { JUDGEMENT_RADIUS, COLOR_DECK_LEFT, COLOR_DECK_RIGHT } from '@/lib/config/gameConstants';
+import { JUDGEMENT_RADIUS, COLOR_DECK_LEFT, COLOR_DECK_RIGHT } from '@/lib/config';
 
 interface LineConfig {
   angle: number;
@@ -7,8 +7,8 @@ interface LineConfig {
   key?: string;
 }
 
-export const calculateLinePoints = (config: LineConfig, vpX: number, vpY: number, lineWidth: number): { x1: number; y1: number; x2: number; y2: number } => {
-  const rad = (config.angle * Math.PI) / 180;
+export const calculateLinePoints = (config: LineConfig, vpX: number, vpY: number, lineWidth: number, rotationOffset: number = 0): { x1: number; y1: number; x2: number; y2: number } => {
+  const rad = ((config.angle + rotationOffset) * Math.PI) / 180;
   const cx = vpX + Math.cos(rad) * JUDGEMENT_RADIUS;
   const cy = vpY + Math.sin(rad) * JUDGEMENT_RADIUS;
   const perpRad = rad + Math.PI / 2;

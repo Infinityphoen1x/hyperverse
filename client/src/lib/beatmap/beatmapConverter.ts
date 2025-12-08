@@ -5,7 +5,7 @@ export function convertBeatmapNotes(rawNotes: any[], beatmapStart: number = 0): 
     id: n.id || `note-${i}`,
     lane: n.lane,
     time: n.time + beatmapStart,
-    type: n.type === 'HOLD' ? (n.lane === -1 ? 'SPIN_LEFT' : 'SPIN_RIGHT') : 'TAP',
+    type: n.type === 'HOLD' ? 'HOLD' : 'TAP',
     duration: n.duration,
     hit: false,
     missed: false,

@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { BeatmapLoader } from "@/components/game/loaders/BeatmapLoader";
 import { BeatmapData } from "@/lib/beatmap/beatmapParser";
+import { useGameStore } from "@/stores/useGameStore";
 
 interface HomeProps {
   onStartGame: (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => void;
@@ -12,6 +13,7 @@ export default function Home({ onStartGame, onOpenSettings }: HomeProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const [isLoaderOpen, setIsLoaderOpen] = useState(false);
   const [beatmapLoaded, setBeatmapLoaded] = useState(false);
+  const unloadBeatmap = useGameStore(state => state.unloadBeatmap);
 
   const colors = ["#00FFFF", "#FF00FF", "#00FF00", "#00CCFF", "#FF0080"];
   const [colorIndex, setColorIndex] = useState(0);
@@ -56,6 +58,9 @@ export default function Home({ onStartGame, onOpenSettings }: HomeProps) {
   }, [colors.length]);
 
   const handleBeatmapLoad = (data: BeatmapData, beatmapText: string) => {
+    // Clear old beatmap first to prevent conflicts
+    unloadBeatmap();
+    
     // Store full beatmap TEXT (not parsed notes) so Game can re-parse with any difficulty
     const beatmapStorageData = { 
       youtubeVideoId: data.youtubeVideoId,
@@ -64,6 +69,11 @@ export default function Home({ onStartGame, onOpenSettings }: HomeProps) {
     localStorage.setItem('pendingBeatmap', JSON.stringify(beatmapStorageData));
     setBeatmapLoaded(true);
     setIsLoaderOpen(false); // Auto-close the loader
+  };
+
+  const handleUnloadBeatmap = () => {
+    unloadBeatmap();
+    setBeatmapLoaded(false);
   };
 
   return (
@@ -160,15 +170,27 @@ export default function Home({ onStartGame, onOpenSettings }: HomeProps) {
           </motion.button>
           
           {beatmapLoaded && (
-            <motion.button 
-              onClick={() => { setIsLoaderOpen(true); }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-6 text-white font-bold font-orbitron rounded-sm border-2 border-neon-cyan bg-transparent hover:bg-neon-cyan/10 transition-colors text-sm whitespace-nowrap"
-              data-testid="button-load-new-beatmap"
-            >
-              LOAD NEW
-            </motion.button>
+            <>
+              <motion.button 
+                onClick={() => { setIsLoaderOpen(true); }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-6 py-6 text-white font-bold font-orbitron rounded-sm border-2 border-neon-cyan bg-transparent hover:bg-neon-cyan/10 transition-colors text-sm whitespace-nowrap"
+                data-testid="button-load-new-beatmap"
+              >
+                LOAD NEW
+              </motion.button>
+              
+              <motion.button 
+                onClick={handleUnloadBeatmap}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-6 py-6 text-white font-bold font-orbitron rounded-sm border-2 border-red-500/50 bg-transparent hover:bg-red-500/10 hover:border-red-500 transition-colors text-sm whitespace-nowrap"
+                data-testid="button-unload-beatmap"
+              >
+                UNLOAD
+              </motion.button>
+            </>
           )}
 
           <motion.button 

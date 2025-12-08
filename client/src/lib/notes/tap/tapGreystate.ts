@@ -1,7 +1,7 @@
 import {
   GREYSCALE_FILL_COLOR,
   GREYSCALE_GLOW_COLOR,
-} from '@/lib/config/gameConstants';
+} from '@/lib/config';
 import { TapNoteState } from './tapNoteHelpers';
 import { getColorForLane } from '@/lib/utils/laneUtils';
 

@@ -1,8 +1,9 @@
-import { MAX_HEALTH } from '@/lib/config/gameConstants';
+import { MAX_HEALTH } from '@/lib/config';
 import { GameErrors } from '@/lib/errors/errorLog';
+import { useGameStore } from '@/stores/useGameStore';
 
-// Lane to ray angle mapping
-export const getLaneAngle = (lane: number): number => {
+// Lane to ray angle mapping with rotation offset
+export const getLaneAngle = (lane: number, rotationOffset: number = 0): number => {
   const rayMapping: Record<number, number> = {
     [-2]: 0,
     [-1]: 180,
@@ -16,7 +17,7 @@ export const getLaneAngle = (lane: number): number => {
     GameErrors.log(`Invalid lane ${lane}, using default angle 0`);
     return 0;
   }
-  return angle;
+  return angle + rotationOffset;
 };
 
 // Lane to color mapping with health-based desaturation

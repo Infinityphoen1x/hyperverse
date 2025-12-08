@@ -4,7 +4,7 @@ import { GameErrors } from '@/lib/errors/errorLog';
 import { calculateApproachGeometry, calculateLockedNearDistance, calculateHoldNoteGlow, calculateCollapseGeometry } from "@/lib/geometry/holdNoteGeometry";
 import { calculateHoldNoteColors, determineGreyscaleState } from "@/lib/notes/hold/holdGreystate";
 import { markAnimationCompletedIfDone, trackHoldNoteAnimationLifecycle, getHoldNoteFailureStates } from "@/lib/notes/hold/holdNoteHelpers";
-import { FAILURE_ANIMATION_DURATION, HOLD_NOTE_STRIP_WIDTH_MULTIPLIER, JUDGEMENT_RADIUS, LEAD_TIME } from '@/lib/config/gameConstants';
+import { FAILURE_ANIMATION_DURATION, HOLD_NOTE_STRIP_WIDTH_MULTIPLIER, JUDGEMENT_RADIUS, LEAD_TIME } from '@/lib/config';
 import { getLaneAngle, getColorForLane } from '@/lib/utils/laneUtils';
 
 export interface HoldNoteProcessedData {
@@ -23,7 +23,7 @@ export interface HoldNoteProcessedData {
   currentTime: number;
 }
 
-export function processSingleHoldNote(note: Note, currentTime: number, noteSpeedMultiplier: number = 1.0): HoldNoteProcessedData | null {
+export function processSingleHoldNote(note: Note, currentTime: number, noteSpeedMultiplier: number = 1.0, tunnelRotation: number = 0): HoldNoteProcessedData | null {
   try {
     if (!note || !Number.isFinite(note.time) || !note.id) return null;
 
@@ -49,7 +49,7 @@ export function processSingleHoldNote(note: Note, currentTime: number, noteSpeed
       }
     }
 
-    const rayAngle = getLaneAngle(note.lane);
+    const rayAngle = getLaneAngle(note.lane, tunnelRotation);
     if (!Number.isFinite(rayAngle)) {
       console.warn(`Invalid ray angle for lane ${note.lane}`);
       return null;

@@ -1,6 +1,6 @@
 // src/components/ChromaticAberration.tsx
 import { motion } from 'framer-motion';
-import { CHROMATIC_OFFSET_PX } from '@/lib/config/gameConstants';
+import { CHROMATIC_OFFSET_PX } from '@/lib/config';
 
 interface ChromaticAberrationProps { intensity: number; }
 

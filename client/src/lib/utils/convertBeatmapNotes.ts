@@ -79,16 +79,12 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
     if (!validNoteIndices.has(i)) continue;
     const note = beatmapNotes[i];
     
-    let type: 'TAP' | 'SPIN_LEFT' | 'SPIN_RIGHT';
+    let type: 'TAP' | 'HOLD';
     
-    // Re-apply logic to determine final internal type
-    // SPIN_LEFT/SPIN_RIGHT refer to lane position, not rotation direction
-    if (note.lane === -1) {
-        type = 'SPIN_LEFT';  // Q deck (left position)
-    } else if (note.lane === -2) {
-        type = 'SPIN_RIGHT'; // P deck (right position)
+    if (note.type === 'HOLD') {
+      type = 'HOLD';
     } else {
-        type = 'TAP';
+      type = 'TAP';
     }
 
     const id = note.holdId || `note-${note.time}-${i}`;
@@ -102,11 +98,11 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
     };
     
     // Apply duration if it's a spin note
-    if ((type === 'SPIN_LEFT' || type === 'SPIN_RIGHT') && note.duration) {
+    if (type === 'HOLD' && note.duration) {
       gameNote.duration = note.duration;
     }
     // Fallback: if we decided it's a spin note but it has no duration (was TAP in beatmap), give it default
-    if ((type === 'SPIN_LEFT' || type === 'SPIN_RIGHT') && !gameNote.duration) {
+    if (type === 'HOLD' && !gameNote.duration) {
       gameNote.duration = 1000;
     }
 

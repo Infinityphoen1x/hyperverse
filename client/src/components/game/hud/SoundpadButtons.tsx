@@ -3,25 +3,24 @@ import React, { useCallback } from 'react';
 import { useGameStore } from '@/stores/useGameStore'; // Assumes store with vpX, vpY (e.g., viewport state)
 import { SoundpadButton } from './SoundpadButton';
 import { calculateButtonPosition } from '@/lib/utils/soundpadUtils';
-import { BUTTON_CONFIG, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config/gameConstants';
+import { useTunnelRotation } from '@/hooks/useTunnelRotation';
+import { BUTTON_CONFIG, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT, VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config';
 
 interface SoundpadButtonsProps {
-  // Optional overrides; defaults to store for global sync
+  // Optional overrides; defaults to fixed VP for outer hexagon alignment
   vpX?: number;
   vpY?: number;
   onPadHit?: (lane: number) => void;
 }
 
 export function SoundpadButtons(props: SoundpadButtonsProps = {}) {
-  const { vpX = 350, vpY = 300, onPadHit = () => {} } = props;
+  const { vpX = VANISHING_POINT_X, vpY = VANISHING_POINT_Y, onPadHit = () => {} } = props;
+  const tunnelRotation = useTunnelRotation();
   
-  // Validate viewport values before rendering
-  const isValid = typeof vpX === 'number' && typeof vpY === 'number' && vpX >= 0 && vpY >= 0;
+  // Use fixed vanishing point for soundpad buttons (same as outer hexagon)
+  const fixedVpX = VANISHING_POINT_X;
+  const fixedVpY = VANISHING_POINT_Y;
   
-  if (!isValid) {
-    return null;
-  }
-
   return (
     <svg
       className="absolute inset-0"
@@ -34,7 +33,7 @@ export function SoundpadButtons(props: SoundpadButtonsProps = {}) {
       }}
     >
       {BUTTON_CONFIG.map(({ lane, angle }) => {
-        const position = calculateButtonPosition(angle, vpX, vpY);
+        const position = calculateButtonPosition(angle, fixedVpX, fixedVpY, tunnelRotation);
         return (
           <SoundpadButton
             key={`soundpad-button-${lane}`}

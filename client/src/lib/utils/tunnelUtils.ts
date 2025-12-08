@@ -1,5 +1,5 @@
 // src/utils/tunnelUtils.ts
-import { MAX_HEALTH } from '@/lib/config/gameConstants';
+import { MAX_HEALTH } from '@/lib/config';
 
 export const getHealthBasedRayColor = (health: number): string => {
   const healthFactor = Math.max(0, MAX_HEALTH - health) / MAX_HEALTH;

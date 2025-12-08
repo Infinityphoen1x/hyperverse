@@ -1,5 +1,5 @@
 // src/utils/visualEffectsUtils.ts
-import { PARTICLE_COLORS, PARTICLE_SIZE_MIN, PARTICLE_SIZE_MAX } from '@/lib/config/gameConstants';
+import { PARTICLE_COLORS, PARTICLE_SIZE_MIN, PARTICLE_SIZE_MAX } from '@/lib/config';
 
 export const generateParticles = (count: number) => {
   const now = Date.now();
