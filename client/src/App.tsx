@@ -86,7 +86,11 @@ function App() {
               <Game 
                 key={`game-${youtubeVideoId}-${selectedDifficulty}-${gameActive}`}
                 difficulty={selectedDifficulty}
-                onBackToHome={() => setGameActive(false)}
+                onBackToHome={() => {
+                  setGameActive(false);
+                  setYoutubeVideoId(null); // Clear video ID to unmount iframe
+                  localStorage.removeItem('pendingBeatmap'); // Clear pending beatmap
+                }}
                 playerInitializedRef={playerInitializedRef}
                 youtubeVideoId={youtubeVideoId}
               />
