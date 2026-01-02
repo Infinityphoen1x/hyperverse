@@ -9,15 +9,20 @@ interface HexagonLayersProps {
   hexCenterX: number;
   hexCenterY: number;
   rotationOffset?: number; // Rotation offset in degrees
+  zoomIntensity?: number; // 0-1 for zoom compression effect
 }
 
-export function HexagonLayers({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rotationOffset = 0 }: HexagonLayersProps) {
+export function HexagonLayers({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rotationOffset = 0, zoomIntensity = 0 }: HexagonLayersProps) {
   const maxRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1];
   
   return (
     <>
       {HEXAGON_RADII.map((radius, idx) => {
-        const progress = radius / maxRadius;
+        const baseProgress = radius / maxRadius;
+        
+        // Apply zoom compression: pull inner hexagons toward outer
+        const compressionFactor = 0.4;
+        const progress = baseProgress + (1 - baseProgress) * zoomIntensity * compressionFactor;
         
         // Calculate vertices along the rays from VP to outer hexagon corners
         const points = Array.from({ length: 6 }).map((_, i) => {
@@ -34,7 +39,11 @@ export function HexagonLayers({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rota
         }).join(' ');
         
         const strokeWidth = 0.3 + progress * 3.5;
-        const opacity = 0.2 + progress * 0.5; // Max 0.7 opacity for outermost (was 0.08-0.30)
+        const baseOpacity = 0.2 + progress * 0.5;
+        
+        // Enhance opacity during ZOOM
+        const glowBoost = zoomIntensity * 0.3;
+        const opacity = Math.min(1, baseOpacity + glowBoost);
         
         return (
           <polygon 

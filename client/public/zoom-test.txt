@@ -1,0 +1,80 @@
+[METADATA]
+title: ZOOM Effect Test
+artist: TheFatRat & Cecilia Gault
+bpm: 128
+duration: 205000
+youtube: xfGrN3ZsPLA
+beatmapStart: 0
+beatmapEnd: 60000
+
+[MEDIUM]
+# Test 1: Short ZOOM (1 second) - Q + P (deck lanes)
+3000|-1|HOLD|1000|zoom_test_1_left
+3000|-2|HOLD|1000|zoom_test_1_right
+
+# Gap
+5000|0|TAP
+6000|1|TAP
+
+# Test 2: Medium ZOOM (2 seconds) - W + I (opposite outer lanes)
+8000|0|HOLD|2000|zoom_test_2_w
+8000|2|HOLD|2000|zoom_test_2_i
+
+# Gap
+11000|2|TAP
+12000|3|TAP
+
+# Test 3: Long ZOOM (3 seconds) - O + E (opposite outer lanes)
+14000|1|HOLD|3000|zoom_test_3_o
+14000|3|HOLD|3000|zoom_test_3_e
+
+# Gap with single notes
+18000|0|TAP
+19000|1|TAP
+20000|2|TAP
+21000|3|TAP
+
+# Test 4: Extended ZOOM (4 seconds) - Q + P
+23000|-1|HOLD|4000|zoom_test_4_left
+23000|-2|HOLD|4000|zoom_test_4_right
+
+# Gap
+28000|0|TAP
+29000|1|TAP
+
+# Test 5: Back-to-back ZOOMs - W + I then O + E
+31000|0|HOLD|2000|zoom_test_5a_w
+31000|2|HOLD|2000|zoom_test_5a_i
+33500|1|HOLD|2000|zoom_test_5b_o
+33500|3|HOLD|2000|zoom_test_5b_e
+
+# Gap
+37000|0|TAP
+38000|1|TAP
+39000|2|TAP
+
+# Test 6: Very short ZOOM (500ms) - quick test
+41000|0|HOLD|500|zoom_test_6_w
+41000|2|HOLD|500|zoom_test_6_i
+
+# Gap
+43000|3|TAP
+44000|0|TAP
+
+# Test 7: Staggered end (different durations - should NOT trigger ZOOM)
+46000|1|HOLD|2000|staggered_o
+46000|3|HOLD|3000|staggered_e
+
+# Gap
+49000|0|TAP
+50000|1|TAP
+
+# Test 8: Staggered start (different start times - should NOT trigger ZOOM)
+52000|-1|HOLD|2000|staggered_start_q
+52500|-2|HOLD|2000|staggered_start_p
+
+# Final notes
+55000|1|TAP
+56000|2|TAP
+57000|3|TAP
+58000|0|TAP

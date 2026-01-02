@@ -9,6 +9,7 @@ interface ParallaxHexagonLayersProps {
   hexCenterX: number;
   hexCenterY: number;
   rotationOffset?: number;
+  zoomIntensity?: number; // 0-1 for zoom compression effect
 }
 
 const BASE_PARALLAX_DELAY_MS = 50; // Base delay for outermost layer
@@ -20,7 +21,8 @@ const ParallaxHexagonLayersComponent = ({
   vpY, 
   hexCenterX, 
   hexCenterY, 
-  rotationOffset = 0 
+  rotationOffset = 0,
+  zoomIntensity = 0
 }: ParallaxHexagonLayersProps) => {
   // Store target and current values per layer for smooth interpolation
   const layerRotationsRef = useRef<{[layerIndex: number]: {current: number, target: number, targetTime: number}}>({}); 
@@ -39,6 +41,15 @@ const ParallaxHexagonLayersComponent = ({
   parallaxRadii.push(extraRadius);
 
   const maxRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1];
+  
+  // Delayed zoom intensity (300ms delay to match parallax)
+  const delayedZoomRef = useRef(0);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      delayedZoomRef.current = zoomIntensity;
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [zoomIntensity]);
   
   // Initialize all layers
   useEffect(() => {
@@ -101,7 +112,11 @@ const ParallaxHexagonLayersComponent = ({
   return (
     <>
       {parallaxRadii.map((radius, idx) => {
-        const progress = radius / maxRadius;
+        const baseProgress = radius / maxRadius;
+        
+        // Apply zoom compression with delayed intensity
+        const compressionFactor = 0.4;
+        const progress = baseProgress + (1 - baseProgress) * delayedZoomRef.current * compressionFactor;
         
         // Get this layer's smoothly interpolated rotation
         const layerRotation = layerRotationsRef.current[idx]?.current ?? 0;
@@ -120,7 +135,11 @@ const ParallaxHexagonLayersComponent = ({
         
         // Depth styling
         const strokeWidth = 0.4 + progress * 4.0;
-        const opacity = 0.03 + progress * 0.17; // Max 0.2 opacity for outermost (was 0.05-0.50)
+        const baseOpacity = 0.03 + progress * 0.17;
+        
+        // Enhance opacity during ZOOM (with delayed intensity)
+        const glowBoost = delayedZoomRef.current * 0.2;
+        const opacity = Math.min(0.3, baseOpacity + glowBoost);
         
         return (
           <g key={`parallax-layer-${idx}`}>
