@@ -24,9 +24,15 @@ function collectTimestamps(notes: Note[]): Map<number, string[]> {
   const timestampMap = new Map<number, string[]>();
   
   for (const note of notes) {
-    // Skip already hit or failed notes
-    if (note.hit || note.missed || note.tapTooEarlyFailure || note.tapMissFailure || 
-        note.tooEarlyFailure || note.holdMissFailure || note.holdReleaseFailure) {
+    // Skip already hit tap notes or failed notes
+    // For hold notes: skip only if released (has releaseTime) or failed, but not if just pressed
+    const isHoldInProgress = note.type === 'HOLD' && note.pressHoldTime && !note.releaseTime && !note.hit;
+    const shouldSkip = !isHoldInProgress && (
+      note.hit || note.missed || note.tapTooEarlyFailure || note.tapMissFailure || 
+      note.tooEarlyFailure || note.holdMissFailure || note.holdReleaseFailure
+    );
+    
+    if (shouldSkip) {
       continue;
     }
 

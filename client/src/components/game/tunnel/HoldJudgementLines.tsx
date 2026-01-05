@@ -7,10 +7,12 @@ import { useTunnelRotation } from '@/hooks/useTunnelRotation';
 interface HoldJudgementLinesProps {
   vpX?: number; // Optional, defaults to fixed VP
   vpY?: number; // Optional, defaults to fixed VP
+  zoomScale?: number;
 }
 
-const HoldJudgementLinesComponent = ({ vpX = VANISHING_POINT_X, vpY = VANISHING_POINT_Y }: HoldJudgementLinesProps) => {
+const HoldJudgementLinesComponent = ({ vpX = VANISHING_POINT_X, vpY = VANISHING_POINT_Y, zoomScale = 1.0 }: HoldJudgementLinesProps) => {
   const tunnelRotation = useTunnelRotation();
+  const scaledLineWidth = HOLD_JUDGEMENT_LINE_WIDTH * zoomScale;
   
   return (
     <svg 
@@ -25,7 +27,7 @@ const HoldJudgementLinesComponent = ({ vpX = VANISHING_POINT_X, vpY = VANISHING_
       }}
     >
       {HOLD_LINE_CONFIGS.map((config, idx) => {
-        const { x1, y1, x2, y2 } = calculateLinePoints(config, vpX, vpY, HOLD_JUDGEMENT_LINE_WIDTH, tunnelRotation);
+        const { x1, y1, x2, y2 } = calculateLinePoints(config, vpX, vpY, scaledLineWidth, tunnelRotation);
         return (
           <line 
             key={`hold-judgement-line-${idx}`}

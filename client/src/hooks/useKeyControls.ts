@@ -7,7 +7,7 @@ interface UseKeyControlsProps {
   onResume?: () => void;
   onRewind?: () => void;
   onHitNote?: (lane: number) => void;
-  onTrackHoldStart?: (lane: number) => void;
+  onTrackHoldStart?: (lane: number) => boolean;
   onTrackHoldEnd?: (lane: number) => void;
 }
 
@@ -22,30 +22,11 @@ const KEY_LANE_MAP: Record<string, number> = {
 
 const GAMEPLAY_KEYS = new Set(['w', 'W', 'o', 'O', 'i', 'I', 'e', 'E', 'q', 'Q', 'p', 'P']);
 
-// Helper to check if there's a HOLD note approaching or active on a lane
-function hasApproachingOrActiveHoldNote(lane: number, notes: any[], currentTime: number): boolean {
-  const HOLD_DETECTION_WINDOW = 200; // ms - detect holds within 200ms (slightly more lenient than 150ms hit window)
-  return notes.some(n => 
-    n.lane === lane &&
-    n.type === 'HOLD' &&
-    !n.hit &&
-    !n.holdMissFailure &&
-    (
-      // Approaching: within detection window
-      Math.abs(n.time - currentTime) < HOLD_DETECTION_WINDOW ||
-      // Active: pressed and not yet released
-      (n.pressHoldTime && n.pressHoldTime > 0 && !n.hit)
-    )
-  );
-}
-
 export function useKeyControls({ onPause, onResume, onRewind, onHitNote, onTrackHoldStart, onTrackHoldEnd }: UseKeyControlsProps): void {
   const gameState = useGameStore(state => state.gameState);
   const isPaused = useGameStore(state => state.isPaused);
   const storeHitNote = useGameStore(state => state.hitNote);
   const hitNote = onHitNote || storeHitNote;
-  const notes = useGameStore(state => state.notes);
-  const currentTime = useGameStore(state => state.currentTime);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent): void => {
@@ -71,21 +52,17 @@ export function useKeyControls({ onPause, onResume, onRewind, onHitNote, onTrack
       if ((gameState === 'PLAYING' || gameState === 'RESUMING') && !isPaused) {
         const lane = KEY_LANE_MAP[e.key];
         if (lane !== undefined) {
-          // Check if there's a HOLD note approaching or already active on this lane
-          const hasHoldNote = hasApproachingOrActiveHoldNote(lane, notes, currentTime);
-          console.log('[KEY-DOWN]', e.key, 'lane:', lane, 'hasHoldNote:', hasHoldNote, 'currentTime:', currentTime);
-          if (hasHoldNote) {
-            console.log('[KEY-DOWN] Calling trackHoldStart for lane:', lane);
-            onTrackHoldStart?.(lane);
-          } else {
-            // Otherwise treat as TAP note
-            console.log('[KEY-DOWN] Calling hitNote for lane:', lane);
+          // Try trackHoldStart first - returns true if hold note found, false otherwise
+          const foundHold = onTrackHoldStart?.(lane);
+          
+          // If no hold note found, treat as tap
+          if (!foundHold) {
             hitNote(lane);
           }
         }
       }
     },
-    [gameState, isPaused, hitNote, onHitNote, storeHitNote, onPause, onResume, onRewind, onTrackHoldStart, notes, currentTime]
+    [gameState, isPaused, hitNote, onHitNote, storeHitNote, onPause, onResume, onRewind, onTrackHoldStart]
   );
 
   const handleKeyUp = useCallback(

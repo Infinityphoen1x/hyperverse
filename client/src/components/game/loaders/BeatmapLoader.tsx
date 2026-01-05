@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Music } from "lucide-react";
 import { useBeatmapLoader } from '@/hooks/useBeatmapLoader';
 import { BeatmapData } from '@/lib/beatmap/beatmapParser';
+import { audioManager } from '@/lib/audio/audioManager';
 
 interface BeatmapLoaderProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
@@ -29,6 +30,7 @@ export function BeatmapLoader({ difficulty, isOpen, setIsOpen, onBeatmapLoad }: 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <Button
+            onClick={() => audioManager.play('difficultySettingsApply')}
             variant="outline"
             size="sm"
             className={`border-neon-cyan text-neon-cyan hover:bg-neon-cyan/10 font-rajdhani text-xs gap-1.5 ${
@@ -98,14 +100,20 @@ export function BeatmapLoader({ difficulty, isOpen, setIsOpen, onBeatmapLoad }: 
             {/* Buttons */}
             <div className="flex gap-2 flex-shrink-0">
               <Button
-                onClick={handleLoadBeatmap}
+                onClick={() => {
+                  audioManager.play('difficultySettingsApply');
+                  handleLoadBeatmap();
+                }}
                 className="flex-1 bg-neon-cyan text-black hover:bg-neon-cyan/80 font-rajdhani font-bold"
                 data-testid="button-confirm-beatmap"
               >
                 LOAD
               </Button>
               <Button
-                onClick={handleQuickLoadEscapingGravity}
+                onClick={() => {
+                  audioManager.play('difficultySettingsApply');
+                  handleQuickLoadEscapingGravity();
+                }}
                 size="sm"
                 className="bg-neon-yellow/30 text-neon-yellow hover:bg-neon-yellow/50 font-rajdhani text-xs"
                 data-testid="button-quick-load-gravity"
@@ -114,7 +122,10 @@ export function BeatmapLoader({ difficulty, isOpen, setIsOpen, onBeatmapLoad }: 
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  audioManager.play('difficultySettingsApply');
+                  setIsOpen(false);
+                }}
                 className="border-neon-pink text-neon-pink hover:bg-neon-pink/10 font-rajdhani"
                 data-testid="button-cancel-beatmap"
               >

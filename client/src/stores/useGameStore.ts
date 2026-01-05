@@ -20,6 +20,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   beatmapBpm: DEFAULT_BEATMAP_BPM, // Default BPM - will be updated when beatmap loads
   noteSpeedMultiplier: 1.0, // Temporary slider value in settings
   defaultNoteSpeedMultiplier: 1.0, // Persisted default used in gameplay
+  soundVolume: 0.7, // Master volume for sound effects (0.0 to 1.0)
+  soundMuted: false, // Master mute for sound effects
   tunnelRotation: 0, // Current tunnel rotation in degrees
   targetTunnelRotation: 0, // Target rotation for animation
   animatedTunnelRotation: 0, // Current animated rotation value (shared across all components)
@@ -40,6 +42,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setBeatmapBpm: (bpm) => set({ beatmapBpm: bpm }),
   setNoteSpeedMultiplier: (multiplier) => set({ noteSpeedMultiplier: Math.max(0.5, Math.min(2.0, multiplier)) }),
   setDefaultNoteSpeedMultiplier: (multiplier) => set({ defaultNoteSpeedMultiplier: Math.max(0.5, Math.min(2.0, multiplier)) }),
+  setSoundVolume: (volume) => set({ soundVolume: Math.max(0, Math.min(1, volume)) }),
+  setSoundMuted: (muted) => set({ soundMuted: muted }),
   setTunnelRotation: (angle) => set({ tunnelRotation: angle }),
   setTargetTunnelRotation: (angle) => set({ targetTunnelRotation: angle }),
   setAnimatedTunnelRotation: (angle) => set({ animatedTunnelRotation: angle }),

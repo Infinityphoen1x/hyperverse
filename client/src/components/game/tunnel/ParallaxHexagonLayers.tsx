@@ -10,6 +10,7 @@ interface ParallaxHexagonLayersProps {
   hexCenterY: number;
   rotationOffset?: number;
   zoomIntensity?: number; // 0-1 for zoom compression effect
+  zoomScale?: number; // Scale multiplier for size increase (1.0 to 1.3)
 }
 
 const BASE_PARALLAX_DELAY_MS = 50; // Base delay for outermost layer
@@ -22,7 +23,8 @@ const ParallaxHexagonLayersComponent = ({
   hexCenterX, 
   hexCenterY, 
   rotationOffset = 0,
-  zoomIntensity = 0
+  zoomIntensity = 0,
+  zoomScale = 1.0
 }: ParallaxHexagonLayersProps) => {
   // Store target and current values per layer for smooth interpolation
   const layerRotationsRef = useRef<{[layerIndex: number]: {current: number, target: number, targetTime: number}}>({}); 
@@ -40,16 +42,19 @@ const ParallaxHexagonLayersComponent = ({
   const extraRadius = outermost + (outermost - HEXAGON_RADII[HEXAGON_RADII.length - 2]) * 0.75;
   parallaxRadii.push(extraRadius);
 
-  const maxRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1];
-  
   // Delayed zoom intensity (300ms delay to match parallax)
   const delayedZoomRef = useRef(0);
+  const delayedScaleRef = useRef(1.0);
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       delayedZoomRef.current = zoomIntensity;
+      delayedScaleRef.current = zoomScale;
     }, 300);
     return () => clearTimeout(timer);
-  }, [zoomIntensity]);
+  }, [zoomIntensity, zoomScale]);
+  
+  const baseMaxRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1];
   
   // Initialize all layers
   useEffect(() => {
@@ -65,6 +70,7 @@ const ParallaxHexagonLayersComponent = ({
     const now = performance.now();
     
     parallaxRadii.forEach((radius, idx) => {
+      const maxRadius = baseMaxRadius * delayedScaleRef.current;
       const progress = radius / maxRadius;
       const depthFactor = progress; // 0 (near/inner) to 1 (far/outer)
       const delay = BASE_PARALLAX_DELAY_MS * (1 + (1 - depthFactor) * 4); // 50-250ms (outer = less delay, inner = more delay)
@@ -78,7 +84,7 @@ const ParallaxHexagonLayersComponent = ({
         layerRotationsRef.current[idx].targetTime = now + delay;
       }
     });
-  }, [rotationOffset, parallaxRadii, maxRadius]);
+  }, [rotationOffset, parallaxRadii, baseMaxRadius, delayedScaleRef]);
 
   // Smooth animation loop
   useEffect(() => {
@@ -112,11 +118,15 @@ const ParallaxHexagonLayersComponent = ({
   return (
     <>
       {parallaxRadii.map((radius, idx) => {
-        const baseProgress = radius / maxRadius;
+        // Only scale outermost parallax layer (last index)
+        const isOutermost = idx === parallaxRadii.length - 1;
+        const scaledRadius = isOutermost ? radius * delayedScaleRef.current : radius;
+        const maxRadius = baseMaxRadius * delayedScaleRef.current;
         
-        // Apply zoom compression with delayed intensity
-        const compressionFactor = 0.4;
-        const progress = baseProgress + (1 - baseProgress) * delayedZoomRef.current * compressionFactor;
+        const baseProgress = scaledRadius / maxRadius;
+        
+        // Don't apply compression - use base progress directly
+        const progress = baseProgress;
         
         // Get this layer's smoothly interpolated rotation
         const layerRotation = layerRotationsRef.current[idx]?.current ?? 0;

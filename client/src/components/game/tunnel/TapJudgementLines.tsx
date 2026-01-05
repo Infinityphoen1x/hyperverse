@@ -7,10 +7,12 @@ import { useTunnelRotation } from '@/hooks/useTunnelRotation';
 interface TapJudgementLinesProps {
   vpX?: number; // Optional, defaults to fixed VP
   vpY?: number; // Optional, defaults to fixed VP
+  zoomScale?: number;
 }
 
-const TapJudgementLinesComponent = ({ vpX = VANISHING_POINT_X, vpY = VANISHING_POINT_Y }: TapJudgementLinesProps) => {
+const TapJudgementLinesComponent = ({ vpX = VANISHING_POINT_X, vpY = VANISHING_POINT_Y, zoomScale = 1.0 }: TapJudgementLinesProps) => {
   const tunnelRotation = useTunnelRotation();
+  const scaledLineWidth = TAP_JUDGEMENT_LINE_WIDTH * zoomScale;
   
   return (
     <svg 
@@ -25,7 +27,7 @@ const TapJudgementLinesComponent = ({ vpX = VANISHING_POINT_X, vpY = VANISHING_P
       }}
     >
       {TAP_LINE_CONFIGS.map((config, idx) => {
-        const { x1, y1, x2, y2 } = calculateLinePoints(config, vpX, vpY, TAP_JUDGEMENT_LINE_WIDTH, tunnelRotation);
+        const { x1, y1, x2, y2 } = calculateLinePoints(config, vpX, vpY, scaledLineWidth, tunnelRotation);
         return (
           <g key={`judgement-line-${idx}`} data-testid={`tap-line-group-${idx}`}>
             <line 

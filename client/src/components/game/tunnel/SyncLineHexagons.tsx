@@ -8,9 +8,10 @@ interface SyncLineHexagonsProps {
   vpX: number;
   vpY: number;
   rotationOffset?: number;
+  zoomScale?: number;
 }
 
-const SyncLineHexagonsComponent = ({ vpX, vpY, rotationOffset = 0 }: SyncLineHexagonsProps) => {
+const SyncLineHexagonsComponent = ({ vpX, vpY, rotationOffset = 0, zoomScale = 1.0 }: SyncLineHexagonsProps) => {
   const notes = useGameStore(state => state.notes);
   const currentTime = useGameStore(state => state.currentTime);
   const noteSpeedMultiplier = useGameStore(state => state.noteSpeedMultiplier);
@@ -22,13 +23,14 @@ const SyncLineHexagonsComponent = ({ vpX, vpY, rotationOffset = 0 }: SyncLineHex
   return (
     <>
       {syncGroups.map((group) => {
+        const scaledRadius = group.radius * zoomScale;
         const progress = group.radius / JUDGEMENT_RADIUS;
         
         // Generate hexagon points
         const points = Array.from({ length: 6 }).map((_, i) => {
           const angle = ((i * 60 + rotationOffset) * Math.PI) / 180;
-          const x = vpX + group.radius * Math.cos(angle);
-          const y = vpY + group.radius * Math.sin(angle);
+          const x = vpX + scaledRadius * Math.cos(angle);
+          const y = vpY + scaledRadius * Math.sin(angle);
           return `${x},${y}`;
         }).join(' ');
         

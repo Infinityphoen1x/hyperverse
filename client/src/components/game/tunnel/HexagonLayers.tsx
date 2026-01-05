@@ -10,19 +10,49 @@ interface HexagonLayersProps {
   hexCenterY: number;
   rotationOffset?: number; // Rotation offset in degrees
   zoomIntensity?: number; // 0-1 for zoom compression effect
+  zoomScale?: number; // Scale multiplier for size increase (1.0 to 1.3)
 }
 
-export function HexagonLayers({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rotationOffset = 0, zoomIntensity = 0 }: HexagonLayersProps) {
-  const maxRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1];
+export function HexagonLayers({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rotationOffset = 0, zoomIntensity = 0, zoomScale = 1.0 }: HexagonLayersProps) {
+  const baseMaxRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1];
+  
+  // Apply ease-out cubic to zoom intensity for smoother appearance
+  const easedIntensity = 1 - Math.pow(1 - zoomIntensity, 3);
+  
+  // During zoom, add additional smaller hexagons approaching the vanishing point
+  const additionalHexagons = Math.floor(easedIntensity * 4); // Gradually add up to 4 hexagons as zoom increases
+  
+  const allRadii = React.useMemo(() => {
+    if (additionalHexagons === 0) return HEXAGON_RADII;
+    
+    // Create hexagons with spacing that compresses toward vanishing point
+    const totalHexagons = HEXAGON_RADII.length + additionalHexagons;
+    const maxRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1]; // 248
+    
+    // Use exponential spacing for more dramatic depth compression
+    const newRadii: number[] = [];
+    for (let i = 0; i < totalHexagons; i++) {
+      // Exponential curve creates tighter spacing near vanishing point
+      const linearProgress = (i + 1) / totalHexagons;
+      const exponentialProgress = Math.pow(linearProgress, 1.5); // Compress spacing toward VP
+      const radius = maxRadius * exponentialProgress;
+      newRadii.push(radius);
+    }
+    
+    return newRadii;
+  }, [additionalHexagons]);
   
   return (
     <>
-      {HEXAGON_RADII.map((radius, idx) => {
-        const baseProgress = radius / maxRadius;
+      {allRadii.map((radius, idx) => {
+        // Apply scale to all hexagon layers for proportional zoom
+        const scaledRadius = radius * zoomScale;
+        const maxRadius = baseMaxRadius * zoomScale;
         
-        // Apply zoom compression: pull inner hexagons toward outer
-        const compressionFactor = 0.4;
-        const progress = baseProgress + (1 - baseProgress) * zoomIntensity * compressionFactor;
+        const baseProgress = scaledRadius / maxRadius;
+        
+        // Don't apply compression - use base progress directly
+        const progress = baseProgress;
         
         // Calculate vertices along the rays from VP to outer hexagon corners
         const points = Array.from({ length: 6 }).map((_, i) => {
@@ -43,7 +73,17 @@ export function HexagonLayers({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rota
         
         // Enhance opacity during ZOOM
         const glowBoost = zoomIntensity * 0.3;
-        const opacity = Math.min(1, baseOpacity + glowBoost);
+        let opacity = Math.min(1, baseOpacity + glowBoost);
+        
+        // Gradually fade in additional hexagons based on zoom intensity and their depth
+        const isAdditionalHexagon = idx < additionalHexagons;
+        if (isAdditionalHexagon) {
+          // Fade in based on both eased zoom intensity and hexagon index (farther = appear first)
+          const depthFactor = (idx + 1) / (additionalHexagons + 1); // 0 to 1
+          const visibilityThreshold = 1 - depthFactor; // Closer hexagons need more zoom
+          const fadeAmount = Math.max(0, (easedIntensity - visibilityThreshold) / (1 - visibilityThreshold));
+          opacity *= fadeAmount;
+        }
         
         return (
           <polygon 

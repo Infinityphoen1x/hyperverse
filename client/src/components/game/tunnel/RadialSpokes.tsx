@@ -10,10 +10,11 @@ interface RadialSpokesProps {
   hexCenterY: number;
   rotationOffset?: number; // Rotation offset in degrees
   zoomIntensity?: number; // 0-1 for zoom glow effect
+  zoomScale?: number; // Scale multiplier for size increase (1.0 to 1.3)
 }
 
-const RadialSpokesComponent = ({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rotationOffset = 0, zoomIntensity = 0 }: RadialSpokesProps) => {
-  const maxRadius = TUNNEL_MAX_DISTANCE;
+const RadialSpokesComponent = ({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rotationOffset = 0, zoomIntensity = 0, zoomScale = 1.0 }: RadialSpokesProps) => {
+  const maxRadius = TUNNEL_MAX_DISTANCE * zoomScale; // Apply zoom scale
   return (
     <>
       {RAY_ANGLES.map((angle: number) => {

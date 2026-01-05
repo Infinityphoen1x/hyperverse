@@ -2,6 +2,8 @@
 import { useCallback, useRef } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo } from '@/lib/youtube';
+import { resetZoomEffect } from './useZoomEffect';
+import { playRewindSound } from './useAudioEffects';
 
 interface UseRewindProps {
   setPauseMenuOpen: (open: boolean) => void;
@@ -31,6 +33,9 @@ export function useRewind({ setPauseMenuOpen, engineRef, startGame }: UseRewindP
     restartGame();
     setPauseMenuOpen(false);
     
+    // Play rewind sound
+    playRewindSound();
+    
     // CRITICAL: Reset the cached time in useYouTubePlayer to prevent
     // the engine from seeing old time and failing all notes immediately
     if (engineRef?.current?.resetTime) {
@@ -51,6 +56,9 @@ export function useRewind({ setPauseMenuOpen, engineRef, startGame }: UseRewindP
     if (engineRef?.current?.resetRotation) {
         engineRef.current.resetRotation();
     }
+    
+    // CRITICAL: Reset zoom effect to prevent stale zoom state
+    resetZoomEffect();
     
     try {
       // Fire and forget pause to ensure we don't get weird audio artifacts

@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { GameState } from '@/lib/engine/gameTypes';
+import { playCountdownSound } from './useAudioEffects';
 
 interface UseCountdownProps {
   gameState: GameState;
@@ -28,6 +29,11 @@ export function useCountdown({
   // Ticking logic
   useEffect(() => {
     if (gameState !== 'PAUSED' || countdownSeconds === 0) return;
+
+    // Play countdown sound on each tick (3, 2, 1)
+    if (countdownSeconds > 0 && countdownSeconds <= 3) {
+      playCountdownSound();
+    }
 
     const interval = setInterval(() => {
       const current = useGameStore.getState().countdownSeconds;

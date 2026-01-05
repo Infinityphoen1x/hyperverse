@@ -7,6 +7,7 @@ import { useCountdown } from './useCountdown';
 import { useFadeAnimation } from './useFadeAnimation';
 import { useAutoStart } from './useAutoStart';
 import { useRewind } from './useRewind';
+import { audioManager } from '@/lib/audio/audioManager';
 
 interface UseGameLogicProps {
   gameState: GameState;
@@ -71,8 +72,14 @@ export function useGameLogic({
   }, [setPauseMenuOpen]);
 
   // Deck handlers
-  const handleLeftDeckSpin = useCallback(() => hitNote(-1), [hitNote]);
-  const handleRightDeckSpin = useCallback(() => hitNote(-2), [hitNote]);
+  const handleLeftDeckSpin = useCallback(() => {
+    audioManager.play('spinNote');
+    hitNote(-1);
+  }, [hitNote]);
+  const handleRightDeckSpin = useCallback(() => {
+    audioManager.play('spinNote');
+    hitNote(-2);
+  }, [hitNote]);
 
   // Pause logic
   const { pauseGame: pauseHandler, handleResume } = usePauseLogic({

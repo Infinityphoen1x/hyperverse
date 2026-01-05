@@ -11,10 +11,11 @@ interface SoundpadButtonsProps {
   vpX?: number;
   vpY?: number;
   onPadHit?: (lane: number) => void;
+  zoomScale?: number;
 }
 
 export function SoundpadButtons(props: SoundpadButtonsProps = {}) {
-  const { vpX = VANISHING_POINT_X, vpY = VANISHING_POINT_Y, onPadHit = () => {} } = props;
+  const { vpX = VANISHING_POINT_X, vpY = VANISHING_POINT_Y, onPadHit = () => {}, zoomScale = 1.0 } = props;
   const tunnelRotation = useTunnelRotation();
   
   // Use fixed vanishing point for soundpad buttons (same as outer hexagon)
@@ -33,7 +34,7 @@ export function SoundpadButtons(props: SoundpadButtonsProps = {}) {
       }}
     >
       {BUTTON_CONFIG.map(({ lane, angle }) => {
-        const position = calculateButtonPosition(angle, fixedVpX, fixedVpY, tunnelRotation);
+        const position = calculateButtonPosition(angle, fixedVpX, fixedVpY, tunnelRotation, zoomScale);
         return (
           <SoundpadButton
             key={`soundpad-button-${lane}`}

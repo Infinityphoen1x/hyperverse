@@ -2,6 +2,7 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { pauseYouTubeVideo } from '@/lib/youtube';
+import { playPauseSound } from './useAudioEffects';
 
 interface UsePauseLogicProps {
   getVideoTime?: () => number | null;
@@ -30,6 +31,9 @@ export function usePauseLogic({
     setIsPaused(true);
     setGameState('PAUSED');
     setPauseMenuOpen?.(true);
+    
+    // Play pause sound
+    playPauseSound();
 
     // Async YouTube pause - fire and forget mainly, don't block UI
     // execute immediately to sync with UI as close as possible

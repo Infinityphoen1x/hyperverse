@@ -26,6 +26,11 @@ export interface HoldNoteProcessedData {
 export function processSingleHoldNote(note: Note, currentTime: number, noteSpeedMultiplier: number = 1.0, tunnelRotation: number = 0): HoldNoteProcessedData | null {
   try {
     if (!note || !Number.isFinite(note.time) || !note.id) return null;
+    
+    // Skip completed hold notes (successfully released)
+    if (note.hit && note.releaseTime) {
+      return null;
+    }
 
     const timeUntilHit = note.time - currentTime;
     if (!Number.isFinite(timeUntilHit) || !Number.isFinite(LEAD_TIME)) return null;

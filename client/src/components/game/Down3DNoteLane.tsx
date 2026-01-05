@@ -4,6 +4,7 @@ import { VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config';
 import { useVanishingPointOffset } from '@/hooks/useVanishingPointOffset';
 import { useVanishingPointStore } from '@/stores/useVanishingPointStore';
 import { useGameStore } from '@/stores/useGameStore';
+import { useZoomEffect } from '@/hooks/useZoomEffect';
 import { TunnelBackground } from './tunnel/TunnelBackground';
 import { SoundpadButtons } from './hud/SoundpadButtons';
 import { JudgementLines } from './tunnel/JudgementLines';
@@ -27,6 +28,7 @@ const Down3DNoteLaneComponent = ({
   const setVPOffset = useVanishingPointStore(state => state.setVPOffset);
 
   const vpOffset = useVanishingPointOffset();
+  const { zoomScale } = useZoomEffect();
   
   const vpX = VANISHING_POINT_X + vpOffset.x;
   const vpY = VANISHING_POINT_Y + vpOffset.y;
@@ -69,10 +71,10 @@ const Down3DNoteLaneComponent = ({
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-hidden" data-testid="down3d-note-lane">
       <TunnelBackground vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} health={health} />
-      <SoundpadButtons vpX={vpX} vpY={vpY} onPadHit={onPadHit} />
-      <JudgementLines vpX={vpX} vpY={vpY} type="tap" />
+      <SoundpadButtons vpX={vpX} vpY={vpY} onPadHit={onPadHit} zoomScale={zoomScale} />
+      <JudgementLines vpX={vpX} vpY={vpY} type="tap" zoomScale={zoomScale} />
       <HoldNotes vpX={vpX} vpY={vpY} />
-      <JudgementLines vpX={vpX} vpY={vpY} type="hold" />
+      <JudgementLines vpX={vpX} vpY={vpY} type="hold" zoomScale={zoomScale} />
       <TapNotes vpX={vpX} vpY={vpY} />
     </div>
   );

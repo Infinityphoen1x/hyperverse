@@ -31,8 +31,8 @@ const TunnelBackgroundComponent = ({
   const rayColor = getHealthBasedRayColor(health);
   const baseTunnelRotation = useTunnelRotation(1.0); // Get base rotation with full idle speed
   
-  // ZOOM effect: compression + oscillating rotation
-  const { zoomIntensity, zoomRotation } = useZoomEffect();
+  // ZOOM effect: compression + rotation + scale
+  const { zoomIntensity, zoomRotation, zoomScale } = useZoomEffect();
   const tunnelRotation = baseTunnelRotation + zoomRotation;
 
   return (
@@ -44,11 +44,11 @@ const TunnelBackgroundComponent = ({
       <svg className="absolute inset-0 w-full h-full" style={{ opacity: 1 }} data-testid="tunnel-background-svg">
         <circle cx={vpX} cy={vpY} r="6" fill="rgba(0,255,255,0.05)" data-testid="vanishing-point-circle" />
         {/* Parallax background layer - per-layer depth scaling with delays */}
-        <ParallaxHexagonLayers rayColor={rayColor} vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} rotationOffset={tunnelRotation} zoomIntensity={zoomIntensity} />
+        <ParallaxHexagonLayers rayColor={rayColor} vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} rotationOffset={tunnelRotation} zoomIntensity={zoomIntensity} zoomScale={zoomScale} />
         {/* Main foreground tunnel - full speed */}
-        <HexagonLayers rayColor={rayColor} vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} rotationOffset={tunnelRotation} zoomIntensity={zoomIntensity} />
-        <RadialSpokes rayColor={rayColor} vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} rotationOffset={tunnelRotation} zoomIntensity={zoomIntensity} />
-        <SyncLineHexagons vpX={vpX} vpY={vpY} rotationOffset={tunnelRotation} />
+        <HexagonLayers rayColor={rayColor} vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} rotationOffset={tunnelRotation} zoomIntensity={zoomIntensity} zoomScale={zoomScale} />
+        <RadialSpokes rayColor={rayColor} vpX={vpX} vpY={vpY} hexCenterX={hexCenterX} hexCenterY={hexCenterY} rotationOffset={tunnelRotation} zoomIntensity={zoomIntensity} zoomScale={zoomScale} />
+        <SyncLineHexagons vpX={vpX} vpY={vpY} rotationOffset={tunnelRotation} zoomScale={zoomScale} />
       </svg>
     </div>
   );

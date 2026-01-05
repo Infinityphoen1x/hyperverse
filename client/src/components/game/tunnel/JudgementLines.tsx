@@ -7,13 +7,14 @@ interface JudgementLinesProps {
   vpX?: number;
   vpY?: number;
   type: 'tap' | 'hold';
+  zoomScale?: number;
 }
 
-const JudgementLinesComponent = ({ vpX = 350, vpY = 300, type }: JudgementLinesProps) => {
+const JudgementLinesComponent = ({ vpX = 350, vpY = 300, type, zoomScale = 1.0 }: JudgementLinesProps) => {
   return type === 'tap' ? (
-    <TapJudgementLines vpX={vpX} vpY={vpY} data-testid="tap-judgement-lines" />
+    <TapJudgementLines vpX={vpX} vpY={vpY} zoomScale={zoomScale} data-testid="tap-judgement-lines" />
   ) : (
-    <HoldJudgementLines vpX={vpX} vpY={vpY} data-testid="hold-judgement-lines" />
+    <HoldJudgementLines vpX={vpX} vpY={vpY} zoomScale={zoomScale} data-testid="hold-judgement-lines" />
   );
 };
 

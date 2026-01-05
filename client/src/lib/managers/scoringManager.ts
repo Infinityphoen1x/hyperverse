@@ -12,6 +12,7 @@ export class ScoringManager {
       score: 0,
       combo: 0,
       health: config.MAX_HEALTH,
+      missCount: 0,
     };
   }
 
@@ -25,6 +26,7 @@ export class ScoringManager {
       score: 0,
       combo: 0,
       health: this.config.MAX_HEALTH,
+      missCount: 0,
     };
     console.log('[SCORING-MANAGER] Reset complete - health now:', this.state.health);
   }
@@ -54,7 +56,8 @@ export class ScoringManager {
     console.log('[SCORING-MANAGER] recordMiss - current health:', this.state.health, 'removing -2');
     this.state.combo = 0;
     this.state.health = Math.max(0, this.state.health - 2);
-    console.log('[SCORING-MANAGER] recordMiss - new health:', this.state.health);
+    this.state.missCount = (this.state.missCount || 0) + 1;
+    console.log('[SCORING-MANAGER] recordMiss - new health:', this.state.health, 'missCount:', this.state.missCount);
     return this.getState();
   }
 

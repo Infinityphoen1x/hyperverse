@@ -1,4 +1,4 @@
-export type { NoteUpdateResult } from './config/types';
+export type { NoteUpdateResult } from './processors/noteUpdateHelpers';
 
 // TAP note processors
 export { getTapNoteState, shouldRenderTapNote, trackTapNoteAnimation } from './tap/tapNoteHelpers';

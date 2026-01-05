@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { BeatmapLoader } from "@/components/game/loaders/BeatmapLoader";
 import { BeatmapData } from "@/lib/beatmap/beatmapParser";
 import { useGameStore } from "@/stores/useGameStore";
+import { audioManager } from "@/lib/audio/audioManager";
 
 interface HomeProps {
   onStartGame: (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => void;
@@ -140,7 +141,10 @@ export default function Home({ onStartGame, onOpenSettings }: HomeProps) {
           {(['EASY', 'MEDIUM', 'HARD'] as const).map((diff) => (
             <button
               key={diff}
-              onClick={() => setSelectedDifficulty(diff)}
+              onClick={() => {
+                audioManager.play('difficultySettingsApply');
+                setSelectedDifficulty(diff);
+              }}
               className={`
                 px-8 py-4 rounded-none border transition-all duration-300 font-orbitron tracking-widest
                 ${selectedDifficulty === diff 
@@ -155,7 +159,10 @@ export default function Home({ onStartGame, onOpenSettings }: HomeProps) {
 
         <div className="flex gap-4 justify-center items-center flex-nowrap flex-wrap">
           <motion.button 
-            onClick={() => onStartGame(selectedDifficulty)}
+            onClick={() => {
+              audioManager.play('startSession');
+              onStartGame(selectedDifficulty);
+            }}
             disabled={!beatmapLoaded}
             whileHover={beatmapLoaded ? { scale: 1.05 } : {}}
             whileTap={beatmapLoaded ? { scale: 0.95 } : {}}
@@ -172,7 +179,10 @@ export default function Home({ onStartGame, onOpenSettings }: HomeProps) {
           {beatmapLoaded && (
             <>
               <motion.button 
-                onClick={() => { setIsLoaderOpen(true); }}
+                onClick={() => { 
+                  audioManager.play('difficultySettingsApply');
+                  setIsLoaderOpen(true); 
+                }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="px-6 py-6 text-white font-bold font-orbitron rounded-sm border-2 border-neon-cyan bg-transparent hover:bg-neon-cyan/10 transition-colors text-sm whitespace-nowrap"
@@ -182,7 +192,10 @@ export default function Home({ onStartGame, onOpenSettings }: HomeProps) {
               </motion.button>
               
               <motion.button 
-                onClick={handleUnloadBeatmap}
+                onClick={() => {
+                  audioManager.play('difficultySettingsApply');
+                  handleUnloadBeatmap();
+                }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="px-6 py-6 text-white font-bold font-orbitron rounded-sm border-2 border-red-500/50 bg-transparent hover:bg-red-500/10 hover:border-red-500 transition-colors text-sm whitespace-nowrap"
@@ -194,7 +207,10 @@ export default function Home({ onStartGame, onOpenSettings }: HomeProps) {
           )}
 
           <motion.button 
-            onClick={onOpenSettings}
+            onClick={() => {
+              audioManager.play('difficultySettingsApply');
+              onOpenSettings();
+            }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="px-6 py-6 text-white font-bold font-orbitron rounded-sm border-2 border-white/30 bg-transparent hover:border-neon-cyan hover:text-neon-cyan transition-colors text-sm whitespace-nowrap"

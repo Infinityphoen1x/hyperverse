@@ -9,6 +9,8 @@ import { useYouTubePlayer } from "@/hooks/useYoutubePlayer";
 import { useGameLogic } from "@/hooks/useGameLogic";
 import { useShake } from "@/hooks/useShake";
 import { useIdleRotationManager } from "@/hooks/useIdleRotation";
+import { useAudioEffects } from "@/hooks/useAudioEffects";
+import { audioManager } from "@/lib/audio/audioManager";
 import { GameOverScreen } from "@/components/screens/GameOverScreen";
 import { PauseMenu } from "@/components/ui/HUD/PauseMenu";
 import { ResumeOverlay } from "@/components/screens/ResumeOverlay";
@@ -37,6 +39,9 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
 
   // Initialize idle rotation animation
   useIdleRotationManager();
+  
+  // Audio effects - monitors game events and plays sounds
+  useAudioEffects();
 
   // Store startGame in ref for use in callbacks
   const startGameRef = useRef<(() => void) | null>(null);
@@ -154,6 +159,16 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
 
   // Load beatmap from localStorage and re-parse with new difficulty
   useEffect(() => {
+    // Preload audio on mount
+    audioManager.preload().catch(err => {
+      console.error('[GAME] Failed to preload audio:', err);
+    });
+    
+    // Sync audio manager with store settings
+    const { soundVolume, soundMuted } = useGameStore.getState();
+    audioManager.setVolume(soundVolume);
+    audioManager.setMuted(soundMuted);
+    
     const pendingBeatmapStr = localStorage.getItem('pendingBeatmap');
     if (pendingBeatmapStr) {
       try {

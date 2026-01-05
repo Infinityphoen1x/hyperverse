@@ -38,6 +38,11 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
     const tapNotes = notes.filter(n => n.type === 'TAP');
     
     return notes.filter(n => {
+      // Skip completed hold notes
+      if (n.type === 'HOLD' && n.hit && n.releaseTime) {
+        return false;
+      }
+      
       // For hold notes, check visibility based on note.time + note.duration, not just note.time
       const isHoldNote = n.type === 'HOLD';
       const holdDuration = isHoldNote ? (n.duration || 1000) : 0;

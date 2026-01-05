@@ -49,6 +49,7 @@ export interface ScoreState {
   score: number;
   combo: number;
   health: number;
+  missCount?: number;
 }
 
 export interface TimingResult {
@@ -87,6 +88,8 @@ export interface GameStoreState {
   // Player settings
   noteSpeedMultiplier: number; // 0.5 to 2.0 - temporary slider value in settings
   defaultNoteSpeedMultiplier: number; // 0.5 to 2.0 - persisted default used in gameplay
+  soundVolume: number; // 0.0 to 1.0 - master volume for sound effects
+  soundMuted: boolean; // Master mute toggle for sound effects
   
   // Tunnel rotation
   tunnelRotation: number; // Current rotation angle in degrees
@@ -111,6 +114,8 @@ export interface GameStoreState {
   setBeatmapBpm: (bpm: number) => void;
   setNoteSpeedMultiplier: (multiplier: number) => void;
   setDefaultNoteSpeedMultiplier: (multiplier: number) => void;
+  setSoundVolume: (volume: number) => void;
+  setSoundMuted: (muted: boolean) => void;
   setTunnelRotation: (angle: number) => void;
   setTargetTunnelRotation: (angle: number) => void;
   setAnimatedTunnelRotation: (angle: number) => void;

@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useGameStore } from "@/stores/useGameStore";
 import { Slider } from "@/components/ui/slider";
+import { audioManager } from "@/lib/audio/audioManager";
 
 interface SettingsProps {
   onBack: () => void;
@@ -12,6 +13,10 @@ export default function Settings({ onBack }: SettingsProps) {
   const defaultNoteSpeedMultiplier = useGameStore(state => state.defaultNoteSpeedMultiplier);
   const setNoteSpeedMultiplier = useGameStore(state => state.setNoteSpeedMultiplier);
   const setDefaultNoteSpeedMultiplier = useGameStore(state => state.setDefaultNoteSpeedMultiplier);
+  const soundVolume = useGameStore(state => state.soundVolume);
+  const soundMuted = useGameStore(state => state.soundMuted);
+  const setSoundVolume = useGameStore(state => state.setSoundVolume);
+  const setSoundMuted = useGameStore(state => state.setSoundMuted);
 
   // Initialize slider to current default when settings opens
   useEffect(() => {
@@ -22,7 +27,19 @@ export default function Settings({ onBack }: SettingsProps) {
     setNoteSpeedMultiplier(value[0]);
   };
 
+  const handleVolumeChange = (value: number[]) => {
+    setSoundVolume(value[0]);
+    audioManager.setVolume(value[0]);
+  };
+
+  const handleMuteToggle = () => {
+    const newMutedState = !soundMuted;
+    setSoundMuted(newMutedState);
+    audioManager.setMuted(newMutedState);
+  };
+
   const handleApply = () => {
+    audioManager.play('difficultySettingsApply');
     setDefaultNoteSpeedMultiplier(noteSpeedMultiplier);
     onBack();
   };
@@ -84,6 +101,44 @@ export default function Settings({ onBack }: SettingsProps) {
             </div>
             <p className="text-xs text-white/40 font-rajdhani mt-2">
               Controls how fast notes travel. Does not affect hit timing or YouTube sync.
+            </p>
+          </div>
+
+          {/* Sound Volume Setting */}
+          <div className="space-y-4 pt-4 border-t border-white/10">
+            <div className="flex items-center justify-between">
+              <label className="text-white font-orbitron text-sm tracking-widest">
+                SOUND VOLUME
+              </label>
+              <button
+                onClick={handleMuteToggle}
+                className={`px-4 py-1 text-xs font-orbitron rounded-sm border transition-colors ${
+                  soundMuted 
+                    ? 'bg-neon-pink/20 border-neon-pink text-neon-pink' 
+                    : 'bg-transparent border-white/30 text-white/60 hover:border-neon-cyan hover:text-neon-cyan'
+                }`}
+              >
+                {soundMuted ? 'MUTED' : 'MUTE'}
+              </button>
+            </div>
+            <div className="space-y-3">
+              <Slider
+                value={[soundVolume]}
+                onValueChange={handleVolumeChange}
+                min={0}
+                max={1}
+                step={0.05}
+                className="w-full"
+                disabled={soundMuted}
+              />
+              <div className="flex justify-between text-xs font-rajdhani text-white/60">
+                <span>0%</span>
+                <span className="text-neon-cyan font-bold">{soundMuted ? 'MUTED' : `${Math.round(soundVolume * 100)}%`}</span>
+                <span>100%</span>
+              </div>
+            </div>
+            <p className="text-xs text-white/40 font-rajdhani mt-2">
+              Controls volume for all game sound effects.
             </p>
           </div>
         </div>
