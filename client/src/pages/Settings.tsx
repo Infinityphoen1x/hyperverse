@@ -9,10 +9,10 @@ interface SettingsProps {
 }
 
 export default function Settings({ onBack }: SettingsProps) {
-  const noteSpeedMultiplier = useGameStore(state => state.noteSpeedMultiplier);
-  const defaultNoteSpeedMultiplier = useGameStore(state => state.defaultNoteSpeedMultiplier);
-  const setNoteSpeedMultiplier = useGameStore(state => state.setNoteSpeedMultiplier);
-  const setDefaultNoteSpeedMultiplier = useGameStore(state => state.setDefaultNoteSpeedMultiplier);
+  const playerSpeed = useGameStore(state => state.playerSpeed);
+  const defaultPlayerSpeed = useGameStore(state => state.defaultPlayerSpeed);
+  const setPlayerSpeed = useGameStore(state => state.setPlayerSpeed);
+  const setDefaultPlayerSpeed = useGameStore(state => state.setDefaultPlayerSpeed);
   const soundVolume = useGameStore(state => state.soundVolume);
   const soundMuted = useGameStore(state => state.soundMuted);
   const setSoundVolume = useGameStore(state => state.setSoundVolume);
@@ -20,11 +20,11 @@ export default function Settings({ onBack }: SettingsProps) {
 
   // Initialize slider to current default when settings opens
   useEffect(() => {
-    setNoteSpeedMultiplier(defaultNoteSpeedMultiplier);
+    setPlayerSpeed(defaultPlayerSpeed);
   }, []);
 
   const handleSpeedChange = (value: number[]) => {
-    setNoteSpeedMultiplier(value[0]);
+    setPlayerSpeed(value[0]);
   };
 
   const handleVolumeChange = (value: number[]) => {
@@ -40,13 +40,13 @@ export default function Settings({ onBack }: SettingsProps) {
 
   const handleApply = () => {
     audioManager.play('difficultySettingsApply');
-    setDefaultNoteSpeedMultiplier(noteSpeedMultiplier);
+    setDefaultPlayerSpeed(playerSpeed);
     onBack();
   };
 
   const handleCancel = () => {
     // Discard slider changes and exit
-    setNoteSpeedMultiplier(defaultNoteSpeedMultiplier);
+    setPlayerSpeed(defaultPlayerSpeed);
     onBack();
   };
 
@@ -86,17 +86,17 @@ export default function Settings({ onBack }: SettingsProps) {
             </label>
             <div className="space-y-3">
               <Slider
-                value={[noteSpeedMultiplier]}
+                value={[playerSpeed]}
                 onValueChange={handleSpeedChange}
-                min={0.5}
-                max={2.0}
-                step={0.1}
+                min={5}
+                max={40}
+                step={1}
                 className="w-full"
               />
-              <div className="flex justify-between text-xs font-rajdhani text-white/60">
-                <span>0.5x</span>
-                <span className="text-neon-pink font-bold">{noteSpeedMultiplier.toFixed(1)}x</span>
-                <span>2.0x</span>
+              <div className="flex justify-between text-xs text-gray-400">
+                <span>Slower (5)</span>
+                <span className="text-neon-pink font-bold">{playerSpeed.toFixed(0)}</span>
+                <span>Faster (40)</span>
               </div>
             </div>
             <p className="text-xs text-white/40 font-rajdhani mt-2">

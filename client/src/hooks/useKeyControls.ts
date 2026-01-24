@@ -33,6 +33,13 @@ export function useKeyControls({ onPause, onResume, onRewind, onHitNote, onTrack
       if (GAMEPLAY_KEYS.has(e.key)) {
         e.preventDefault();
       }
+      
+      // CRITICAL: Ignore repeat keydown events (key is already held)
+      // This prevents held keys from triggering multiple TAP notes
+      // or causing "too early" failures on upcoming notes
+      if (e.repeat) {
+        return;
+      }
 
       if (e.key === 'Escape') {
         e.preventDefault();

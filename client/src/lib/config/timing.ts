@@ -24,6 +24,8 @@ export interface GameConfigConstants {
   HOLD_ACTIVATION_WINDOW: number;
   /** LEAD_TIME: milliseconds before note.time that notes become visible (appear at VP) */
   LEAD_TIME: number;
+  /** MAGIC_MS: constant for player speed calculation (effectiveLeadTime = MAGIC_MS / playerSpeed) */
+  MAGIC_MS: number;
   /** Timing accuracy threshold for "PERFECT" rating, milliseconds */
   ACCURACY_PERFECT_MS: number;
   /** Timing accuracy threshold for "GREAT" rating, milliseconds */
@@ -47,6 +49,7 @@ export const GAME_CONFIG: GameConfigConstants = {
   HOLD_RELEASE_WINDOW: 150,
   HOLD_ACTIVATION_WINDOW: 150,
   LEAD_TIME: 4000,
+  MAGIC_MS: 80000, // effectiveLeadTime = MAGIC_MS / playerSpeed (speed 20 = 4000ms default)
   ACCURACY_PERFECT_MS: 50,
   ACCURACY_GREAT_MS: 100,
   ACCURACY_PERFECT_POINTS: 100,
@@ -63,6 +66,7 @@ export const HOLD_RELEASE_OFFSET = GAME_CONFIG.HOLD_RELEASE_OFFSET;
 export const HOLD_RELEASE_WINDOW = GAME_CONFIG.HOLD_RELEASE_WINDOW;
 export const HOLD_ACTIVATION_WINDOW = GAME_CONFIG.HOLD_ACTIVATION_WINDOW;
 export const LEAD_TIME = GAME_CONFIG.LEAD_TIME;
+export const MAGIC_MS = GAME_CONFIG.MAGIC_MS;
 export const ACCURACY_PERFECT_MS = GAME_CONFIG.ACCURACY_PERFECT_MS;
 export const ACCURACY_GREAT_MS = GAME_CONFIG.ACCURACY_GREAT_MS;
 export const ACCURACY_PERFECT_POINTS = GAME_CONFIG.ACCURACY_PERFECT_POINTS;

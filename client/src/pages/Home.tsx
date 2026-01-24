@@ -3,18 +3,21 @@ import { useState, useEffect } from "react";
 import { BeatmapLoader } from "@/components/game/loaders/BeatmapLoader";
 import { BeatmapData } from "@/lib/beatmap/beatmapParser";
 import { useGameStore } from "@/stores/useGameStore";
+import { useYoutubeStore } from "@/stores/useYoutubeStore";
 import { audioManager } from "@/lib/audio/audioManager";
 
 interface HomeProps {
   onStartGame: (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => void;
   onOpenSettings: () => void;
+  onOpenEditor?: () => void;
 }
 
-export default function Home({ onStartGame, onOpenSettings }: HomeProps) {
+export default function Home({ onStartGame, onOpenSettings, onOpenEditor }: HomeProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const [isLoaderOpen, setIsLoaderOpen] = useState(false);
   const [beatmapLoaded, setBeatmapLoaded] = useState(false);
   const unloadBeatmap = useGameStore(state => state.unloadBeatmap);
+  const playerReady = useYoutubeStore(state => state.playerReady);
 
   const colors = ["#00FFFF", "#FF00FF", "#00FF00", "#00CCFF", "#FF0080"];
   const [colorIndex, setColorIndex] = useState(0);
@@ -163,11 +166,11 @@ export default function Home({ onStartGame, onOpenSettings }: HomeProps) {
               audioManager.play('startSession');
               onStartGame(selectedDifficulty);
             }}
-            disabled={!beatmapLoaded}
-            whileHover={beatmapLoaded ? { scale: 1.05 } : {}}
-            whileTap={beatmapLoaded ? { scale: 0.95 } : {}}
+            disabled={!beatmapLoaded || !playerReady}
+            whileHover={beatmapLoaded && playerReady ? { scale: 1.05 } : {}}
+            whileTap={beatmapLoaded && playerReady ? { scale: 0.95 } : {}}
             className={`px-12 py-6 text-black font-bold text-xl font-orbitron rounded-sm border-2 transition-colors whitespace-nowrap ${
-              beatmapLoaded
+              beatmapLoaded && playerReady
                 ? 'bg-neon-pink shadow-[0_0_50px_rgba(255,0,127,0.8)] border-neon-pink cursor-pointer'
                 : 'bg-neon-cyan shadow-[0_0_50px_cyan] border-white hover:bg-white opacity-50 cursor-not-allowed'
             }`}
@@ -218,6 +221,21 @@ export default function Home({ onStartGame, onOpenSettings }: HomeProps) {
           >
             ⚙ SETTINGS
           </motion.button>
+
+          {onOpenEditor && (
+            <motion.button 
+              onClick={() => {
+                audioManager.play('difficultySettingsApply');
+                onOpenEditor();
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-6 py-6 text-neon-pink font-bold font-orbitron rounded-sm border-2 border-neon-pink/50 bg-transparent hover:bg-neon-pink/10 hover:border-neon-pink transition-colors text-sm whitespace-nowrap"
+              data-testid="button-open-editor"
+            >
+              ✎ EDITOR
+            </motion.button>
+          )}
         </div>
       </motion.div>
       

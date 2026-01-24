@@ -23,8 +23,9 @@ export const SoundpadButton: React.FC<SoundpadButtonProps> = ({ lane, position, 
       n.lane === lane && 
       n.hit && 
       n.type === 'TAP' && 
-      n.hitTime && 
-      Date.now() - n.hitTime < 200 // Glow for 200ms
+      !n.missed && 
+      !n.tapMissFailure && 
+      !n.tapTooEarlyFailure
     );
     
     if (recentHit && !isGlowing) {

@@ -1,6 +1,6 @@
 // src/lib/utils/syncLineUtils.ts
 import { Note } from '@/lib/engine/gameTypes';
-import { LEAD_TIME, JUDGEMENT_RADIUS } from '@/lib/config';
+import { LEAD_TIME, JUDGEMENT_RADIUS, MAGIC_MS } from '@/lib/config';
 
 /**
  * Sync threshold: notes within this many ms are considered synchronized
@@ -107,16 +107,20 @@ function calculateSyncRadius(timestamp: number, currentTime: number, effectiveLe
 /**
  * Detects synchronized notes and returns sync groups with their visual properties
  */
-export function detectSyncGroups(notes: Note[], currentTime: number, noteSpeedMultiplier: number = 1.0): SyncGroup[] {
+/**
+ * Detect groups of synchronized notes and return hexagons to render
+ * @param playerSpeed - Player speed setting (5-40, higher = faster notes)
+ */
+export function detectSyncGroups(notes: Note[], currentTime: number, playerSpeed: number = 20): SyncGroup[] {
   const timestampMap = collectTimestamps(notes);
   const syncedGroups = groupSyncedTimestamps(timestampMap);
   
   const syncGroups: SyncGroup[] = [];
   
-  // Scale lead time by note speed to match note velocity
-  const effectiveLeadTime = LEAD_TIME / noteSpeedMultiplier;
+  // MAGIC_MS formula: effectiveLeadTime = MAGIC_MS / playerSpeed
+  const effectiveLeadTime = MAGIC_MS / playerSpeed;
   
-  for (const [timestamp, noteIds] of syncedGroups.entries()) {
+  for (const [timestamp, noteIds] of Array.from(syncedGroups.entries())) {
     const timeUntilHit = timestamp - currentTime;
     
     // Only show sync lines for notes that are visible (within lead time window)
@@ -128,10 +132,10 @@ export function detectSyncGroups(notes: Note[], currentTime: number, noteSpeedMu
       // If so, position sync line at the hold note's far end position
       let radius: number;
       
-      const hasHoldRelease = noteIds.some(id => id.endsWith('-end'));
+      const hasHoldRelease = noteIds.some((id: string) => id.endsWith('-end'));
       if (hasHoldRelease) {
         // Find the hold note that's releasing at this timestamp
-        const holdNoteId = noteIds.find(id => id.endsWith('-end'))?.split('-')[0];
+        const holdNoteId = noteIds.find((id: string) => id.endsWith('-end'))?.split('-')[0];
         const holdNote = notes.find(n => n.id === holdNoteId && n.type === 'HOLD');
         
         if (holdNote && holdNote.duration) {

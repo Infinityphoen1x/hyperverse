@@ -2,7 +2,7 @@ import React, { memo, useCallback } from 'react';
 import { HoldNote } from './HoldNote';
 import { useHoldNotes } from '@/hooks/useHoldNotes';
 import { useGameStore } from '@/stores/useGameStore';
-import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT, LEAD_TIME } from '@/lib/config';
+import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT, LEAD_TIME, MAGIC_MS } from '@/lib/config';
 
 interface HoldNotesProps {
   vpX?: number;
@@ -14,7 +14,7 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
   const notes = useGameStore(state => state.notes || []);
   const currentTime = useGameStore(state => state.currentTime);
   const tunnelRotation = useGameStore(state => state.tunnelRotation);
-  const noteSpeedMultiplier = useGameStore(state => state.noteSpeedMultiplier) || 1.0;
+  const playerSpeed = useGameStore(state => state.playerSpeed) || 20;
   
   // Use vanishing point as rotation center
   const rotationCenterX = propVpX;
@@ -23,16 +23,17 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
   const visibleNotes = React.useMemo(() => {
     if (!notes || !Array.isArray(notes)) return [];
     
-    // Scale render window inversely to note speed for velocity adjustment
-    // 2.0x speed: notes spawn at -2000ms (travel faster, less upcoming notes)
-    // 0.5x speed: notes spawn at -8000ms (travel slower, more upcoming notes)
-    const effectiveLeadTime = LEAD_TIME / noteSpeedMultiplier;
+    // MAGIC_MS formula: effectiveLeadTime = MAGIC_MS / playerSpeed
+    // Speed 5: 16000ms (very slow, for beginners)
+    // Speed 20: 4000ms (default, matches old 1.0x multiplier)
+    // Speed 40: 2000ms (very fast, for experts)
+    const effectiveLeadTime = MAGIC_MS / playerSpeed;
     
     // Scale failure visibility windows to match note speed
     // These ensure greyscale animations complete before note cleanup
     const failureWindowTooEarly = effectiveLeadTime; // Full approach duration
     const failureWindowMiss = effectiveLeadTime / 2; // Half approach duration (post-judgement)
-    const hitCleanupWindow = 500 / noteSpeedMultiplier; // Brief cleanup period
+    const hitCleanupWindow = effectiveLeadTime / 8; // Brief cleanup period (scales with speed)
     
     const holdNotes = notes.filter(n => n.type === 'HOLD');
     const tapNotes = notes.filter(n => n.type === 'TAP');
@@ -63,7 +64,7 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
       // For normal tap notes: keep visible from effectiveLeadTime before start to hitCleanupWindow after start
       return noteStartTime <= currentTime + effectiveLeadTime && noteStartTime >= currentTime - hitCleanupWindow;
     });
-  }, [notes, currentTime, noteSpeedMultiplier]);
+  }, [notes, currentTime, playerSpeed]);
 
   const processedNotes = useHoldNotes(visibleNotes, currentTime);
 

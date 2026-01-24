@@ -30,9 +30,8 @@ export const getTapNoteState = (note: Note, currentTime: number): TapNoteState =
 const getFailureAnimationDuration = (isTooEarly: boolean): number =>
   isTooEarly ? TAP_FAILURE_ANIMATIONS.TOO_EARLY.duration : TAP_FAILURE_ANIMATIONS.MISS.duration;
 
-export const shouldRenderTapNote = (state: TapNoteState, timeUntilHit: number, noteSpeedMultiplier: number = 1.0): boolean => {
-  // Scale lead time by noteSpeedMultiplier to match note velocity
-  const effectiveLeadTime = LEAD_TIME / noteSpeedMultiplier;
+export const shouldRenderTapNote = (state: TapNoteState, timeUntilHit: number, effectiveLeadTime: number): boolean => {
+  // effectiveLeadTime is pre-calculated using MAGIC_MS / playerSpeed formula
   
   // For failed notes, only check animation duration, not render window
   // Failed notes need to stay visible longer than normal notes (visibility handled in useTapNotes)

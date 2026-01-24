@@ -18,8 +18,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   missCount: 0,
   countdownSeconds: 0,
   beatmapBpm: DEFAULT_BEATMAP_BPM, // Default BPM - will be updated when beatmap loads
-  noteSpeedMultiplier: 1.0, // Temporary slider value in settings
-  defaultNoteSpeedMultiplier: 1.0, // Persisted default used in gameplay
+  playerSpeed: 20, // Temporary slider value in settings (5-40, higher = faster notes)
+  defaultPlayerSpeed: 20, // Persisted default used in gameplay
   soundVolume: 0.7, // Master volume for sound effects (0.0 to 1.0)
   soundMuted: false, // Master mute for sound effects
   tunnelRotation: 0, // Current tunnel rotation in degrees
@@ -27,6 +27,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   animatedTunnelRotation: 0, // Current animated rotation value (shared across all components)
   idleRotation: 0, // Idle sway animation angle
   spinPressCountPerLane: { '-1': 0, '-2': 0 }, // Track key presses per lane for spin alternation
+  leftDeckSpinning: false, // Tracks if left deck is spinning due to hold note
+  rightDeckSpinning: false, // Tracks if right deck is spinning due to hold note
 
   // Setters
   setGameState: (gameState) => set({ gameState }),
@@ -40,8 +42,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setIsPaused: (isPaused) => set({ isPaused }),
   setCountdownSeconds: (countdownSeconds) => set({ countdownSeconds }),
   setBeatmapBpm: (bpm) => set({ beatmapBpm: bpm }),
-  setNoteSpeedMultiplier: (multiplier) => set({ noteSpeedMultiplier: Math.max(0.5, Math.min(2.0, multiplier)) }),
-  setDefaultNoteSpeedMultiplier: (multiplier) => set({ defaultNoteSpeedMultiplier: Math.max(0.5, Math.min(2.0, multiplier)) }),
+  setPlayerSpeed: (speed) => set({ playerSpeed: Math.max(5, Math.min(40, speed)) }),
+  setDefaultPlayerSpeed: (speed) => set({ defaultPlayerSpeed: Math.max(5, Math.min(40, speed)) }),
   setSoundVolume: (volume) => set({ soundVolume: Math.max(0, Math.min(1, volume)) }),
   setSoundMuted: (muted) => set({ soundMuted: muted }),
   setTunnelRotation: (angle) => set({ tunnelRotation: angle }),
@@ -54,6 +56,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       [lane]: (state.spinPressCountPerLane[lane] ?? 0) + 1
     }
   })),
+  setLeftDeckSpinning: (spinning) => set({ leftDeckSpinning: spinning }),
+  setRightDeckSpinning: (spinning) => set({ rightDeckSpinning: spinning }),
 
   // Game actions
   hitNote: (lane) => {
@@ -64,9 +68,21 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   },
   startDeckHold: (lane) => {
     console.log(`[GAME] Start deck hold on lane ${lane}`);
+    // Start deck spinning when hold note is pressed
+    if (lane === -1) {
+      set({ leftDeckSpinning: true });
+    } else if (lane === -2) {
+      set({ rightDeckSpinning: true });
+    }
   },
   endDeckHold: (lane) => {
     console.log(`[GAME] End deck hold on lane ${lane}`);
+    // Stop deck spinning when hold note is released
+    if (lane === -1) {
+      set({ leftDeckSpinning: false });
+    } else if (lane === -2) {
+      set({ rightDeckSpinning: false });
+    }
   },
   pauseGame: () => set({ isPaused: true, countdownSeconds: 0 }),
   resumeGame: () => set({ isPaused: false }),

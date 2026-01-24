@@ -34,7 +34,7 @@ export interface UseGameEngineReturn {
   restartGame: () => void;
   setGameState: (state: GameState) => void;
   hitNote: (lane: number) => void;
-  trackHoldStart: (lane: number) => void;
+  trackHoldStart: (lane: number) => boolean;
   trackHoldEnd: (lane: number) => void;
   markNoteMissed: (noteId: string) => void;
   getReleaseTime: (noteId: string) => number | undefined;
@@ -173,6 +173,20 @@ export function useGameEngine({
         }
 
         if (result.updatedNotes !== currentNotes) {
+             // Check for hold notes that just failed/completed and stop deck spinning
+             const endDeckHold = useGameStore.getState().endDeckHold;
+             result.updatedNotes.forEach((updatedNote, index) => {
+               const oldNote = currentNotes[index];
+               // If this is a hold note on a deck lane that just transitioned to failed/completed
+               if (updatedNote.type === 'HOLD' && 
+                   (updatedNote.lane === -1 || updatedNote.lane === -2) &&
+                   oldNote && !oldNote.hit && !oldNote.holdMissFailure && !oldNote.holdReleaseFailure &&
+                   (updatedNote.hit || updatedNote.holdMissFailure || updatedNote.holdReleaseFailure)) {
+                 // Stop deck spinning for this lane
+                 endDeckHold(updatedNote.lane);
+               }
+             });
+             
              setNotes(result.updatedNotes);
              GameErrors.updateNoteStats(result.updatedNotes);
         }

@@ -6,7 +6,7 @@
 import type { Note } from '@/types/game';
 import { RotationManager } from '@/lib/managers/rotationManager';
 import { useGameStore } from '@/stores/useGameStore';
-import { LEAD_TIME } from '@/lib/config';
+import { MAGIC_MS } from '@/lib/config';
 import { requiresRotation, getTargetRotation } from '@/lib/config/rotationConstants';
 
 interface CheckRotationTriggersParams {
@@ -40,8 +40,8 @@ export function checkRotationTriggers({
   const nextHold = upcomingHolds[0];
   
   // Calculate when rotation should start, using effectiveLeadTime to match note velocity
-  const noteSpeedMultiplier = useGameStore.getState().noteSpeedMultiplier || 1.0;
-  const effectiveLeadTime = LEAD_TIME / noteSpeedMultiplier;
+  const playerSpeed = useGameStore.getState().playerSpeed || 20;
+  const effectiveLeadTime = MAGIC_MS / playerSpeed;
   const ROTATION_TRIGGER_ADVANCE = 1700; // ROTATION_DURATION + SETTLE_TIME
   const rotationStartTime = nextHold.time - effectiveLeadTime - ROTATION_TRIGGER_ADVANCE;
   

@@ -14,11 +14,11 @@ interface SyncLineHexagonsProps {
 const SyncLineHexagonsComponent = ({ vpX, vpY, rotationOffset = 0, zoomScale = 1.0 }: SyncLineHexagonsProps) => {
   const notes = useGameStore(state => state.notes);
   const currentTime = useGameStore(state => state.currentTime);
-  const noteSpeedMultiplier = useGameStore(state => state.noteSpeedMultiplier);
+  const playerSpeed = useGameStore(state => state.playerSpeed);
   
   const syncGroups = useMemo(() => {
-    return detectSyncGroups(notes, currentTime, noteSpeedMultiplier);
-  }, [notes, currentTime, noteSpeedMultiplier]);
+    return detectSyncGroups(notes, currentTime, playerSpeed);
+  }, [notes, currentTime, playerSpeed]);
 
   return (
     <>

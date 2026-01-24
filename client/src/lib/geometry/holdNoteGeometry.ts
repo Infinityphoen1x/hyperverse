@@ -16,7 +16,7 @@ export const calculateApproachGeometry = (
   useFixedDepth: boolean = false,
   effectiveLeadTime: number = LEAD_TIME
 ): ApproachGeometry => {
-  // effectiveLeadTime is scaled by noteSpeedMultiplier to match tap note velocity
+  // effectiveLeadTime is calculated using MAGIC_MS / playerSpeed to match tap note velocity
   // This ensures hold and tap notes travel at the same speed
   
   const rawNearProgress = (effectiveLeadTime - timeUntilHit) / effectiveLeadTime;

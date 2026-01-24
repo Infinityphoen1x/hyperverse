@@ -47,11 +47,20 @@ export function CamelotWheel({
   const [isKeyPressed, setIsKeyPressed] = useState(false);
   const rotationRef = useRef(0);
   const isKeyPressedRef = useRef(false);
+  const shouldSpinRef = useRef(false);
   const lastSpinRotationRef = useRef(0);
   const lastStateUpdateTimeRef = useRef(0);
   const wheelLane = side === 'left' ? -1 : -2;
   const incrementSpinPressCount = useGameStore(state => state.incrementSpinPressCount);
   const tunnelRotation = useGameStore(state => state.tunnelRotation);
+  
+  // Get deck spinning state from store (controlled by hold notes)
+  const isDeckSpinning = useGameStore(state => 
+    side === 'left' ? state.leftDeckSpinning : state.rightDeckSpinning
+  );
+  
+  // Deck should spin if either key is pressed OR hold note is active
+  const shouldSpin = isKeyPressed || isDeckSpinning;
   
   // Determine which lane is currently aligned with this deck
   const alignedLane = useMemo(
@@ -65,7 +74,8 @@ export function CamelotWheel({
   // Sync refs when state changes
   useEffect(() => {
     isKeyPressedRef.current = isKeyPressed;
-  }, [isKeyPressed]);
+    shouldSpinRef.current = shouldSpin;
+  }, [isKeyPressed, shouldSpin]);
 
   // Memoized callbacks to prevent recreation in effects
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -115,7 +125,7 @@ export function CamelotWheel({
   useEffect(() => {
     let animationId: number;
     const animate = (now: number) => {
-      if (isKeyPressedRef.current) {
+      if (shouldSpinRef.current) {
         const rotationDelta = ROTATION_SPEED;
         const newRotation = rotationRef.current + rotationDelta;
         rotationRef.current = newRotation;
@@ -170,9 +180,12 @@ export function CamelotWheel({
     opacity: 0.7
   };
   
+  // Enhanced border glow when deck is spinning (either from key or hold note)
   const borderStyle = {
-    borderColor: `${laneColor}80`, // 50% opacity
-    boxShadow: `0 0 30px ${laneColor}4D` // 30% opacity
+    borderColor: shouldSpin ? laneColor : `${laneColor}80`, // Full opacity when spinning, 50% when idle
+    boxShadow: shouldSpin 
+      ? `0 0 40px ${laneColor}, 0 0 20px ${laneColor}80` // Brighter double glow when spinning
+      : `0 0 30px ${laneColor}4D` // 30% opacity when idle
   };
 
   return (

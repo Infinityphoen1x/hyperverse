@@ -28,14 +28,13 @@ const calculateEffectiveProgress = (
 };
 
 const calculateDistances = (
-  effectiveProgress: number,
-  noteSpeedMultiplier: number = 1.0
+  effectiveProgress: number
 ): { nearDistance: number; farDistance: number } => {
   // Don't clamp perspectiveScale - it must scale proportionally with nearDistance
   // This prevents rapid depth change when notes approach past judgement
   // Both nearDistance and scaledDepth grow together, maintaining proportional depth
   const perspectiveScale = Math.max(0, effectiveProgress); // Allow > 1 past judgement
-  // Depth is now FIXED - noteSpeedMultiplier affects render window duration, not geometry
+  // Depth is now FIXED - playerSpeed (via effectiveLeadTime = MAGIC_MS / playerSpeed) affects render window duration, not geometry
   const scaledDepth = TAP_DEPTH.MAX * perspectiveScale;
   
   const nearDistance = 1 + (Math.max(0, effectiveProgress) * (JUDGEMENT_RADIUS - 1));
@@ -93,7 +92,7 @@ export const calculateTapNoteGeometry = (
 ): TapNoteGeometry => {
   const isFailedOrHit = isFailed || isSuccessfulHit;
   const effectiveProgress = calculateEffectiveProgress(progress, isFailedOrHit, noteTime, currentTime, failureTime, isMissFailure);
-  const { nearDistance, farDistance } = calculateDistances(effectiveProgress, 1.0);
+  const { nearDistance, farDistance } = calculateDistances(effectiveProgress);
   const corners = calculateRayCorners(vpX, vpY, tapRayAngle, nearDistance, farDistance);
 
   return {

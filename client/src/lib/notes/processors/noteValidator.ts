@@ -41,13 +41,22 @@ export class NoteValidator {
   }
 
   findPressableTapNote(notes: Note[], lane: number, currentTime: number): Note | null {
-    return notes.find(n => 
+    // Find all TAP notes on this lane within the hit window
+    const candidates = notes.filter(n => 
       n.lane === lane &&
       n.type === 'TAP' &&
       this.isNoteActive(n) &&
       currentTime >= n.time - this.config.TAP_HIT_WINDOW &&
       currentTime <= n.time + this.config.TAP_HIT_WINDOW
-    ) || null;
+    );
+    
+    // If multiple notes are pressable, return the closest one
+    if (candidates.length === 0) return null;
+    if (candidates.length === 1) return candidates[0];
+    
+    return candidates.reduce((prev, curr) => 
+      Math.abs(curr.time - currentTime) < Math.abs(prev.time - currentTime) ? curr : prev
+    );
   }
 
   findClosestActiveNote(notes: Note[], lane: number, type: NoteType, currentTime: number): Note | null {
@@ -66,13 +75,22 @@ export class NoteValidator {
   }
 
   findPressableHoldNote(notes: Note[], lane: number, currentTime: number): Note | null {
-    return notes.find(n => 
+    // Find all HOLD notes on this lane within the hit window
+    const candidates = notes.filter(n => 
       n.lane === lane &&
       n.type === 'HOLD' &&
       this.isNoteActive(n) &&
-      currentTime >= n.time - LEAD_TIME &&
+      currentTime >= n.time - this.config.HOLD_HIT_WINDOW &&
       currentTime <= n.time + this.config.HOLD_ACTIVATION_WINDOW
-    ) || null;
+    );
+    
+    // If multiple notes are pressable, return the closest one
+    if (candidates.length === 0) return null;
+    if (candidates.length === 1) return candidates[0];
+    
+    return candidates.reduce((prev, curr) => 
+      Math.abs(curr.time - currentTime) < Math.abs(prev.time - currentTime) ? curr : prev
+    );
   }
 
   findActiveHoldNote(notes: Note[], lane: number, currentTime: number): Note | null {

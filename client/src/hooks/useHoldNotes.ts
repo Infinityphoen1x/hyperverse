@@ -9,7 +9,7 @@ export type { HoldNoteProcessedData };
 
 export function useHoldNotes(visibleNotes: Note[], currentTime: number): HoldNoteProcessedData[] {
   const gameState = useGameStore(state => state.gameState);
-  const noteSpeedMultiplier = useGameStore(state => state.noteSpeedMultiplier) || 1.0;
+  const playerSpeed = useGameStore(state => state.playerSpeed) || 20;
   const tunnelRotation = useTunnelRotation();
   
   return useMemo(() => {
@@ -25,7 +25,7 @@ export function useHoldNotes(visibleNotes: Note[], currentTime: number): HoldNot
     
     return visibleNotes
       .filter((n) => n && n.type === 'HOLD' && n.id)
-      .map((note) => processSingleHoldNote(note, currentTime, noteSpeedMultiplier, tunnelRotation))
+      .map((note) => processSingleHoldNote(note, currentTime, playerSpeed, tunnelRotation))
       .filter((data): data is HoldNoteProcessedData => data !== null);
-  }, [visibleNotes, currentTime, gameState, noteSpeedMultiplier, tunnelRotation]);
+  }, [visibleNotes, currentTime, gameState, playerSpeed, tunnelRotation]);
 }

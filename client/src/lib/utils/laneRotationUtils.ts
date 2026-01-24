@@ -12,18 +12,18 @@
 export function findRotatedLaneForDeck(deckLane: number, tunnelRotation: number): number | null {
   if (deckLane !== -1 && deckLane !== -2) return null; // Only applies to deck lanes
   
-  // Lane angles (before rotation): -2: 60°, -1: 120°, 0: 180°, 1: 240°, 2: 300°, 3: 0°
-  const targetAngle = deckLane === -1 ? 120 : 60; // Where the deck lane is positioned
+  // Lane angles (before rotation): -2: 0°, -1: 180°, 0: 120°, 1: 60°, 2: 300°, 3: 240°
+  const targetAngle = deckLane === -1 ? 180 : 0; // Where the deck lane is positioned
   
   // Check which lane is rotated to match this angle
   // Normalize rotation to 0-360
   const normalizedRotation = ((tunnelRotation % 360) + 360) % 360;
   
-  // Lane 0 (W) is at 180°, rotating by -60° puts it at 120° (lane -1 position)
-  // Lane 1 (O) is at 240°, rotating by -120° puts it at 120° (lane -1 position)
+  // Lane 0 (W) is at 120°, rotating by 60° puts it at 180° (lane -1 position)
+  // Lane 1 (O) is at 60°, rotating by 120° puts it at 180° (lane -1 position)
   // etc.
   
-  const laneBaseAngles = { 0: 180, 1: 240, 2: 300, 3: 0 };
+  const laneBaseAngles = { 0: 120, 1: 60, 2: 300, 3: 240 };
   
   for (const [lane, baseAngle] of Object.entries(laneBaseAngles)) {
     const rotatedAngle = (baseAngle + normalizedRotation) % 360;

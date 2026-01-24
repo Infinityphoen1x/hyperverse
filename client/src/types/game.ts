@@ -86,8 +86,8 @@ export interface GameStoreState {
   beatmapBpm: number;
   
   // Player settings
-  noteSpeedMultiplier: number; // 0.5 to 2.0 - temporary slider value in settings
-  defaultNoteSpeedMultiplier: number; // 0.5 to 2.0 - persisted default used in gameplay
+  playerSpeed: number; // 5 to 40 - temporary slider value in settings (higher = faster notes)
+  defaultPlayerSpeed: number; // 5 to 40 - persisted default used in gameplay
   soundVolume: number; // 0.0 to 1.0 - master volume for sound effects
   soundMuted: boolean; // Master mute toggle for sound effects
   
@@ -99,6 +99,10 @@ export interface GameStoreState {
   
   // Spin alternation - tracks key press count per lane for DJ deck direction alternation
   spinPressCountPerLane: { [lane: number]: number };
+  
+  // Deck spinning state - tracks which decks are currently spinning due to hold notes
+  leftDeckSpinning: boolean;
+  rightDeckSpinning: boolean;
   
   // Actions
   setGameState: (state: GameState) => void;
@@ -112,8 +116,8 @@ export interface GameStoreState {
   setIsPaused: (paused: boolean) => void;
   setCountdownSeconds: (seconds: number) => void;
   setBeatmapBpm: (bpm: number) => void;
-  setNoteSpeedMultiplier: (multiplier: number) => void;
-  setDefaultNoteSpeedMultiplier: (multiplier: number) => void;
+  setPlayerSpeed: (speed: number) => void;
+  setDefaultPlayerSpeed: (speed: number) => void;
   setSoundVolume: (volume: number) => void;
   setSoundMuted: (muted: boolean) => void;
   setTunnelRotation: (angle: number) => void;
@@ -121,6 +125,8 @@ export interface GameStoreState {
   setAnimatedTunnelRotation: (angle: number) => void;
   setIdleRotation: (angle: number) => void;
   incrementSpinPressCount: (lane: number) => void;
+  setLeftDeckSpinning: (spinning: boolean) => void;
+  setRightDeckSpinning: (spinning: boolean) => void;
   
   // Game actions
   hitNote: (lane: number) => void;

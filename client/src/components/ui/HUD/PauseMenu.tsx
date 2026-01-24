@@ -20,8 +20,8 @@ const PauseMenuComponent = ({
   const countdownSeconds = useGameStore(state => state.countdownSeconds);
   const resumeGameStore = useGameStore(state => state.resumeGame);
   const rewindGameStore = useGameStore(state => state.rewindGame);
-  const noteSpeedMultiplier = useGameStore(state => state.noteSpeedMultiplier);
-  const setNoteSpeedMultiplier = useGameStore(state => state.setNoteSpeedMultiplier);
+  const playerSpeed = useGameStore(state => state.playerSpeed);
+  const setPlayerSpeed = useGameStore(state => state.setPlayerSpeed);
   
   const [showSettings, setShowSettings] = useState(false);
 
@@ -30,7 +30,7 @@ const PauseMenuComponent = ({
   const handleRewind = onRewind || rewindGameStore;
   
   const handleSpeedChange = (value: number[]) => {
-    setNoteSpeedMultiplier(value[0]);
+    setPlayerSpeed(value[0]);
   };
 
   if (!isPaused) return null;
@@ -63,17 +63,17 @@ const PauseMenuComponent = ({
           <div className="bg-black/90 border border-neon-cyan p-6 rounded-lg space-y-4 max-w-md mx-auto">
             <h3 className="text-neon-cyan font-orbitron text-xl">NOTE SPEED</h3>
             <Slider
-              value={[noteSpeedMultiplier]}
+              value={[playerSpeed]}
               onValueChange={handleSpeedChange}
-              min={0.5}
-              max={2.0}
-              step={0.1}
+              min={5}
+              max={40}
+              step={1}
               className="w-full"
             />
             <div className="flex justify-between text-xs font-rajdhani text-white/60">
-              <span>0.5x</span>
-              <span className="text-neon-pink font-bold">{noteSpeedMultiplier.toFixed(1)}x</span>
-              <span>2.0x</span>
+              <span>Slower (5)</span>
+              <span className="text-neon-pink font-bold">{playerSpeed.toFixed(0)}</span>
+              <span>Faster (40)</span>
             </div>
           </div>
         )}

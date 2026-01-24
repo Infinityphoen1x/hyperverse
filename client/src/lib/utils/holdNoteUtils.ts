@@ -4,7 +4,7 @@ import { GameErrors } from '@/lib/errors/errorLog';
 import { calculateApproachGeometry, calculateLockedNearDistance, calculateHoldNoteGlow, calculateCollapseGeometry } from "@/lib/geometry/holdNoteGeometry";
 import { calculateHoldNoteColors, determineGreyscaleState } from "@/lib/notes/hold/holdGreystate";
 import { markAnimationCompletedIfDone, trackHoldNoteAnimationLifecycle, getHoldNoteFailureStates } from "@/lib/notes/hold/holdNoteHelpers";
-import { FAILURE_ANIMATION_DURATION, HOLD_NOTE_STRIP_WIDTH_MULTIPLIER, JUDGEMENT_RADIUS, LEAD_TIME } from '@/lib/config';
+import { FAILURE_ANIMATION_DURATION, HOLD_NOTE_STRIP_WIDTH_MULTIPLIER, JUDGEMENT_RADIUS, LEAD_TIME, MAGIC_MS } from '@/lib/config';
 import { getLaneAngle, getColorForLane } from '@/lib/utils/laneUtils';
 
 export interface HoldNoteProcessedData {
@@ -23,7 +23,11 @@ export interface HoldNoteProcessedData {
   currentTime: number;
 }
 
-export function processSingleHoldNote(note: Note, currentTime: number, noteSpeedMultiplier: number = 1.0, tunnelRotation: number = 0): HoldNoteProcessedData | null {
+/**
+ * Process a single hold note and calculate its render data
+ * @param playerSpeed - Player speed setting (5-40, higher = faster notes)
+ */
+export function processSingleHoldNote(note: Note, currentTime: number, playerSpeed: number = 20, tunnelRotation: number = 0): HoldNoteProcessedData | null {
   try {
     if (!note || !Number.isFinite(note.time) || !note.id) return null;
     
@@ -60,8 +64,8 @@ export function processSingleHoldNote(note: Note, currentTime: number, noteSpeed
       return null;
     }
 
-    // Calculate effectiveLeadTime scaled by noteSpeedMultiplier to match tap note velocity
-    const effectiveLeadTime = LEAD_TIME / noteSpeedMultiplier;
+    // Calculate effectiveLeadTime using MAGIC_MS / playerSpeed to match tap note velocity
+    const effectiveLeadTime = MAGIC_MS / playerSpeed;
 
     // For early failures, calculate approach geometry at the time of failure (frozen, clamped to judgement)
     // For miss failures, calculate at current time allowing extension past judgement
@@ -74,10 +78,10 @@ export function processSingleHoldNote(note: Note, currentTime: number, noteSpeed
       approachGeometry = calculateApproachGeometry(timeUntilHit, pressHoldTime, failures.isTooEarlyFailure, holdDuration, failures.isHoldMissFailure, false, effectiveLeadTime);
     }
     
-    // Scale collapse duration by noteSpeedMultiplier to match note velocity
+    // Scale collapse duration by playerSpeed (via effectiveLeadTime ratio) to match note velocity
     // This ensures the collapse speed matches the approach speed
     const baseCollapseDuration = failures.hasAnyFailure ? FAILURE_ANIMATION_DURATION : holdDuration;
-    const collapseDuration = baseCollapseDuration / noteSpeedMultiplier;
+    const collapseDuration = baseCollapseDuration * (LEAD_TIME / effectiveLeadTime);
     const lockedNearDistance = calculateLockedNearDistance(note, pressHoldTime, failures.isTooEarlyFailure, approachGeometry.nearDistance, failureTime, failures.isHoldMissFailure);
     const stripWidth = holdDuration * HOLD_NOTE_STRIP_WIDTH_MULTIPLIER;
     // Use the actual approach geometry's far distance (what was being rendered)

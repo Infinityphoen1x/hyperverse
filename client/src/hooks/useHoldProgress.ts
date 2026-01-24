@@ -20,6 +20,7 @@ interface HoldProgressReturn {
 export const useHoldProgress = ({ lane: propLane }: UseHoldProgressProps = {}): HoldProgressReturn => {
   const notes = useGameStore(state => state.notes);
   const currentTime = useGameStore(state => state.currentTime);
+  const playerSpeed = useGameStore(state => state.playerSpeed) || 20;
   const lane = propLane ?? -1;
 
   const [isGlowing, setIsGlowing] = useState(false);
@@ -52,7 +53,8 @@ export const useHoldProgress = ({ lane: propLane }: UseHoldProgressProps = {}): 
     currentTime,
     lane,
     DECK_METER_COMPLETION_THRESHOLD,
-    DECK_METER_DEFAULT_HOLD_DURATION
+    DECK_METER_DEFAULT_HOLD_DURATION,
+    playerSpeed
   );
 
   // Handle side effects (glow) in useEffect

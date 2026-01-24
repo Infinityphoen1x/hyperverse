@@ -21,7 +21,7 @@ interface UseGameLogicProps {
   setGameState: (state: GameState) => void;
   setCurrentTime: (time: number) => void;
   hitNote: (noteId: number) => void;
-  trackHoldStart: (noteId: number) => void;
+  trackHoldStart: (noteId: number) => boolean;
   trackHoldEnd: (noteId: number) => void;
   customNotes?: Note[];
   engineRef?: React.RefObject<any>;

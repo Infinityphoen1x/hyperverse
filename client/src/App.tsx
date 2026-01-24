@@ -8,10 +8,12 @@ import { initYouTubePlayer, initYouTubeTimeListener, destroyYouTubePlayer } from
 import Home from "@/pages/Home";
 import Game from "@/pages/Game";
 import Settings from "@/pages/Settings";
+import BeatmapEditor from "@/pages/BeatmapEditor";
 
 function App() {
   const [gameActive, setGameActive] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const youtubeContainerRef = useRef<HTMLDivElement>(null);
   const playerInitializedRef = useRef<boolean>(false) as React.RefObject<boolean>;
@@ -19,11 +21,6 @@ function App() {
 
   // Initialize console logging for diagnostics
   useConsoleLogger();
-
-  // Clear stale beatmap data on initial app mount (prevents auto-load from previous sessions)
-  useEffect(() => {
-    localStorage.removeItem('pendingBeatmap');
-  }, []); // Empty deps = runs once on mount
 
   // Initialize YouTube player when container mounts and videoId changes
   useEffect(() => {
@@ -45,7 +42,7 @@ function App() {
     };
   }, [youtubeVideoId]);
 
-  // Get YouTube video ID from localStorage (set by Game component)
+  // Get YouTube video ID from localStorage (set by Game component or Editor)
   useEffect(() => {
     const loadVideoId = () => {
       const pending = localStorage.getItem('pendingBeatmap');
@@ -53,6 +50,7 @@ function App() {
         try {
           const data = JSON.parse(pending);
           if (data.youtubeVideoId) {
+            console.log('[APP-YOUTUBE] Loading video ID from localStorage:', data.youtubeVideoId);
             setYoutubeVideoId(data.youtubeVideoId);
           }
         } catch (e) {
@@ -63,9 +61,24 @@ function App() {
         setYoutubeVideoId(null);
       }
     };
+    
+    // Initial load
     loadVideoId();
+    
+    // Poll for changes every 500ms
     const interval = setInterval(loadVideoId, 500);
-    return () => clearInterval(interval);
+    
+    // Listen for immediate updates from editor
+    const handleBeatmapUpdate = () => {
+      console.log('[APP-YOUTUBE] beatmapUpdate event received, loading video ID');
+      loadVideoId();
+    };
+    window.addEventListener('beatmapUpdate', handleBeatmapUpdate);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('beatmapUpdate', handleBeatmapUpdate);
+    };
   }, []);
 
   return (
@@ -83,13 +96,20 @@ function App() {
             />
           )}
 
-          {/* UI Layer - Home, Game, or Settings (z-10+) */}
+          {/* UI Layer - Home, Game, Settings, or Editor (z-10+) */}
           <div className="absolute inset-0 z-10">
             {settingsOpen && (
               <Settings onBack={() => setSettingsOpen(false)} />
             )}
-            {!gameActive && !settingsOpen && (
-              <Home onStartGame={(difficulty) => { setSelectedDifficulty(difficulty); setGameActive(true); }} onOpenSettings={() => setSettingsOpen(true)} />
+            {editorOpen && (
+              <BeatmapEditor onBack={() => setEditorOpen(false)} />
+            )}
+            {!gameActive && !settingsOpen && !editorOpen && (
+              <Home 
+                onStartGame={(difficulty) => { setSelectedDifficulty(difficulty); setGameActive(true); }} 
+                onOpenSettings={() => setSettingsOpen(true)}
+                onOpenEditor={() => setEditorOpen(true)}
+              />
             )}
             {gameActive && (
               <Game 
