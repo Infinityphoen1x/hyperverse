@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { GameState } from '@/lib/engine/gameTypes';
-import { playCountdownSound } from './useAudioEffects';
+import { playCountdownSound } from '@/hooks/audio/useAudioEffects';
 
 interface UseCountdownProps {
   gameState: GameState;

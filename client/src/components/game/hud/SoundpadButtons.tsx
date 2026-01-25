@@ -3,7 +3,7 @@ import React, { useCallback } from 'react';
 import { useGameStore } from '@/stores/useGameStore'; // Assumes store with vpX, vpY (e.g., viewport state)
 import { SoundpadButton } from './SoundpadButton';
 import { calculateButtonPosition } from '@/lib/utils/soundpadUtils';
-import { useTunnelRotation } from '@/hooks/useTunnelRotation';
+import { useTunnelRotation } from '@/hooks/effects/tunnel/useTunnelRotation';
 import { BUTTON_CONFIG, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT, VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config';
 
 interface SoundpadButtonsProps {

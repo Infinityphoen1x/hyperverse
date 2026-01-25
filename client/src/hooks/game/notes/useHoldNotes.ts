@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 import { Note } from '@/lib/engine/gameTypes';
 import { processSingleHoldNote, HoldNoteProcessedData } from '@/lib/utils/holdNoteUtils';
 import { useGameStore } from '@/stores/useGameStore';
-import { useTunnelRotation } from './useTunnelRotation';
+import { useTunnelRotation } from '@/hooks/effects/tunnel/useTunnelRotation';
 
 export type { HoldNoteProcessedData };
 

@@ -3,6 +3,10 @@
  */
 
 import { Note } from '@/types/game';
+import { GAME_CONFIG } from '@/lib/config/timing';
+import { MS_PER_MINUTE, BEAT_GRID_OFFSET_FACTOR } from '@/lib/config/editor';
+
+const TAP_HIT_WINDOW = GAME_CONFIG.TAP_HIT_WINDOW;
 
 export interface MouseToLaneResult {
   lane: number;
@@ -39,12 +43,20 @@ export function checkNoteOverlap(
     // Only check notes on the same lane
     if (note.lane !== lane) return false;
     
-    // Get the note's time range
-    const noteStart = note.time;
-    const noteEnd = note.type === 'HOLD' && note.duration ? note.time + note.duration : note.time;
+    // Get the note's time range with hit window buffer for TAP notes
+    // TAP notes need ±TAP_HIT_WINDOW buffer to prevent overlapping hit windows
+    let noteStart = note.time;
+    let noteEnd = note.type === 'HOLD' && note.duration ? note.time + note.duration : note.time;
     
-    // Check for overlap: (start1 < end2) AND (start2 < end1)
-    return (startTime < noteEnd) && (noteStart < endTime);
+    if (note.type === 'TAP') {
+      // Expand TAP note time range by hit window (±150ms)
+      noteStart -= TAP_HIT_WINDOW;
+      noteEnd += TAP_HIT_WINDOW;
+    }
+    
+    // Check for overlap: (start1 <= end2) AND (start2 <= end1)
+    // Use <= to catch exact time matches
+    return (startTime <= noteEnd) && (noteStart <= endTime);
   });
 }
 
@@ -96,6 +108,7 @@ export function mouseToLane(
  * @param leadTime Lead time constant (default 4000ms)
  * @param judgementRadius Judgement radius constant (default 187)
  * @returns Note time, distance, and progress
+ * @throws Error if judgementRadius is invalid
  */
 export function mouseToTime(
   mouseX: number,
@@ -106,6 +119,14 @@ export function mouseToTime(
   leadTime: number = 4000,
   judgementRadius: number = 187
 ): MouseToTimeResult {
+  // Validate inputs
+  if (judgementRadius <= 1) {
+    throw new Error('Invalid judgementRadius: must be > 1');
+  }
+  if (leadTime <= 0) {
+    throw new Error('Invalid leadTime: must be > 0');
+  }
+  
   const dx = mouseX - vpX;
   const dy = mouseY - vpY;
   const distance = Math.sqrt(dx * dx + dy * dy);
@@ -122,13 +143,21 @@ export function mouseToTime(
  * @param bpm Beats per minute
  * @param division Beat division (1, 2, 4, 8, 16)
  * @returns Snapped time
+ * @throws Error if BPM or division is invalid
  */
 export function snapTimeToGrid(
   time: number,
   bpm: number,
   division: number
 ): number {
-  const beatDurationMs = 60000 / bpm;
+  if (bpm <= 0) {
+    throw new Error('Invalid BPM: must be > 0');
+  }
+  if (division <= 0) {
+    throw new Error('Invalid division: must be > 0');
+  }
+  
+  const beatDurationMs = MS_PER_MINUTE / bpm; // 60000ms per minute / BPM
   const snapIntervalMs = beatDurationMs / division;
   return Math.round(time / snapIntervalMs) * snapIntervalMs;
 }
@@ -151,13 +180,16 @@ export function generateBeatGrid(
   judgementRadius: number = 187,
   count: number = 10
 ): Array<{ distance: number; time: number }> {
-  const beatDurationMs = 60000 / bpm;
+  const beatDurationMs = MS_PER_MINUTE / bpm; // 60000ms per minute / BPM
   const snapIntervalMs = beatDurationMs / division;
   const circles: Array<{ distance: number; time: number }> = [];
 
+  // Generate grid points centered around current time
+  // BEAT_GRID_OFFSET_FACTOR (0.75) extends grid backward to show compressed hexagons near VP
+  // This creates visual depth by showing past grid lines approaching vanishing point
   for (let i = 0; i < count; i++) {
-    const gridTime = currentTime + (i - 5) * snapIntervalMs;
-    const progress = (i - 5) * snapIntervalMs / leadTime;
+    const gridTime = currentTime + (i - count * BEAT_GRID_OFFSET_FACTOR) * snapIntervalMs;
+    const progress = (gridTime - currentTime) / leadTime;
     const distance = 1 + (progress * (judgementRadius - 1));
 
     // Only include circles within valid range
@@ -176,6 +208,6 @@ export function generateBeatGrid(
  * @returns Interval in milliseconds
  */
 export function getBeatInterval(bpm: number, division: number): number {
-  const beatDurationMs = 60000 / bpm;
+  const beatDurationMs = MS_PER_MINUTE / bpm; // 60000ms per minute / BPM
   return beatDurationMs / division;
 }

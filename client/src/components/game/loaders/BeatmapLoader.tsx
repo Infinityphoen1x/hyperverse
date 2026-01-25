@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Music } from "lucide-react";
-import { useBeatmapLoader } from '@/hooks/useBeatmapLoader';
+import { useBeatmapLoader } from '@/hooks/game/data/useBeatmapLoader';
 import { BeatmapData } from '@/lib/beatmap/beatmapParser';
 import { audioManager } from '@/lib/audio/audioManager';
 

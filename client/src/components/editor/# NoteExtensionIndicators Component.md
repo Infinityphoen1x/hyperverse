@@ -1,3 +1,27 @@
+# NoteExtensionIndicators Component
+
+White indicator lines showing where note handles can be dragged.  
+Appears at the start and end positions of **selected notes**.  
+Reuses note geometry calculations to minimize duplication.
+
+## Purpose
+
+- Visualize draggable handles for resizing HOLD notes (start/end)
+- Visualize the effective hit window boundaries for TAP notes
+- Lines appear as thin white strokes at the near and/or far edges
+- Matches the perspective geometry used in actual note rendering
+
+## Features
+
+- **HOLD notes**: Shows indicators at both the near (start) and far (end) edges of the hold trapezoid
+- **TAP notes**: Shows two thin lines at `time - TAP_HIT_WINDOW` and `time + TAP_HIT_WINDOW`
+- Uses tunnel rotation via `useTunnelRotation()`
+- Reuses `calculateRayCorners`, `calculateDistances`, `calculateApproachGeometry`
+- SVG overlay, pointer-events-none (non-interactive)
+
+## Code
+
+```tsx
 /**
  * White indicator lines showing where note handles can be dragged
  * Appears at the start and end positions of selected notes
@@ -29,12 +53,7 @@ interface NoteExtensionIndicatorsProps {
 export function NoteExtensionIndicators({ selectedNote, currentTime, vpX, vpY }: NoteExtensionIndicatorsProps) {
   const tunnelRotation = useTunnelRotation();
   
-  console.log('[WHITE LINES DEBUG] Render called, selectedNote:', selectedNote?.id, 'type:', selectedNote?.type);
-  
-  if (!selectedNote) {
-    console.log('[WHITE LINES DEBUG] No selected note, returning null');
-    return null;
-  }
+  if (!selectedNote) return null;
 
   // Build indicators for start and end positions
   const indicators: Array<{ nearDistance: number; farDistance: number; label: string }> = [];
@@ -57,20 +76,29 @@ export function NoteExtensionIndicators({ selectedNote, currentTime, vpX, vpY }:
       LEAD_TIME // effectiveLeadTime - editor uses base LEAD_TIME
     );
     
-    console.log('[WHITE LINES DEBUG] HOLD geometry:', { 
-      nearDistance: holdGeometry.nearDistance, 
-      farDistance: holdGeometry.farDistance,
-      timeUntilHit,
-      holdDuration
-    });
+    // The hold geometry gives us the full trapezoid
+    // nearDistance = where note.time is (start handle)
+    // farDistance = where note.time + duration is (end handle)
     
-    // Use the actual holdGeometry distances directly (FIX: was recalculating separately)
-    // This ensures the white lines EXACTLY match the hold note trapezoid edges
-    indicators.push({ 
-      nearDistance: holdGeometry.nearDistance, 
-      farDistance: holdGeometry.farDistance, 
-      label: 'hold' 
-    });
+    // For white lines, we want to show indicators at both ends
+    // Start handle: at nearDistance (the near edge of the hold note)
+    // End handle: at farDistance (the far edge of the hold note)
+    
+    // Check if start is visible
+    const startProgress = 1 - (timeUntilHit / LEAD_TIME);
+    if (startProgress >= 0 && startProgress <= 1) {
+      // For start handle, use tap note geometry to get the depth at that time point
+      const startGeometry = calculateDistances(startProgress);
+      indicators.push({ nearDistance: startGeometry.nearDistance, farDistance: startGeometry.farDistance, label: 'start' });
+    }
+    
+    // Check if end is visible
+    const endProgress = 1 - ((timeUntilHit + holdDuration) / LEAD_TIME);
+    if (endProgress >= 0 && endProgress <= 1) {
+      // For end handle, use tap note geometry to get the depth at the end time
+      const endGeometry = calculateDistances(endProgress);
+      indicators.push({ nearDistance: endGeometry.nearDistance, farDistance: endGeometry.farDistance, label: 'end' });
+    }
   } else {
     // For TAP notes, show handles at the hit window boundaries
     // Near handle: at note.time - TAP_HIT_WINDOW (start of hit window)
@@ -108,9 +136,6 @@ export function NoteExtensionIndicators({ selectedNote, currentTime, vpX, vpY }:
   // Get lane angle with tunnel rotation applied
   const laneRayAngle = getLaneAngle(selectedNote.lane, tunnelRotation);
 
-  console.log('[WHITE LINES DEBUG] Rendering', indicators.length, 'indicators for', selectedNote.type, 'note');
-  console.log('[WHITE LINES DEBUG] Indicators:', indicators);
-
   return (
     <svg 
       className="absolute inset-0 pointer-events-none" 
@@ -136,9 +161,9 @@ export function NoteExtensionIndicators({ selectedNote, currentTime, vpX, vpY }:
               y1={corners.y4}
               x2={corners.x3}
               y2={corners.y3}
-              stroke="#00FF00"
-              strokeWidth={EXTENSION_INDICATOR_STROKE_WIDTH * 3}
-              opacity={1}
+              stroke="white"
+              strokeWidth={EXTENSION_INDICATOR_STROKE_WIDTH}
+              opacity={EXTENSION_INDICATOR_OPACITY}
               strokeLinecap="round"
             />
           );
@@ -152,9 +177,9 @@ export function NoteExtensionIndicators({ selectedNote, currentTime, vpX, vpY }:
                 y1={corners.y4}
                 x2={corners.x3}
                 y2={corners.y3}
-                stroke="#FF00FF"
-                strokeWidth={EXTENSION_INDICATOR_STROKE_WIDTH * 3}
-                opacity={1}
+                stroke="white"
+                strokeWidth={EXTENSION_INDICATOR_STROKE_WIDTH}
+                opacity={EXTENSION_INDICATOR_OPACITY}
                 strokeLinecap="round"
               />
               {/* Line at far edge (toward vanishing point) - x1 to x2 */}
@@ -163,9 +188,9 @@ export function NoteExtensionIndicators({ selectedNote, currentTime, vpX, vpY }:
                 y1={corners.y1}
                 x2={corners.x2}
                 y2={corners.y2}
-                stroke="#FFFF00"
-                strokeWidth={EXTENSION_INDICATOR_STROKE_WIDTH * 3}
-                opacity={1}
+                stroke="white"
+                strokeWidth={EXTENSION_INDICATOR_STROKE_WIDTH}
+                opacity={EXTENSION_INDICATOR_OPACITY}
                 strokeLinecap="round"
               />
             </g>
@@ -175,3 +200,18 @@ export function NoteExtensionIndicators({ selectedNote, currentTime, vpX, vpY }:
     </svg>
   );
 }
+  Known Issues / Debugging Notes
+
+Indicators only appear when a note is selected (selectedNote !== null)
+For HOLD notes: currently recalculates progress separately instead of using holdGeometry.nearDistance / farDistance directly → may cause misalignment
+TAP indicators often invisible if note is near/currently at judgment line (progress out of [0, MAX_PROGRESS])
+No handling for multi-selected notes (only shows for single selectedNote)
+SVG assumes TUNNEL_CONTAINER_WIDTH/HEIGHT match the parent container exactly
+
+Potential Improvements
+
+Use actual holdGeometry.nearDistance and farDistance for HOLD notes
+Add support for multi-selection (show indicators for all selected notes)
+Fade opacity based on how close to edge (0–1 progress)
+Different colors/styles for active drag handle
+Add small circle markers at handle positions for better click target visibility

@@ -1,7 +1,7 @@
 // src/components/TapNotes.tsx
 import React, { memo, useCallback } from 'react';
 import { TapNote } from './TapNote';
-import { useTapNotes } from '@/hooks/useTapNotes';
+import { useTapNotes } from '@/hooks/game/notes/useTapNotes';
 import { useGameStore } from '@/stores/useGameStore';
 import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config';
 

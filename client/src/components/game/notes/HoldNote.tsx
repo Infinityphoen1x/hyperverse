@@ -2,7 +2,7 @@
 import React, { memo } from 'react';
 import { getTrapezoidCorners } from "@/lib/geometry/holdNoteGeometry";
 import { calculateHoldNoteStyle } from "@/lib/notes/hold/holdNoteStyle";
-import { HoldNoteProcessedData } from '@/hooks/useHoldNotes';
+import { HoldNoteProcessedData } from '@/hooks/game/notes/useHoldNotes';
 
 interface HoldNoteProps {
   noteData: HoldNoteProcessedData;

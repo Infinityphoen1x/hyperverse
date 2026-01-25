@@ -5,7 +5,7 @@ import { getLaneAngle, getColorForLane } from '@/lib/utils/laneUtils';
 import { calculateTapNoteGeometry } from "@/lib/geometry/tapNoteGeometry";
 import { calculateTapNoteStyle } from "@/lib/notes/tap/tapNoteStyle";
 import { TapNoteState } from '@/lib/notes/tap/tapNoteHelpers';
-import { useTunnelRotation } from '@/hooks/useTunnelRotation';
+import { useTunnelRotation } from '@/hooks/effects/tunnel/useTunnelRotation';
 
 interface TapNoteProps {
   note: Note;

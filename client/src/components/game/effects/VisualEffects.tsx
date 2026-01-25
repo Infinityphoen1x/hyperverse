@@ -1,9 +1,9 @@
 // src/components/VisualEffects.tsx
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useGameStore } from '@/stores/useGameStore'; // Your game store (e.g., with combo, health, missCount)
-import { useParticles } from '@/hooks/useParticles';
-import { useChromatic } from '@/hooks/useChromatic';
-import { useGlitch } from '@/hooks/useGlitch';
+import { useParticles } from '@/hooks/effects/geometry/useParticles';
+import { useChromatic } from '@/hooks/effects/screen/useChromatic';
+import { useGlitch } from '@/hooks/effects/screen/useGlitch';
 import { ParticleSystem } from '@/components/game/effects/ParticleSystem';
 import { GlitchOverlay } from '@/components/game/effects/GlitchOverlay';
 import { ChromaticAberration } from '@/components/game/effects/ChromaticAberration';

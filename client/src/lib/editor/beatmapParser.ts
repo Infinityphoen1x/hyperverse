@@ -1,6 +1,16 @@
 /**
  * Beatmap text parsing utilities
  * Converts beatmap text format into Note objects
+ * 
+ * Supported Formats:
+ * - New (pipe-delimited): time|lane|TYPE|duration|id
+ *   Example: 1000|0|TAP or 2000|1|HOLD|500
+ * 
+ * - Legacy (space-delimited): TYPE lane time duration
+ *   Example: TAP 0 1000 or HOLD 1 2000 500
+ * 
+ * Auto-detects format based on presence of pipe character.
+ * New format is recommended for all new beatmaps.
  */
 
 import { Note } from '@/types/game';
@@ -26,7 +36,7 @@ export interface BeatmapMetadata {
 /**
  * Parse beatmap text into notes array
  * @param text Beatmap text content
- * @returns Array of Note objects
+ * @returns Array of Note objects (empty array if parsing fails)
  */
 export function parseBeatmapText(text: string): Note[] {
   try {
@@ -38,12 +48,33 @@ export function parseBeatmapText(text: string): Note[] {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('[')) return;
 
-      const parts = trimmed.split(/\s+/);
+      // Support both formats:
+      // New format: time|lane|TYPE|duration|id
+      // Old format: TYPE lane time duration
+      const parts = trimmed.includes('|') ? trimmed.split('|') : trimmed.split(/\s+/);
       if (parts.length < 3) return;
 
-      const type = parts[0].toUpperCase();
-      const lane = parseInt(parts[1]);
-      const time = parseInt(parts[2]);
+      let type: string, lane: number, time: number, duration: number | undefined;
+
+      if (trimmed.includes('|')) {
+        // New pipe-delimited format: time|lane|TYPE|duration|id
+        time = parseInt(parts[0]);
+        lane = parseInt(parts[1]);
+        type = parts[2].toUpperCase();
+        if (parts.length >= 4) {
+          duration = parseInt(parts[3]);
+        }
+      } else {
+        // Old space-delimited format: TYPE lane time duration
+        type = parts[0].toUpperCase();
+        lane = parseInt(parts[1]);
+        time = parseInt(parts[2]);
+        if (parts.length >= 4) {
+          duration = parseInt(parts[3]);
+        }
+      }
+
+      if (isNaN(lane) || isNaN(time)) return;
 
       if (type === 'TAP') {
         notes.push({
@@ -54,8 +85,7 @@ export function parseBeatmapText(text: string): Note[] {
           hit: false,
           missed: false,
         });
-      } else if (type === 'HOLD' && parts.length >= 4) {
-        const duration = parseInt(parts[3]);
+      } else if (type === 'HOLD' && duration !== undefined && !isNaN(duration)) {
         notes.push({
           id: `editor-note-${noteId++}`,
           type: 'HOLD',
@@ -70,8 +100,8 @@ export function parseBeatmapText(text: string): Note[] {
 
     return notes;
   } catch (error) {
-    console.error('Failed to parse beatmap:', error);
-    return [];
+    console.error('[BEATMAP-PARSER] Failed to parse beatmap text:', error);
+    return []; // Return empty array on parse failure
   }
 }
 
@@ -81,15 +111,16 @@ export function parseBeatmapText(text: string): Note[] {
  * @returns Object with notes organized by difficulty
  */
 export function parseBeatmapTextWithDifficulties(text: string): DifficultyNotes {
-  const lines = text.split('\n');
-  const difficultyNotes: DifficultyNotes = {
-    EASY: [],
-    MEDIUM: [],
-    HARD: [],
-  };
-  
-  let currentDifficulty: Difficulty | null = null;
-  let noteId = 0;
+  try {
+    const lines = text.split('\n');
+    const difficultyNotes: DifficultyNotes = {
+      EASY: [],
+      MEDIUM: [],
+      HARD: [],
+    };
+    
+    let currentDifficulty: Difficulty | null = null;
+    let noteId = 0;
 
   lines.forEach((line) => {
     const trimmed = line.trim();
@@ -105,12 +136,33 @@ export function parseBeatmapTextWithDifficulties(text: string): DifficultyNotes 
     
     if (!trimmed || trimmed.startsWith('#')) return;
 
-    const parts = trimmed.split(/\s+/);
+    // Support both formats:
+    // New format: time|lane|TYPE|duration|id
+    // Old format: TYPE lane time duration
+    const parts = trimmed.includes('|') ? trimmed.split('|') : trimmed.split(/\s+/);
     if (parts.length < 3) return;
 
-    const type = parts[0].toUpperCase();
-    const lane = parseInt(parts[1]);
-    const time = parseInt(parts[2]);
+    let type: string, lane: number, time: number, duration: number | undefined;
+
+    if (trimmed.includes('|')) {
+      // New pipe-delimited format: time|lane|TYPE|duration|id
+      time = parseInt(parts[0]);
+      lane = parseInt(parts[1]);
+      type = parts[2].toUpperCase();
+      if (parts.length >= 4) {
+        duration = parseInt(parts[3]);
+      }
+    } else {
+      // Old space-delimited format: TYPE lane time duration
+      type = parts[0].toUpperCase();
+      lane = parseInt(parts[1]);
+      time = parseInt(parts[2]);
+      if (parts.length >= 4) {
+        duration = parseInt(parts[3]);
+      }
+    }
+
+    if (isNaN(lane) || isNaN(time)) return;
 
     // Default to MEDIUM if no difficulty specified
     const targetDifficulty = currentDifficulty || 'MEDIUM';
@@ -124,8 +176,7 @@ export function parseBeatmapTextWithDifficulties(text: string): DifficultyNotes 
         hit: false,
         missed: false,
       });
-    } else if (type === 'HOLD' && parts.length >= 4) {
-      const duration = parseInt(parts[3]);
+    } else if (type === 'HOLD' && duration !== undefined && !isNaN(duration)) {
       difficultyNotes[targetDifficulty].push({
         id: `editor-note-${noteId++}`,
         type: 'HOLD',
@@ -139,8 +190,11 @@ export function parseBeatmapTextWithDifficulties(text: string): DifficultyNotes 
   });
 
   return difficultyNotes;
+  } catch (error) {
+    console.error('[BEATMAP-PARSER] Failed to parse difficulty-based beatmap:', error);
+    return { EASY: [], MEDIUM: [], HARD: [] }; // Return empty difficulties on parse failure
+  }
 }
-
 /**
  * Extract metadata from beatmap text
  * @param text Beatmap text content

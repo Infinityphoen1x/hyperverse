@@ -1,6 +1,6 @@
 import React, { memo, useCallback } from 'react';
 import { HoldNote } from './HoldNote';
-import { useHoldNotes } from '@/hooks/useHoldNotes';
+import { useHoldNotes } from '@/hooks/game/notes/useHoldNotes';
 import { useGameStore } from '@/stores/useGameStore';
 import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT, LEAD_TIME, MAGIC_MS } from '@/lib/config';
 

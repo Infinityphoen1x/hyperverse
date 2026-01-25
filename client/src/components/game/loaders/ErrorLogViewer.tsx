@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
-import { useErrorLogs } from '@/hooks/useErrorLogs';
+import { useErrorLogs } from '@/hooks/utils/useErrorLogs';
 import { NoteStatsSection } from './NoteStatsSection';
 import { RenderAndHitStatsSection } from './RenderAndHitStatsSection';
 import { FailureBreakdownSection } from './FailureBreakdownSection';

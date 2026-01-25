@@ -1,10 +1,10 @@
 // src/components/Down3DNoteLane.tsx
 import React, { memo, useEffect } from "react";
 import { VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config';
-import { useVanishingPointOffset } from '@/hooks/useVanishingPointOffset';
+import { useVanishingPointOffset } from '@/hooks/effects/geometry/useVanishingPointOffset';
 import { useVanishingPointStore } from '@/stores/useVanishingPointStore';
 import { useGameStore } from '@/stores/useGameStore';
-import { useZoomEffect } from '@/hooks/useZoomEffect';
+import { useZoomEffect } from '@/hooks/effects/screen/useZoomEffect';
 import { TunnelBackground } from './tunnel/TunnelBackground';
 import { SoundpadButtons } from './hud/SoundpadButtons';
 import { JudgementLines } from './tunnel/JudgementLines';

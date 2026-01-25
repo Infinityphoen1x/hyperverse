@@ -5,6 +5,7 @@
 
 import { Note } from '@/types/game';
 import type { BeatmapMetadata } from './beatmapParser';
+import { MIN_HOLD_DURATION, VALID_LANES, isValidLane } from '@/lib/config/editor';
 
 /**
  * Validation result interface
@@ -24,9 +25,9 @@ export interface ValidationIssue {
 export function validateNote(note: Note): string[] {
   const errors: string[] = [];
 
-  // Validate lane
-  if (![0, 1, 2, 3, -1, -2].includes(note.lane)) {
-    errors.push(`Invalid lane: ${note.lane}. Must be 0-3 or -1/-2`);
+  // Validate lane using centralized VALID_LANES constant
+  if (!isValidLane(note.lane)) {
+    errors.push(`Invalid lane: ${note.lane}. Must be one of: ${VALID_LANES.join(', ')}`);
   }
 
   // Validate time
@@ -36,8 +37,8 @@ export function validateNote(note: Note): string[] {
 
   // Validate HOLD duration
   if (note.type === 'HOLD') {
-    if (!note.duration || note.duration < 100) {
-      errors.push(`Invalid HOLD duration: ${note.duration}. Must be >= 100ms`);
+    if (!note.duration || note.duration < MIN_HOLD_DURATION) {
+      errors.push(`Invalid HOLD duration: ${note.duration}. Must be >= ${MIN_HOLD_DURATION}ms`);
     }
   }
 
@@ -98,22 +99,22 @@ export function validateBeatmap(notes: Note[], metadata: BeatmapMetadata): Valid
       });
     }
 
-    // Check invalid lane
-    if (![0, 1, 2, 3, -1, -2].includes(note.lane)) {
+    // Check invalid lane using centralized VALID_LANES constant
+    if (!isValidLane(note.lane)) {
       issues.push({
         noteId: note.id,
         type: 'invalid_lane',
-        message: `Invalid lane ${note.lane}. Must be 0-3 or -1/-2`,
+        message: `Invalid lane ${note.lane}. Must be one of: ${VALID_LANES.join(', ')}`,
         severity: 'error',
       });
     }
 
     // Check HOLD duration
-    if (note.type === 'HOLD' && (!note.duration || note.duration < 100)) {
+    if (note.type === 'HOLD' && (!note.duration || note.duration < MIN_HOLD_DURATION)) {
       issues.push({
         noteId: note.id,
         type: 'invalid_duration',
-        message: `HOLD note duration ${note.duration}ms is too short (minimum 100ms)`,
+        message: `HOLD note duration ${note.duration}ms is too short (minimum ${MIN_HOLD_DURATION}ms)`,
         severity: 'error',
       });
     }

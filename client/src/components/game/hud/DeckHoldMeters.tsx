@@ -1,7 +1,7 @@
 // src/components/DeckHoldMeters.tsx
 import React, { useMemo } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
-import { useHoldProgress } from '@/hooks/useHoldProgress';
+import { useHoldProgress } from '@/hooks/game/notes/useHoldProgress';
 import { RectangleMeter } from '@/components/game/hud/RectangleMeter';
 import { Note } from '@/types/game';
 import { getLaneAngle, getColorForLane } from '@/lib/utils/laneUtils';

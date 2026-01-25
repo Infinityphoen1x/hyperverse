@@ -7,15 +7,14 @@ import { HoldNotes } from '@/components/game/notes/HoldNotes';
 import { NoteHandles } from '@/components/editor/NoteHandles';
 import { EditorBeatGrid } from '@/components/editor/EditorBeatGrid';
 import { EditorStatusBar } from '@/components/editor/EditorStatusBar';
+import { EditorNotesPanel } from '@/components/editor/EditorNotesPanel';
 import { NoteExtensionIndicators } from '@/components/editor/NoteExtensionIndicators';
 import { Note } from '@/types/game';
 import { VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config';
-import { useVanishingPointOffset } from '@/hooks/useVanishingPointOffset';
-import { useZoomEffect } from '@/hooks/useZoomEffect';
-import { useEditorMouseHandlers } from '@/hooks/useEditorMouseHandlers';
+import { useVanishingPointOffset } from '@/hooks/effects/geometry/useVanishingPointOffset';
+import { useZoomEffect } from '@/hooks/effects/screen/useZoomEffect';
+import { useEditorMouseHandlers } from '@/hooks/editor/useEditorMouseHandlers';
 import type { Difficulty } from '@/lib/editor/beatmapTextUtils';
-
-const MIN_HOLD_DURATION = 100;
 
 interface EditorCanvasProps {
   canvasRef: React.RefObject<HTMLDivElement | null>;
@@ -189,6 +188,7 @@ export function EditorCanvas({
           />
           
           {/* White indicator lines showing where handles can be dragged */}
+          {console.log('[WHITE LINES DEBUG] Condition check:', { selectedNoteId, isDragging, result: selectedNoteId && !isDragging })}
           {selectedNoteId && !isDragging && (
             <NoteExtensionIndicators
               selectedNote={parsedNotes.find(n => n.id === selectedNoteId) || null}
@@ -240,12 +240,23 @@ export function EditorCanvas({
         bpm={metadata.bpm}
       />
 
+      {/* Notes Debug Panel */}
+      <EditorNotesPanel
+        parsedNotes={parsedNotes}
+        selectedNoteIds={selectedNoteIds}
+        isDragging={isDragging}
+        draggedHandle={draggedHandle}
+        draggedNoteId={draggedNoteId}
+      />
+
       {/* Beat Grid - hexagonal with parallax */}
       {snapEnabled && editorMode && (
         <EditorBeatGrid 
           currentTime={currentTime}
           bpm={metadata.bpm}
           snapDivision={snapDivision}
+          vpX={vpX}
+          vpY={vpY}
         />
       )}
     </div>

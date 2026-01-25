@@ -2,7 +2,7 @@
 import React, { memo } from 'react';
 import { calculateLinePoints, HOLD_LINE_CONFIGS } from '@/lib/utils/judgementLineUtils';
 import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT, HOLD_JUDGEMENT_LINE_WIDTH, VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config';
-import { useTunnelRotation } from '@/hooks/useTunnelRotation';
+import { useTunnelRotation } from '@/hooks/effects/tunnel/useTunnelRotation';
 
 interface HoldJudgementLinesProps {
   vpX?: number; // Optional, defaults to fixed VP

@@ -2,8 +2,8 @@
 import { useCallback, useRef } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo } from '@/lib/youtube';
-import { resetZoomEffect } from './useZoomEffect';
-import { playRewindSound } from './useAudioEffects';
+import { resetZoomEffect } from '@/hooks/effects/screen/useZoomEffect';
+import { playRewindSound } from '@/hooks/audio/useAudioEffects';
 
 interface UseRewindProps {
   setPauseMenuOpen: (open: boolean) => void;

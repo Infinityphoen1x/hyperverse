@@ -1,7 +1,7 @@
 // src/hooks/useTunnelRotation.ts
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
-import { useIdleRotation } from './useIdleRotation';
+import { useIdleRotation } from '@/hooks/effects/animation/useIdleRotation';
 
 /**
  * Hook that provides smoothly animated tunnel rotation

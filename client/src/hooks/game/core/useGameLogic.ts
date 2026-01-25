@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import type { GameState, Note } from '@/types/game';
-import { usePauseLogic } from './usePauseLogic';
-import { useKeyControls } from './useKeyControls';
-import { useCountdown } from './useCountdown';
-import { useFadeAnimation } from './useFadeAnimation';
-import { useAutoStart } from './useAutoStart';
-import { useRewind } from './useRewind';
+import { usePauseLogic } from '@/hooks/game/mechanics/usePauseLogic';
+import { useKeyControls } from '@/hooks/game/input/useKeyControls';
+import { useCountdown } from '@/hooks/game/mechanics/useCountdown';
+import { useFadeAnimation } from '@/hooks/effects/animation/useFadeAnimation';
+import { useAutoStart } from '@/hooks/game/mechanics/useAutoStart';
+import { useRewind } from '@/hooks/game/mechanics/useRewind';
 import { audioManager } from '@/lib/audio/audioManager';
 
 interface UseGameLogicProps {

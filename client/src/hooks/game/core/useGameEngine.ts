@@ -7,8 +7,8 @@ import { ScoringManager } from '@/lib/managers/scoringManager';
 import { RotationManager } from '@/lib/managers/rotationManager';
 import { GameErrors } from '@/lib/errors/errorLog';
 import { GAME_CONFIG } from '@/lib/config';
-import { useGameInput } from './useGameInput';
-import { checkRotationTriggers } from './useRotationTriggers';
+import { useGameInput } from '@/hooks/game/input/useGameInput';
+import { checkRotationTriggers } from '@/hooks/effects/tunnel/useRotationTriggers';
 
 // Default config from single source of truth
 const DEFAULT_CONFIG: GameConfig = GAME_CONFIG as GameConfig;

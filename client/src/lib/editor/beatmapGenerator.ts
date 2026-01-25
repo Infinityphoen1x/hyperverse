@@ -20,13 +20,14 @@ export function generateBeatmapText(
 ): string {
   const lines: string[] = [];
   
-  lines.push(`#TITLE: ${metadata.title}`);
-  lines.push(`#ARTIST: ${metadata.artist}`);
-  lines.push(`#BPM: ${metadata.bpm}`);
-  lines.push(`#DURATION: ${metadata.duration}`);
-  lines.push(`#YOUTUBE: ${metadata.youtubeUrl}`);
-  lines.push(`#BEATMAPSTART: ${metadata.beatmapStart}`);
-  lines.push(`#BEATMAPEND: ${metadata.beatmapEnd}`);
+  lines.push('[METADATA]');
+  lines.push(`title: ${metadata.title}`);
+  lines.push(`artist: ${metadata.artist}`);
+  lines.push(`bpm: ${metadata.bpm}`);
+  lines.push(`duration: ${metadata.duration}`);
+  lines.push(`youtube: ${metadata.youtubeUrl}`);
+  lines.push(`beatmapStart: ${metadata.beatmapStart}`);
+  lines.push(`beatmapEnd: ${metadata.beatmapEnd}`);
   lines.push('');
   lines.push(`[${difficulty}]`);
   lines.push('');
@@ -36,9 +37,9 @@ export function generateBeatmapText(
   
   sortedNotes.forEach(note => {
     if (note.type === 'TAP') {
-      lines.push(`TAP ${note.lane} ${note.time}`);
+      lines.push(`${note.time}|${note.lane}|TAP`);
     } else if (note.type === 'HOLD') {
-      lines.push(`HOLD ${note.lane} ${note.time} ${note.duration || 500}`);
+      lines.push(`${note.time}|${note.lane}|HOLD|${note.duration || 500}`);
     }
   });
 
@@ -57,13 +58,14 @@ export function generateBeatmapTextWithDifficulties(
 ): string {
   const lines: string[] = [];
   
-  lines.push(`#TITLE: ${metadata.title}`);
-  lines.push(`#ARTIST: ${metadata.artist}`);
-  lines.push(`#BPM: ${metadata.bpm}`);
-  lines.push(`#DURATION: ${metadata.duration}`);
-  lines.push(`#YOUTUBE: ${metadata.youtubeUrl}`);
-  lines.push(`#BEATMAPSTART: ${metadata.beatmapStart}`);
-  lines.push(`#BEATMAPEND: ${metadata.beatmapEnd}`);
+  lines.push('[METADATA]');
+  lines.push(`title: ${metadata.title}`);
+  lines.push(`artist: ${metadata.artist}`);
+  lines.push(`bpm: ${metadata.bpm}`);
+  lines.push(`duration: ${metadata.duration}`);
+  lines.push(`youtube: ${metadata.youtubeUrl}`);
+  lines.push(`beatmapStart: ${metadata.beatmapStart}`);
+  lines.push(`beatmapEnd: ${metadata.beatmapEnd}`);
   lines.push('');
 
   // Add each difficulty section
@@ -76,9 +78,9 @@ export function generateBeatmapTextWithDifficulties(
       const sortedNotes = [...notes].sort((a, b) => a.time - b.time);
       sortedNotes.forEach(note => {
         if (note.type === 'TAP') {
-          lines.push(`TAP ${note.lane} ${note.time}`);
+          lines.push(`${note.time}|${note.lane}|TAP`);
         } else if (note.type === 'HOLD') {
-          lines.push(`HOLD ${note.lane} ${note.time} ${note.duration || 500}`);
+          lines.push(`${note.time}|${note.lane}|HOLD|${note.duration || 500}`);
         }
       });
       lines.push('');

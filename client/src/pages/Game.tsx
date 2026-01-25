@@ -1,15 +1,15 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
-import { useGameEngine } from "@/hooks/useGameEngine";
+import { useGameEngine } from "@/hooks/game/core/useGameEngine";
 import { useGameStore } from "@/stores/useGameStore";
 import { Difficulty, Note } from "@/lib/engine/gameTypes";
 import { parseBeatmap } from "@/lib/beatmap/beatmapParser";
 import { convertBeatmapNotes } from "@/lib/beatmap/beatmapConverter";
 
-import { useYouTubePlayer } from "@/hooks/useYoutubePlayer";
-import { useGameLogic } from "@/hooks/useGameLogic";
-import { useShake } from "@/hooks/useShake";
-import { useIdleRotationManager } from "@/hooks/useIdleRotation";
-import { useAudioEffects } from "@/hooks/useAudioEffects";
+import { useYouTubePlayer } from "@/hooks/audio/useYoutubePlayer";
+import { useGameLogic } from "@/hooks/game/core/useGameLogic";
+import { useShake } from "@/hooks/effects/screen/useShake";
+import { useIdleRotationManager } from "@/hooks/effects/animation/useIdleRotation";
+import { useAudioEffects } from "@/hooks/audio/useAudioEffects";
 import { audioManager } from "@/lib/audio/audioManager";
 import { GameOverScreen } from "@/components/screens/GameOverScreen";
 import { PauseMenu } from "@/components/ui/HUD/PauseMenu";

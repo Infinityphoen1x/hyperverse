@@ -2,7 +2,7 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
 import { pauseYouTubeVideo } from '@/lib/youtube';
-import { playPauseSound } from './useAudioEffects';
+import { playPauseSound } from '@/hooks/audio/useAudioEffects';
 
 interface UsePauseLogicProps {
   getVideoTime?: () => number | null;

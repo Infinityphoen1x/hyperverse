@@ -6,8 +6,8 @@ import { HexagonLayers } from './HexagonLayers';
 import { ParallaxHexagonLayers } from './ParallaxHexagonLayers';
 import { RadialSpokes } from './RadialSpokes';
 import { SyncLineHexagons } from './SyncLineHexagons';
-import { useTunnelRotation } from '@/hooks/useTunnelRotation';
-import { useZoomEffect } from '@/hooks/useZoomEffect';
+import { useTunnelRotation } from '@/hooks/effects/tunnel/useTunnelRotation';
+import { useZoomEffect } from '@/hooks/effects/screen/useZoomEffect';
 import { VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config';
 
 interface TunnelBackgroundProps {
