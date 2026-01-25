@@ -27,7 +27,7 @@ const calculateEffectiveProgress = (
   return Math.max(0, Math.min(1, progress));
 };
 
-const calculateDistances = (
+export const calculateDistances = (
   effectiveProgress: number
 ): { nearDistance: number; farDistance: number } => {
   // Don't clamp perspectiveScale - it must scale proportionally with nearDistance
@@ -42,7 +42,7 @@ const calculateDistances = (
   return { nearDistance, farDistance };
 };
 
-const calculateRayCorners = (
+export const calculateRayCorners = (
   vpX: number,
   vpY: number,
   rayAngle: number,

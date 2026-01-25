@@ -2,7 +2,9 @@ import { useCallback, useRef, useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useGameStore } from '@/stores/useGameStore';
-import { useEditorStore } from '@/stores/useEditorStore';
+import { useEditorCoreStore } from '@/stores/useEditorCoreStore';
+import { useEditorUIStore } from '@/stores/useEditorUIStore';
+import { useEditorGraphicsStore } from '@/stores/useEditorGraphicsStore';
 import { useVanishingPointStore } from '@/stores/useVanishingPointStore';
 import { audioManager } from '@/lib/audio/audioManager';
 import { useYouTubePlayer } from '@/hooks/useYoutubePlayer';
@@ -20,14 +22,16 @@ import {
 } from '@/lib/editor/beatmapTextUtils';
 
 export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
-  const store = useEditorStore();
+  const coreStore = useEditorCoreStore();
+  const uiStore = useEditorUIStore();
+  const graphicsStore = useEditorGraphicsStore();
   const canvasRef = useRef<HTMLDivElement>(null);
   const resizeRef = useRef<HTMLDivElement>(null);
   const isParsingFromTextRef = useRef(false);
   const playerInitializedRef = useRef(false);
   
-  // Initialize idle rotation animation
-  useIdleRotationManager();
+  // Initialize idle rotation animation (conditional on idleMotionEnabled)
+  useIdleRotationManager(graphicsStore.idleMotionEnabled);
   
   // Force re-renders for animation (requestAnimationFrame loop)
   const [, setAnimationFrame] = useState(0);
@@ -84,6 +88,14 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
   
   // Dynamic vanishing point: smooth circular motion for 3D perspective wobble
   useEffect(() => {
+    // Only run if idle motion is enabled
+    if (!graphicsStore.idleMotionEnabled) {
+      // Reset to center when disabled
+      const setVPOffset = useVanishingPointStore.getState().setVPOffset;
+      setVPOffset({ x: 0, y: 0 });
+      return;
+    }
+    
     const setVPOffset = useVanishingPointStore.getState().setVPOffset;
     const VP_AMPLITUDE = 15; // ±15px offset from center
     const VP_CYCLE_DURATION = 8000; // 8 seconds per full cycle
@@ -105,12 +117,12 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
       clearInterval(intervalId);
       setVPOffset({ x: 0, y: 0 }); // Reset on unmount
     };
-  }, []);
+  }, [graphicsStore.idleMotionEnabled]);
 
   // Extract YouTube video ID from metadata
   useEffect(() => {
-    if (store.metadata.youtubeUrl) {
-      const match = store.metadata.youtubeUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
+    if (coreStore.metadata.youtubeUrl) {
+      const match = coreStore.metadata.youtubeUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);  
       if (match) {
         const videoId = match[1];
         setYoutubeVideoId(videoId);
@@ -130,13 +142,13 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
     } else {
       setNeedsYouTubeSetup(true);
     }
-  }, [store.metadata.youtubeUrl]);
+  }, [coreStore.metadata.youtubeUrl]);
 
   // Handle YouTube setup
   const handleYouTubeSetup = useCallback((videoId: string) => {
     console.log('[EDITOR] YouTube setup - videoId:', videoId);
     setYoutubeVideoId(videoId);
-    store.updateMetadata({ youtubeUrl: `https://youtube.com/watch?v=${videoId}` });
+    coreStore.updateMetadata({ youtubeUrl: `https://youtube.com/watch?v=${videoId}` });
     setNeedsYouTubeSetup(false);
     
     // Update localStorage so App.tsx initializes the player
@@ -147,7 +159,7 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
     // Trigger a re-render of YouTube player by dispatching event
     window.dispatchEvent(new CustomEvent('beatmapUpdate'));
     console.log('[EDITOR] Dispatched beatmapUpdate event');
-  }, [store]);
+  }, [coreStore]);
 
   // Handle play/pause from user gesture (required by YouTube)
   const handlePlay = useCallback(async () => {
@@ -173,15 +185,15 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
   // Panel resizing
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!store.isResizing) return;
+      if (!uiStore.isResizing) return;
       const newWidth = e.clientX;
       if (newWidth >= 300 && newWidth <= 800) {
-        store.setPanelWidth(newWidth);
+        uiStore.setPanelWidth(newWidth);
       }
     };
-    const handleMouseUp = () => store.setIsResizing(false);
+    const handleMouseUp = () => uiStore.setIsResizing(false);
 
-    if (store.isResizing) {
+    if (uiStore.isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
     }
@@ -189,61 +201,61 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [store.isResizing]);
+  }, [uiStore.isResizing, uiStore.setPanelWidth, uiStore.setIsResizing]);
 
   // Parse beatmap text with difficulties
   useEffect(() => {
     isParsingFromTextRef.current = true;
-    const allDifficulties = parseBeatmapTextWithDifficulties(store.beatmapText);
-    store.setDifficultyNotes('EASY', allDifficulties.EASY);
-    store.setDifficultyNotes('MEDIUM', allDifficulties.MEDIUM);
-    store.setDifficultyNotes('HARD', allDifficulties.HARD);
-    store.setParsedNotes(allDifficulties[store.currentDifficulty]);
+    const allDifficulties = parseBeatmapTextWithDifficulties(coreStore.beatmapText);
+    coreStore.setDifficultyNotes('EASY', allDifficulties.EASY);
+    coreStore.setDifficultyNotes('MEDIUM', allDifficulties.MEDIUM);
+    coreStore.setDifficultyNotes('HARD', allDifficulties.HARD);
+    coreStore.setParsedNotes(allDifficulties[coreStore.currentDifficulty]);
     // Reset flag after a brief delay to avoid immediate re-generation
     setTimeout(() => {
       isParsingFromTextRef.current = false;
     }, 100);
-  }, [store.beatmapText, store.currentDifficulty, store.setDifficultyNotes, store.setParsedNotes]);
+  }, [coreStore.beatmapText, coreStore.currentDifficulty, coreStore.setDifficultyNotes, coreStore.setParsedNotes]);
 
   // Sync difficulty change
   useEffect(() => {
-    const currentDiffNotes = store.difficultyNotes[store.currentDifficulty];
-    store.setParsedNotes(currentDiffNotes);
-  }, [store.currentDifficulty]);
+    const currentDiffNotes = coreStore.difficultyNotes[coreStore.currentDifficulty];
+    coreStore.setParsedNotes(currentDiffNotes);
+  }, [coreStore.currentDifficulty, coreStore.difficultyNotes, coreStore.setParsedNotes]);
 
   // Regenerate text when notes are edited via UI (not from text parsing)
   useEffect(() => {
     if (isParsingFromTextRef.current) return;
-    const newText = generateBeatmapTextWithDifficulties(store.metadata, store.difficultyNotes);
-    store.setBeatmapText(newText);
-  }, [store.difficultyNotes, store.metadata, store.setBeatmapText]);
+    const newText = generateBeatmapTextWithDifficulties(coreStore.metadata, coreStore.difficultyNotes);
+    coreStore.setBeatmapText(newText);
+  }, [coreStore.difficultyNotes, coreStore.metadata, coreStore.setBeatmapText]);
 
   // Sync to game store for rendering
   useEffect(() => {
-    setNotes(store.parsedNotes);
-  }, [store.parsedNotes, setNotes]);
+    setNotes(coreStore.parsedNotes);
+  }, [coreStore.parsedNotes, setNotes]);
 
   // Control tunnel rotation based on spinEnabled
   useEffect(() => {
-    if (!store.spinEnabled) {
+    if (!graphicsStore.spinEnabled) {
       setTunnelRotation(0);
     }
-  }, [store.spinEnabled, setTunnelRotation]);
+  }, [graphicsStore.spinEnabled, setTunnelRotation]);
 
   // Delete selected notes
   const deleteSelectedNote = useCallback(() => {
-    if (store.selectedNoteIds.length > 0 || store.selectedNoteId) {
-      store.addToHistory(store.parsedNotes);
-      const idsToDelete = store.selectedNoteIds.length > 0 
-        ? store.selectedNoteIds 
-        : [store.selectedNoteId!];
-      const newNotes = store.parsedNotes.filter(n => !idsToDelete.includes(n.id));
-      store.setParsedNotes(newNotes);
-      store.setDifficultyNotes(store.currentDifficulty, newNotes);
-      store.clearSelection();
+    if (coreStore.selectedNoteIds.length > 0 || coreStore.selectedNoteId) {
+      coreStore.addToHistory(coreStore.parsedNotes);
+      const idsToDelete = coreStore.selectedNoteIds.length > 0 
+        ? coreStore.selectedNoteIds 
+        : [coreStore.selectedNoteId!];
+      const newNotes = coreStore.parsedNotes.filter(n => !idsToDelete.includes(n.id));
+      coreStore.setParsedNotes(newNotes);
+      coreStore.setDifficultyNotes(coreStore.currentDifficulty, newNotes);
+      coreStore.clearSelection();
       audioManager.play('difficultySettingsApply');
     }
-  }, [store]);
+  }, [coreStore]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -253,84 +265,84 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
 
       if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
-        store.undo();
+        coreStore.undo();
       }
       if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
         e.preventDefault();
-        store.redo();
+        coreStore.redo();
       }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && store.selectedNoteId && !isInputField) {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && coreStore.selectedNoteId && !isInputField) {
         e.preventDefault();
         deleteSelectedNote();
       }
       if (e.key === ' ' && !isInputField) {
         e.preventDefault();
-        store.setIsPlaying(!store.isPlaying);
+        coreStore.setIsPlaying(!coreStore.isPlaying);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [store, deleteSelectedNote]);
+  }, [coreStore, uiStore, deleteSelectedNote]);
 
   // Playhead animation - sync with YouTube when playing
   useEffect(() => {
-    if (!store.isPlaying) return;
+    if (!coreStore.isPlaying) return;
     
     const interval = setInterval(() => {
       // Get time from YouTube if available, otherwise use manual increment
       const videoTime = isReady ? getVideoTime() : null;
       const next = videoTime !== null ? videoTime : currentTime + 16;
       
-      if (store.loopEnd && next >= store.loopEnd) {
-        const loopStart = store.loopStart || store.metadata.beatmapStart;
+      if (coreStore.loopEnd && next >= coreStore.loopEnd) {
+        const loopStart = coreStore.loopStart || coreStore.metadata.beatmapStart;
         setCurrentTime(loopStart);
         if (isReady && seek) {
           seek(loopStart / 1000); // Convert ms to seconds
         }
-      } else if (next >= store.metadata.beatmapEnd) {
-        store.setIsPlaying(false);
-        setCurrentTime(store.metadata.beatmapEnd);
+      } else if (next >= coreStore.metadata.beatmapEnd) {
+        coreStore.setIsPlaying(false);
+        setCurrentTime(coreStore.metadata.beatmapEnd);
       } else {
         setCurrentTime(next);
       }
     }, 16);
     return () => clearInterval(interval);
-  }, [store.isPlaying, store.loopStart, store.loopEnd, store.metadata, currentTime, setCurrentTime, store, isReady, getVideoTime, seek]);
+  }, [coreStore.isPlaying, coreStore.loopStart, coreStore.loopEnd, coreStore.metadata, currentTime, setCurrentTime, coreStore, isReady, getVideoTime, seek]);
 
   // Sync YouTube player when currentTime changes manually (not during playback)
   const lastSyncedTimeRef = useRef(0);
   useEffect(() => {
-    if (!store.isPlaying && isReady && seek && Math.abs(currentTime - lastSyncedTimeRef.current) > 100) {
+    if (!coreStore.isPlaying && isReady && seek && Math.abs(currentTime - lastSyncedTimeRef.current) > 100) {
       seek(currentTime / 1000); // Convert ms to seconds
       lastSyncedTimeRef.current = currentTime;
     }
-  }, [currentTime, store.isPlaying, isReady, seek]);
+  }, [currentTime, coreStore.isPlaying, isReady, seek]);
 
   // Update metadata from text
   const updateFromText = useCallback((text: string) => {
     const extractedMetadata = parseMetadataFromText(text);
-    store.updateMetadata(extractedMetadata);
-  }, [store.updateMetadata]);
+    coreStore.updateMetadata(extractedMetadata);
+  }, [coreStore.updateMetadata]);
 
   // Validate beatmap
   useEffect(() => {
-    const issues = validateBeatmap(store.parsedNotes, store.metadata);
+    const issues = validateBeatmap(coreStore.parsedNotes, coreStore.metadata);
     setValidationIssues(issues);
-  }, [store.parsedNotes, store.metadata]);
+  }, [coreStore.parsedNotes, coreStore.metadata]);
 
   // Copy to clipboard
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(store.beatmapText);
+    navigator.clipboard.writeText(coreStore.beatmapText);
     audioManager.play('difficultySettingsApply');
   };
 
   // Download beatmap
   const downloadBeatmap = () => {
-    const blob = new Blob([store.beatmapText], { type: 'text/plain' });
+    const blob = new Blob([coreStore.beatmapText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${store.metadata.title || 'beatmap'}.txt`;
+    a.download = `${coreStore.metadata.title || 'beatmap'}.txt`;
     a.click();
     URL.revokeObjectURL(url);
     audioManager.play('difficultySettingsApply');
@@ -353,11 +365,11 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
           BACK
         </button>
         <button
-          onClick={() => store.setIsPanelOpen(!store.isPanelOpen)}
+          onClick={() => uiStore.setIsPanelOpen(!uiStore.isPanelOpen)}
           className="flex items-center gap-2 px-4 py-2 bg-neon-cyan border border-neon-cyan text-black rounded hover:bg-neon-cyan/80 transition-colors font-rajdhani font-bold"
         >
-          {store.isPanelOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-          {store.isPanelOpen ? 'HIDE' : 'SHOW'} PANEL
+          {uiStore.isPanelOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+          {uiStore.isPanelOpen ? 'HIDE' : 'SHOW'} PANEL
         </button>
       </div>
 
@@ -371,46 +383,48 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
           <EditorCanvas
             canvasRef={canvasRef}
             currentTime={currentTime}
-            parsedNotes={store.parsedNotes}
-            metadata={store.metadata}
-            editorMode={store.editorMode}
-            snapEnabled={store.snapEnabled}
-            snapDivision={store.snapDivision}
-            hoveredNote={store.hoveredNote}
-            setHoveredNote={store.setHoveredNote}
-            selectedNoteId={store.selectedNoteId}
-            setSelectedNoteId={store.setSelectedNoteId}
-            selectedNoteIds={store.selectedNoteIds}
-            toggleNoteSelection={store.toggleNoteSelection}
-            clearSelection={store.clearSelection}
-            addToHistory={store.addToHistory}
-            setParsedNotes={store.setParsedNotes}
-            setDifficultyNotes={store.setDifficultyNotes}
-            currentDifficulty={store.currentDifficulty}
-            isDragging={store.isDragging}
-            setIsDragging={store.setIsDragging}
-            dragStartTime={store.dragStartTime}
-            setDragStartTime={store.setDragStartTime}
-            dragStartLane={store.dragStartLane}
-            setDragStartLane={store.setDragStartLane}
-            draggedNoteId={store.draggedNoteId}
-            setDraggedNoteId={store.setDraggedNoteId}
-            draggedHandle={store.draggedHandle}
-            setDraggedHandle={store.setDraggedHandle}
-            glowEnabled={store.glowEnabled}
-            dynamicVPEnabled={store.dynamicVPEnabled}
-            zoomEnabled={store.zoomEnabled}
-            judgementLinesEnabled={store.judgementLinesEnabled}
-            spinEnabled={store.spinEnabled}
+            parsedNotes={coreStore.parsedNotes}
+            metadata={coreStore.metadata}
+            editorMode={coreStore.editorMode}
+            snapEnabled={uiStore.snapEnabled}
+            snapDivision={uiStore.snapDivision}
+            hoveredNote={coreStore.hoveredNote}
+            setHoveredNote={coreStore.setHoveredNote}
+            selectedNoteId={coreStore.selectedNoteId}
+            setSelectedNoteId={coreStore.setSelectedNoteId}
+            selectedNoteIds={coreStore.selectedNoteIds}
+            toggleNoteSelection={coreStore.toggleNoteSelection}
+            clearSelection={coreStore.clearSelection}
+            addToHistory={coreStore.addToHistory}
+            setParsedNotes={coreStore.setParsedNotes}
+            setDifficultyNotes={coreStore.setDifficultyNotes}
+            currentDifficulty={coreStore.currentDifficulty}
+            isDragging={uiStore.isDragging}
+            setIsDragging={uiStore.setIsDragging}
+            dragStartTime={uiStore.dragStartTime}
+            setDragStartTime={uiStore.setDragStartTime}
+            dragStartLane={uiStore.dragStartLane}
+            setDragStartLane={uiStore.setDragStartLane}
+            draggedNoteId={uiStore.draggedNoteId}
+            setDraggedNoteId={uiStore.setDraggedNoteId}
+            draggedHandle={uiStore.draggedHandle}
+            setDraggedHandle={uiStore.setDraggedHandle}
+            glowEnabled={graphicsStore.glowEnabled}
+            dynamicVPEnabled={graphicsStore.dynamicVPEnabled}
+            zoomEnabled={graphicsStore.zoomEnabled}
+            judgementLinesEnabled={graphicsStore.judgementLinesEnabled}
+            spinEnabled={graphicsStore.spinEnabled}
           />
         </div>
       </div>
 
       {/* Sidebar */}
       <EditorSidebarManager
-        {...store}
-        canUndo={store.canUndo}
-        canRedo={store.canRedo}
+        {...coreStore}
+        {...uiStore}
+        {...graphicsStore}
+        canUndo={coreStore.canUndo}
+        canRedo={coreStore.canRedo}
         deleteSelectedNote={deleteSelectedNote}
         copyToClipboard={copyToClipboard}
         downloadBeatmap={downloadBeatmap}
@@ -425,14 +439,14 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
 
       {/* Modals */}
       <AnimatePresence>
-        {store.showBpmTapper && (
+        {uiStore.showBpmTapper && (
           <BpmTapperModal
-            onClose={() => store.setShowBpmTapper(false)}
-            onBpmDetected={(bpm) => store.updateMetadata({ bpm })}
+            onClose={() => uiStore.setShowBpmTapper(false)}
+            onBpmDetected={(bpm) => coreStore.updateMetadata({ bpm })}
           />
         )}
-        {store.showShortcutsModal && (
-          <ShortcutsModal onClose={() => store.setShowShortcutsModal(false)} />
+        {uiStore.showShortcutsModal && (
+          <ShortcutsModal onClose={() => uiStore.setShowShortcutsModal(false)} />
         )}
       </AnimatePresence>
     </div>

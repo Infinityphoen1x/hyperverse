@@ -62,10 +62,7 @@ interface EditorStoreState {
   dragStartTime: number | null;
   dragStartLane: number | null;
   draggedNoteId: string | null;
-  draggedHandle: 'start' | 'end' | null;
-  
-  // Selected handle (for glow effect before dragging)
-  selectedHandle: { noteId: string; handle: 'start' | 'end' } | null;
+  draggedHandle: 'start' | 'end' | 'near' | 'far' | null;
   
   // Snap settings
   snapEnabled: boolean;
@@ -77,6 +74,7 @@ interface EditorStoreState {
   zoomEnabled: boolean;
   judgementLinesEnabled: boolean;
   spinEnabled: boolean;
+  idleMotionEnabled: boolean;
   
   // History for undo/redo
   history: Note[][];
@@ -129,8 +127,7 @@ interface EditorStoreState {
   setDragStartTime: (time: number | null) => void;
   setDragStartLane: (lane: number | null) => void;
   setDraggedNoteId: (id: string | null) => void;
-  setDraggedHandle: (handle: 'start' | 'end' | null) => void;
-  setSelectedHandle: (selection: { noteId: string; handle: 'start' | 'end' } | null) => void;
+  setDraggedHandle: (handle: 'start' | 'end' | 'near' | 'far' | null) => void;
   setSnapEnabled: (enabled: boolean) => void;
   setSnapDivision: (division: 1 | 2 | 4 | 8 | 16) => void;
   
@@ -140,6 +137,7 @@ interface EditorStoreState {
   setZoomEnabled: (enabled: boolean) => void;
   setJudgementLinesEnabled: (enabled: boolean) => void;
   setSpinEnabled: (enabled: boolean) => void;
+  setIdleMotionEnabled: (enabled: boolean) => void;
   setMetadata: (metadata: BeatmapMetadata) => void;
   updateMetadata: (partial: Partial<BeatmapMetadata>) => void;
   setParsedNotes: (notes: Note[]) => void;
@@ -204,10 +202,6 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
   draggedNoteId: null,
   draggedHandle: null,
   
-  // Initial selected handle
-  selectedHandle: null,
-  draggedHandle: null,
-  
   // Initial snap settings
   snapEnabled: true,
   snapDivision: 4,
@@ -218,6 +212,7 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
   zoomEnabled: true,
   judgementLinesEnabled: true,
   spinEnabled: true,
+  idleMotionEnabled: true,
   
   // Initial history
   history: [],
@@ -346,7 +341,6 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
   setDragStartLane: (lane) => set({ dragStartLane: lane }),
   setDraggedNoteId: (id) => set({ draggedNoteId: id }),
   setDraggedHandle: (handle) => set({ draggedHandle: handle }),
-  setSelectedHandle: (selection) => set({ selectedHandle: selection }),
   setSnapEnabled: (enabled) => set({ snapEnabled: enabled }),
   setSnapDivision: (division) => set({ snapDivision: division }),
   setMetadata: (metadata) => set({ metadata }),
@@ -393,4 +387,5 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
   setZoomEnabled: (enabled) => set({ zoomEnabled: enabled }),
   setJudgementLinesEnabled: (enabled) => set({ judgementLinesEnabled: enabled }),
   setSpinEnabled: (enabled) => set({ spinEnabled: enabled }),
+  setIdleMotionEnabled: (enabled) => set({ idleMotionEnabled: enabled }),
 }));

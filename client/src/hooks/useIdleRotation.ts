@@ -5,9 +5,16 @@ import { useGameStore } from '@/stores/useGameStore';
 /**
  * Manages the global idle rotation animation
  * Should only be called once from the main game component
+ * @param enabled Whether idle rotation is enabled
  */
-export function useIdleRotationManager(): void {
+export function useIdleRotationManager(enabled: boolean = true): void {
   useEffect(() => {
+    // Reset rotation to 0 when disabled
+    if (!enabled) {
+      useGameStore.getState().setIdleRotation(0);
+      return;
+    }
+    
     const startTime = performance.now();
     let animationRef: number | null = null;
     let lastUpdate = 0;
@@ -36,8 +43,10 @@ export function useIdleRotationManager(): void {
       if (animationRef !== null) {
         cancelAnimationFrame(animationRef);
       }
+      // Reset rotation when unmounting
+      useGameStore.getState().setIdleRotation(0);
     };
-  }, []);
+  }, [enabled]);
 }
 
 /**

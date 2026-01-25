@@ -28,6 +28,8 @@ interface EditorSidebarManagerProps {
   sections: Record<SectionName, Section>;
   toggleSectionCollapse: (section: SectionName) => void;
   toggleSectionPopout: (section: SectionName) => void;
+  idleMotionEnabled: boolean;
+  setIdleMotionEnabled: (enabled: boolean) => void;
   closeSectionCompletely: (section: SectionName) => void;
   reopenSection: (section: SectionName) => void;
   setSectionSide: (section: SectionName, side: 'left' | 'right') => void;
@@ -159,6 +161,8 @@ export function EditorSidebarManager(props: EditorSidebarManagerProps) {
             setJudgementLinesEnabled={props.setJudgementLinesEnabled}
             spinEnabled={props.spinEnabled}
             setSpinEnabled={props.setSpinEnabled}
+            idleMotionEnabled={props.idleMotionEnabled}
+            setIdleMotionEnabled={props.setIdleMotionEnabled}
           />
         );
     }

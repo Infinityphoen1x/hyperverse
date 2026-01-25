@@ -11,6 +11,8 @@ interface GraphicsSectionProps {
   setJudgementLinesEnabled: (enabled: boolean) => void;
   spinEnabled: boolean;
   setSpinEnabled: (enabled: boolean) => void;
+  idleMotionEnabled: boolean;
+  setIdleMotionEnabled: (enabled: boolean) => void;
 }
 
 export function GraphicsSection({
@@ -24,6 +26,8 @@ export function GraphicsSection({
   setJudgementLinesEnabled,
   spinEnabled,
   setSpinEnabled,
+  idleMotionEnabled,
+  setIdleMotionEnabled,
 }: GraphicsSectionProps) {
   const toggles = [
     {
@@ -55,6 +59,12 @@ export function GraphicsSection({
       description: 'Continuous tunnel rotation',
       enabled: spinEnabled,
       setEnabled: setSpinEnabled,
+    },
+    {
+      label: 'Idle Motion',
+      description: 'Background sway & parallax',
+      enabled: idleMotionEnabled,
+      setEnabled: setIdleMotionEnabled,
     },
   ];
 
