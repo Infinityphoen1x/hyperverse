@@ -4,8 +4,10 @@
  */
 
 import { Note } from '@/types/game';
-import { LEAD_TIME } from '@/lib/config/timing';
+import { LEAD_TIME, GAME_CONFIG } from '@/lib/config/timing';
 import { calculateDistances } from '@/lib/geometry/tapNoteGeometry';
+
+const TAP_HIT_WINDOW = GAME_CONFIG.TAP_HIT_WINDOW;
 
 export type HandleType = 'start' | 'end' | 'near' | 'far';
 
@@ -41,12 +43,22 @@ export function detectNearestHandle(
     
     return nearestHandle;
   } else {
-    // For TAP notes, check near and far edges
-    const startProgress = 1 - ((note.time - currentTime) / LEAD_TIME);
-    const startGeometry = calculateDistances(startProgress);
+    // For TAP notes, check near and far edges based on hit window
+    // This matches how white lines are displayed in NoteExtensionIndicators
+    // Near handle: at note.time - TAP_HIT_WINDOW
+    // Far handle: at note.time + TAP_HIT_WINDOW
     
-    const nearDist = Math.abs(mouseDistance - startGeometry.nearDistance);
-    const farDist = Math.abs(mouseDistance - startGeometry.farDistance);
+    const nearHandleTime = note.time - TAP_HIT_WINDOW;
+    const farHandleTime = note.time + TAP_HIT_WINDOW;
+    
+    const nearProgress = 1 - ((nearHandleTime - currentTime) / LEAD_TIME);
+    const farProgress = 1 - ((farHandleTime - currentTime) / LEAD_TIME);
+    
+    const nearGeometry = calculateDistances(nearProgress);
+    const farGeometry = calculateDistances(farProgress);
+    
+    const nearDist = Math.abs(mouseDistance - nearGeometry.nearDistance);
+    const farDist = Math.abs(mouseDistance - farGeometry.nearDistance);
     
     return nearDist < farDist ? 'near' : 'far';
   }

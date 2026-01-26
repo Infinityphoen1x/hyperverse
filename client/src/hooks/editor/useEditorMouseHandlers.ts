@@ -26,6 +26,7 @@ interface UseEditorMouseHandlersProps {
   dragStartTime: number | null;
   dragStartLane: number | null;
   currentDifficulty: string;
+  isPlaying: boolean; // NEW: Check if playback is active
   
   // Actions
   toggleNoteSelection: (id: string) => void;
@@ -57,6 +58,7 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
     dragStartTime,
     dragStartLane,
     currentDifficulty,
+    isPlaying,
     toggleNoteSelection,
     clearSelection,
     setSelectedNoteId,
@@ -76,6 +78,10 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
 
   const handleCanvasMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!canvasRef.current) return;
+    
+    // Prevent editing during playback
+    if (isPlaying) return;
+    
     const rect = canvasRef.current.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
@@ -90,29 +96,49 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
     });
     
     if (clickedNote) {
-      // Clicked on a note - prepare for drag or selection
-      setDraggedNoteId(clickedNote.id);
-      setDragStartTime(clickedNote.time);
-      setDragStartLane(clickedNote.lane);
-      mouseDownPosRef.current = { x: mouseX, y: mouseY };
+      // Clicked on a note - check if it's already selected
+      const isAlreadySelected = selectedNoteIds.includes(clickedNote.id);
+      
+      if (isAlreadySelected) {
+        // Note already selected - check if clicking near a handle
+        const { distance: mouseDistance } = mouseToLane(mouseX, mouseY, VANISHING_POINT_X, VANISHING_POINT_Y);
+        const nearestHandle = detectNearestHandle(clickedNote, mouseDistance, currentTime);
+        
+        // Store handle info for potential drag
+        setDraggedNoteId(clickedNote.id);
+        setDragStartTime(clickedNote.time);
+        setDragStartLane(clickedNote.lane);
+        setDraggedHandle(nearestHandle); // Pre-set handle for immediate drag
+        mouseDownPosRef.current = { x: mouseX, y: mouseY };
+      } else {
+        // Note not selected - prepare for selection or body drag
+        setDraggedNoteId(clickedNote.id);
+        setDragStartTime(clickedNote.time);
+        setDragStartLane(clickedNote.lane);
+        setDraggedHandle(null); // Body drag by default
+        mouseDownPosRef.current = { x: mouseX, y: mouseY };
+      }
       audioManager.play('tapHit');
     } else {
-      // Clicked empty space - check if we can create a note here
+      // Clicked empty space - clear selection and potentially create note
       const { lane: closestLane } = mouseToLane(mouseX, mouseY, VANISHING_POINT_X, VANISHING_POINT_Y);
-      const noteTime = snapEnabled ? snapTimeToGrid(currentTime, metadata.bpm, snapDivision) : currentTime;
+      const { time: timeOffset } = mouseToTime(mouseX, mouseY, VANISHING_POINT_X, VANISHING_POINT_Y, currentTime, LEAD_TIME, JUDGEMENT_RADIUS);
+      const noteTime = snapEnabled ? snapTimeToGrid(timeOffset, metadata.bpm, snapDivision) : timeOffset;
+      
+      // Always clear selection when clicking empty space
+      clearSelection();
       
       // Check if a note already exists at this time/lane
       if (checkNoteOverlap(parsedNotes, null, closestLane, noteTime - TAP_HIT_WINDOW, noteTime + TAP_HIT_WINDOW)) {
-        return; // Position already occupied
+        return; // Position already occupied - just cleared selection
       }
       
       setIsDragging(true);
       setDragStartTime(noteTime);
       setDragStartLane(closestLane);
       mouseDownPosRef.current = { x: mouseX, y: mouseY };
-      if (!e.ctrlKey && !e.metaKey) clearSelection();
     }
-  }, [canvasRef, currentTime, snapEnabled, metadata.bpm, snapDivision, parsedNotes, selectedNoteIds, clearSelection, setIsDragging, setDragStartTime, setDragStartLane, setDraggedNoteId]);
+  }, [canvasRef, currentTime, snapEnabled, metadata.bpm, snapDivision, parsedNotes, selectedNoteIds, isPlaying, clearSelection, setIsDragging, setDragStartTime, setDragStartLane, setDraggedNoteId]);
 
   const handleCanvasMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!canvasRef.current) return;
@@ -139,8 +165,13 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
       
       const isSelected = selectedNoteIds.includes(draggedNoteId);
       
-      if (isSelected) {
-        // Note is selected - detect nearest handle to extend/shorten
+      // If handle was pre-set in mouseDown (for selected notes), use it
+      // Otherwise, detect behavior based on selection state
+      if (draggedHandle) {
+        // Handle already detected - start dragging immediately
+        setIsDragging(true);
+      } else if (isSelected) {
+        // Note is selected but no handle set - detect nearest handle now
         const nearestHandle = detectNearestHandle(draggedNote, mouseDistance, currentTime);
         setDraggedHandle(nearestHandle);
         setIsDragging(true);
@@ -190,8 +221,9 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
       setParsedNotes(updatedNotes);
       setHoveredNote({ lane: closestLane, time: newTime });
     } else {
-      // Hover preview at judgement line
-      const noteTime = snapEnabled ? snapTimeToGrid(currentTime, metadata.bpm, snapDivision) : currentTime;
+      // Hover preview at mouse cursor position depth
+      const { time: timeOffset } = mouseToTime(mouseX, mouseY, VANISHING_POINT_X, VANISHING_POINT_Y, currentTime, LEAD_TIME, JUDGEMENT_RADIUS);
+      const noteTime = snapEnabled ? snapTimeToGrid(timeOffset, metadata.bpm, snapDivision) : timeOffset;
       setHoveredNote({ lane: closestLane, time: noteTime });
     }
   }, [canvasRef, currentTime, snapEnabled, metadata.bpm, snapDivision, setHoveredNote, isDragging, draggedNoteId, draggedHandle, parsedNotes, setParsedNotes, selectedNoteIds, setDraggedHandle, setIsDragging]);
@@ -200,8 +232,9 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
     if (!canvasRef.current) return;
 
     if (isDragging) {
-      // We were dragging - finalize the change
+      // We were dragging - finalize the change and save to history
       if (draggedNoteId) {
+        // Save to history for both position and lane changes
         addToHistory(parsedNotes);
         setDifficultyNotes(currentDifficulty, parsedNotes);
         audioManager.play('tapHit');

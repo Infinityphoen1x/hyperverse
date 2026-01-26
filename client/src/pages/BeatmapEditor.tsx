@@ -9,11 +9,14 @@ import { useVanishingPointStore } from '@/stores/useVanishingPointStore';
 import { audioManager } from '@/lib/audio/audioManager';
 import { useYouTubePlayer } from '@/hooks/audio/useYoutubePlayer';
 import { useIdleRotationManager } from '@/hooks/effects/animation/useIdleRotation';
+import { useEditorKeyboardHandlers } from '@/hooks/editor/useEditorKeyboardHandlers';
 import { YouTubeSetupModal } from '@/components/editor/YouTubeSetupModal';
 import { EditorSidebarManager } from '@/components/editor/EditorSidebarManager';
 import { BpmTapperModal } from '@/components/editor/BpmTapperModal';
 import { ShortcutsModal } from '@/components/editor/ShortcutsModal';
 import { EditorCanvas } from '@/components/editor/EditorCanvas';
+import { DurationInputPopup } from '@/components/editor/DurationInputPopup';
+import { ConversionToastContainer } from '@/components/editor/ConversionToast';
 import {
   parseBeatmapTextWithDifficulties,
   parseMetadataFromText,
@@ -21,14 +24,18 @@ import {
   validateBeatmap,
 } from '@/lib/editor/beatmapTextUtils';
 
-export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
+interface BeatmapEditorProps {
+  onBack?: () => void;
+  playerInitializedRef: React.RefObject<boolean>;
+}
+
+export default function BeatmapEditor({ onBack, playerInitializedRef }: BeatmapEditorProps) {
   const coreStore = useEditorCoreStore();
   const uiStore = useEditorUIStore();
   const graphicsStore = useEditorGraphicsStore();
   const canvasRef = useRef<HTMLDivElement>(null);
   const resizeRef = useRef<HTMLDivElement>(null);
   const isParsingFromTextRef = useRef(false);
-  const playerInitializedRef = useRef(false);
   
   // Initialize idle rotation animation (conditional on idleMotionEnabled)
   useIdleRotationManager(graphicsStore.idleMotionEnabled);
@@ -43,6 +50,7 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
   const setGameState = useGameStore(state => state.setGameState);
   
   const [validationIssues, setValidationIssues] = useState<ReturnType<typeof validateBeatmap>>([]);
+  const [durationInputState, setDurationInputState] = useState<{ visible: boolean; lane: number; time: number } | null>(null);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(() => {
     // Initialize from localStorage on mount
     const pendingBeatmap = localStorage.getItem('pendingBeatmap');
@@ -63,6 +71,21 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
   const { getVideoTime, seek, play, pause, isReady } = useYouTubePlayer({
     videoId: youtubeVideoId,
     playerInitializedRef,
+  });
+  
+  // Initialize keyboard handlers for note placement (Q W E I O P)
+  const { createHoldNote } = useEditorKeyboardHandlers({
+    currentTime,
+    parsedNotes: coreStore.parsedNotes,
+    snapEnabled: uiStore.snapEnabled,
+    snapDivision: uiStore.snapDivision,
+    metadata: coreStore.metadata,
+    currentDifficulty: coreStore.currentDifficulty,
+    isEditorActive: true, // Always active when editor is open
+    setParsedNotes: coreStore.setParsedNotes,
+    setDifficultyNotes: coreStore.setDifficultyNotes,
+    addToHistory: coreStore.addToHistory,
+    setDurationInputState,
   });
   
   console.log('[EDITOR] Current youtubeVideoId state:', youtubeVideoId, 'isReady:', isReady);
@@ -87,16 +110,16 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
   }, []);
   
   // Dynamic vanishing point: smooth circular motion for 3D perspective wobble
+  const setVPOffset = useVanishingPointStore(state => state.setVPOffset);
+  
   useEffect(() => {
     // Only run if idle motion is enabled
     if (!graphicsStore.idleMotionEnabled) {
       // Reset to center when disabled
-      const setVPOffset = useVanishingPointStore.getState().setVPOffset;
       setVPOffset({ x: 0, y: 0 });
       return;
     }
     
-    const setVPOffset = useVanishingPointStore.getState().setVPOffset;
     const VP_AMPLITUDE = 15; // ±15px offset from center
     const VP_CYCLE_DURATION = 8000; // 8 seconds per full cycle
     const VP_UPDATE_INTERVAL = 16; // ~60fps
@@ -117,7 +140,7 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
       clearInterval(intervalId);
       setVPOffset({ x: 0, y: 0 }); // Reset on unmount
     };
-  }, [graphicsStore.idleMotionEnabled]);
+  }, [graphicsStore.idleMotionEnabled, setVPOffset]);
 
   // Extract YouTube video ID from metadata
   useEffect(() => {
@@ -152,7 +175,10 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
     setNeedsYouTubeSetup(false);
     
     // Update localStorage so App.tsx initializes the player
-    const beatmapData = { youtubeVideoId: videoId };
+    // Preserve any existing beatmapText
+    const existingData = localStorage.getItem('pendingBeatmap');
+    const beatmapData = existingData ? JSON.parse(existingData) : {};
+    beatmapData.youtubeVideoId = videoId;
     localStorage.setItem('pendingBeatmap', JSON.stringify(beatmapData));
     console.log('[EDITOR] Set pendingBeatmap in localStorage:', beatmapData);
     
@@ -165,12 +191,17 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
   const handlePlay = useCallback(async () => {
     if (!isReady || !play) return;
     try {
+      // Seek YouTube to current editor time before playing
+      if (seek) {
+        await seek(currentTime / 1000); // Convert ms to seconds
+        console.log('[EDITOR] Seeked YouTube to', currentTime, 'ms before playing');
+      }
       await play();
       console.log('[EDITOR] YouTube play triggered');
     } catch (err) {
       console.error('[EDITOR] YouTube play failed:', err);
     }
-  }, [isReady, play]);
+  }, [isReady, play, seek, currentTime]);
 
   const handlePause = useCallback(async () => {
     if (!isReady || !pause) return;
@@ -181,6 +212,18 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
       console.error('[EDITOR] YouTube pause failed:', err);
     }
   }, [isReady, pause]);
+
+  // Handle duration input popup
+  const handleDurationConfirm = useCallback((duration: number) => {
+    if (!durationInputState) return;
+    createHoldNote(durationInputState.lane, durationInputState.time, duration);
+    setDurationInputState(null);
+  }, [durationInputState, createHoldNote]);
+
+  const handleDurationCancel = useCallback(() => {
+    // Cancel creates TAP instead - keyboard handler already created TAP on quick release
+    setDurationInputState(null);
+  }, []);
 
   // Panel resizing
   useEffect(() => {
@@ -228,6 +271,12 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
     if (isParsingFromTextRef.current) return;
     const newText = generateBeatmapTextWithDifficulties(coreStore.metadata, coreStore.difficultyNotes);
     coreStore.setBeatmapText(newText);
+    
+    // Save updated beatmapText to localStorage so iframe can reload correctly
+    const existingData = localStorage.getItem('pendingBeatmap');
+    const beatmapData = existingData ? JSON.parse(existingData) : {};
+    beatmapData.beatmapText = newText;
+    localStorage.setItem('pendingBeatmap', JSON.stringify(beatmapData));
   }, [coreStore.difficultyNotes, coreStore.metadata, coreStore.setBeatmapText]);
 
   // Sync to game store for rendering
@@ -349,14 +398,17 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black">
+    <div className="fixed inset-0">
+      {/* Semi-transparent overlay to show YouTube iframe behind */}
+      <div className="absolute inset-0 bg-black/50 pointer-events-none z-0" />
+      
       {/* YouTube Setup Modal */}
       {needsYouTubeSetup && (
         <YouTubeSetupModal onSubmit={handleYouTubeSetup} />
       )}
 
       {/* Top Bar */}
-      <div className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between p-4 bg-black/80 backdrop-blur-sm border-b border-neon-cyan/30">
+      <div className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between p-4 bg-black/95 backdrop-blur-md border-b border-neon-cyan/30">
         <button
           onClick={onBack}
           className="flex items-center gap-2 px-4 py-2 bg-transparent border border-neon-cyan/30 text-neon-cyan rounded hover:bg-neon-cyan/10 transition-colors font-rajdhani"
@@ -414,6 +466,7 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
             zoomEnabled={graphicsStore.zoomEnabled}
             judgementLinesEnabled={graphicsStore.judgementLinesEnabled}
             spinEnabled={graphicsStore.spinEnabled}
+            isPlaying={coreStore.isPlaying}
           />
         </div>
       </div>
@@ -449,6 +502,18 @@ export default function BeatmapEditor({ onBack }: { onBack?: () => void }) {
           <ShortcutsModal onClose={() => uiStore.setShowShortcutsModal(false)} />
         )}
       </AnimatePresence>
+
+      {/* Duration Input Popup for HOLD note creation */}
+      <DurationInputPopup
+        visible={durationInputState?.visible || false}
+        lane={durationInputState?.lane || 0}
+        time={durationInputState?.time || 0}
+        onConfirm={handleDurationConfirm}
+        onCancel={handleDurationCancel}
+      />
+      
+      {/* Conversion Feedback Toasts */}
+      <ConversionToastContainer />
     </div>
   );
 }

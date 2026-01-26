@@ -4,7 +4,7 @@ import { CollapsibleSection } from './CollapsibleSection';
 import type { Difficulty } from '@/lib/editor/beatmapTextUtils';
 
 // Side panel component for left/right editor panels
-type SectionName = 'tools' | 'playback' | 'metadata' | 'beatmapText' | 'graphics';
+type SectionName = 'tools' | 'playback' | 'metadata' | 'beatmapText' | 'graphics' | 'statistics';
 
 interface SidePanelProps {
   side: 'left' | 'right';
@@ -28,6 +28,7 @@ interface SidePanelProps {
   resizeRef: React.RefObject<HTMLDivElement | null>;
   setIsResizing: (resizing: boolean) => void;
   onCollapseSide: () => void;
+  clearSelection: () => void;
 }
 
 export function SidePanel({
@@ -52,9 +53,10 @@ export function SidePanel({
   resizeRef,
   setIsResizing,
   onCollapseSide,
+  clearSelection,
 }: SidePanelProps) {
   // Get all sections that aren't visible on this side for the reopen toolbar
-  const allSections: SectionName[] = ['tools', 'playback', 'metadata', 'beatmapText', 'graphics'];
+  const allSections: SectionName[] = ['tools', 'playback', 'metadata', 'beatmapText', 'graphics', 'statistics'];
   const hiddenSections = allSections.filter(
     (name) => !sectionStates[name].visible || sectionStates[name].poppedOut || sectionStates[name].side !== side
   );
@@ -156,7 +158,15 @@ export function SidePanel({
       </div>
 
       {/* Scrollable Sections */}
-      <div className="flex-1 overflow-y-auto">
+      <div 
+        className="flex-1 overflow-y-auto"
+        onClick={(e) => {
+          // Deselect notes when clicking on empty space in the panel
+          if (e.target === e.currentTarget) {
+            clearSelection();
+          }
+        }}
+      >
         {sections.map((section) => (
           <CollapsibleSection
             key={section}

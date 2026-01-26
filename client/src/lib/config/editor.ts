@@ -34,9 +34,9 @@ export interface EditorConfig {
 }
 
 export const EDITOR_CONFIG: EditorConfig = {
-  MIN_HOLD_DURATION: 100,
+  MIN_HOLD_DURATION: 165, // TAP_HIT_WINDOW × 1.1 (150 × 1.1 = 165ms)
   MIN_DRAG_DISTANCE: 5,
-  CLICK_TOLERANCE_PIXELS: 30,
+  CLICK_TOLERANCE_PIXELS: 100, // Generous tolerance for selecting notes near judgment lines
   CANDIDATE_TIME_THRESHOLD_MS: 500,
   MS_PER_MINUTE: 60000,
   BEAT_GRID_OFFSET_FACTOR: 0.75,

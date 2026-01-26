@@ -56,15 +56,10 @@ const RectangleMeterComponent = ({ progress, outlineColor, lane, isGlowing }: Re
             className="h-4 rounded-sm border-2"
             style={{
               width: `${DECK_METER_SEGMENT_WIDTH}px`,
-              borderColor: outlineColor,
-              background: isFilled ? fillColor : 'transparent',
-              boxShadow: isFull && isFilled
-                ? `0 0 15px ${fillColor}, 0 0 30px ${fillColor}, inset 0 0 8px rgba(255,255,255,0.6)`
-                : isFilled
-                  ? `0 0 10px ${fillColor}, inset 0 0 6px rgba(255,255,255,0.3)`
-                  : 'none',
             }}
             animate={{
+              borderColor: outlineColor,
+              background: isFilled ? fillColor : 'transparent',
               opacity: isFilled ? 1 : 0.15,
               boxShadow: isFull && isFilled
                 ? [
@@ -76,7 +71,7 @@ const RectangleMeterComponent = ({ progress, outlineColor, lane, isGlowing }: Re
                   ? `0 0 10px ${fillColor}, inset 0 0 6px rgba(255,255,255,0.3)`
                   : 'none',
             }}
-            transition={isFull && isFilled ? { duration: 0.6, repeat: Infinity } : { duration: 0.08 }}
+            transition={isFull && isFilled ? { duration: 0.6, repeat: Infinity } : { duration: 0.3 }}
           />
         );
       })}

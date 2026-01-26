@@ -12,7 +12,7 @@ Current visual style:
 - **All notes** have: `id`, `type: 'TAP' | 'HOLD'`, `lane`, `time` (start)
 - **HOLD notes** have: `duration > 0` (end = time + duration)
 - **TAP notes**: `duration` is **undefined/null** (instantaneous)
-- **Editor treatment of TAPs**: Treated as having **effective duration = `TAP_HIT_WINDOW`** (e.g. 67ms) for:
+- **Editor treatment of TAPs**: Treated as having **effective duration = `TAP_HIT_WINDOW`** (150ms) for:
   - Overlap checks: TAP occupies `[time - window/2, time + window/2]`
   - Visual ghost/previews during drag
 - **Dynamic conversion rules** (auto-apply during edits):

@@ -78,6 +78,7 @@ export function DeckHoldMeters({ notes: propNotes, currentTime: propCurrentTime 
           {getKeyLabel(leftLane)}
         </div>
         <RectangleMeter
+          key="left-deck"
           progress={leftProgress}
           outlineColor={leftColor}
           lane={leftLane}
@@ -93,6 +94,7 @@ export function DeckHoldMeters({ notes: propNotes, currentTime: propCurrentTime 
           {getKeyLabel(rightLane)}
         </div>
         <RectangleMeter
+          key="right-deck"
           progress={rightProgress}
           outlineColor={rightColor}
           lane={rightLane}

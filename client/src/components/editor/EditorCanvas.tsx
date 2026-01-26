@@ -4,11 +4,10 @@ import { SoundpadButtons } from '@/components/game/hud/SoundpadButtons';
 import { JudgementLines } from '@/components/game/tunnel/JudgementLines';
 import { TapNotes } from '@/components/game/notes/TapNotes';
 import { HoldNotes } from '@/components/game/notes/HoldNotes';
-import { NoteHandles } from '@/components/editor/NoteHandles';
 import { EditorBeatGrid } from '@/components/editor/EditorBeatGrid';
 import { EditorStatusBar } from '@/components/editor/EditorStatusBar';
-import { EditorNotesPanel } from '@/components/editor/EditorNotesPanel';
-import { NoteExtensionIndicators } from '@/components/editor/NoteExtensionIndicators';
+import { SelectionBoundingBox } from '@/components/editor/SelectionBoundingBox';
+import { EditorInteractionLayer } from '@/components/editor/EditorInteractionLayer';
 import { Note } from '@/types/game';
 import { VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config';
 import { useVanishingPointOffset } from '@/hooks/effects/geometry/useVanishingPointOffset';
@@ -50,6 +49,7 @@ interface EditorCanvasProps {
   zoomEnabled: boolean;
   judgementLinesEnabled: boolean;
   spinEnabled: boolean;
+  isPlaying: boolean;
 }
 
 export function EditorCanvas({
@@ -86,6 +86,7 @@ export function EditorCanvas({
   zoomEnabled,
   judgementLinesEnabled,
   spinEnabled,
+  isPlaying,
 }: EditorCanvasProps) {
   // Get dynamic vanishing point offset (if enabled)
   const vpOffset = useVanishingPointOffset();
@@ -111,6 +112,7 @@ export function EditorCanvas({
     dragStartTime,
     dragStartLane,
     currentDifficulty,
+    isPlaying,
     toggleNoteSelection,
     clearSelection,
     setSelectedNoteId,
@@ -124,6 +126,91 @@ export function EditorCanvas({
     setDifficultyNotes,
     addToHistory,
   });
+
+  // Handle note clicks from interaction layer
+  const handleNoteClick = useCallback((note: Note, event: React.MouseEvent) => {
+    const isAlreadySelected = selectedNoteIds.includes(note.id);
+    
+    if (event.shiftKey) {
+      // Shift-click: multi-select mode
+      // First, ensure selectedNoteId is in selectedNoteIds if it exists
+      if (selectedNoteId && !selectedNoteIds.includes(selectedNoteId)) {
+        toggleNoteSelection(selectedNoteId);
+      }
+      
+      // Now toggle this note in the selection
+      if (isAlreadySelected) {
+        // Remove from selection - batch updates
+        const newSelectedIds = selectedNoteIds.filter(id => id !== note.id);
+        clearSelection();
+        if (newSelectedIds.length > 0) {
+          newSelectedIds.forEach(id => toggleNoteSelection(id));
+          setSelectedNoteId(newSelectedIds[0]);
+        }
+      } else {
+        // Check if we can add this note (max 6 notes, one per lane)
+        const selectedNotes = parsedNotes.filter(n => selectedNoteIds.includes(n.id));
+        const laneTaken = selectedNotes.some(n => n.lane === note.lane);
+        
+        if (laneTaken) {
+          // Lane already has a selected note - replace it
+          const oldNoteInLane = selectedNotes.find(n => n.lane === note.lane);
+          if (oldNoteInLane) {
+            toggleNoteSelection(oldNoteInLane.id); // Remove old note
+          }
+          toggleNoteSelection(note.id); // Add new note
+          setSelectedNoteId(note.id);
+        } else if (selectedNoteIds.length >= 6) {
+          // Max 6 notes - do nothing (optional: show toast)
+          return;
+        } else {
+          // Add to selection - single operation
+          toggleNoteSelection(note.id);
+          setSelectedNoteId(note.id);
+        }
+      }
+    } else {
+      // Regular click: select only this note
+      if (isAlreadySelected && selectedNoteIds.length === 1) {
+        // Clicking the only selected note - deselect it - single operation
+        clearSelection();
+      } else {
+        // Select this note exclusively - batch clear and select
+        clearSelection();
+        // Use a microtask to batch the next updates
+        queueMicrotask(() => {
+          setSelectedNoteId(note.id);
+          toggleNoteSelection(note.id);
+        });
+      }
+    }
+  }, [selectedNoteId, selectedNoteIds, clearSelection, setSelectedNoteId, toggleNoteSelection]);
+
+  const handleNoteMouseDown = useCallback((note: Note, event: React.MouseEvent) => {
+    if (isPlaying) return;
+    // Only allow dragging if note is NOT selected
+    if (!selectedNoteIds.includes(note.id)) {
+      setDraggedNoteId(note.id);
+      setDragStartTime(note.time);
+      setDragStartLane(note.lane);
+    }
+  }, [isPlaying, selectedNoteIds, setDraggedNoteId, setDragStartTime, setDragStartLane]);
+
+  const handleBoundingBoxHandleMouseDown = useCallback((noteId: string, handle: 'start' | 'end' | 'near' | 'far', event: React.MouseEvent) => {
+    if (isPlaying) return;
+    if (!noteId) return;
+    
+    const selectedNote = parsedNotes.find(n => n.id === noteId);
+    if (!selectedNote) return;
+    
+    // Start dragging the handle - set this note as the primary selection
+    setSelectedNoteId(noteId);
+    setDraggedNoteId(noteId);
+    setDragStartTime(selectedNote.time);
+    setDragStartLane(selectedNote.lane);
+    setDraggedHandle(handle);
+    setIsDragging(true);
+  }, [isPlaying, parsedNotes, setDraggedNoteId, setDragStartTime, setDragStartLane, setDraggedHandle, setIsDragging, setSelectedNoteId]);
 
   return (
     <div
@@ -179,24 +266,34 @@ export function EditorCanvas({
           )}
           <TapNotes vpX={vpX} vpY={vpY} />
           
-          {/* Note handles for extending/shortening - only at start/end of notes */}
-          <NoteHandles 
-            parsedNotes={parsedNotes}
-            currentTime={currentTime}
-            draggedNoteId={draggedNoteId}
-            draggedHandle={draggedHandle}
-          />
-          
-          {/* White indicator lines showing where handles can be dragged */}
-          {console.log('[WHITE LINES DEBUG] Condition check:', { selectedNoteId, isDragging, result: selectedNoteId && !isDragging })}
-          {selectedNoteId && !isDragging && (
-            <NoteExtensionIndicators
-              selectedNote={parsedNotes.find(n => n.id === selectedNoteId) || null}
-              currentTime={currentTime}
-              vpX={vpX}
-              vpY={vpY}
-            />
+          {/* Bounding boxes around all selected notes */}
+          {selectedNoteIds.length > 0 && !isDragging && (
+            <>
+              {selectedNoteIds.map(noteId => {
+                const selectedNote = parsedNotes.find(n => n.id === noteId);
+                if (!selectedNote) return null;
+                return (
+                  <SelectionBoundingBox
+                    key={`bbox-${noteId}`}
+                    selectedNote={selectedNote}
+                    currentTime={currentTime}
+                    vpX={vpX}
+                    vpY={vpY}
+                    onHandleMouseDown={handleBoundingBoxHandleMouseDown}
+                  />
+                );
+              })}
+            </>
           )}
+          
+          {/* Interaction layer - invisible clickable overlay matching note geometry */}
+          <EditorInteractionLayer
+            vpX={vpX}
+            vpY={vpY}
+            selectedNoteId={selectedNoteId}
+            onNoteClick={handleNoteClick}
+            onNoteMouseDown={handleNoteMouseDown}
+          />
           
           {/* Selected highlights - disabled (removed unwanted yellow circles) */}
           {/* {parsedNotes.map(note => {
@@ -238,15 +335,6 @@ export function EditorCanvas({
         snapEnabled={snapEnabled}
         snapDivision={snapDivision}
         bpm={metadata.bpm}
-      />
-
-      {/* Notes Debug Panel */}
-      <EditorNotesPanel
-        parsedNotes={parsedNotes}
-        selectedNoteIds={selectedNoteIds}
-        isDragging={isDragging}
-        draggedHandle={draggedHandle}
-        draggedNoteId={draggedNoteId}
       />
 
       {/* Beat Grid - hexagonal with parallax */}

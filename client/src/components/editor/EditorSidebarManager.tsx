@@ -1,5 +1,5 @@
 import { AnimatePresence } from 'framer-motion';
-import { Settings, Clock, FileText, Wrench, ArrowLeftRight, Monitor, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Settings, Clock, FileText, Wrench, ArrowLeftRight, Monitor, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
 import { SidePanel } from '@/components/editor/SidePanel';
 import { FloatingWindow } from '@/components/editor/FloatingWindow';
 import { ToolsSection } from './ToolsSection';
@@ -7,9 +7,10 @@ import { PlaybackSection } from './PlaybackSection';
 import { MetadataSection } from './MetadataSection';
 import { BeatmapTextSection } from './BeatmapTextSection';
 import { GraphicsSection } from './GraphicsSection';
+import { StatisticsSection } from './StatisticsSection';
 import type { Difficulty } from '@/lib/editor/beatmapTextUtils';
 
-type SectionName = 'tools' | 'playback' | 'metadata' | 'beatmapText' | 'graphics';
+type SectionName = 'tools' | 'playback' | 'metadata' | 'beatmapText' | 'graphics' | 'statistics';
 
 interface Section {
   visible: boolean;
@@ -50,6 +51,7 @@ interface EditorSidebarManagerProps {
   deleteSelectedNote: () => void;
   selectedNoteId: string | null;
   selectedNoteIds: string[];
+  clearSelection: () => void;
   copyToClipboard: () => void;
   downloadBeatmap: () => void;
   showBpmTapper: boolean;
@@ -83,6 +85,10 @@ interface EditorSidebarManagerProps {
   setJudgementLinesEnabled: (enabled: boolean) => void;
   spinEnabled: boolean;
   setSpinEnabled: (enabled: boolean) => void;
+  parsedNotes: any[];
+  isDragging: boolean;
+  draggedHandle: 'start' | 'end' | 'near' | 'far' | null;
+  draggedNoteId: string | null;
 }
 
 export function EditorSidebarManager(props: EditorSidebarManagerProps) {
@@ -92,6 +98,7 @@ export function EditorSidebarManager(props: EditorSidebarManagerProps) {
     metadata: { title: 'METADATA', icon: <Settings className="w-4 h-4" /> },
     beatmapText: { title: 'BEATMAP TEXT', icon: <FileText className="w-4 h-4" /> },
     graphics: { title: 'GRAPHICS', icon: <Monitor className="w-4 h-4" /> },
+    statistics: { title: 'STATISTICS', icon: <BarChart3 className="w-4 h-4" /> },
   };
 
   const renderSectionContent = (section: SectionName) => {
@@ -165,6 +172,16 @@ export function EditorSidebarManager(props: EditorSidebarManagerProps) {
             setIdleMotionEnabled={props.setIdleMotionEnabled}
           />
         );
+      case 'statistics':
+        return (
+          <StatisticsSection
+            parsedNotes={props.parsedNotes}
+            selectedNoteIds={props.selectedNoteIds}
+            isDragging={props.isDragging}
+            draggedHandle={props.draggedHandle}
+            draggedNoteId={props.draggedNoteId}
+          />
+        );
     }
   };
 
@@ -205,6 +222,7 @@ export function EditorSidebarManager(props: EditorSidebarManagerProps) {
           resizeRef={props.resizeRef}
           setIsResizing={props.setIsResizing}
           onCollapseSide={() => props.setLeftSideCollapsed(true)}
+          clearSelection={props.clearSelection}
         />
       )}
 
@@ -243,6 +261,7 @@ export function EditorSidebarManager(props: EditorSidebarManagerProps) {
           resizeRef={props.resizeRef}
           setIsResizing={props.setIsResizing}
           onCollapseSide={() => props.setRightSideCollapsed(true)}
+          clearSelection={props.clearSelection}
         />
       )}
 

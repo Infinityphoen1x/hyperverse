@@ -40,37 +40,26 @@ export function NoteExtensionIndicators({ selectedNote, currentTime, vpX, vpY }:
   const indicators: Array<{ nearDistance: number; farDistance: number; label: string }> = [];
 
   if (selectedNote.type === 'HOLD' && selectedNote.duration) {
-    // For HOLD notes, use the same geometry calculation as hold note rendering
-    // This ensures white lines match the actual trapezoid edges
+    // For HOLD notes, show indicators at both start and end positions
+    // Calculate each end separately to match actual note rendering
     const timeUntilHit = selectedNote.time - currentTime;
     const holdDuration = selectedNote.duration;
     
-    // Calculate geometry for the entire hold note using the same function as rendering
-    // useFixedDepth=false means both ends approach independently (dynamic mode)
-    const holdGeometry = calculateApproachGeometry(
-      timeUntilHit, 
-      0, // pressHoldTime - not pressed in editor
-      false, // isTooEarlyFailure
-      holdDuration,
-      false, // isHoldMissFailure
-      false, // useFixedDepth - use dynamic mode
-      LEAD_TIME // effectiveLeadTime - editor uses base LEAD_TIME
-    );
+    // Check if start is visible
+    const startProgress = 1 - (timeUntilHit / LEAD_TIME);
+    if (startProgress >= 0 && startProgress <= EXTENSION_INDICATOR_MAX_PROGRESS) {
+      // For start handle, use tap note geometry to get the depth at that time point
+      const startGeometry = calculateDistances(startProgress);
+      indicators.push({ nearDistance: startGeometry.nearDistance, farDistance: startGeometry.farDistance, label: 'start' });
+    }
     
-    console.log('[WHITE LINES DEBUG] HOLD geometry:', { 
-      nearDistance: holdGeometry.nearDistance, 
-      farDistance: holdGeometry.farDistance,
-      timeUntilHit,
-      holdDuration
-    });
-    
-    // Use the actual holdGeometry distances directly (FIX: was recalculating separately)
-    // This ensures the white lines EXACTLY match the hold note trapezoid edges
-    indicators.push({ 
-      nearDistance: holdGeometry.nearDistance, 
-      farDistance: holdGeometry.farDistance, 
-      label: 'hold' 
-    });
+    // Check if end is visible
+    const endProgress = 1 - ((timeUntilHit + holdDuration) / LEAD_TIME);
+    if (endProgress >= 0 && endProgress <= EXTENSION_INDICATOR_MAX_PROGRESS) {
+      // For end handle, use tap note geometry to get the depth at the end time
+      const endGeometry = calculateDistances(endProgress);
+      indicators.push({ nearDistance: endGeometry.nearDistance, farDistance: endGeometry.farDistance, label: 'end' });
+    }
   } else {
     // For TAP notes, show handles at the hit window boundaries
     // Near handle: at note.time - TAP_HIT_WINDOW (start of hit window)

@@ -92,7 +92,7 @@ function App() {
             <div 
               className="absolute inset-0 pointer-events-none z-0"
               ref={youtubeContainerRef}
-              style={{ display: 'block', opacity: 0.05, width: '100%', height: '100%' }}
+              style={{ display: 'block', opacity: 0.15, width: '100%', height: '100%' }}
             />
           )}
 
@@ -102,7 +102,10 @@ function App() {
               <Settings onBack={() => setSettingsOpen(false)} />
             )}
             {editorOpen && (
-              <BeatmapEditor onBack={() => setEditorOpen(false)} />
+              <BeatmapEditor 
+                onBack={() => setEditorOpen(false)}
+                playerInitializedRef={playerInitializedRef}
+              />
             )}
             {!gameActive && !settingsOpen && !editorOpen && (
               <Home 

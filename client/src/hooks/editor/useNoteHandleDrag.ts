@@ -9,6 +9,7 @@ import { VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config';
 import { JUDGEMENT_RADIUS } from '@/lib/config/geometry';
 import { LEAD_TIME, GAME_CONFIG } from '@/lib/config/timing';
 import { MIN_HOLD_DURATION } from '@/lib/config/editor';
+import { ConversionFeedback } from '@/components/editor/ConversionToast';
 import type { HandleType } from './useHandleDetection';
 
 const TAP_HIT_WINDOW = GAME_CONFIG.TAP_HIT_WINDOW;
@@ -85,6 +86,10 @@ export function updateNoteFromHandleDrag(params: HandleDragParams): Note[] {
       if (newDuration > MIN_HOLD_DURATION) {
         return { ...note, time: newStartTime, type: 'HOLD' as const, duration: newDuration };
       } else if (newDuration > 0) {
+        // Converting HOLD to TAP
+        if (note.type === 'HOLD') {
+          ConversionFeedback.show('HOLD → TAP (duration too short)');
+        }
         return { ...note, time: newStartTime, type: 'TAP' as const, duration: undefined };
       } else {
         return note; // Invalid duration
@@ -106,8 +111,16 @@ export function updateNoteFromHandleDrag(params: HandleDragParams): Note[] {
       }
 
       if (newDuration > MIN_HOLD_DURATION) {
+        // Converting TAP to HOLD
+        if (note.type === 'TAP') {
+          ConversionFeedback.show('TAP → HOLD (extended duration)');
+        }
         return { ...note, type: 'HOLD' as const, duration: newDuration };
       } else if (newDuration > 0) {
+        // Converting HOLD to TAP
+        if (note.type === 'HOLD') {
+          ConversionFeedback.show('HOLD → TAP (shortened)');
+        }
         return { ...note, type: 'TAP' as const, duration: undefined };
       } else {
         return note; // Invalid duration
@@ -131,6 +144,10 @@ export function updateNoteFromHandleDrag(params: HandleDragParams): Note[] {
       if (newDuration > MIN_HOLD_DURATION) {
         return { ...note, time: newTime, type: 'HOLD' as const, duration: newDuration };
       } else {
+        // Converting to TAP
+        if (note.type === 'HOLD') {
+          ConversionFeedback.show('HOLD → TAP (duration too short)');
+        }
         return { ...note, time: newTime, type: 'TAP' as const, duration: undefined };
       }
     } else {
@@ -149,8 +166,16 @@ export function updateNoteFromHandleDrag(params: HandleDragParams): Note[] {
       }
 
       if (newDuration > MIN_HOLD_DURATION) {
+        // Converting TAP to HOLD
+        if (note.type === 'TAP') {
+          ConversionFeedback.show('TAP → HOLD (extended duration)');
+        }
         return { ...note, type: 'HOLD' as const, duration: newDuration };
       } else {
+        // Converting HOLD to TAP
+        if (note.type === 'HOLD') {
+          ConversionFeedback.show('HOLD → TAP (shortened)');
+        }
         return { ...note, type: 'TAP' as const, duration: undefined };
       }
     }

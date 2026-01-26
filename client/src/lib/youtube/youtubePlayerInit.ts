@@ -59,7 +59,8 @@ export function initYouTubePlayer(containerElement: HTMLDivElement | null, video
           modestbranding: 1,
           rel: 0,
           enablejsapi: 1,
-          origin: origin
+          origin: origin,
+          widget_referrer: origin
         },
         events: {
           onReady: () => {
@@ -111,17 +112,18 @@ export function initYouTubePlayer(containerElement: HTMLDivElement | null, video
           console.log('[YOUTUBE-PLAYER-INIT] Origin in src:', hasOrigin ? originValue : 'MISSING!');
           console.log('[YOUTUBE-PLAYER-INIT] Expected origin:', window.location.origin);
           
-          // Safari: Explicitly set allow attribute after creation
-          if (isSafari) {
-            iframe.setAttribute('allow', 'autoplay; encrypted-media; fullscreen');
-            console.log('[YOUTUBE-PLAYER-INIT] Safari: Added explicit allow attribute');
-          }
+          // Set iframe attributes for cross-origin compatibility (Safari/Firefox)
+          iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+          iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+          console.log('[YOUTUBE-PLAYER-INIT] Set allow and referrerpolicy attributes');
         } else {
           console.warn('[YOUTUBE-PLAYER-INIT] Iframe not found in container after 100ms, trying 500ms...');
           setTimeout(() => {
             const iframe2 = containerElement.querySelector('iframe');
             if (iframe2) {
               useYoutubeStore.getState().setYoutubeIframeElement(iframe2);
+              iframe2.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
+              iframe2.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
               console.log('[YOUTUBE-PLAYER-INIT] Iframe found after 500ms, src:', iframe2.src);
             }
           }, 400);

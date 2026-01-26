@@ -130,8 +130,14 @@ export function mouseToTime(
   const dx = mouseX - vpX;
   const dy = mouseY - vpY;
   const distance = Math.sqrt(dx * dx + dy * dy);
+  
+  // Calculate progress: 0 at VP (far), 1 at judgement (near)
   const progress = Math.max(0, Math.min(1, (distance - 1) / (judgementRadius - 1)));
-  const timeOffset = progress * leadTime;
+  
+  // Invert progress: notes closer to judgement should be at currentTime,
+  // notes closer to VP should be further in the future
+  const invertedProgress = 1 - progress;
+  const timeOffset = invertedProgress * leadTime;
   const time = Math.round(currentTime + timeOffset);
 
   return { time, distance, progress };

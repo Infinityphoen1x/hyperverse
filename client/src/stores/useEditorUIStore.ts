@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-type SectionName = 'tools' | 'playback' | 'metadata' | 'beatmapText' | 'graphics';
+type SectionName = 'tools' | 'playback' | 'metadata' | 'beatmapText' | 'graphics' | 'statistics';
 
 interface Section {
   visible: boolean;
@@ -93,6 +93,7 @@ export const useEditorUIStore = create<EditorUIStoreState>((set, get) => ({
     metadata: { visible: true, collapsed: true, poppedOut: false, side: 'left', floatPosition: { x: 100, y: 500 } },
     beatmapText: { visible: true, collapsed: true, poppedOut: false, side: 'left', floatPosition: { x: 100, y: 700 } },
     graphics: { visible: true, collapsed: false, poppedOut: false, side: 'right', floatPosition: { x: 800, y: 100 } },
+    statistics: { visible: true, collapsed: false, poppedOut: false, side: 'right', floatPosition: { x: 800, y: 400 } },
   },
   
   // Initial modal state

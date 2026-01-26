@@ -1,0 +1,62 @@
+# Beatmap Editor – Interaction Rules & Behaviors
+
+**Last updated:** January 26, 2026  
+**Project context:** Perspective tunnel rhythm game editor with 6 lanes (pentagon layout), TAP and HOLD notes, snap grid, undo/redo, and dynamic note conversion.
+
+This document defines the complete set of **mouse** and **keyboard** interaction rules for note placement, selection, movement, and duration editing. All rules aim for intuitive, discoverable behavior similar to modern rhythm game charting tools.
+
+## Core Concepts
+
+- **TAP notes** — Instantaneous in gameplay (hit window only), rendered as thin trapezoids with depth ≈ `TAP_HIT_WINDOW`.
+- **HOLD notes** — Have explicit `duration` > `TAP_HIT_WINDOW × 1.1` (minimum enforced).
+- **White handles** — Appear **only** on **selected** notes; indicate draggable edges for duration editing.
+- **Body drag** (no handles) — Always moves placement (time + lane), never changes duration/type.
+- **Auto-conversion** — Bidirectional:  
+  - Duration ≤ `TAP_HIT_WINDOW` → becomes TAP  
+  - Duration > `TAP_HIT_WINDOW` → becomes HOLD
+- **Minimum HOLD duration** — `TAP_HIT_WINDOW × 1.1` (e.g. 110 ms if window = 100 ms)
+
+## Mouse Interaction Rules
+
+| Action / Situation                                      | Requires selection? | White handles visible? | What happens when dragging                                                            | Allowed to change duration? | Resulting note type after drag                          | Constraints / Feedback                                                                 |
+|---------------------------------------------------------|---------------------|------------------------|---------------------------------------------------------------------------------------|-----------------------------|----------------------------------------------------------|----------------------------------------------------------------------------------------|
+| Click empty space                                       | No                  | No                     | —                                                                                     | No                          | —                                                        | Clears selection (unless Shift/Ctrl used)                                              |
+| Click on a note (short click, no drag)                  | Becomes selected    | Yes (after click)      | —                                                                                     | No                          | Unchanged                                                | Sets/toggles selection                                                                 |
+| Drag **non-selected** note (body)                       | No                  | No                     | Moves note in time (Z-axis/timeline) + lane                                           | No                          | Unchanged                                                | Placement only; no duration/type change                                                |
+| Drag **selected** note by **body**                      | Yes                 | Yes                    | Moves entire note in time + lane                                                      | No                          | Unchanged                                                | Preserves duration and type                                                            |
+| Drag **selected** note by **near handle** (head/start)  | Yes                 | Yes                    | Moves start time → shortens/lengthens duration                                        | Yes                         | HOLD → TAP if ≤ TAP_HIT_WINDOW                           | Cannot go negative; auto-converts; red ghost if invalid                                |
+| Drag **selected** note by **far handle** (tail/end)     | Yes                 | Yes                    | Moves end time → lengthens/shortens duration                                          | Yes                         | TAP → HOLD if > TAP_HIT_WINDOW<br>HOLD → TAP if ≤ TAP_HIT_WINDOW | Primary way to create holds from taps or revert holds to taps                         |
+| Multi-select + drag body                                | Yes (multiple)      | Yes                    | Moves all selected notes in time + lane (group move)                                  | No                          | Unchanged                                                | —                                                                                      |
+| Multi-select + drag one handle                          | Yes (multiple)      | Yes                    | Batch resize duration if all selected holds share matching start/end times            | Yes (batch)                 | Each converts individually if threshold crossed          | If timings differ → single-note edit only (or warning toast)                           |
+| Attempt invalid drag (overlap / negative / too short)   | —                   | —                      | Prevent commit; revert or show red ghost/flash                                        | —                           | —                                                        | Tooltip: "Overlap detected" / "Duration too short – min X ms"                          |
+
+## Keyboard Note Placement Rules
+
+| Action / Situation                                      | Key(s) involved                  | Requires selection? | Input box appears? | Resulting note type                                      | Duration / Timing Behavior                                                                 | Constraints / Minimums / Feedback                                      |
+|---------------------------------------------------------|----------------------------------|---------------------|--------------------|----------------------------------------------------------|---------------------------------------------------------------------------------------------|------------------------------------------------------------------------|
+| Place **TAP** note                                      | Quick press & release: **Q W E I O P** | No                  | No                 | TAP                                                      | Placed at current editor time (snapped if snap enabled)                                     | Instant placement; soft "tap" sound                                    |
+| Place **HOLD** note (with custom duration)              | Hold down **Q W E I O P**        | No                  | Yes                | HOLD (if valid) or TAP (if too short / cancelled)        | User types duration in ms → confirm with Enter or key release                               | Min: `TAP_HIT_WINDOW × 1.1`<br>Esc → cancel (place TAP instead)       |
+| Quick hold (optional fallback)                          | Hold **Q W E I O P** briefly     | No                  | No                 | HOLD                                                     | Auto duration (e.g. 250–500 ms or next snap grid)                                           | Only if you prefer quick holds without popup; otherwise always show input |
+| Cancel duration input                                   | Press **Esc** while typing       | —                   | —                  | TAP (or no note)                                         | —                                                                                           | Prevents accidental long holds                                         |
+| Lane mapping (example – adjust to your layout)          | Q → Lane 1<br>W → Lane 2<br>E → Lane 3<br>I → Lane 4<br>O → Lane 5<br>P → Lane 6 | —                   | —                  | —                                                        | —                                                                                           | Matches pentagon layout (bottom-left → top-left clockwise/counter)     |
+
+### Keyboard Input Box Details
+- **Appearance**: Small centered popup near judgment line or mouse cursor when key held > ~150 ms
+- **Pre-filled value**: Suggested default (e.g. 500 ms or next snap interval)
+- **Validation**: Numbers only; reject < minimum
+- **Confirm**: Press **Enter** or release held key
+- **Cancel**: **Esc** → places TAP note instead
+- **Feedback**: Sound cue on confirm ("hold-created"), brief label "HOLD created – X ms"
+
+## General Rules & QoL Guidelines
+
+- **White handles** appear **only on selected notes** — visual cue that duration editing is available.
+- **Body drag** (with or without selection) **never** changes duration or type.
+- **Snap** applies to all time changes (placement and duration ends).
+- **Conversion feedback**: Brief floating text ("TAP → HOLD" / "Shortened to TAP") + optional sound.
+- **Invalid states**: Red ghost/preview, prevent commit, tooltip explanation.
+- **Multi-select batch editing**: Only when timings match; otherwise fall back to single-note edit.
+
+This document serves as the single source of truth for implementing and testing editor interactions.
+
+Feel free to expand with future features (flick notes, slides, copy/paste shortcuts, etc.).
