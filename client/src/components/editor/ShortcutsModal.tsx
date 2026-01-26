@@ -1,27 +1,119 @@
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, RotateCcw, Edit2 } from 'lucide-react';
+import { useState } from 'react';
+import { useShortcutsStore } from '@/stores/useShortcutsStore';
+import { audioManager } from '@/lib/audio/audioManager';
 
 interface ShortcutsModalProps {
   onClose: () => void;
 }
 
 interface ShortcutRowProps {
+  id: string;
   keys: string;
   description: string;
+  onEdit: (id: string) => void;
+  onReset: (id: string) => void;
+  isEditing: boolean;
+  hasModifiers?: { ctrl?: boolean; shift?: boolean; alt?: boolean };
 }
 
-function ShortcutRow({ keys, description }: ShortcutRowProps) {
+function ShortcutRow({ id, keys, description, onEdit, onReset, isEditing, hasModifiers }: ShortcutRowProps) {
+  const displayKey = [
+    hasModifiers?.ctrl ? 'Ctrl' : '',
+    hasModifiers?.shift ? 'Shift' : '',
+    hasModifiers?.alt ? 'Alt' : '',
+    keys
+  ].filter(Boolean).join('+');
+
   return (
-    <div className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0">
+    <div className="flex items-center justify-between py-2 border-b border-gray-700 last:border-0 group">
       <span className="text-sm font-rajdhani text-gray-300">{description}</span>
-      <kbd className="px-2 py-1 bg-gray-800 border border-gray-600 rounded text-xs font-mono text-neon-cyan">
-        {keys}
-      </kbd>
+      <div className="flex items-center gap-2">
+        <kbd className={`px-2 py-1 border rounded text-xs font-mono ${
+          isEditing 
+            ? 'bg-neon-cyan/20 border-neon-cyan text-neon-cyan animate-pulse' 
+            : 'bg-gray-800 border-gray-600 text-neon-cyan'
+        }`}>
+          {isEditing ? 'Press key...' : displayKey}
+        </kbd>
+        <button
+          onClick={() => onEdit(id)}
+          className="p-1 opacity-0 group-hover:opacity-100 hover:bg-neon-cyan/20 rounded transition-all"
+          title="Edit binding"
+        >
+          <Edit2 className="w-3 h-3 text-neon-cyan" />
+        </button>
+        <button
+          onClick={() => onReset(id)}
+          className="p-1 opacity-0 group-hover:opacity-100 hover:bg-yellow-500/20 rounded transition-all"
+          title="Reset to default"
+        >
+          <RotateCcw className="w-3 h-3 text-yellow-500" />
+        </button>
+      </div>
     </div>
   );
 }
 
 export function ShortcutsModal({ onClose }: ShortcutsModalProps) {
+  const { bindings, setBinding, resetBinding, resetAll } = useShortcutsStore();
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const handleEdit = (id: string) => {
+    setEditingId(id);
+  };
+
+  const handleReset = (id: string) => {
+    resetBinding(id);
+    audioManager.play('tapHit');
+  };
+
+  const handleResetAll = () => {
+    resetAll();
+    audioManager.play('difficultySettingsApply');
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (!editingId) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Cancel on Escape
+    if (e.key === 'Escape') {
+      setEditingId(null);
+      return;
+    }
+    
+    // Capture the key and modifiers
+    const key = e.key;
+    const modifiers = {
+      ctrl: e.ctrlKey,
+      shift: e.shiftKey,
+      alt: e.altKey,
+    };
+    
+    setBinding(editingId, key, modifiers);
+    setEditingId(null);
+    audioManager.play('tapHit');
+  };
+
+  // Attach global key listener when editing
+  useState(() => {
+    if (editingId) {
+      const listener = (e: KeyboardEvent) => handleKeyDown(e);
+      window.addEventListener('keydown', listener);
+      return () => window.removeEventListener('keydown', listener);
+    }
+  });
+
+  const categorizedBindings = {
+    general: bindings.filter(b => b.category === 'general'),
+    editing: bindings.filter(b => b.category === 'editing'),
+    playback: bindings.filter(b => b.category === 'playback'),
+    export: bindings.filter(b => b.category === 'export'),
+  };
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -39,53 +131,113 @@ export function ShortcutsModal({ onClose }: ShortcutsModalProps) {
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-rajdhani text-neon-cyan font-bold">KEYBOARD SHORTCUTS</h2>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-red-500/20 rounded transition-colors"
-          >
-            <X className="w-5 h-5 text-red-500" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleResetAll}
+              className="px-3 py-1 bg-yellow-500/20 border border-yellow-500 text-yellow-500 rounded hover:bg-yellow-500/30 transition-colors text-xs font-rajdhani flex items-center gap-1"
+            >
+              <RotateCcw className="w-3 h-3" />
+              RESET ALL
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1 hover:bg-red-500/20 rounded transition-colors"
+            >
+              <X className="w-5 h-5 text-red-500" />
+            </button>
+          </div>
         </div>
+
+        <p className="text-xs text-gray-400 mb-4">
+          Click the edit icon next to any shortcut to customize it. Press Escape to cancel editing.
+        </p>
 
         <div className="space-y-4">
           <div>
             <h3 className="text-md font-rajdhani text-neon-pink font-bold mb-2">GENERAL</h3>
             <div className="space-y-1">
-              <ShortcutRow keys="Space" description="Play/Pause" />
-              <ShortcutRow keys="E" description="Toggle Editor Mode" />
-              <ShortcutRow keys="S" description="Toggle Snap" />
-              <ShortcutRow keys="Ctrl+Z" description="Undo" />
-              <ShortcutRow keys="Ctrl+Y" description="Redo" />
-              <ShortcutRow keys="Esc" description="Deselect All" />
+              {categorizedBindings.general.map(binding => (
+                <ShortcutRow
+                  key={binding.id}
+                  id={binding.id}
+                  keys={binding.currentKey}
+                  description={binding.description}
+                  onEdit={handleEdit}
+                  onReset={handleReset}
+                  isEditing={editingId === binding.id}
+                  hasModifiers={{
+                    ctrl: binding.ctrlRequired,
+                    shift: binding.shiftRequired,
+                    alt: binding.altRequired,
+                  }}
+                />
+              ))}
             </div>
           </div>
 
           <div>
             <h3 className="text-md font-rajdhani text-neon-pink font-bold mb-2">NOTE EDITING</h3>
             <div className="space-y-1">
-              <ShortcutRow keys="Click" description="Add Note (Editor Mode)" />
-              <ShortcutRow keys="Ctrl+Click" description="Multi-Select" />
-              <ShortcutRow keys="Delete" description="Delete Selected" />
-              <ShortcutRow keys="1-6" description="Select Lane" />
-              <ShortcutRow keys="T" description="Toggle Note Type (Tap/Hold)" />
+              {categorizedBindings.editing.map(binding => (
+                <ShortcutRow
+                  key={binding.id}
+                  id={binding.id}
+                  keys={binding.currentKey}
+                  description={binding.description}
+                  onEdit={handleEdit}
+                  onReset={handleReset}
+                  isEditing={editingId === binding.id}
+                  hasModifiers={{
+                    ctrl: binding.ctrlRequired,
+                    shift: binding.shiftRequired,
+                    alt: binding.altRequired,
+                  }}
+                />
+              ))}
             </div>
           </div>
 
           <div>
             <h3 className="text-md font-rajdhani text-neon-pink font-bold mb-2">PLAYBACK</h3>
             <div className="space-y-1">
-              <ShortcutRow keys="←" description="Seek -1s" />
-              <ShortcutRow keys="→" description="Seek +1s" />
-              <ShortcutRow keys="↑" description="Seek +5s" />
-              <ShortcutRow keys="↓" description="Seek -5s" />
+              {categorizedBindings.playback.map(binding => (
+                <ShortcutRow
+                  key={binding.id}
+                  id={binding.id}
+                  keys={binding.currentKey}
+                  description={binding.description}
+                  onEdit={handleEdit}
+                  onReset={handleReset}
+                  isEditing={editingId === binding.id}
+                  hasModifiers={{
+                    ctrl: binding.ctrlRequired,
+                    shift: binding.shiftRequired,
+                    alt: binding.altRequired,
+                  }}
+                />
+              ))}
             </div>
           </div>
 
           <div>
             <h3 className="text-md font-rajdhani text-neon-pink font-bold mb-2">EXPORT</h3>
             <div className="space-y-1">
-              <ShortcutRow keys="Ctrl+C" description="Copy to Clipboard" />
-              <ShortcutRow keys="Ctrl+S" description="Download Beatmap" />
+              {categorizedBindings.export.map(binding => (
+                <ShortcutRow
+                  key={binding.id}
+                  id={binding.id}
+                  keys={binding.currentKey}
+                  description={binding.description}
+                  onEdit={handleEdit}
+                  onReset={handleReset}
+                  isEditing={editingId === binding.id}
+                  hasModifiers={{
+                    ctrl: binding.ctrlRequired,
+                    shift: binding.shiftRequired,
+                    alt: binding.altRequired,
+                  }}
+                />
+              ))}
             </div>
           </div>
         </div>

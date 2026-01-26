@@ -6,6 +6,7 @@ import { useEditorCoreStore } from '@/stores/useEditorCoreStore';
 import { useEditorUIStore } from '@/stores/useEditorUIStore';
 import { useEditorGraphicsStore } from '@/stores/useEditorGraphicsStore';
 import { useVanishingPointStore } from '@/stores/useVanishingPointStore';
+import { useShortcutsStore } from '@/stores/useShortcutsStore';
 import { audioManager } from '@/lib/audio/audioManager';
 import { useYouTubePlayer } from '@/hooks/audio/useYoutubePlayer';
 import { useIdleRotationManager } from '@/hooks/effects/animation/useIdleRotation';
@@ -17,12 +18,14 @@ import { ShortcutsModal } from '@/components/editor/ShortcutsModal';
 import { EditorCanvas } from '@/components/editor/EditorCanvas';
 import { DurationInputPopup } from '@/components/editor/DurationInputPopup';
 import { ConversionToastContainer } from '@/components/editor/ConversionToast';
+import { NotePropertiesDialog } from '@/components/editor/NotePropertiesDialog';
 import {
   parseBeatmapTextWithDifficulties,
   parseMetadataFromText,
   generateBeatmapTextWithDifficulties,
   validateBeatmap,
 } from '@/lib/editor/beatmapTextUtils';
+import { Note } from '@/types/game';
 
 interface BeatmapEditorProps {
   onBack?: () => void;
@@ -33,6 +36,7 @@ export default function BeatmapEditor({ onBack, playerInitializedRef }: BeatmapE
   const coreStore = useEditorCoreStore();
   const uiStore = useEditorUIStore();
   const graphicsStore = useEditorGraphicsStore();
+  const shortcuts = useShortcutsStore(state => state.bindings);
   const canvasRef = useRef<HTMLDivElement>(null);
   const resizeRef = useRef<HTMLDivElement>(null);
   const isParsingFromTextRef = useRef(false);
@@ -51,6 +55,7 @@ export default function BeatmapEditor({ onBack, playerInitializedRef }: BeatmapE
   
   const [validationIssues, setValidationIssues] = useState<ReturnType<typeof validateBeatmap>>([]);
   const [durationInputState, setDurationInputState] = useState<{ visible: boolean; lane: number; time: number } | null>(null);
+  const [showPropertiesDialog, setShowPropertiesDialog] = useState(false);
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(() => {
     // Initialize from localStorage on mount
     const pendingBeatmap = localStorage.getItem('pendingBeatmap');
@@ -89,6 +94,25 @@ export default function BeatmapEditor({ onBack, playerInitializedRef }: BeatmapE
   });
   
   console.log('[EDITOR] Current youtubeVideoId state:', youtubeVideoId, 'isReady:', isReady);
+
+  // Load beatmapText from localStorage on mount (if exists)
+  useEffect(() => {
+    const pendingBeatmap = localStorage.getItem('pendingBeatmap');
+    if (pendingBeatmap) {
+      try {
+        const data = JSON.parse(pendingBeatmap);
+        if (data.beatmapText && data.beatmapText.trim()) {
+          console.log('[EDITOR] Loading existing beatmapText from localStorage');
+          // Parse and load the existing beatmap
+          const metadata = parseMetadataFromText(data.beatmapText);
+          coreStore.setMetadata(metadata);
+          coreStore.setBeatmapText(data.beatmapText);
+        }
+      } catch (e) {
+        console.error('[EDITOR] Failed to load beatmapText from localStorage:', e);
+      }
+    }
+  }, []); // Only run once on mount
 
   // Set game state to PAUSED so notes render (like paused gameplay)
   useEffect(() => {
@@ -306,32 +330,231 @@ export default function BeatmapEditor({ onBack, playerInitializedRef }: BeatmapE
     }
   }, [coreStore]);
 
+  // Toggle note type (TAP <-> HOLD)
+  const toggleNoteType = useCallback(() => {
+    const selectedIds = coreStore.selectedNoteIds.length > 0 
+      ? coreStore.selectedNoteIds 
+      : coreStore.selectedNoteId ? [coreStore.selectedNoteId] : [];
+    
+    if (selectedIds.length === 0) return;
+    
+    coreStore.addToHistory(coreStore.parsedNotes);
+    const newNotes = coreStore.parsedNotes.map(note => {
+      if (!selectedIds.includes(note.id)) return note;
+      
+      if (note.type === 'TAP') {
+        // Convert TAP to HOLD with default 500ms duration
+        return { ...note, type: 'HOLD' as const, duration: 500 };
+      } else {
+        // Convert HOLD to TAP
+        const { duration, ...rest } = note;
+        return { ...rest, type: 'TAP' as const };
+      }
+    });
+    
+    coreStore.setParsedNotes(newNotes);
+    coreStore.setDifficultyNotes(coreStore.currentDifficulty, newNotes);
+    audioManager.play('tapHit');
+  }, [coreStore]);
+
+  // Handle note properties update
+  const handlePropertiesUpdate = useCallback((updates: Array<{ id: string; changes: Partial<Note> }>) => {
+    coreStore.addToHistory(coreStore.parsedNotes);
+    const newNotes = coreStore.parsedNotes.map(note => {
+      const update = updates.find(u => u.id === note.id);
+      return update ? { ...note, ...update.changes } : note;
+    });
+    coreStore.setParsedNotes(newNotes);
+    coreStore.setDifficultyNotes(coreStore.currentDifficulty, newNotes);
+  }, [coreStore]);
+
+  // Select nearest note in a specific lane
+  const selectNoteInLane = useCallback((lane: number) => {
+    const notesInLane = coreStore.parsedNotes.filter(n => n.lane === lane);
+    if (notesInLane.length === 0) {
+      audioManager.play('uiError');
+      return;
+    }
+    
+    // Find note closest to current time
+    const closestNote = notesInLane.reduce((closest, note) => {
+      const currentDist = Math.abs(note.time - currentTime);
+      const closestDist = Math.abs(closest.time - currentTime);
+      return currentDist < closestDist ? note : closest;
+    });
+    
+    coreStore.clearSelection();
+    coreStore.setSelectedNoteId(closestNote.id);
+    coreStore.toggleNoteSelection(closestNote.id);
+    
+    // Optionally seek to the note
+    setCurrentTime(closestNote.time);
+    
+    audioManager.play('tapHit');
+  }, [coreStore, currentTime, setCurrentTime]);
+
+  // Check if shortcut matches current key event
+  const matchesShortcut = useCallback((e: KeyboardEvent, shortcutId: string): boolean => {
+    const binding = shortcuts.find(s => s.id === shortcutId);
+    if (!binding) return false;
+    
+    const keyMatches = e.key.toLowerCase() === binding.currentKey.toLowerCase();
+    const ctrlMatches = !!e.ctrlKey === !!binding.ctrlRequired;
+    const shiftMatches = !!e.shiftKey === !!binding.shiftRequired;
+    const altMatches = !!e.altKey === !!binding.altRequired;
+    
+    return keyMatches && ctrlMatches && shiftMatches && altMatches;
+  }, [shortcuts]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
 
-      if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+      // Undo
+      if (matchesShortcut(e, 'undo')) {
         e.preventDefault();
         coreStore.undo();
+        return;
       }
-      if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
+      
+      // Redo
+      if (matchesShortcut(e, 'redo')) {
         e.preventDefault();
         coreStore.redo();
+        return;
       }
-      if ((e.key === 'Delete' || e.key === 'Backspace') && coreStore.selectedNoteId && !isInputField) {
+      
+      // Delete
+      if (matchesShortcut(e, 'deleteNote') && coreStore.selectedNoteId && !isInputField) {
         e.preventDefault();
         deleteSelectedNote();
+        return;
       }
-      if (e.key === ' ' && !isInputField) {
+      
+      // Play/Pause
+      if (matchesShortcut(e, 'playPause') && !isInputField) {
         e.preventDefault();
         coreStore.setIsPlaying(!coreStore.isPlaying);
+        return;
+      }
+      
+      // Toggle Editor Mode
+      if (matchesShortcut(e, 'toggleEditor') && !isInputField) {
+        e.preventDefault();
+        coreStore.setEditorMode(!coreStore.editorMode);
+        audioManager.play('tapHit');
+        return;
+      }
+      
+      // Toggle Snap
+      if (matchesShortcut(e, 'toggleSnap') && !isInputField && !e.ctrlKey) {
+        e.preventDefault();
+        uiStore.setSnapEnabled(!uiStore.snapEnabled);
+        audioManager.play('tapHit');
+        return;
+      }
+      
+      // Deselect All
+      if (matchesShortcut(e, 'deselectAll') && !isInputField) {
+        e.preventDefault();
+        coreStore.clearSelection();
+        return;
+      }
+      
+      // Toggle Note Type
+      if (matchesShortcut(e, 'toggleNoteType') && !isInputField) {
+        e.preventDefault();
+        toggleNoteType();
+        return;
+      }
+      
+      // Edit Properties
+      if (matchesShortcut(e, 'editProperties') && !isInputField) {
+        if (coreStore.selectedNoteId || coreStore.selectedNoteIds.length > 0) {
+          e.preventDefault();
+          setShowPropertiesDialog(true);
+        }
+        return;
+      }
+      
+      // Copy to Clipboard
+      if (matchesShortcut(e, 'copyClipboard')) {
+        e.preventDefault();
+        copyToClipboard();
+        return;
+      }
+      
+      // Download Beatmap
+      if (matchesShortcut(e, 'downloadBeatmap')) {
+        e.preventDefault();
+        downloadBeatmap();
+        return;
+      }
+      
+      // Seek shortcuts (only when not in input fields)
+      if (!isInputField) {
+        if (matchesShortcut(e, 'seekBackward1')) {
+          e.preventDefault();
+          setCurrentTime(Math.max(0, currentTime - 1000));
+          return;
+        }
+        if (matchesShortcut(e, 'seekForward1')) {
+          e.preventDefault();
+          setCurrentTime(currentTime + 1000);
+          return;
+        }
+        if (matchesShortcut(e, 'seekBackward5')) {
+          e.preventDefault();
+          setCurrentTime(Math.max(0, currentTime - 5000));
+          return;
+        }
+        if (matchesShortcut(e, 'seekForward5')) {
+          e.preventDefault();
+          setCurrentTime(currentTime + 5000);
+          return;
+        }
+      }
+      
+      // Lane selection shortcuts (only when not in input fields)
+      if (!isInputField) {
+        if (matchesShortcut(e, 'selectLane0')) {
+          e.preventDefault();
+          selectNoteInLane(0);
+          return;
+        }
+        if (matchesShortcut(e, 'selectLane1')) {
+          e.preventDefault();
+          selectNoteInLane(1);
+          return;
+        }
+        if (matchesShortcut(e, 'selectLane2')) {
+          e.preventDefault();
+          selectNoteInLane(2);
+          return;
+        }
+        if (matchesShortcut(e, 'selectLane3')) {
+          e.preventDefault();
+          selectNoteInLane(3);
+          return;
+        }
+        if (matchesShortcut(e, 'selectLaneNeg1')) {
+          e.preventDefault();
+          selectNoteInLane(-1);
+          return;
+        }
+        if (matchesShortcut(e, 'selectLaneNeg2')) {
+          e.preventDefault();
+          selectNoteInLane(-2);
+          return;
+        }
       }
     };
+    
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [coreStore, uiStore, deleteSelectedNote]);
+  }, [coreStore, uiStore, deleteSelectedNote, toggleNoteType, currentTime, setCurrentTime, matchesShortcut, selectNoteInLane]);
 
   // Playhead animation - sync with YouTube when playing
   useEffect(() => {
@@ -500,6 +723,18 @@ export default function BeatmapEditor({ onBack, playerInitializedRef }: BeatmapE
         )}
         {uiStore.showShortcutsModal && (
           <ShortcutsModal onClose={() => uiStore.setShowShortcutsModal(false)} />
+        )}
+        {showPropertiesDialog && (
+          <NotePropertiesDialog
+            notes={coreStore.parsedNotes}
+            selectedNoteIds={
+              coreStore.selectedNoteIds.length > 0 
+                ? coreStore.selectedNoteIds 
+                : coreStore.selectedNoteId ? [coreStore.selectedNoteId] : []
+            }
+            onClose={() => setShowPropertiesDialog(false)}
+            onUpdate={handlePropertiesUpdate}
+          />
         )}
       </AnimatePresence>
 

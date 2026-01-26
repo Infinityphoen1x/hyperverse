@@ -60,7 +60,7 @@ export function YouTubeSetupModal({ onSubmit }: YouTubeSetupModalProps) {
                 setError('');
               }}
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-              placeholder="https://youtube.com/watch?v=... or dQw4w9WgXcQ"
+              placeholder="https://youtube.com/watch?v=xfGrN3ZsPLA or xfGrN3ZsPLA"
               className="w-full bg-black border border-neon-cyan/30 text-white px-4 py-3 rounded focus:border-neon-cyan focus:outline-none font-mono text-sm"
               autoFocus
             />

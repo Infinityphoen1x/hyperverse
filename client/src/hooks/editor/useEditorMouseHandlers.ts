@@ -96,27 +96,43 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
     });
     
     if (clickedNote) {
-      // Clicked on a note - check if it's already selected
+      // Clicked on a note
       const isAlreadySelected = selectedNoteIds.includes(clickedNote.id);
+      const isMultiSelect = e.ctrlKey || e.metaKey;
       
       if (isAlreadySelected) {
-        // Note already selected - check if clicking near a handle
-        const { distance: mouseDistance } = mouseToLane(mouseX, mouseY, VANISHING_POINT_X, VANISHING_POINT_Y);
-        const nearestHandle = detectNearestHandle(clickedNote, mouseDistance, currentTime);
-        
-        // Store handle info for potential drag
-        setDraggedNoteId(clickedNote.id);
-        setDragStartTime(clickedNote.time);
-        setDragStartLane(clickedNote.lane);
-        setDraggedHandle(nearestHandle); // Pre-set handle for immediate drag
-        mouseDownPosRef.current = { x: mouseX, y: mouseY };
+        // Note already selected
+        if (isMultiSelect) {
+          // Ctrl+Click on selected note = deselect it
+          toggleNoteSelection(clickedNote.id);
+          audioManager.play('tapHit');
+          return;
+        } else {
+          // Regular click on selected - check if clicking near a handle
+          const { distance: mouseDistance } = mouseToLane(mouseX, mouseY, VANISHING_POINT_X, VANISHING_POINT_Y);
+          const nearestHandle = detectNearestHandle(clickedNote, mouseDistance, currentTime);
+          
+          // Store handle info for potential drag
+          setDraggedNoteId(clickedNote.id);
+          setDragStartTime(clickedNote.time);
+          setDragStartLane(clickedNote.lane);
+          setDraggedHandle(nearestHandle); // Pre-set handle for immediate drag
+          mouseDownPosRef.current = { x: mouseX, y: mouseY };
+        }
       } else {
-        // Note not selected - prepare for selection or body drag
-        setDraggedNoteId(clickedNote.id);
-        setDragStartTime(clickedNote.time);
-        setDragStartLane(clickedNote.lane);
-        setDraggedHandle(null); // Body drag by default
-        mouseDownPosRef.current = { x: mouseX, y: mouseY };
+        // Note not selected
+        if (isMultiSelect) {
+          // Ctrl+Click adds to selection without clearing
+          toggleNoteSelection(clickedNote.id);
+          audioManager.play('tapHit');
+        } else {
+          // Regular click - prepare for selection or body drag
+          setDraggedNoteId(clickedNote.id);
+          setDragStartTime(clickedNote.time);
+          setDragStartLane(clickedNote.lane);
+          setDraggedHandle(null); // Body drag by default
+          mouseDownPosRef.current = { x: mouseX, y: mouseY };
+        }
       }
       audioManager.play('tapHit');
     } else {
@@ -125,8 +141,10 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
       const { time: timeOffset } = mouseToTime(mouseX, mouseY, VANISHING_POINT_X, VANISHING_POINT_Y, currentTime, LEAD_TIME, JUDGEMENT_RADIUS);
       const noteTime = snapEnabled ? snapTimeToGrid(timeOffset, metadata.bpm, snapDivision) : timeOffset;
       
-      // Always clear selection when clicking empty space
-      clearSelection();
+      // Always clear selection when clicking empty space (unless multi-selecting)
+      if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+        clearSelection();
+      }
       
       // Check if a note already exists at this time/lane
       if (checkNoteOverlap(parsedNotes, null, closestLane, noteTime - TAP_HIT_WINDOW, noteTime + TAP_HIT_WINDOW)) {
@@ -138,7 +156,7 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
       setDragStartLane(closestLane);
       mouseDownPosRef.current = { x: mouseX, y: mouseY };
     }
-  }, [canvasRef, currentTime, snapEnabled, metadata.bpm, snapDivision, parsedNotes, selectedNoteIds, isPlaying, clearSelection, setIsDragging, setDragStartTime, setDragStartLane, setDraggedNoteId]);
+  }, [canvasRef, currentTime, snapEnabled, metadata.bpm, snapDivision, parsedNotes, selectedNoteIds, isPlaying, clearSelection, toggleNoteSelection, setIsDragging, setDragStartTime, setDragStartLane, setDraggedNoteId]);
 
   const handleCanvasMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!canvasRef.current) return;
@@ -231,6 +249,8 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
   const handleCanvasMouseUp = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!canvasRef.current) return;
 
+    const isMultiSelect = e.ctrlKey || e.metaKey || e.shiftKey;
+
     if (isDragging) {
       // We were dragging - finalize the change and save to history
       if (draggedNoteId) {
@@ -257,7 +277,9 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
           setParsedNotes(updatedNotes);
           setDifficultyNotes(currentDifficulty, updatedNotes);
           // Don't select the newly created note
-          clearSelection();
+          if (!isMultiSelect) {
+            clearSelection();
+          }
           setSelectedNoteId(null);
           audioManager.play('tapHit');
         }
@@ -272,14 +294,20 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
       // We clicked but didn't drag - toggle selection
       const isAlreadySelected = selectedNoteIds.includes(draggedNoteId);
       
-      if (isAlreadySelected) {
-        // Deselect
-        clearSelection();
-        setSelectedNoteId(null);
+      if (isMultiSelect) {
+        // Multi-select mode was already handled in mouseDown
+        // Just clean up
       } else {
-        // Select
-        clearSelection();
-        setSelectedNoteId(draggedNoteId);
+        // Single select mode
+        if (isAlreadySelected) {
+          // Deselect
+          clearSelection();
+          setSelectedNoteId(null);
+        } else {
+          // Select (and clear others)
+          clearSelection();
+          setSelectedNoteId(draggedNoteId);
+        }
       }
       setDraggedNoteId(null);
       mouseDownPosRef.current = null;

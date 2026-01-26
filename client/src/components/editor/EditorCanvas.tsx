@@ -131,8 +131,8 @@ export function EditorCanvas({
   const handleNoteClick = useCallback((note: Note, event: React.MouseEvent) => {
     const isAlreadySelected = selectedNoteIds.includes(note.id);
     
-    if (event.shiftKey) {
-      // Shift-click: multi-select mode
+    if (event.ctrlKey || event.metaKey) {
+      // Ctrl-click: multi-select mode
       // First, ensure selectedNoteId is in selectedNoteIds if it exists
       if (selectedNoteId && !selectedNoteIds.includes(selectedNoteId)) {
         toggleNoteSelection(selectedNoteId);
