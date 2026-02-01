@@ -25,6 +25,7 @@ export interface UseCandidateScoringParams {
   snapEnabled: boolean;
   snapDivision: 1 | 2 | 4 | 8 | 16;
   bpm: number;
+  beatmapStart: number;
 }
 
 /**
@@ -39,7 +40,7 @@ export function findCandidateNote(
   mouseY: number,
   params: UseCandidateScoringParams
 ): Note | null {
-  const { parsedNotes, currentTime, snapEnabled, snapDivision, bpm } = params;
+  const { parsedNotes, currentTime, snapEnabled, snapDivision, bpm, beatmapStart } = params;
   
   const { lane: closestLane, distance: mouseDistance } = mouseToLane(
     mouseX, 
@@ -58,7 +59,7 @@ export function findCandidateNote(
     JUDGEMENT_RADIUS
   );
   
-  const clickTime = snapEnabled ? snapTimeToGrid(timeOffset, bpm, snapDivision) : timeOffset;
+  const clickTime = snapEnabled ? snapTimeToGrid(timeOffset, bpm, snapDivision, beatmapStart) : timeOffset;
 
   // Find all candidate notes that could be clicked, then pick the best match
   const candidateNotes = parsedNotes

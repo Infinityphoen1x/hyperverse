@@ -73,11 +73,37 @@ export function initYouTubePlayer(containerElement: HTMLDivElement | null, video
               getCurrentTime: typeof player?.getCurrentTime,
               getPlayerState: typeof player?.getPlayerState
             });
+            
+            // Capture video duration
+            try {
+              const duration = player?.getDuration();
+              if (duration && !isNaN(duration)) {
+                const durationMs = Math.floor(duration * 1000);
+                useYoutubeStore.getState().setVideoDurationMs(durationMs);
+                console.log('[YOUTUBE-PLAYER-INIT] Video duration captured:', durationMs, 'ms');
+              }
+            } catch (e) {
+              console.warn('[YOUTUBE-PLAYER-INIT] Failed to get video duration:', e);
+            }
+            
             onReadyCb?.();
           },
           onError: (e: any) => console.warn('[YOUTUBE-PLAYER-ERROR] YouTube player error:', e),
           onStateChange: (e: any) => {
-            console.log('[YOUTUBE-STATE-CHANGE] State:', e.data); // 1=playing, 2=paused
+            console.log('[YOUTUBE-STATE-CHANGE] State:', e.data); // -1=unstarted, 0=ended, 1=playing, 2=paused, 3=buffering, 5=cued
+            
+            // Sync isPlaying state with YouTube player state
+            // This ensures the play button UI updates when YouTube auto-plays (e.g., after seeking)
+            const isPlaying = e.data === 1; // 1 = playing
+            const isPaused = e.data === 2; // 2 = paused
+            
+            if (isPlaying || isPaused) {
+              // Get the editor store to update isPlaying state
+              // We need to import this dynamically to avoid circular dependencies
+              import('@/stores/useEditorCoreStore').then(({ useEditorCoreStore }) => {
+                useEditorCoreStore.getState().setIsPlaying(isPlaying);
+              });
+            }
           }
         }
       };
@@ -115,7 +141,11 @@ export function initYouTubePlayer(containerElement: HTMLDivElement | null, video
           // Set iframe attributes for cross-origin compatibility (Safari/Firefox)
           iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
           iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
-          console.log('[YOUTUBE-PLAYER-INIT] Set allow and referrerpolicy attributes');
+          // Prevent iframe from receiving keyboard events (fixes keys 1-6 triggering YouTube seek)
+          iframe.setAttribute('tabindex', '-1');
+          // Prevent iframe from stealing focus
+          iframe.addEventListener('focus', () => iframe.blur());
+          console.log('[YOUTUBE-PLAYER-INIT] Set allow, referrerpolicy, and tabindex attributes');
         } else {
           console.warn('[YOUTUBE-PLAYER-INIT] Iframe not found in container after 100ms, trying 500ms...');
           setTimeout(() => {
@@ -124,6 +154,10 @@ export function initYouTubePlayer(containerElement: HTMLDivElement | null, video
               useYoutubeStore.getState().setYoutubeIframeElement(iframe2);
               iframe2.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
               iframe2.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+              // Prevent iframe from receiving keyboard events (fixes keys 1-6 triggering YouTube seek)
+              iframe2.setAttribute('tabindex', '-1');
+              // Prevent iframe from stealing focus
+              iframe2.addEventListener('focus', () => iframe2.blur());
               console.log('[YOUTUBE-PLAYER-INIT] Iframe found after 500ms, src:', iframe2.src);
             }
           }, 400);

@@ -12,6 +12,17 @@ interface SyncLineHexagonsProps {
 }
 
 const SyncLineHexagonsComponent = ({ vpX, vpY, rotationOffset = 0, zoomScale = 1.0 }: SyncLineHexagonsProps) => {
+  // DEBUG: Log input props
+  if (!isFinite(vpX) || !isFinite(vpY) || !isFinite(rotationOffset)) {
+    console.error('[SyncLineHexagons] NaN in props:', { vpX, vpY, rotationOffset, zoomScale });
+  }
+  
+  // Safety check for NaN values using isFinite (handles undefined, NaN, Infinity)
+  const safeVpX = isFinite(vpX) ? vpX : 350;
+  const safeVpY = isFinite(vpY) ? vpY : 300;
+  const safeRotationOffset = isFinite(rotationOffset) ? rotationOffset : 0;
+  const safeZoomScale = isFinite(zoomScale) ? zoomScale : 1.0;
+  
   const notes = useGameStore(state => state.notes);
   const currentTime = useGameStore(state => state.currentTime);
   const playerSpeed = useGameStore(state => state.playerSpeed);
@@ -23,14 +34,14 @@ const SyncLineHexagonsComponent = ({ vpX, vpY, rotationOffset = 0, zoomScale = 1
   return (
     <>
       {syncGroups.map((group) => {
-        const scaledRadius = group.radius * zoomScale;
+        const scaledRadius = group.radius * safeZoomScale;
         const progress = group.radius / JUDGEMENT_RADIUS;
         
         // Generate hexagon points
         const points = Array.from({ length: 6 }).map((_, i) => {
-          const angle = ((i * 60 + rotationOffset) * Math.PI) / 180;
-          const x = vpX + scaledRadius * Math.cos(angle);
-          const y = vpY + scaledRadius * Math.sin(angle);
+          const angle = ((i * 60 + safeRotationOffset) * Math.PI) / 180;
+          const x = safeVpX + scaledRadius * Math.cos(angle);
+          const y = safeVpY + scaledRadius * Math.sin(angle);
           return `${x},${y}`;
         }).join(' ');
         

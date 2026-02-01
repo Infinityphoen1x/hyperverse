@@ -26,6 +26,19 @@ const ParallaxHexagonLayersComponent = ({
   zoomIntensity = 0,
   zoomScale = 1.0
 }: ParallaxHexagonLayersProps) => {
+  // DEBUG: Log input props
+  if (!isFinite(vpX) || !isFinite(vpY) || !isFinite(hexCenterX) || !isFinite(hexCenterY)) {
+    console.error('[ParallaxHexagonLayers] NaN in props:', { vpX, vpY, hexCenterX, hexCenterY, rotationOffset, zoomIntensity, zoomScale });
+  }
+  
+  // Safety check for NaN values using isFinite (handles undefined, NaN, Infinity)
+  const safeVpX = isFinite(vpX) ? vpX : 350;
+  const safeVpY = isFinite(vpY) ? vpY : 300;
+  const safeHexCenterX = isFinite(hexCenterX) ? hexCenterX : 350;
+  const safeHexCenterY = isFinite(hexCenterY) ? hexCenterY : 300;
+  const safeRotationOffset = isFinite(rotationOffset) ? rotationOffset : 0;
+  const safeZoomScale = isFinite(zoomScale) ? zoomScale : 1.0;
+  
   // Store target and current values per layer for smooth interpolation
   const layerRotationsRef = useRef<{[layerIndex: number]: {current: number, target: number, targetTime: number}}>({}); 
   const animationRef = useRef<number | null>(null);
@@ -60,7 +73,7 @@ const ParallaxHexagonLayersComponent = ({
   useEffect(() => {
     parallaxRadii.forEach((_, idx) => {
       if (!layerRotationsRef.current[idx]) {
-        layerRotationsRef.current[idx] = {current: rotationOffset, target: rotationOffset, targetTime: 0};
+        layerRotationsRef.current[idx] = {current: safeRotationOffset, target: safeRotationOffset, targetTime: 0};
       }
     });
   }, []);
@@ -70,12 +83,12 @@ const ParallaxHexagonLayersComponent = ({
     const now = performance.now();
     
     parallaxRadii.forEach((radius, idx) => {
-      const maxRadius = baseMaxRadius * delayedScaleRef.current;
+      const maxRadius = baseMaxRadius * safeZoomScale;
       const progress = radius / maxRadius;
       const depthFactor = progress; // 0 (near/inner) to 1 (far/outer)
       const delay = BASE_PARALLAX_DELAY_MS * (1 + (1 - depthFactor) * 4); // 50-250ms (outer = less delay, inner = more delay)
       const rotationScale = PARALLAX_ROTATION_BASE_SCALE * (1 + depthFactor * 1.0); // Outer rotates MORE (3.0x-6.0x)
-      const scaledRotation = rotationOffset * rotationScale;
+      const scaledRotation = safeRotationOffset * rotationScale;
       
       if (!layerRotationsRef.current[idx]) {
         layerRotationsRef.current[idx] = {current: scaledRotation, target: scaledRotation, targetTime: now + delay};
@@ -134,11 +147,26 @@ const ParallaxHexagonLayersComponent = ({
         // Calculate vertices
         const points = Array.from({ length: 6 }).map((_, i) => {
           const angle = ((i * 60 + layerRotation) * Math.PI) / 180;
-          const outerCornerX = hexCenterX + maxRadius * Math.cos(angle);
-          const outerCornerY = hexCenterY + maxRadius * Math.sin(angle);
+          const outerCornerX = safeHexCenterX + maxRadius * Math.cos(angle);
+          const outerCornerY = safeHexCenterY + maxRadius * Math.sin(angle);
           
-          const x = vpX + (outerCornerX - vpX) * progress;
-          const y = vpY + (outerCornerY - vpY) * progress;
+          const x = safeVpX + (outerCornerX - safeVpX) * progress;
+          const y = safeVpY + (outerCornerY - safeVpY) * progress;
+          
+          // DEBUG: Check for NaN in parallax hexagon points
+          if (!isFinite(x) || !isFinite(y)) {
+            console.error('[ParallaxHexagonLayers point] NaN detected:', {
+              layerIdx: idx,
+              vertexIdx: i,
+              radius,
+              layerRotation,
+              progress,
+              angle,
+              outerCornerX, outerCornerY,
+              safeVpX, safeVpY,
+              x, y
+            });
+          }
           
           return `${x},${y}`;
         }).join(' ');
@@ -163,21 +191,21 @@ const ParallaxHexagonLayersComponent = ({
             {/* Rays connecting this layer to the next parallax layer (skip for last layer) */}
             {idx < parallaxRadii.length - 1 && Array.from({ length: 6 }).map((_, cornerIdx) => {
               const angle = ((cornerIdx * 60 + layerRotation) * Math.PI) / 180;
-              const outerCornerX = hexCenterX + maxRadius * Math.cos(angle);
-              const outerCornerY = hexCenterY + maxRadius * Math.sin(angle);
+              const outerCornerX = safeHexCenterX + maxRadius * Math.cos(angle);
+              const outerCornerY = safeHexCenterY + maxRadius * Math.sin(angle);
               
               // Current layer corner
-              const x1 = vpX + (outerCornerX - vpX) * progress;
-              const y1 = vpY + (outerCornerY - vpY) * progress;
+              const x1 = safeVpX + (outerCornerX - safeVpX) * progress;
+              const y1 = safeVpY + (outerCornerY - safeVpY) * progress;
               
               // Next layer corner
               const nextProgress = parallaxRadii[idx + 1] / maxRadius;
               const nextLayerRotation = layerRotationsRef.current[idx + 1]?.current ?? layerRotation;
               const nextAngle = ((cornerIdx * 60 + nextLayerRotation) * Math.PI) / 180;
-              const nextOuterCornerX = hexCenterX + maxRadius * Math.cos(nextAngle);
-              const nextOuterCornerY = hexCenterY + maxRadius * Math.sin(nextAngle);
-              const x2 = vpX + (nextOuterCornerX - vpX) * nextProgress;
-              const y2 = vpY + (nextOuterCornerY - vpY) * nextProgress;
+              const nextOuterCornerX = safeHexCenterX + maxRadius * Math.cos(nextAngle);
+              const nextOuterCornerY = safeHexCenterY + maxRadius * Math.sin(nextAngle);
+              const x2 = safeVpX + (nextOuterCornerX - safeVpX) * nextProgress;
+              const y2 = safeVpY + (nextOuterCornerY - safeVpY) * nextProgress;
               
               return (
                 <line
@@ -195,12 +223,12 @@ const ParallaxHexagonLayersComponent = ({
             {/* Rays connecting each parallax layer to its corresponding tunnel hexagon vertices */}
             {Array.from({ length: 6 }).map((_, cornerIdx) => {
               const angle = ((cornerIdx * 60 + layerRotation) * Math.PI) / 180;
-              const outerCornerX = hexCenterX + maxRadius * Math.cos(angle);
-              const outerCornerY = hexCenterY + maxRadius * Math.sin(angle);
+              const outerCornerX = safeHexCenterX + maxRadius * Math.cos(angle);
+              const outerCornerY = safeHexCenterY + maxRadius * Math.sin(angle);
               
               // Parallax layer corner
-              const x1 = vpX + (outerCornerX - vpX) * progress;
-              const y1 = vpY + (outerCornerY - vpY) * progress;
+              const x1 = safeVpX + (outerCornerX - safeVpX) * progress;
+              const y1 = safeVpY + (outerCornerY - safeVpY) * progress;
               
               // Find corresponding tunnel hexagon (match by index if possible, or closest)
               const tunnelIdx = Math.min(idx, HEXAGON_RADII.length - 1);
@@ -208,11 +236,11 @@ const ParallaxHexagonLayersComponent = ({
               const tunnelProgress = tunnelRadius / maxRadius;
               
               // Calculate corresponding tunnel hexagon vertex
-              const tunnelAngle = ((cornerIdx * 60 + rotationOffset) * Math.PI) / 180;
-              const tunnelOuterCornerX = hexCenterX + maxRadius * Math.cos(tunnelAngle);
-              const tunnelOuterCornerY = hexCenterY + maxRadius * Math.sin(tunnelAngle);
-              const x2 = vpX + (tunnelOuterCornerX - vpX) * tunnelProgress;
-              const y2 = vpY + (tunnelOuterCornerY - vpY) * tunnelProgress;
+              const tunnelAngle = ((cornerIdx * 60 + safeRotationOffset) * Math.PI) / 180;
+              const tunnelOuterCornerX = safeHexCenterX + maxRadius * Math.cos(tunnelAngle);
+              const tunnelOuterCornerY = safeHexCenterY + maxRadius * Math.sin(tunnelAngle);
+              const x2 = safeVpX + (tunnelOuterCornerX - safeVpX) * tunnelProgress;
+              const y2 = safeVpY + (tunnelOuterCornerY - safeVpY) * tunnelProgress;
               
               return (
                 <line

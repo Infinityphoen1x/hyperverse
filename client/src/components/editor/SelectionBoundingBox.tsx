@@ -37,9 +37,10 @@ const SelectionBoundingBoxComponent = ({
   vpY,
   onHandleMouseDown
 }: SelectionBoundingBoxProps) => {
-  const tunnelRotation = useTunnelRotation();
-
+  // Early return BEFORE hooks to avoid hook count mismatch
   if (!selectedNote) return null;
+  
+  const tunnelRotation = useTunnelRotation();
 
   let points: string = '';
   

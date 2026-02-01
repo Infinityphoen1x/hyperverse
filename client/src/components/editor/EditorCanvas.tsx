@@ -1,15 +1,17 @@
-import { useCallback } from 'react';
-import { TunnelBackground } from '@/components/game/tunnel/TunnelBackground';
+import { useCallback, useEffect } from 'react';
 import { SoundpadButtons } from '@/components/game/hud/SoundpadButtons';
 import { JudgementLines } from '@/components/game/tunnel/JudgementLines';
 import { TapNotes } from '@/components/game/notes/TapNotes';
 import { HoldNotes } from '@/components/game/notes/HoldNotes';
+import { DeckHoldMeters } from '@/components/game/hud/DeckHoldMeters';
+import { EditorTunnelBackground } from '@/components/editor/EditorTunnelBackground';
 import { EditorBeatGrid } from '@/components/editor/EditorBeatGrid';
 import { EditorStatusBar } from '@/components/editor/EditorStatusBar';
 import { SelectionBoundingBox } from '@/components/editor/SelectionBoundingBox';
 import { EditorInteractionLayer } from '@/components/editor/EditorInteractionLayer';
 import { Note } from '@/types/game';
 import { VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT } from '@/lib/config';
+import { EDITOR_CONTAINER_CLASSES } from '@/lib/config/editor';
 import { useVanishingPointOffset } from '@/hooks/effects/geometry/useVanishingPointOffset';
 import { useZoomEffect } from '@/hooks/effects/screen/useZoomEffect';
 import { useEditorMouseHandlers } from '@/hooks/editor/useEditorMouseHandlers';
@@ -20,7 +22,7 @@ interface EditorCanvasProps {
   currentTime: number;
   parsedNotes: Note[];
   metadata: any;
-  editorMode: boolean;
+  isEditMode: boolean;
   snapEnabled: boolean;
   snapDivision: 1 | 2 | 4 | 8 | 16;
   hoveredNote: any;
@@ -50,14 +52,15 @@ interface EditorCanvasProps {
   judgementLinesEnabled: boolean;
   spinEnabled: boolean;
   isPlaying: boolean;
+  simulationMode: boolean;
 }
 
-export function EditorCanvas({
+const EditorCanvasComponent = ({
   canvasRef,
   currentTime,
   parsedNotes,
   metadata,
-  editorMode,
+  isEditMode,
   snapEnabled,
   snapDivision,
   hoveredNote,
@@ -87,16 +90,28 @@ export function EditorCanvas({
   judgementLinesEnabled,
   spinEnabled,
   isPlaying,
-}: EditorCanvasProps) {
+  simulationMode,
+}: EditorCanvasProps) => {
   // Get dynamic vanishing point offset (if enabled)
   const vpOffset = useVanishingPointOffset();
   const { zoomScale } = useZoomEffect();
   
-  // Calculate actual vanishing point coordinates
-  const vpX = dynamicVPEnabled ? VANISHING_POINT_X + vpOffset.x : VANISHING_POINT_X;
-  const vpY = dynamicVPEnabled ? VANISHING_POINT_Y + vpOffset.y : VANISHING_POINT_Y;
-  const actualZoomScale = zoomEnabled ? zoomScale : 1.0;
-  
+  // Calculate actual vanishing point coordinates with proper defaults and type safety
+  const vpOffsetX = (typeof vpOffset?.x === 'number' && isFinite(vpOffset.x)) ? vpOffset.x : 0;
+  const vpOffsetY = (typeof vpOffset?.y === 'number' && isFinite(vpOffset.y)) ? vpOffset.y : 0;
+  const vpX = dynamicVPEnabled ? VANISHING_POINT_X + vpOffsetX : VANISHING_POINT_X;
+  const vpY = dynamicVPEnabled ? VANISHING_POINT_Y + vpOffsetY : VANISHING_POINT_Y;
+  const actualZoomScale = (zoomEnabled && typeof zoomScale === 'number' && isFinite(zoomScale)) ? zoomScale : 1.0;  
+  // DEBUG: Log NaN values in EditorCanvas
+  if (!isFinite(vpX) || !isFinite(vpY)) {
+    console.error('[EditorCanvas] NaN detected:', {
+      vpX, vpY,
+      vpOffset,
+      vpOffsetX, vpOffsetY,
+      VANISHING_POINT_X, VANISHING_POINT_Y,
+      dynamicVPEnabled
+    });
+  }  
   // Extract mouse handlers to custom hook
   const { handleCanvasMouseDown, handleCanvasMouseMove, handleCanvasMouseUp } = useEditorMouseHandlers({
     canvasRef,
@@ -129,10 +144,13 @@ export function EditorCanvas({
 
   // Handle note clicks from interaction layer
   const handleNoteClick = useCallback((note: Note, event: React.MouseEvent) => {
+    // Only allow note selection/interaction when edit mode is enabled
+    if (!isEditMode) return;
+    
     const isAlreadySelected = selectedNoteIds.includes(note.id);
     
-    if (event.ctrlKey || event.metaKey) {
-      // Ctrl-click: multi-select mode
+    if (event.ctrlKey || event.metaKey || event.shiftKey) {
+      // Ctrl/Cmd/Shift-click: multi-select mode
       // First, ensure selectedNoteId is in selectedNoteIds if it exists
       if (selectedNoteId && !selectedNoteIds.includes(selectedNoteId)) {
         toggleNoteSelection(selectedNoteId);
@@ -215,32 +233,50 @@ export function EditorCanvas({
   return (
     <div
       ref={canvasRef}
+      className={`${EDITOR_CONTAINER_CLASSES.CANVAS_ROOT} ${glowEnabled ? '' : 'editor-no-glow'}`}
+      style={{
+        width: `${TUNNEL_CONTAINER_WIDTH}px`,
+        height: `${TUNNEL_CONTAINER_HEIGHT}px`,
+        margin: '0 auto'
+      }}
       onMouseDown={handleCanvasMouseDown}
       onMouseMove={handleCanvasMouseMove}
       onMouseUp={handleCanvasMouseUp}
       onMouseLeave={() => { setHoveredNote(null); setIsDragging(false); }}
-      className={`relative cursor-crosshair ${glowEnabled ? '' : 'editor-no-glow'}`}
-      style={{ 
-        width: `${TUNNEL_CONTAINER_WIDTH}px`, 
-        height: `${TUNNEL_CONTAINER_HEIGHT}px`,
-        margin: '0 auto'
-      }}
     >
-      {/* Tunnel - matching game rendering */}
-      <TunnelBackground 
-        vpX={vpX} 
-        vpY={vpY} 
+      {/* Tunnel - matches gameplay exactly */}
+      <EditorTunnelBackground
+        vpX={vpX}
+        vpY={vpY}
         hexCenterX={VANISHING_POINT_X}
         hexCenterY={VANISHING_POINT_Y}
         health={100}
       />
       
-      {/* Soundpad buttons - matching game */}
-      <SoundpadButtons 
-        vpX={vpX} 
-        vpY={vpY} 
-        zoomScale={actualZoomScale}
-      />
+      {/* Soundpad buttons - only visible during simulation mode */}
+      {simulationMode && (
+        <SoundpadButtons 
+          vpX={vpX} 
+          vpY={vpY} 
+          zoomScale={actualZoomScale}
+        />
+      )}
+      
+      {/* Deck Hold Meters - only visible during simulation mode */}
+      {simulationMode && (
+        <DeckHoldMeters notes={parsedNotes} currentTime={currentTime} />
+      )}
+      
+      {/* Beat Grid - hexagonal with parallax */}
+      {snapEnabled && isEditMode && (
+        <EditorBeatGrid 
+          currentTime={currentTime}
+          bpm={metadata.bpm}
+          snapDivision={snapDivision}
+          vpX={vpX}
+          vpY={vpY}
+        />
+      )}
       
       {/* Judgement lines - matching game (conditionally rendered) */}
       {judgementLinesEnabled && (
@@ -252,8 +288,8 @@ export function EditorCanvas({
         />
       )}
 
-      {/* Notes */}
-      {editorMode && parsedNotes.length > 0 && (
+      {/* Notes - Always visible, but editing features only available in edit mode */}
+      {parsedNotes.length > 0 && (
         <>
           <HoldNotes vpX={vpX} vpY={vpY} />
           {judgementLinesEnabled && (
@@ -266,8 +302,8 @@ export function EditorCanvas({
           )}
           <TapNotes vpX={vpX} vpY={vpY} />
           
-          {/* Bounding boxes around all selected notes */}
-          {selectedNoteIds.length > 0 && !isDragging && (
+          {/* Bounding boxes around all selected notes - only in edit mode */}
+          {isEditMode && selectedNoteIds.length > 0 && !isDragging && (
             <>
               {selectedNoteIds.map(noteId => {
                 const selectedNote = parsedNotes.find(n => n.id === noteId);
@@ -336,17 +372,11 @@ export function EditorCanvas({
         snapDivision={snapDivision}
         bpm={metadata.bpm}
       />
-
-      {/* Beat Grid - hexagonal with parallax */}
-      {snapEnabled && editorMode && (
-        <EditorBeatGrid 
-          currentTime={currentTime}
-          bpm={metadata.bpm}
-          snapDivision={snapDivision}
-          vpX={vpX}
-          vpY={vpY}
-        />
-      )}
     </div>
   );
-}
+};
+
+// Export without memo - canvas must re-render for animations (VP offset, notes, etc.)
+export const EditorCanvas = EditorCanvasComponent;
+
+EditorCanvas.displayName = 'EditorCanvas';

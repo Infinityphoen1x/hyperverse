@@ -9,6 +9,7 @@ import Home from "@/pages/Home";
 import Game from "@/pages/Game";
 import Settings from "@/pages/Settings";
 import BeatmapEditor from "@/pages/BeatmapEditor";
+import { useBeatmapStore } from "@/stores/useBeatmapStore";
 
 function App() {
   const [gameActive, setGameActive] = useState(false);
@@ -17,7 +18,7 @@ function App() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const youtubeContainerRef = useRef<HTMLDivElement>(null);
   const playerInitializedRef = useRef<boolean>(false) as React.RefObject<boolean>;
-  const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
+  const youtubeVideoId = useBeatmapStore(state => state.youtubeVideoId);
 
   // Initialize console logging for diagnostics
   useConsoleLogger();
@@ -42,51 +43,12 @@ function App() {
     };
   }, [youtubeVideoId]);
 
-  // Get YouTube video ID from localStorage (set by Game component or Editor)
-  useEffect(() => {
-    const loadVideoId = () => {
-      const pending = localStorage.getItem('pendingBeatmap');
-      if (pending) {
-        try {
-          const data = JSON.parse(pending);
-          if (data.youtubeVideoId) {
-            console.log('[APP-YOUTUBE] Loading video ID from localStorage:', data.youtubeVideoId);
-            setYoutubeVideoId(data.youtubeVideoId);
-          }
-        } catch (e) {
-          console.warn('[APP-YOUTUBE] Failed to parse beatmap');
-        }
-      } else {
-        // No beatmap in localStorage - clear video ID to unmount iframe
-        setYoutubeVideoId(null);
-      }
-    };
-    
-    // Initial load
-    loadVideoId();
-    
-    // Poll for changes every 500ms
-    const interval = setInterval(loadVideoId, 500);
-    
-    // Listen for immediate updates from editor
-    const handleBeatmapUpdate = () => {
-      console.log('[APP-YOUTUBE] beatmapUpdate event received, loading video ID');
-      loadVideoId();
-    };
-    window.addEventListener('beatmapUpdate', handleBeatmapUpdate);
-    
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('beatmapUpdate', handleBeatmapUpdate);
-    };
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         {/* Persistent background container - never remounts */}
-        <div className="fixed inset-0 w-full h-full bg-black overflow-hidden">
+        <div className="fixed inset-0 w-full h-full bg-black" style={{ overflow: 'hidden', minHeight: '100vh', minWidth: '100vw' }}>
           {/* YouTube player - PERSISTENT background (z-0) */}
           {youtubeVideoId && (
             <div 
@@ -97,7 +59,7 @@ function App() {
           )}
 
           {/* UI Layer - Home, Game, Settings, or Editor (z-10+) */}
-          <div className="absolute inset-0 z-10">
+          <div className="absolute inset-0 z-10" style={{ overflow: 'hidden' }}>
             {settingsOpen && (
               <Settings onBack={() => setSettingsOpen(false)} />
             )}

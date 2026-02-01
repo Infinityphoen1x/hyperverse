@@ -1,4 +1,3 @@
-import { useYouTubePlayerStore } from '@/stores/useYouTubePlayerStore';
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { getYouTubeVideoTime, seekYouTubeVideo, playYouTubeVideo, pauseYouTubeVideo } from '@/lib/youtube';
 

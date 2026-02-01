@@ -55,5 +55,8 @@ export function useIdleRotationManager(enabled: boolean = true): void {
  */
 export function useIdleRotation(depthFactor: number = 1.0): number {
   const baseRotation = useGameStore(state => state.idleRotation);
-  return baseRotation * depthFactor;
+  const safeBase = isFinite(baseRotation) ? baseRotation : 0;
+  const safeFactor = isFinite(depthFactor) ? depthFactor : 1.0;
+  const result = safeBase * safeFactor;
+  return isFinite(result) ? result : 0;
 }

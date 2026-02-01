@@ -65,6 +65,26 @@ export const TUNNEL_CONTAINER_WIDTH = TUNNEL_VIEWPORT.containerWidth;
 export const TUNNEL_CONTAINER_HEIGHT = TUNNEL_VIEWPORT.containerHeight;
 
 /**
+ * Vanishing point animation configuration
+ * Creates smooth circular motion for 3D perspective wobble effect
+ */
+export interface VanishingPointAnimation {
+  amplitude: number;      // ±pixels offset from center
+  cycleDuration: number;  // milliseconds per full cycle
+  updateInterval: number; // milliseconds between updates (~60fps)
+}
+
+export const VP_ANIMATION: VanishingPointAnimation = {
+  amplitude: 15,          // ±15px offset from center
+  cycleDuration: 8000,    // 8 seconds per full cycle
+  updateInterval: 16,     // ~60fps
+};
+
+export const VP_AMPLITUDE = VP_ANIMATION.amplitude;
+export const VP_CYCLE_DURATION = VP_ANIMATION.cycleDuration;
+export const VP_UPDATE_INTERVAL = VP_ANIMATION.updateInterval;
+
+/**
  * HOLD note visual geometry
  */
 export interface HoldNoteGeometry {

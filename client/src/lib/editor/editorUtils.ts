@@ -148,13 +148,15 @@ export function mouseToTime(
  * @param time Time in milliseconds
  * @param bpm Beats per minute
  * @param division Beat division (1, 2, 4, 8, 16)
+ * @param beatmapStart Start time of the beatmap in ms (default 0)
  * @returns Snapped time
  * @throws Error if BPM or division is invalid
  */
 export function snapTimeToGrid(
   time: number,
   bpm: number,
-  division: number
+  division: number,
+  beatmapStart: number = 0
 ): number {
   if (bpm <= 0) {
     throw new Error('Invalid BPM: must be > 0');
@@ -165,18 +167,23 @@ export function snapTimeToGrid(
   
   const beatDurationMs = MS_PER_MINUTE / bpm; // 60000ms per minute / BPM
   const snapIntervalMs = beatDurationMs / division;
-  return Math.round(time / snapIntervalMs) * snapIntervalMs;
+  
+  // Snap relative to beatmapStart, not absolute 0
+  const offset = time - beatmapStart;
+  const snappedOffset = Math.round(offset / snapIntervalMs) * snapIntervalMs;
+  return beatmapStart + snappedOffset;
 }
 
 /**
- * Generate beat grid circle data for visual overlay
+ * Generate beat grid hexagon data for visual overlay
  * @param currentTime Current playback time
  * @param bpm Beats per minute
  * @param division Beat division
- * @param leadTime Lead time constant
- * @param judgementRadius Judgement radius constant
- * @param count Number of circles to generate
- * @returns Array of grid circle data with distance values
+ * @param leadTime Lead time constant (how far ahead notes appear)
+ * @param judgementRadius Judgement radius constant (max distance from VP)
+ * @param beatmapStart Start time of the beatmap in ms
+ * @param beatmapEnd End time of the beatmap in ms
+ * @returns Array of grid hexagon data with distance and time values
  */
 export function generateBeatGrid(
   currentTime: number,
@@ -184,27 +191,42 @@ export function generateBeatGrid(
   division: number,
   leadTime: number = 4000,
   judgementRadius: number = 187,
-  count: number = 10
+  beatmapStart: number = 0,
+  beatmapEnd: number = 60000
 ): Array<{ distance: number; time: number }> {
   const beatDurationMs = MS_PER_MINUTE / bpm; // 60000ms per minute / BPM
   const snapIntervalMs = beatDurationMs / division;
-  const circles: Array<{ distance: number; time: number }> = [];
+  const hexagons: Array<{ distance: number; time: number }> = [];
 
-  // Generate grid points centered around current time
-  // BEAT_GRID_OFFSET_FACTOR (0.75) extends grid backward to show compressed hexagons near VP
-  // This creates visual depth by showing past grid lines approaching vanishing point
-  for (let i = 0; i < count; i++) {
-    const gridTime = currentTime + (i - count * BEAT_GRID_OFFSET_FACTOR) * snapIntervalMs;
-    const progress = (gridTime - currentTime) / leadTime;
-    const distance = 1 + (progress * (judgementRadius - 1));
+  // Generate grid hexagons for all beat divisions in visible range
+  // Start from first snap point before current visible range
+  const visibleStart = currentTime - leadTime * 0.2; // Show some hexagons behind VP
+  const visibleEnd = currentTime + leadTime; // Show hexagons up to lead time ahead
+  
+  // Find first snap point at or before visible start
+  const firstSnapTime = Math.floor(visibleStart / snapIntervalMs) * snapIntervalMs;
+  
+  // Generate hexagons from first snap point to visible end
+  for (let snapTime = firstSnapTime; snapTime <= visibleEnd; snapTime += snapIntervalMs) {
+    // Skip if outside beatmap bounds
+    if (snapTime < beatmapStart || snapTime > beatmapEnd) continue;
+    
+    // Calculate distance from VP based on time difference
+    const timeDiff = snapTime - currentTime;
+    const progress = timeDiff / leadTime;
+    
+    // Distance formula: closer to currentTime = at judgement line (judgementRadius)
+    //                  further ahead = closer to VP (distance = 1)
+    // Inverted: progress -1 (past) → 0 (now) → 1 (future)
+    const distance = judgementRadius - (progress * (judgementRadius - 1));
 
-    // Only include circles within valid range
+    // Only include hexagons within valid depth range
     if (distance >= 1 && distance <= judgementRadius) {
-      circles.push({ distance, time: gridTime });
+      hexagons.push({ distance, time: snapTime });
     }
   }
 
-  return circles;
+  return hexagons;
 }
 
 /**

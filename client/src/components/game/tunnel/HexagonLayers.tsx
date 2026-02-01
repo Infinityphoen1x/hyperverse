@@ -14,6 +14,19 @@ interface HexagonLayersProps {
 }
 
 export function HexagonLayers({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rotationOffset = 0, zoomIntensity = 0, zoomScale = 1.0 }: HexagonLayersProps) {
+  // DEBUG: Log input props
+  if (!isFinite(vpX) || !isFinite(vpY) || !isFinite(hexCenterX) || !isFinite(hexCenterY)) {
+    console.error('[HexagonLayers] NaN in props:', { vpX, vpY, hexCenterX, hexCenterY, rotationOffset, zoomIntensity, zoomScale });
+  }
+  
+  // Safety check for NaN values using isFinite (handles undefined, NaN, Infinity)
+  const safeVpX = isFinite(vpX) ? vpX : 350;
+  const safeVpY = isFinite(vpY) ? vpY : 300;
+  const safeHexCenterX = isFinite(hexCenterX) ? hexCenterX : 350;
+  const safeHexCenterY = isFinite(hexCenterY) ? hexCenterY : 300;
+  const safeRotationOffset = isFinite(rotationOffset) ? rotationOffset : 0;
+  const safeZoomScale = isFinite(zoomScale) ? zoomScale : 1.0;
+  
   const baseMaxRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1];
   
   // Apply ease-out cubic to zoom intensity for smoother appearance
@@ -46,8 +59,8 @@ export function HexagonLayers({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rota
     <>
       {allRadii.map((radius, idx) => {
         // Apply scale to all hexagon layers for proportional zoom
-        const scaledRadius = radius * zoomScale;
-        const maxRadius = baseMaxRadius * zoomScale;
+        const scaledRadius = radius * safeZoomScale;
+        const maxRadius = baseMaxRadius * safeZoomScale;
         
         const baseProgress = scaledRadius / maxRadius;
         
@@ -57,13 +70,28 @@ export function HexagonLayers({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rota
         // Calculate vertices along the rays from VP to outer hexagon corners
         const points = Array.from({ length: 6 }).map((_, i) => {
           // Calculate fixed outer corner position (with rotation)
-          const angle = ((i * 60 + rotationOffset) * Math.PI) / 180;
-          const outerCornerX = hexCenterX + maxRadius * Math.cos(angle);
-          const outerCornerY = hexCenterY + maxRadius * Math.sin(angle);
+          const angle = ((i * 60 + safeRotationOffset) * Math.PI) / 180;
+          const outerCornerX = safeHexCenterX + maxRadius * Math.cos(angle);
+          const outerCornerY = safeHexCenterY + maxRadius * Math.sin(angle);
           
           // Position vertex along ray from VP to outer corner at this radius distance
-          const x = vpX + (outerCornerX - vpX) * progress;
-          const y = vpY + (outerCornerY - vpY) * progress;
+          const x = safeVpX + (outerCornerX - safeVpX) * progress;
+          const y = safeVpY + (outerCornerY - safeVpY) * progress;
+          
+          // DEBUG: Check for NaN in hexagon points
+          if (!isFinite(x) || !isFinite(y)) {
+            console.error('[HexagonLayers point] NaN detected:', {
+              layerIdx: idx,
+              vertexIdx: i,
+              radius,
+              scaledRadius,
+              progress,
+              angle,
+              outerCornerX, outerCornerY,
+              safeVpX, safeVpY,
+              x, y
+            });
+          }
           
           return `${x},${y}`;
         }).join(' ');

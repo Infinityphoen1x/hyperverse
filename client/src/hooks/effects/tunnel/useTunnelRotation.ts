@@ -83,5 +83,6 @@ export function useTunnelRotation(depthFactor: number = 1.0): number {
   }, [targetRotation, setAnimatedRotation]); // Remove animatedRotation from dependencies!
   
   // Combine gameplay rotation with idle sway
-  return animatedRotation + idleRotation;
+  const result = animatedRotation + idleRotation;
+  return isFinite(result) ? result : 0;
 }

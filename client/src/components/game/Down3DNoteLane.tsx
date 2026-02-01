@@ -1,6 +1,6 @@
 // src/components/Down3DNoteLane.tsx
 import React, { memo, useEffect } from "react";
-import { VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config';
+import { VANISHING_POINT_X, VANISHING_POINT_Y, VP_AMPLITUDE, VP_CYCLE_DURATION, VP_UPDATE_INTERVAL } from '@/lib/config';
 import { useVanishingPointOffset } from '@/hooks/effects/geometry/useVanishingPointOffset';
 import { useVanishingPointStore } from '@/stores/useVanishingPointStore';
 import { useGameStore } from '@/stores/useGameStore';
@@ -37,10 +37,6 @@ const Down3DNoteLaneComponent = ({
 
   // Dynamic vanishing point: smooth circular motion for 3D perspective wobble
   useEffect(() => {
-    const VP_AMPLITUDE = 15; // ±15px offset from center
-    const VP_CYCLE_DURATION = 8000; // 8 seconds per full cycle
-    const VP_UPDATE_INTERVAL = 16; // ~60fps
-    
     const intervalId = setInterval(() => {
       const elapsed = Date.now() % VP_CYCLE_DURATION;
       const progress = elapsed / VP_CYCLE_DURATION; // 0 to 1
@@ -59,14 +55,6 @@ const Down3DNoteLaneComponent = ({
       setVPOffset({ x: 0, y: 0 }); // Reset on unmount
     };
   }, [setVPOffset]);
-
-  useEffect(() => {
-    if (combo > 0 && combo % 5 === 0) {
-      console.log(
-        `[VP-RENDER] Combo ${combo}: vpOffset=[${vpOffset.x.toFixed(1)}, ${vpOffset.y.toFixed(1)}] → vpX=${vpX.toFixed(1)}, vpY=${vpY.toFixed(1)}`
-      );
-    }
-  }, [vpOffset, combo, vpX, vpY]);
 
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-hidden" data-testid="down3d-note-lane">

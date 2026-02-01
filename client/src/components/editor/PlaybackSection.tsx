@@ -7,6 +7,7 @@ interface PlaybackSectionProps {
   onPause?: () => void;
   currentTime: number;
   setCurrentTime: (time: number) => void;
+  clearSelection?: () => void; // Optional - only used for timeline seeking
   metadata: {
     beatmapStart: number;
     beatmapEnd: number;
@@ -15,6 +16,7 @@ interface PlaybackSectionProps {
   loopEnd: number | null;
   setLoopStart: (time: number | null) => void;
   setLoopEnd: (time: number | null) => void;
+  videoDurationMs?: number;
 }
 
 export function PlaybackSection({
@@ -24,12 +26,17 @@ export function PlaybackSection({
   onPause,
   currentTime,
   setCurrentTime,
+  clearSelection,
   metadata,
   loopStart,
   loopEnd,
   setLoopStart,
   setLoopEnd,
+  videoDurationMs,
 }: PlaybackSectionProps) {
+  // Use video duration if available, otherwise fall back to beatmapEnd
+  const maxPlaybackTime = videoDurationMs || metadata.beatmapEnd;
+  
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
@@ -53,13 +60,19 @@ export function PlaybackSection({
 
       <div className="flex gap-2">
         <button
-          onClick={() => setCurrentTime(Math.max(metadata.beatmapStart, currentTime - 1000))}
+          onClick={() => {
+            clearSelection?.();
+            setCurrentTime(Math.max(metadata.beatmapStart, currentTime - 1000));
+          }}
           className="flex-1 px-3 py-2 bg-transparent border border-neon-cyan/30 text-neon-cyan rounded text-sm font-rajdhani hover:bg-neon-cyan/10 transition-colors"
         >
           ←1s
         </button>
         <button
-          onClick={() => setCurrentTime(Math.min(metadata.beatmapEnd, currentTime + 1000))}
+          onClick={() => {
+            clearSelection?.();
+            setCurrentTime(Math.min(maxPlaybackTime, currentTime + 1000));
+          }}
           className="flex-1 px-3 py-2 bg-transparent border border-neon-cyan/30 text-neon-cyan rounded text-sm font-rajdhani hover:bg-neon-cyan/10 transition-colors"
         >
           1s→
@@ -71,13 +84,16 @@ export function PlaybackSection({
         <input
           type="range"
           min={metadata.beatmapStart}
-          max={metadata.beatmapEnd}
+          max={maxPlaybackTime}
           value={currentTime}
-          onChange={(e) => setCurrentTime(parseFloat(e.target.value))}
+          onChange={(e) => {
+            clearSelection?.();
+            setCurrentTime(parseFloat(e.target.value));
+          }}
           className="w-full"
         />
         <div className="text-xs text-neon-cyan font-mono text-center mt-1">
-          {currentTime.toFixed(0)}ms
+          {currentTime.toFixed(0)}ms / {maxPlaybackTime.toFixed(0)}ms
         </div>
       </div>
 

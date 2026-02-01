@@ -153,6 +153,12 @@ export const getTrapezoidCorners = (
   hexCenterX: number = VANISHING_POINT_X,
   hexCenterY: number = VANISHING_POINT_Y
 ): { x1: number; y1: number; x2: number; y2: number; x3: number; y3: number; x4: number; y4: number } | null => {
+  // Sanitize inputs to prevent NaN propagation
+  const safeVpX = isFinite(vanishingPointX) ? vanishingPointX : VANISHING_POINT_X;
+  const safeVpY = isFinite(vanishingPointY) ? vanishingPointY : VANISHING_POINT_Y;
+  const safeHexCenterX = isFinite(hexCenterX) ? hexCenterX : VANISHING_POINT_X;
+  const safeHexCenterY = isFinite(hexCenterY) ? hexCenterY : VANISHING_POINT_Y;
+  
   // Allow partial rendering: notes can span from behind vanishing point (negative z) to in front (positive z)
   // Show note as long as at least one end is visible (distance >= 1)
   // The SVG viewport will naturally clip portions behind the VP
@@ -175,28 +181,37 @@ export const getTrapezoidCorners = (
   const rightRad = (rightAngle * Math.PI) / 180;
   
   // Calculate fixed outer corner positions for left and right spread rays
-  const leftOuterX = hexCenterX + TUNNEL_MAX_DISTANCE * Math.cos(leftRad);
-  const leftOuterY = hexCenterY + TUNNEL_MAX_DISTANCE * Math.sin(leftRad);
-  const rightOuterX = hexCenterX + TUNNEL_MAX_DISTANCE * Math.cos(rightRad);
-  const rightOuterY = hexCenterY + TUNNEL_MAX_DISTANCE * Math.sin(rightRad);
+  const leftOuterX = safeHexCenterX + TUNNEL_MAX_DISTANCE * Math.cos(leftRad);
+  const leftOuterY = safeHexCenterY + TUNNEL_MAX_DISTANCE * Math.sin(leftRad);
+  const rightOuterX = safeHexCenterX + TUNNEL_MAX_DISTANCE * Math.cos(rightRad);
+  const rightOuterY = safeHexCenterY + TUNNEL_MAX_DISTANCE * Math.sin(rightRad);
   
   // Position corners along rays from VP to outer corners
   const farProgress = farDistance / TUNNEL_MAX_DISTANCE;
   const nearProgress = nearDistance / TUNNEL_MAX_DISTANCE;
   
   const corners = {
-    x1: vanishingPointX + (leftOuterX - vanishingPointX) * farProgress,
-    y1: vanishingPointY + (leftOuterY - vanishingPointY) * farProgress,
-    x2: vanishingPointX + (rightOuterX - vanishingPointX) * farProgress,
-    y2: vanishingPointY + (rightOuterY - vanishingPointY) * farProgress,
-    x3: vanishingPointX + (rightOuterX - vanishingPointX) * nearProgress,
-    y3: vanishingPointY + (rightOuterY - vanishingPointY) * nearProgress,
-    x4: vanishingPointX + (leftOuterX - vanishingPointX) * nearProgress,
-    y4: vanishingPointY + (leftOuterY - vanishingPointY) * nearProgress,
+    x1: safeVpX + (leftOuterX - safeVpX) * farProgress,
+    y1: safeVpY + (leftOuterY - safeVpY) * farProgress,
+    x2: safeVpX + (rightOuterX - safeVpX) * farProgress,
+    y2: safeVpY + (rightOuterY - safeVpY) * farProgress,
+    x3: safeVpX + (rightOuterX - safeVpX) * nearProgress,
+    y3: safeVpY + (rightOuterY - safeVpY) * nearProgress,
+    x4: safeVpX + (leftOuterX - safeVpX) * nearProgress,
+    y4: safeVpY + (leftOuterY - safeVpY) * nearProgress,
   };
   
   // Validate all coordinates are finite (no NaN or Infinity)
   const allFinite = Object.values(corners).every(v => Number.isFinite(v));
+  if (!allFinite) {
+    console.error('[getTrapezoidCorners] NaN in output:', {
+      noteId,
+      input: { rayAngle, nearDistance, farDistance, vanishingPointX, vanishingPointY, hexCenterX, hexCenterY },
+      safe: { safeVpX, safeVpY, safeHexCenterX, safeHexCenterY },
+      intermediate: { normalizedAngle, needsSwap, leftAngle, rightAngle, leftOuterX, leftOuterY, rightOuterX, rightOuterY, farProgress, nearProgress },
+      output: corners
+    });
+  }
   if (!allFinite) {
     if (noteId) {
       GameErrors.log(`getTrapezoidCorners: Invalid coordinates for note ${noteId}: ${JSON.stringify(corners)}`);

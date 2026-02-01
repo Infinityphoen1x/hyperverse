@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useGameEngine } from "@/hooks/game/core/useGameEngine";
 import { useGameStore } from "@/stores/useGameStore";
 import { Difficulty, Note } from "@/lib/engine/gameTypes";
@@ -24,6 +25,7 @@ import { DeckHoldMeters } from "@/components/game/hud/DeckHoldMeters";
 import { CamelotWheel } from "@/components/game/effects/CamelotWheel";
 import { Down3DNoteLane } from "@/components/game/Down3DNoteLane";
 import { ErrorLogViewer } from "@/components/game/loaders/ErrorLogViewer";
+import { useBeatmapStore } from "@/stores/useBeatmapStore";
 
 interface GameProps {
   difficulty: Difficulty;
@@ -36,6 +38,10 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
   const setBeatmapBpm = useGameStore(state => state.setBeatmapBpm);
+  const { beatmapText: storedBeatmapText, youtubeVideoId: storedYoutubeVideoId } = useBeatmapStore(useShallow(state => ({
+    beatmapText: state.beatmapText,
+    youtubeVideoId: state.youtubeVideoId,
+  })));
 
   // Initialize idle rotation animation
   useIdleRotationManager();
@@ -157,45 +163,41 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
   }, [notes]);
   const scoreDisplay = useMemo(() => score.toString().padStart(6, '0'), [score]);
 
-  // Load beatmap from localStorage and re-parse with new difficulty
   useEffect(() => {
-    // Preload audio on mount
+    setYoutubeVideoId(storedYoutubeVideoId ?? null);
+
+    if (!storedBeatmapText) {
+      setCustomNotes(undefined);
+      return;
+    }
+
+    try {
+      console.log('[GAME] Parsing beatmap with difficulty:', difficulty);
+      const parsed = parseBeatmap(storedBeatmapText, difficulty);
+      if (!parsed.error && parsed.notes) {
+        const beatmapStartOffset = parsed.metadata?.beatmapStart || 0;
+        const convertedNotes = convertBeatmapNotes(parsed.notes, beatmapStartOffset);
+        console.log('[GAME] Loaded', convertedNotes.length, 'notes for difficulty:', difficulty);
+        setCustomNotes(convertedNotes);
+        if (parsed.metadata?.bpm) {
+          setBeatmapBpm(parsed.metadata.bpm);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to parse beatmap from store:', error);
+    }
+  }, [difficulty, storedBeatmapText, storedYoutubeVideoId, setBeatmapBpm]);
+
+  // Preload audio once on mount
+  useEffect(() => {
     audioManager.preload().catch(err => {
       console.error('[GAME] Failed to preload audio:', err);
     });
-    
-    // Sync audio manager with store settings
+
     const { soundVolume, soundMuted } = useGameStore.getState();
     audioManager.setVolume(soundVolume);
     audioManager.setMuted(soundMuted);
-    
-    const pendingBeatmapStr = localStorage.getItem('pendingBeatmap');
-    if (pendingBeatmapStr) {
-      try {
-        const beatmapData = JSON.parse(pendingBeatmapStr);
-        setYoutubeVideoId(beatmapData.youtubeVideoId || null);
-        
-        console.log('[GAME] Parsing beatmap with difficulty:', difficulty);
-        
-        // Re-parse beatmap with the new difficulty to get correct notes
-        if (beatmapData.beatmapText) {
-          const parsed = parseBeatmap(beatmapData.beatmapText, difficulty);
-          if (!parsed.error && parsed.notes) {
-            const beatmapStartOffset = parsed.metadata?.beatmapStart || 0;
-            const convertedNotes = convertBeatmapNotes(parsed.notes, beatmapStartOffset);
-            console.log('[GAME] Loaded', convertedNotes.length, 'notes for difficulty:', difficulty);
-            setCustomNotes(convertedNotes);
-            // Update beatmap BPM for geometry calculations
-            if (parsed.metadata?.bpm) {
-              setBeatmapBpm(parsed.metadata.bpm);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load pending beatmap:', error);
-      }
-    }
-  }, [difficulty]); // Re-parse when difficulty changes
+  }, []);
 
   // Reset ALL game state and YouTube player when difficulty changes
   useEffect(() => {

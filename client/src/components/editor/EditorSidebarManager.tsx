@@ -1,5 +1,6 @@
+import { memo, type ReactElement } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Settings, Clock, FileText, Wrench, ArrowLeftRight, Monitor, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
+import { Settings, Clock, FileText, Wrench, Monitor, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
 import { SidePanel } from '@/components/editor/SidePanel';
 import { FloatingWindow } from '@/components/editor/FloatingWindow';
 import { ToolsSection } from './ToolsSection';
@@ -38,8 +39,8 @@ interface EditorSidebarManagerProps {
   currentDifficulty: Difficulty;
   setCurrentDifficulty: (diff: Difficulty) => void;
   difficultyNotes: Record<Difficulty, any[]>;
-  editorMode: boolean;
-  setEditorMode: (mode: boolean) => void;
+  isEditMode: boolean;
+  setIsEditMode: (mode: boolean) => void;
   snapEnabled: boolean;
   setSnapEnabled: (enabled: boolean) => void;
   snapDivision: 1 | 2 | 4 | 8 | 16;
@@ -77,6 +78,7 @@ interface EditorSidebarManagerProps {
   setIsResizing: (resizing: boolean) => void;
   glowEnabled: boolean;
   setGlowEnabled: (enabled: boolean) => void;
+  videoDurationMs?: number;
   dynamicVPEnabled: boolean;
   setDynamicVPEnabled: (enabled: boolean) => void;
   zoomEnabled: boolean;
@@ -91,15 +93,16 @@ interface EditorSidebarManagerProps {
   draggedNoteId: string | null;
 }
 
-export function EditorSidebarManager(props: EditorSidebarManagerProps) {
-  const sectionConfigs = {
-    tools: { title: 'TOOLS', icon: <Wrench className="w-4 h-4" /> },
-    playback: { title: 'PLAYBACK', icon: <Clock className="w-4 h-4" /> },
-    metadata: { title: 'METADATA', icon: <Settings className="w-4 h-4" /> },
-    beatmapText: { title: 'BEATMAP TEXT', icon: <FileText className="w-4 h-4" /> },
-    graphics: { title: 'GRAPHICS', icon: <Monitor className="w-4 h-4" /> },
-    statistics: { title: 'STATISTICS', icon: <BarChart3 className="w-4 h-4" /> },
-  };
+const SECTION_CONFIGS: Record<SectionName, { title: string; icon: ReactElement }> = {
+  tools: { title: 'TOOLS', icon: <Wrench className="w-4 h-4" /> },
+  playback: { title: 'PLAYBACK', icon: <Clock className="w-4 h-4" /> },
+  metadata: { title: 'METADATA', icon: <Settings className="w-4 h-4" /> },
+  beatmapText: { title: 'BEATMAP TEXT', icon: <FileText className="w-4 h-4" /> },
+  graphics: { title: 'GRAPHICS', icon: <Monitor className="w-4 h-4" /> },
+  statistics: { title: 'STATISTICS', icon: <BarChart3 className="w-4 h-4" /> },
+};
+
+const EditorSidebarManagerComponent = (props: EditorSidebarManagerProps) => {
 
   const renderSectionContent = (section: SectionName) => {
     switch (section) {
@@ -133,11 +136,13 @@ export function EditorSidebarManager(props: EditorSidebarManagerProps) {
             onPause={props.onPause}
             currentTime={props.currentTime}
             setCurrentTime={props.setCurrentTime}
+            clearSelection={props.clearSelection}
             metadata={props.metadata}
             loopStart={props.loopStart}
             loopEnd={props.loopEnd}
             setLoopStart={props.setLoopStart}
             setLoopEnd={props.setLoopEnd}
+            videoDurationMs={props.videoDurationMs}
           />
         );
       case 'metadata':
@@ -145,6 +150,7 @@ export function EditorSidebarManager(props: EditorSidebarManagerProps) {
           <MetadataSection
             metadata={props.metadata}
             updateMetadata={props.updateMetadata}
+            videoDurationMs={props.videoDurationMs}
           />
         );
       case 'beatmapText':
@@ -204,7 +210,7 @@ export function EditorSidebarManager(props: EditorSidebarManagerProps) {
           side="left"
           panelWidth={props.panelWidth}
           sections={leftSections}
-          sectionConfigs={sectionConfigs}
+          sectionConfigs={SECTION_CONFIGS}
           sectionStates={props.sections}
           toggleSectionCollapse={props.toggleSectionCollapse}
           toggleSectionPopout={props.toggleSectionPopout}
@@ -215,8 +221,8 @@ export function EditorSidebarManager(props: EditorSidebarManagerProps) {
           currentDifficulty={props.currentDifficulty}
           setCurrentDifficulty={props.setCurrentDifficulty}
           difficultyNotes={props.difficultyNotes}
-          editorMode={props.editorMode}
-          setEditorMode={props.setEditorMode}
+          isEditMode={props.isEditMode}
+          setIsEditMode={props.setIsEditMode}
           snapEnabled={props.snapEnabled}
           setSnapEnabled={props.setSnapEnabled}
           resizeRef={props.resizeRef}
@@ -230,7 +236,7 @@ export function EditorSidebarManager(props: EditorSidebarManagerProps) {
       {props.leftSideCollapsed && (
         <button
           onClick={() => props.setLeftSideCollapsed(false)}
-          className="fixed left-0 top-1/2 -translate-y-1/2 z-50 bg-black/95 border border-neon-cyan/30 border-l-0 rounded-r-lg p-2 hover:bg-neon-cyan/10 transition-colors group"
+          className="fixed left-0 top-1/2 -translate-y-1/2 z-40 bg-black/95 border border-neon-cyan/30 border-l-0 rounded-r-lg p-2 hover:bg-neon-cyan/10 transition-colors group"
           title="Show left panel"
         >
           <ChevronRight className="w-5 h-5 text-neon-cyan group-hover:text-white" />
@@ -243,7 +249,7 @@ export function EditorSidebarManager(props: EditorSidebarManagerProps) {
           side="right"
           panelWidth={props.panelWidth}
           sections={rightSections}
-          sectionConfigs={sectionConfigs}
+          sectionConfigs={SECTION_CONFIGS}
           sectionStates={props.sections}
           toggleSectionCollapse={props.toggleSectionCollapse}
           toggleSectionPopout={props.toggleSectionPopout}
@@ -254,8 +260,8 @@ export function EditorSidebarManager(props: EditorSidebarManagerProps) {
           currentDifficulty={props.currentDifficulty}
           setCurrentDifficulty={props.setCurrentDifficulty}
           difficultyNotes={props.difficultyNotes}
-          editorMode={props.editorMode}
-          setEditorMode={props.setEditorMode}
+          isEditMode={props.isEditMode}
+          setIsEditMode={props.setIsEditMode}
           snapEnabled={props.snapEnabled}
           setSnapEnabled={props.setSnapEnabled}
           resizeRef={props.resizeRef}
@@ -269,7 +275,7 @@ export function EditorSidebarManager(props: EditorSidebarManagerProps) {
       {props.rightSideCollapsed && (
         <button
           onClick={() => props.setRightSideCollapsed(false)}
-          className="fixed right-0 top-1/2 -translate-y-1/2 z-50 bg-black/95 border border-neon-cyan/30 border-r-0 rounded-l-lg p-2 hover:bg-neon-cyan/10 transition-colors group"
+          className="fixed right-0 top-1/2 -translate-y-1/2 z-40 bg-black/95 border border-neon-cyan/30 border-r-0 rounded-l-lg p-2 hover:bg-neon-cyan/10 transition-colors group"
           title="Show right panel"
         >
           <ChevronLeft className="w-5 h-5 text-neon-cyan group-hover:text-white" />
@@ -281,8 +287,8 @@ export function EditorSidebarManager(props: EditorSidebarManagerProps) {
         {floatingSections.map((section) => (
           <FloatingWindow
             key={section}
-            title={sectionConfigs[section].title}
-            icon={sectionConfigs[section].icon}
+            title={SECTION_CONFIGS[section].title}
+            icon={SECTION_CONFIGS[section].icon}
             initialPosition={props.sections[section].floatPosition}
             collapsed={props.sections[section].collapsed}
             onToggleCollapse={() => props.toggleSectionCollapse(section)}
@@ -299,4 +305,8 @@ export function EditorSidebarManager(props: EditorSidebarManagerProps) {
       </AnimatePresence>
     </>
   );
-}
+};
+
+export const EditorSidebarManager = memo(EditorSidebarManagerComponent);
+
+EditorSidebarManager.displayName = 'EditorSidebarManager';

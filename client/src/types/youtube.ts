@@ -31,23 +31,6 @@ export interface YouTubePlayerState {
  * Zustand Store Types
  */
 
-export interface YouTubeStoreState {
-  // State
-  videoId: string | null;
-  currentTime: number;
-  duration: number;
-  isReady: boolean;
-  lastValidTime: number | null;
-  
-  // Actions
-  setVideoId: (videoId: string | null) => void;
-  setCurrentTime: (time: number) => void;
-  setDuration: (duration: number) => void;
-  setIsReady: (ready: boolean) => void;
-  setLastValidTime: (time: number | null) => void;
-  
-  // Utilities
-  getVideoTime: () => number | null;
-}
+export type { YoutubeStoreState as YouTubeStoreState } from '@/stores/useYoutubeStore';
 
 export {};

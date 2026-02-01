@@ -32,6 +32,7 @@ interface UseEditorKeyboardHandlersProps {
   metadata: { bpm: number };
   currentDifficulty: string;
   isEditorActive: boolean; // Only handle keys when editor is active
+  isEditMode: boolean; // Only place notes when edit mode is enabled
   
   // Actions
   setParsedNotes: (notes: Note[]) => void;
@@ -49,6 +50,7 @@ export function useEditorKeyboardHandlers(props: UseEditorKeyboardHandlersProps)
     metadata,
     currentDifficulty,
     isEditorActive,
+    isEditMode,
     setParsedNotes,
     setDifficultyNotes,
     addToHistory,
@@ -112,7 +114,12 @@ export function useEditorKeyboardHandlers(props: UseEditorKeyboardHandlersProps)
   }, [parsedNotes, currentDifficulty, setParsedNotes, setDifficultyNotes, addToHistory, createTapNote]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (!isEditorActive) return;
+    // Only place notes when editor is active AND edit mode is enabled
+    if (!isEditorActive || !isEditMode) return;
+    
+    // Don't place notes when typing in input fields
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
     
     const key = e.key.toLowerCase();
     const lane = KEY_TO_LANE[key];
@@ -129,7 +136,7 @@ export function useEditorKeyboardHandlers(props: UseEditorKeyboardHandlersProps)
     // Set timeout to show duration input if key held
     const timeout = setTimeout(() => {
       // Key held for HOLD_KEY_THRESHOLD_MS - show duration input
-      const noteTime = snapEnabled ? snapTimeToGrid(currentTime, metadata.bpm, snapDivision) : currentTime;
+      const noteTime = snapEnabled ? snapTimeToGrid(currentTime, metadata.bpm, snapDivision, metadata.beatmapStart) : currentTime;
       setDurationInputState({
         visible: true,
         lane,
@@ -138,10 +145,15 @@ export function useEditorKeyboardHandlers(props: UseEditorKeyboardHandlersProps)
     }, HOLD_KEY_THRESHOLD_MS);
     
     keyHoldTimeouts.current.set(key, timeout);
-  }, [isEditorActive, currentTime, snapEnabled, snapDivision, metadata.bpm, setDurationInputState]);
+  }, [isEditorActive, isEditMode, currentTime, snapEnabled, snapDivision, metadata.bpm, metadata.beatmapStart, setDurationInputState]);
 
   const handleKeyUp = useCallback((e: KeyboardEvent) => {
-    if (!isEditorActive) return;
+    // Only place notes when editor is active AND edit mode is enabled
+    if (!isEditorActive || !isEditMode) return;
+    
+    // Don't place notes when typing in input fields
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
     
     const key = e.key.toLowerCase();
     const lane = KEY_TO_LANE[key];
@@ -165,11 +177,11 @@ export function useEditorKeyboardHandlers(props: UseEditorKeyboardHandlersProps)
     
     // If released quickly (before threshold), create TAP note
     if (pressDuration < HOLD_KEY_THRESHOLD_MS) {
-      const noteTime = snapEnabled ? snapTimeToGrid(currentTime, metadata.bpm, snapDivision) : currentTime;
+      const noteTime = snapEnabled ? snapTimeToGrid(currentTime, metadata.bpm, snapDivision, metadata.beatmapStart) : currentTime;
       createTapNote(lane, noteTime);
     }
     // If released after threshold, duration input is already shown - do nothing
-  }, [isEditorActive, currentTime, snapEnabled, snapDivision, metadata.bpm, createTapNote]);
+  }, [isEditorActive, isEditMode, currentTime, snapEnabled, snapDivision, metadata.bpm, metadata.beatmapStart, createTapNote]);
 
   // Attach keyboard listeners
   useEffect(() => {

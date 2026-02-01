@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Clock, Hash, ArrowRight } from 'lucide-react';
 import { Note } from '@/types/game';
 import { audioManager } from '@/lib/audio/audioManager';
+import { MIN_HOLD_DURATION } from '@/lib/config/editor';
 
 interface NotePropertiesDialogProps {
   notes: Note[];
@@ -18,20 +19,30 @@ export function NotePropertiesDialog({
   onUpdate,
 }: NotePropertiesDialogProps) {
   const selectedNotes = notes.filter(n => selectedNoteIds.includes(n.id));
-  
-  // Get initial values (use first selected note's values)
   const firstNote = selectedNotes[0];
-  const [startTime, setStartTime] = useState(firstNote?.time.toString() || '0');
-  const [endTime, setEndTime] = useState(
+  
+  // If no notes selected, close dialog immediately
+  useEffect(() => {
+    if (selectedNotes.length === 0) {
+      onClose();
+    }
+  }, [selectedNotes.length, onClose]);
+  const [startTime, setStartTime] = useState(() => firstNote?.time.toString() || '0');
+  const [endTime, setEndTime] = useState(() => 
     firstNote?.type === 'HOLD' && firstNote.duration
       ? (firstNote.time + firstNote.duration).toString()
       : firstNote?.time.toString() || '0'
   );
-  const [duration, setDuration] = useState(
+  const [duration, setDuration] = useState(() => 
     firstNote?.type === 'HOLD' && firstNote.duration
       ? firstNote.duration.toString()
       : '0'
   );
+  
+  // If no first note, don't render
+  if (!firstNote) {
+    return null;
+  }
 
   // Check if all selected notes share the same values
   const hasMultipleStartTimes = selectedNotes.length > 1 && 
@@ -43,40 +54,30 @@ export function NotePropertiesDialog({
       return dur1 === dur2;
     });
 
-  // Auto-calculate based on which field is being edited
-  const [lastEditedField, setLastEditedField] = useState<'start' | 'end' | 'duration'>('start');
-
   const handleStartTimeChange = (value: string) => {
     setStartTime(value);
-    setLastEditedField('start');
     
     const start = parseFloat(value) || 0;
-    if (lastEditedField === 'duration' || lastEditedField === 'start') {
-      // Recalculate end time from start + duration
-      const dur = parseFloat(duration) || 0;
-      setEndTime((start + dur).toString());
-    } else {
-      // Recalculate duration from end - start
-      const end = parseFloat(endTime) || 0;
-      setDuration((end - start).toString());
-    }
+    const end = parseFloat(endTime) || 0;
+    // Auto-calculate duration from end - start
+    setDuration((end - start).toString());
   };
 
   const handleEndTimeChange = (value: string) => {
     setEndTime(value);
-    setLastEditedField('end');
     
     const end = parseFloat(value) || 0;
     const start = parseFloat(startTime) || 0;
+    // Auto-calculate duration from end - start
     setDuration((end - start).toString());
   };
 
   const handleDurationChange = (value: string) => {
     setDuration(value);
-    setLastEditedField('duration');
     
     const dur = parseFloat(value) || 0;
     const start = parseFloat(startTime) || 0;
+    // Auto-calculate end time from start + duration
     setEndTime((start + dur).toString());
   };
 
@@ -84,14 +85,29 @@ export function NotePropertiesDialog({
     const start = parseFloat(startTime) || 0;
     const dur = parseFloat(duration) || 0;
 
-    const updates = selectedNotes.map(note => ({
-      id: note.id,
-      changes: {
+    // Auto-convert TAP to HOLD if duration >= MIN_HOLD_DURATION
+    // Auto-convert HOLD to TAP if duration < MIN_HOLD_DURATION
+    const isHold = dur >= MIN_HOLD_DURATION;
+
+    const updates = selectedNotes.map(note => {
+      const changes: Partial<Note> = {
         time: start,
-        duration: dur > 0 ? dur : undefined,
-        type: (dur > 0 ? 'HOLD' : 'TAP') as 'TAP' | 'HOLD',
-      } as Partial<Note>,
-    }));
+        type: isHold ? 'HOLD' : 'TAP',
+      };
+      
+      // Only include duration for HOLD notes
+      if (isHold) {
+        changes.duration = dur;
+      } else {
+        // Remove duration for TAP notes
+        changes.duration = undefined;
+      }
+      
+      return {
+        id: note.id,
+        changes,
+      };
+    });
 
     onUpdate(updates);
     audioManager.play('difficultySettingsApply');
@@ -107,10 +123,6 @@ export function NotePropertiesDialog({
       onClose();
     }
   };
-
-  if (selectedNotes.length === 0) {
-    return null;
-  }
 
   return (
     <AnimatePresence>
@@ -216,7 +228,9 @@ export function NotePropertiesDialog({
                 min="0"
               />
               <p className="text-xs text-gray-500 mt-1">
-                {parseFloat(duration) > 0 ? 'HOLD note' : 'TAP note (duration = 0)'}
+                {parseFloat(duration) >= MIN_HOLD_DURATION 
+                  ? `HOLD note (≥${MIN_HOLD_DURATION}ms)` 
+                  : `TAP note (<${MIN_HOLD_DURATION}ms)`}
               </p>
             </div>
           </div>

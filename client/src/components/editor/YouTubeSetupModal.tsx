@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Youtube } from 'lucide-react';
+import { Youtube, X } from 'lucide-react';
 
 interface YouTubeSetupModalProps {
   onSubmit: (videoId: string) => void;
+  onSkip?: () => void;
 }
 
-export function YouTubeSetupModal({ onSubmit }: YouTubeSetupModalProps) {
+export function YouTubeSetupModal({ onSubmit, onSkip }: YouTubeSetupModalProps) {
   const [input, setInput] = useState('');
   const [error, setError] = useState('');
 
@@ -35,7 +36,18 @@ export function YouTubeSetupModal({ onSubmit }: YouTubeSetupModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-900 border-2 border-neon-cyan rounded-lg p-8 max-w-md w-full">
+      <div className="bg-gray-900 border-2 border-neon-cyan rounded-lg p-8 max-w-md w-full relative">
+        {/* Close button */}
+        {onSkip && (
+          <button
+            onClick={onSkip}
+            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
+            title="Skip and continue without YouTube"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        )}
+        
         <div className="flex items-center gap-3 mb-6">
           <Youtube className="w-8 h-8 text-neon-cyan" />
           <h2 className="text-2xl font-rajdhani font-bold text-neon-cyan">

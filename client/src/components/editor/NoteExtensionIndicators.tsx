@@ -27,14 +27,16 @@ interface NoteExtensionIndicatorsProps {
 }
 
 export function NoteExtensionIndicators({ selectedNote, currentTime, vpX, vpY }: NoteExtensionIndicatorsProps) {
-  const tunnelRotation = useTunnelRotation();
+  // Safety check for NaN values
+  const safeVpX = isNaN(vpX) ? 350 : vpX;
+  const safeVpY = isNaN(vpY) ? 300 : vpY;
   
-  console.log('[WHITE LINES DEBUG] Render called, selectedNote:', selectedNote?.id, 'type:', selectedNote?.type);
-  
+  // Early return BEFORE hooks to avoid hook count mismatch
   if (!selectedNote) {
-    console.log('[WHITE LINES DEBUG] No selected note, returning null');
     return null;
   }
+  
+  const tunnelRotation = useTunnelRotation();
 
   // Build indicators for start and end positions
   const indicators: Array<{ nearDistance: number; farDistance: number; label: string }> = [];
@@ -97,9 +99,6 @@ export function NoteExtensionIndicators({ selectedNote, currentTime, vpX, vpY }:
   // Get lane angle with tunnel rotation applied
   const laneRayAngle = getLaneAngle(selectedNote.lane, tunnelRotation);
 
-  console.log('[WHITE LINES DEBUG] Rendering', indicators.length, 'indicators for', selectedNote.type, 'note');
-  console.log('[WHITE LINES DEBUG] Indicators:', indicators);
-
   return (
     <svg 
       className="absolute inset-0 pointer-events-none" 
@@ -111,7 +110,7 @@ export function NoteExtensionIndicators({ selectedNote, currentTime, vpX, vpY }:
     >
       {indicators.map((indicator, idx) => {
         // Reuse the exact same corner calculation as notes
-        const corners = calculateRayCorners(vpX, vpY, laneRayAngle, indicator.nearDistance, indicator.farDistance);
+        const corners = calculateRayCorners(safeVpX, safeVpY, laneRayAngle, indicator.nearDistance, indicator.farDistance);
         
         // Check if this is a single-line indicator (near === far) or dual-line (near !== far)
         const isSingleLine = Math.abs(indicator.nearDistance - indicator.farDistance) < 0.1;

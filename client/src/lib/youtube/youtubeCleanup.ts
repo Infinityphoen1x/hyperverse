@@ -40,8 +40,12 @@ export function destroyYouTubePlayer(): void {
   state.setYtPlayer(null);
   state.setYoutubeIframeElement(null);
   state.setPlayerReady(false);
+  state.setUiReady(false);
   state.setYoutubeCurrentTimeMs(0);
   state.setLastTimeUpdate(0);
+  state.setLastGoodTimeMs(null);
+  state.setVideoId(null);
+  state.setVideoDurationMs(0);
   
   console.log('[YOUTUBE-CLEANUP] Cleanup complete');
 }

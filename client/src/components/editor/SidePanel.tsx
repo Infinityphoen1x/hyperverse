@@ -21,8 +21,8 @@ interface SidePanelProps {
   currentDifficulty: Difficulty;
   setCurrentDifficulty: (diff: Difficulty) => void;
   difficultyNotes: Record<Difficulty, any[]>;
-  editorMode: boolean;
-  setEditorMode: (mode: boolean) => void;
+  isEditMode: boolean;
+  setIsEditMode: (mode: boolean) => void;
   snapEnabled: boolean;
   setSnapEnabled: (enabled: boolean) => void;
   resizeRef: React.RefObject<HTMLDivElement | null>;
@@ -46,8 +46,8 @@ export function SidePanel({
   currentDifficulty,
   setCurrentDifficulty,
   difficultyNotes,
-  editorMode,
-  setEditorMode,
+  isEditMode,
+  setIsEditMode,
   snapEnabled,
   setSnapEnabled,
   resizeRef,
@@ -67,7 +67,7 @@ export function SidePanel({
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: side === 'left' ? -panelWidth : panelWidth, opacity: 0 }}
       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-      className={`fixed top-0 ${side === 'left' ? 'left-0 border-r' : 'right-0 border-l'} border-neon-cyan/30 h-full bg-black/95 backdrop-blur-sm z-50 flex flex-col pointer-events-auto`}
+      className={`fixed top-0 ${side === 'left' ? 'left-0 border-r' : 'right-0 border-l'} border-neon-cyan/30 h-full bg-black/95 backdrop-blur-sm z-40 flex flex-col pointer-events-auto`}
       style={{ width: `${panelWidth}px`, pointerEvents: 'auto' }}
     >
       {/* Header */}
@@ -134,14 +134,14 @@ export function SidePanel({
 
         <div className="flex gap-2 flex-wrap">
           <button
-            onClick={() => setEditorMode(!editorMode)}
+            onClick={() => setIsEditMode(!isEditMode)}
             className={`px-3 py-1 text-sm font-rajdhani rounded border transition-colors ${
-              editorMode
+              isEditMode
                 ? 'bg-neon-pink border-neon-pink text-black'
                 : 'bg-transparent border-gray-600 text-gray-400'
             }`}
           >
-            EDITOR MODE
+            EDIT MODE
           </button>
           <button
             onClick={() => setSnapEnabled(!snapEnabled)}

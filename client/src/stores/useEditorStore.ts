@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Note } from '@/types/game';
 
-interface BeatmapMetadata {
+export interface BeatmapMetadata {
   title: string;
   artist: string;
   bpm: number;
@@ -11,26 +11,31 @@ interface BeatmapMetadata {
   beatmapEnd: number;
 }
 
-interface EditorStoreState {
+export type EditorPanelSide = 'left' | 'right';
+export type EditorSection = 'tools' | 'playback' | 'metadata' | 'beatmapText' | 'graphics' | 'statistics';
+
+export interface EditorSectionState {
+  visible: boolean;
+  collapsed: boolean;
+  poppedOut: boolean;
+  side: EditorPanelSide;
+  floatPosition: { x: number; y: number };
+}
+
+export interface EditorStoreState {
   // Panel state
   isPanelOpen: boolean;
   panelWidth: number;
   isResizing: boolean;
-  panelSide: 'left' | 'right';
+  panelSide: EditorPanelSide;
   leftSideCollapsed: boolean;
   rightSideCollapsed: boolean;
   
   // Section state
-  sections: {
-    tools: { visible: boolean; collapsed: boolean; poppedOut: boolean; side: 'left' | 'right'; floatPosition: { x: number; y: number } };
-    playback: { visible: boolean; collapsed: boolean; poppedOut: boolean; side: 'left' | 'right'; floatPosition: { x: number; y: number } };
-    metadata: { visible: boolean; collapsed: boolean; poppedOut: boolean; side: 'left' | 'right'; floatPosition: { x: number; y: number } };
-    beatmapText: { visible: boolean; collapsed: boolean; poppedOut: boolean; side: 'left' | 'right'; floatPosition: { x: number; y: number } };
-    graphics: { visible: boolean; collapsed: boolean; poppedOut: boolean; side: 'left' | 'right'; floatPosition: { x: number; y: number } };
-  };
+  sections: Record<EditorSection, EditorSectionState>;
   
-  // Editor mode
-  editorMode: boolean;
+  // Edit mode - controls editing features (beat grid, interaction layer, selection)
+  isEditMode: boolean;
   
   // Playback state
   isPlaying: boolean;
@@ -76,6 +81,9 @@ interface EditorStoreState {
   spinEnabled: boolean;
   idleMotionEnabled: boolean;
   
+  // Simulation mode - test gameplay without editing
+  simulationMode: boolean;
+  
   // History for undo/redo
   history: Note[][];
   historyIndex: number;
@@ -89,18 +97,18 @@ interface EditorStoreState {
   setIsPanelOpen: (open: boolean) => void;
   setPanelWidth: (width: number) => void;
   setIsResizing: (resizing: boolean) => void;
-  setPanelSide: (side: 'left' | 'right') => void;
+  setPanelSide: (side: EditorPanelSide) => void;
   setLeftSideCollapsed: (collapsed: boolean) => void;
   setRightSideCollapsed: (collapsed: boolean) => void;
   
   // Section actions
-  toggleSectionCollapse: (section: 'tools' | 'playback' | 'metadata' | 'beatmapText' | 'graphics') => void;
-  toggleSectionPopout: (section: 'tools' | 'playback' | 'metadata' | 'beatmapText' | 'graphics') => void;
-  closeSectionCompletely: (section: 'tools' | 'playback' | 'metadata' | 'beatmapText' | 'graphics') => void;
-  reopenSection: (section: 'tools' | 'playback' | 'metadata' | 'beatmapText' | 'graphics') => void;
-  setSectionSide: (section: 'tools' | 'playback' | 'metadata' | 'beatmapText' | 'graphics', side: 'left' | 'right') => void;
-  setSectionFloatPosition: (section: 'tools' | 'playback' | 'metadata' | 'beatmapText' | 'graphics', position: { x: number; y: number }) => void;
-  setEditorMode: (mode: boolean) => void;
+  toggleSectionCollapse: (section: EditorSection) => void;
+  toggleSectionPopout: (section: EditorSection) => void;
+  closeSectionCompletely: (section: EditorSection) => void;
+  reopenSection: (section: EditorSection) => void;
+  setSectionSide: (section: EditorSection, side: EditorPanelSide) => void;
+  setSectionFloatPosition: (section: EditorSection, position: { x: number; y: number }) => void;
+  setIsEditMode: (mode: boolean) => void;
   setIsPlaying: (playing: boolean) => void;
   setLoopStart: (time: number | null) => void;
   setLoopEnd: (time: number | null) => void;
@@ -156,8 +164,9 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
   isPanelOpen: true,
   panelWidth: 450,
   isResizing: false,
-  panelSide: 'left',  leftSideCollapsed: false,
-  rightSideCollapsed: false,  
+  panelSide: 'left',
+  leftSideCollapsed: false,
+  rightSideCollapsed: false,
   // Initial section state
   sections: {
     tools: { visible: true, collapsed: false, poppedOut: false, side: 'left', floatPosition: { x: 100, y: 100 } },
@@ -165,10 +174,11 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
     metadata: { visible: true, collapsed: true, poppedOut: false, side: 'left', floatPosition: { x: 100, y: 500 } },
     beatmapText: { visible: true, collapsed: true, poppedOut: false, side: 'left', floatPosition: { x: 100, y: 700 } },
     graphics: { visible: true, collapsed: false, poppedOut: false, side: 'right', floatPosition: { x: 800, y: 100 } },
+    statistics: { visible: true, collapsed: false, poppedOut: false, side: 'right', floatPosition: { x: 800, y: 400 } },
   },
   
-  // Initial editor mode
-  editorMode: true,
+  // Initial edit mode - editing features enabled by default
+  isEditMode: true,
   
   // Initial playback state
   isPlaying: false,
@@ -203,7 +213,7 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
   draggedHandle: null,
   
   // Initial snap settings
-  snapEnabled: true,
+  snapEnabled: false,
   snapDivision: 4,
   
   // Initial graphics settings
@@ -213,6 +223,7 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
   judgementLinesEnabled: true,
   spinEnabled: true,
   idleMotionEnabled: true,
+  simulationMode: false,
   
   // Initial history
   history: [],
@@ -282,7 +293,7 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
       [section]: { ...state.sections[section], floatPosition: position }
     }
   })),
-  setEditorMode: (mode) => set({ editorMode: mode }),
+  setIsEditMode: (mode) => set({ isEditMode: mode }),
   setIsPlaying: (playing) => set({ isPlaying: playing }),
   setLoopStart: (time) => set({ loopStart: time }),
   setLoopEnd: (time) => set({ loopEnd: time }),
@@ -388,4 +399,5 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
   setJudgementLinesEnabled: (enabled) => set({ judgementLinesEnabled: enabled }),
   setSpinEnabled: (enabled) => set({ spinEnabled: enabled }),
   setIdleMotionEnabled: (enabled) => set({ idleMotionEnabled: enabled }),
+  setSimulationMode: (enabled) => set({ simulationMode: enabled }),
 }));

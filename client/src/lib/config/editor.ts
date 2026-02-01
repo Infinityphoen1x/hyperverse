@@ -48,6 +48,17 @@ export const EDITOR_CONFIG: EditorConfig = {
   MIN_TUNNEL_DISTANCE: 1,
 };
 
+/**
+ * CSS class constants for editor containers
+ * Ensures consistency between editor and gameplay container structure
+ */
+export const EDITOR_CONTAINER_CLASSES = {
+  /** Main canvas container - uses margin: 0 auto for centering (fixed width/height), no flexbox needed */
+  CANVAS_ROOT: 'relative cursor-crosshair flex-shrink-0 overflow-hidden',
+  /** Read-only canvas (no interaction) */
+  CANVAS_READONLY: 'relative flex-shrink-0 overflow-hidden',
+} as const;
+
 // Export individual constants for convenience
 export const MIN_HOLD_DURATION = EDITOR_CONFIG.MIN_HOLD_DURATION;
 export const MIN_DRAG_DISTANCE = EDITOR_CONFIG.MIN_DRAG_DISTANCE;
@@ -78,24 +89,3 @@ export function isValidLane(lane: number): lane is ValidLane {
   return (VALID_LANES as readonly number[]).includes(lane);
 }
 
-/**
- * Lane to angle mapping (degrees)
- * Maps lane index to its angle in the tunnel
- */
-export const LANE_ANGLE_MAP: Record<number, number> = {
-  0: 120,   // Top
-  1: 60,    // Top-right
-  2: 300,   // Bottom-right
-  3: 240,   // Bottom-left
-  [-1]: 180, // Left
-  [-2]: 0,   // Right (actually maps to -2 lane)
-} as const;
-
-/**
- * Get the angle for a specific lane
- * @param lane Lane index
- * @returns Angle in degrees
- */
-export function getLaneAngle(lane: number): number {
-  return LANE_ANGLE_MAP[lane] ?? 0;
-}

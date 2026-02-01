@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { X, RotateCcw, Edit2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useShortcutsStore } from '@/stores/useShortcutsStore';
 import { audioManager } from '@/lib/audio/audioManager';
 
@@ -100,13 +100,13 @@ export function ShortcutsModal({ onClose }: ShortcutsModalProps) {
   };
 
   // Attach global key listener when editing
-  useState(() => {
+  useEffect(() => {
     if (editingId) {
       const listener = (e: KeyboardEvent) => handleKeyDown(e);
       window.addEventListener('keydown', listener);
       return () => window.removeEventListener('keydown', listener);
     }
-  });
+  }, [editingId]);
 
   const categorizedBindings = {
     general: bindings.filter(b => b.category === 'general'),

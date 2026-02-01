@@ -21,6 +21,7 @@ export interface HandleDragParams {
   snapEnabled: boolean;
   snapDivision: 1 | 2 | 4 | 8 | 16;
   bpm: number;
+  beatmapStart: number;
   draggedNoteId: string;
   draggedHandle: HandleType;
   parsedNotes: Note[];
@@ -39,6 +40,7 @@ export function updateNoteFromHandleDrag(params: HandleDragParams): Note[] {
     snapEnabled,
     snapDivision,
     bpm,
+    beatmapStart,
     draggedNoteId,
     draggedHandle,
     parsedNotes,
@@ -54,7 +56,7 @@ export function updateNoteFromHandleDrag(params: HandleDragParams): Note[] {
     JUDGEMENT_RADIUS
   );
   
-  const newTime = snapEnabled ? snapTimeToGrid(timeOffset, bpm, snapDivision) : timeOffset;
+  const newTime = snapEnabled ? snapTimeToGrid(timeOffset, bpm, snapDivision, beatmapStart) : timeOffset;
 
   return parsedNotes.map(note => {
     if (note.id !== draggedNoteId) return note;

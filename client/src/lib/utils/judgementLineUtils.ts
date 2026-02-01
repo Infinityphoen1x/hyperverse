@@ -16,24 +16,42 @@ export const calculateLinePoints = (
   hexCenterX: number = VANISHING_POINT_X,
   hexCenterY: number = VANISHING_POINT_Y
 ): { x1: number; y1: number; x2: number; y2: number } => {
+  // Sanitize inputs to prevent NaN propagation
+  const safeVpX = isFinite(vpX) ? vpX : VANISHING_POINT_X;
+  const safeVpY = isFinite(vpY) ? vpY : VANISHING_POINT_Y;
+  const safeHexCenterX = isFinite(hexCenterX) ? hexCenterX : VANISHING_POINT_X;
+  const safeHexCenterY = isFinite(hexCenterY) ? hexCenterY : VANISHING_POINT_Y;
+  const safeRotation = isFinite(rotationOffset) ? rotationOffset : 0;
+  
   // Calculate fixed outer corner position (with rotation)
-  const angle = config.angle + rotationOffset;
+  const angle = config.angle + safeRotation;
   const rad = (angle * Math.PI) / 180;
-  const outerCornerX = hexCenterX + TUNNEL_MAX_DISTANCE * Math.cos(rad);
-  const outerCornerY = hexCenterY + TUNNEL_MAX_DISTANCE * Math.sin(rad);
+  const outerCornerX = safeHexCenterX + TUNNEL_MAX_DISTANCE * Math.cos(rad);
+  const outerCornerY = safeHexCenterY + TUNNEL_MAX_DISTANCE * Math.sin(rad);
   
   // Position judgment line along ray from VP to outer corner at JUDGEMENT_RADIUS distance
   const progress = JUDGEMENT_RADIUS / TUNNEL_MAX_DISTANCE;
-  const cx = vpX + (outerCornerX - vpX) * progress;
-  const cy = vpY + (outerCornerY - vpY) * progress;
+  const cx = safeVpX + (outerCornerX - safeVpX) * progress;
+  const cy = safeVpY + (outerCornerY - safeVpY) * progress;
   
   // Calculate perpendicular direction for line width
-  const rayAngle = Math.atan2(outerCornerY - vpY, outerCornerX - vpX);
+  const rayAngle = Math.atan2(outerCornerY - safeVpY, outerCornerX - safeVpX);
   const perpRad = rayAngle + Math.PI / 2;
   const x1 = cx + Math.cos(perpRad) * (lineWidth / 2);
   const y1 = cy + Math.sin(perpRad) * (lineWidth / 2);
   const x2 = cx - Math.cos(perpRad) * (lineWidth / 2);
   const y2 = cy - Math.sin(perpRad) * (lineWidth / 2);
+  
+  // DEBUG: Log NaN in calculated line points
+  if (!isFinite(x1) || !isFinite(y1) || !isFinite(x2) || !isFinite(y2)) {
+    console.error('[calculateLinePoints] NaN in output:', {
+      input: { vpX, vpY, lineWidth, rotationOffset, hexCenterX, hexCenterY, angle: config.angle },
+      safe: { safeVpX, safeVpY, safeHexCenterX, safeHexCenterY, safeRotation },
+      intermediate: { angle, rad, outerCornerX, outerCornerY, progress, cx, cy, rayAngle, perpRad },
+      output: { x1, y1, x2, y2 }
+    });
+  }
+  
   return { x1, y1, x2, y2 };
 };
 

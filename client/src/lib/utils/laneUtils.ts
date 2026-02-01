@@ -2,17 +2,30 @@ import { MAX_HEALTH } from '@/lib/config';
 import { GameErrors } from '@/lib/errors/errorLog';
 import { useGameStore } from '@/stores/useGameStore';
 
-// Lane to ray angle mapping with rotation offset
+/**
+ * Lane to angle mapping (degrees)
+ * Maps lane index to its base angle in the tunnel
+ * 
+ * Lanes 0-3: TAP note lanes (WEIO keys)
+ * Lanes -1, -2: SPIN deck lanes (Q, P keys)
+ */
+export const LANE_ANGLE_MAP: Record<number, number> = {
+  [-2]: 0,   // P key - Right deck
+  [-1]: 180, // Q key - Left deck
+  [0]: 120,  // W key - Top lane
+  [1]: 60,   // O key - Top-right lane
+  [2]: 300,  // I key - Bottom-right lane
+  [3]: 240,  // E key - Bottom-left lane
+};
+
+/**
+ * Get the angle for a specific lane with optional rotation offset
+ * @param lane Lane index (-2, -1, 0-3)
+ * @param rotationOffset Additional rotation in degrees (default: 0)
+ * @returns Angle in degrees
+ */
 export const getLaneAngle = (lane: number, rotationOffset: number = 0): number => {
-  const rayMapping: Record<number, number> = {
-    [-2]: 0,
-    [-1]: 180,
-    [0]: 120,
-    [1]: 60,
-    [2]: 300,
-    [3]: 240,
-  };
-  const angle = rayMapping[lane];
+  const angle = LANE_ANGLE_MAP[lane];
   if (!Number.isFinite(angle)) {
     GameErrors.log(`Invalid lane ${lane}, using default angle 0`);
     return 0;

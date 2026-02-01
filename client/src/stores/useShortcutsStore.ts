@@ -24,7 +24,7 @@ interface ShortcutsStoreState {
 const DEFAULT_BINDINGS: ShortcutBinding[] = [
   // General
   { id: 'playPause', name: 'Play/Pause', category: 'general', defaultKey: ' ', currentKey: ' ', description: 'Toggle playback' },
-  { id: 'toggleEditor', name: 'Toggle Editor Mode', category: 'general', defaultKey: 'e', currentKey: 'e', description: 'Enable/disable note editing' },
+  { id: 'toggleEditor', name: 'Toggle Edit Mode', category: 'general', defaultKey: 'e', currentKey: 'e', description: 'Enable/disable note editing & placement' },
   { id: 'toggleSnap', name: 'Toggle Snap', category: 'general', defaultKey: 's', currentKey: 's', description: 'Enable/disable grid snapping' },
   { id: 'undo', name: 'Undo', category: 'general', defaultKey: 'z', currentKey: 'z', description: 'Undo last change', ctrlRequired: true },
   { id: 'redo', name: 'Redo', category: 'general', defaultKey: 'y', currentKey: 'y', description: 'Redo last undone change', ctrlRequired: true },
@@ -38,8 +38,7 @@ const DEFAULT_BINDINGS: ShortcutBinding[] = [
   { id: 'selectLane3', name: 'Select Lane 3', category: 'editing', defaultKey: '4', currentKey: '4', description: 'Jump to lane 3' },
   { id: 'selectLaneNeg1', name: 'Select Lane -1', category: 'editing', defaultKey: '5', currentKey: '5', description: 'Jump to lane -1' },
   { id: 'selectLaneNeg2', name: 'Select Lane -2', category: 'editing', defaultKey: '6', currentKey: '6', description: 'Jump to lane -2' },
-  { id: 'toggleNoteType', name: 'Toggle Note Type', category: 'editing', defaultKey: 't', currentKey: 't', description: 'Toggle TAP/HOLD for selected' },
-  { id: 'editProperties', name: 'Edit Properties', category: 'editing', defaultKey: 'Enter', currentKey: 'Enter', description: 'Open note properties dialog' },
+  { id: 'editProperties', name: 'Edit Properties', category: 'editing', defaultKey: 'Enter', currentKey: 'Enter', description: 'Edit note type, timing & duration' },
   
   // Playback
   { id: 'seekBackward1', name: 'Seek -1s', category: 'playback', defaultKey: 'ArrowLeft', currentKey: 'ArrowLeft', description: 'Rewind 1 second' },

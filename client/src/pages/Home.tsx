@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { BeatmapLoader } from "@/components/game/loaders/BeatmapLoader";
 import { BeatmapData } from "@/lib/beatmap/beatmapParser";
 import { useGameStore } from "@/stores/useGameStore";
 import { useYoutubeStore } from "@/stores/useYoutubeStore";
 import { audioManager } from "@/lib/audio/audioManager";
+import { useBeatmapStore } from "@/stores/useBeatmapStore";
 
 interface HomeProps {
   onStartGame: (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => void;
@@ -15,31 +17,22 @@ interface HomeProps {
 export default function Home({ onStartGame, onOpenSettings, onOpenEditor }: HomeProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const [isLoaderOpen, setIsLoaderOpen] = useState(false);
-  const [beatmapLoaded, setBeatmapLoaded] = useState(false);
   const unloadBeatmap = useGameStore(state => state.unloadBeatmap);
   const playerReady = useYoutubeStore(state => state.playerReady);
+  const {
+    youtubeVideoId: storedVideoId,
+    beatmapText: storedBeatmapText,
+    setBeatmapData,
+  } = useBeatmapStore(useShallow(state => ({
+    youtubeVideoId: state.youtubeVideoId,
+    beatmapText: state.beatmapText,
+    setBeatmapData: state.setBeatmapData,
+  })));
+
+  const beatmapLoaded = Boolean(storedVideoId && storedBeatmapText);
 
   const colors = ["#00FFFF", "#FF00FF", "#00FF00", "#00CCFF", "#FF0080"];
   const [colorIndex, setColorIndex] = useState(0);
-
-  // Check if beatmap is already loaded in localStorage on mount and when returning from game
-  useEffect(() => {
-    const pendingBeatmap = localStorage.getItem('pendingBeatmap');
-    if (pendingBeatmap) {
-      try {
-        const beatmapData = JSON.parse(pendingBeatmap);
-        if (beatmapData.youtubeVideoId && beatmapData.beatmapText) {
-          setBeatmapLoaded(true);
-        } else {
-          setBeatmapLoaded(false);
-        }
-      } catch {
-        setBeatmapLoaded(false);
-      }
-    } else {
-      setBeatmapLoaded(false);
-    }
-  }, []);
 
   const bannerMessages = [
     { text: "[ENCRYPTING NEURAL PATHWAYS] • QUANTUM SYNC PROTOCOL ACTIVE • SYNCHRONIZING BRAINWAVES", color: "#00FFFF" },
@@ -62,22 +55,21 @@ export default function Home({ onStartGame, onOpenSettings, onOpenEditor }: Home
   }, [colors.length]);
 
   const handleBeatmapLoad = (data: BeatmapData, beatmapText: string) => {
-    // Clear old beatmap first to prevent conflicts
-    unloadBeatmap();
-    
-    // Store full beatmap TEXT (not parsed notes) so Game can re-parse with any difficulty
-    const beatmapStorageData = { 
-      youtubeVideoId: data.youtubeVideoId,
-      beatmapText: beatmapText
-    };
-    localStorage.setItem('pendingBeatmap', JSON.stringify(beatmapStorageData));
-    setBeatmapLoaded(true);
-    setIsLoaderOpen(false); // Auto-close the loader
+    const isSameVideo = storedVideoId && data.youtubeVideoId && storedVideoId === data.youtubeVideoId;
+
+    if (!isSameVideo) {
+      unloadBeatmap();
+    }
+
+    setBeatmapData({
+      youtubeVideoId: data.youtubeVideoId ?? null,
+      beatmapText,
+    });
+    setIsLoaderOpen(false);
   };
 
   const handleUnloadBeatmap = () => {
     unloadBeatmap();
-    setBeatmapLoaded(false);
   };
 
   return (

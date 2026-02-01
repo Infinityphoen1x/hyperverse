@@ -25,8 +25,8 @@ interface EditorSidebarProps {
   currentDifficulty: Difficulty;
   setCurrentDifficulty: (diff: Difficulty) => void;
   difficultyNotes: Record<Difficulty, any[]>;
-  editorMode: boolean;
-  setEditorMode: (mode: boolean) => void;
+  isEditMode: boolean;
+  setIsEditMode: (mode: boolean) => void;
   snapEnabled: boolean;
   setSnapEnabled: (enabled: boolean) => void;
   snapDivision: 1 | 2 | 4 | 8 | 16;
@@ -59,6 +59,7 @@ interface EditorSidebarProps {
   updateFromText: (text: string) => void;
   resizeRef: React.RefObject<HTMLDivElement>;
   setIsResizing: (resizing: boolean) => void;
+  videoDurationMs?: number;
 }
 
 export function EditorSidebar({
@@ -74,8 +75,8 @@ export function EditorSidebar({
   currentDifficulty,
   setCurrentDifficulty,
   difficultyNotes,
-  editorMode,
-  setEditorMode,
+  isEditMode,
+  setIsEditMode,
   snapEnabled,
   setSnapEnabled,
   snapDivision,
@@ -108,6 +109,7 @@ export function EditorSidebar({
   updateFromText,
   resizeRef,
   setIsResizing,
+  videoDurationMs,
 }: EditorSidebarProps) {
   return (
     <AnimatePresence>
@@ -199,14 +201,14 @@ export function EditorSidebar({
 
             <div className="flex gap-2 flex-wrap">
               <button
-                onClick={() => setEditorMode(!editorMode)}
+                onClick={() => setIsEditMode(!isEditMode)}
                 className={`px-3 py-1 text-sm font-rajdhani rounded border transition-colors ${
-                  editorMode
+                  isEditMode
                     ? 'bg-neon-pink border-neon-pink text-black'
                     : 'bg-transparent border-gray-600 text-gray-400'
                 }`}
               >
-                EDITOR MODE
+                EDIT MODE
               </button>
               <button
                 onClick={() => setSnapEnabled(!snapEnabled)}
@@ -289,6 +291,7 @@ export function EditorSidebar({
                 <MetadataSection
                   metadata={metadata}
                   updateMetadata={updateMetadata}
+                  videoDurationMs={videoDurationMs}
                 />
               </CollapsibleSection>
             )}

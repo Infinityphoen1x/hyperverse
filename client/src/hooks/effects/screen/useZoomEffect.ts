@@ -169,9 +169,9 @@ export function useZoomEffect(): ZoomEffectState {
   }, [zoomState, currentRotation, currentScale, zoomIntensity]);
   
   return { 
-    zoomIntensity, 
-    zoomRotation: currentRotation, 
-    zoomScale: currentScale,
+    zoomIntensity: isFinite(zoomIntensity) ? zoomIntensity : 0, 
+    zoomRotation: isFinite(currentRotation) ? currentRotation : 0, 
+    zoomScale: isFinite(currentScale) ? currentScale : 1.0,
     resetZoom
   };
 }

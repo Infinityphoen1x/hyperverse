@@ -51,31 +51,50 @@ export const calculateRayCorners = (
   hexCenterX: number = VANISHING_POINT_X,
   hexCenterY: number = VANISHING_POINT_Y
 ): { x1: number; y1: number; x2: number; y2: number; x3: number; y3: number; x4: number; y4: number } => {
+  // Sanitize inputs to prevent NaN propagation
+  const safeVpX = isFinite(vpX) ? vpX : VANISHING_POINT_X;
+  const safeVpY = isFinite(vpY) ? vpY : VANISHING_POINT_Y;
+  const safeHexCenterX = isFinite(hexCenterX) ? hexCenterX : VANISHING_POINT_X;
+  const safeHexCenterY = isFinite(hexCenterY) ? hexCenterY : VANISHING_POINT_Y;
+  
   const leftRayAngle = rayAngle - TAP_RAY.SPREAD_ANGLE;
   const rightRayAngle = rayAngle + TAP_RAY.SPREAD_ANGLE;
   
   // Calculate fixed outer corner positions for left and right spread rays
   const leftRad = (leftRayAngle * Math.PI) / 180;
   const rightRad = (rightRayAngle * Math.PI) / 180;
-  const leftOuterX = hexCenterX + TUNNEL_MAX_DISTANCE * Math.cos(leftRad);
-  const leftOuterY = hexCenterY + TUNNEL_MAX_DISTANCE * Math.sin(leftRad);
-  const rightOuterX = hexCenterX + TUNNEL_MAX_DISTANCE * Math.cos(rightRad);
-  const rightOuterY = hexCenterY + TUNNEL_MAX_DISTANCE * Math.sin(rightRad);
+  const leftOuterX = safeHexCenterX + TUNNEL_MAX_DISTANCE * Math.cos(leftRad);
+  const leftOuterY = safeHexCenterY + TUNNEL_MAX_DISTANCE * Math.sin(leftRad);
+  const rightOuterX = safeHexCenterX + TUNNEL_MAX_DISTANCE * Math.cos(rightRad);
+  const rightOuterY = safeHexCenterY + TUNNEL_MAX_DISTANCE * Math.sin(rightRad);
   
   // Position corners along rays from VP to outer corners
   const farProgress = farDistance / TUNNEL_MAX_DISTANCE;
   const nearProgress = nearDistance / TUNNEL_MAX_DISTANCE;
 
-  return {
-    x1: vpX + (leftOuterX - vpX) * farProgress,
-    y1: vpY + (leftOuterY - vpY) * farProgress,
-    x2: vpX + (rightOuterX - vpX) * farProgress,
-    y2: vpY + (rightOuterY - vpY) * farProgress,
-    x3: vpX + (rightOuterX - vpX) * nearProgress,
-    y3: vpY + (rightOuterY - vpY) * nearProgress,
-    x4: vpX + (leftOuterX - vpX) * nearProgress,
-    y4: vpY + (leftOuterY - vpY) * nearProgress,
+  const result = {
+    x1: safeVpX + (leftOuterX - safeVpX) * farProgress,
+    y1: safeVpY + (leftOuterY - safeVpY) * farProgress,
+    x2: safeVpX + (rightOuterX - safeVpX) * farProgress,
+    y2: safeVpY + (rightOuterY - safeVpY) * farProgress,
+    x3: safeVpX + (rightOuterX - safeVpX) * nearProgress,
+    y3: safeVpY + (rightOuterY - safeVpY) * nearProgress,
+    x4: safeVpX + (leftOuterX - safeVpX) * nearProgress,
+    y4: safeVpY + (leftOuterY - safeVpY) * nearProgress,
   };
+  
+  // DEBUG: Log NaN in calculated corners
+  const hasNaN = Object.values(result).some(v => !isFinite(v));
+  if (hasNaN) {
+    console.error('[calculateRayCorners] NaN in output:', {
+      input: { vpX, vpY, rayAngle, nearDistance, farDistance, hexCenterX, hexCenterY },
+      safe: { safeVpX, safeVpY, safeHexCenterX, safeHexCenterY },
+      intermediate: { leftRayAngle, rightRayAngle, leftOuterX, leftOuterY, rightOuterX, rightOuterY, farProgress, nearProgress },
+      output: result
+    });
+  }
+  
+  return result;
 };
 
 export const calculateTapNoteGeometry = (

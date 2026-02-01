@@ -5,6 +5,7 @@ import { convertBeatmapNotes } from "@/lib/beatmap/beatmapConverter";
 import { extractYouTubeId } from '@/lib/youtube';
 import { GameErrors } from '@/lib/errors/errorLog';
 import { validateBeatmap } from '@/lib/parsers/beatmapValidation';
+import { useBeatmapStore } from '@/stores/useBeatmapStore';
 
 interface UseBeatmapLoaderProps {
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
@@ -36,7 +37,15 @@ beatmapEnd: 180
 3000|3|TAP`;
 
 export const useBeatmapLoader = ({ difficulty, onBeatmapLoad }: UseBeatmapLoaderProps): UseBeatmapLoaderReturn => {
-  const [beatmapText, setBeatmapText] = useState(defaultBeatmap);
+  const initialBeatmapText = (() => {
+    const { beatmapText } = useBeatmapStore.getState();
+    if (beatmapText && beatmapText.trim()) {
+      return beatmapText;
+    }
+    return defaultBeatmap;
+  })();
+
+  const [beatmapText, setBeatmapText] = useState(initialBeatmapText);
   const [error, setError] = useState("");
   const [isBeatmapLoaded, setIsBeatmapLoaded] = useState(false);
 

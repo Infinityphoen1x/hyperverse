@@ -11,6 +11,11 @@ interface TapNotesProps {
 }
 
 const TapNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: TapNotesProps) => {
+  // DEBUG: Log input props
+  if (!isFinite(propVpX) || !isFinite(propVpY)) {
+    console.error('[TapNotes] NaN in props:', { propVpX, propVpY });
+  }
+  
   // Memoize selectors to prevent unnecessary store subscriptions
   const currentTime = useGameStore(state => state.currentTime);
   const tunnelRotation = useGameStore(state => state.tunnelRotation);

@@ -9,9 +9,16 @@ interface MetadataSectionProps {
     beatmapEnd: number;
   };
   updateMetadata: (updates: Partial<MetadataSectionProps['metadata']>) => void;
+  videoDurationMs?: number;
 }
 
-export function MetadataSection({ metadata, updateMetadata }: MetadataSectionProps) {
+export function MetadataSection({ metadata, updateMetadata, videoDurationMs }: MetadataSectionProps) {
+  const handleAutoFillEnd = () => {
+    if (videoDurationMs && videoDurationMs > 0) {
+      updateMetadata({ beatmapEnd: videoDurationMs });
+    }
+  };
+  
   return (
     <div className="space-y-3">
       <div>
@@ -46,9 +53,10 @@ export function MetadataSection({ metadata, updateMetadata }: MetadataSectionPro
           <label className="text-xs text-gray-400 font-rajdhani">DURATION (s)</label>
           <input
             type="number"
-            value={metadata.duration}
-            onChange={(e) => updateMetadata({ duration: parseFloat(e.target.value) || 0 })}
-            className="w-full bg-black border border-neon-cyan/30 text-white px-2 py-1 text-sm font-rajdhani rounded"
+            value={videoDurationMs ? Math.floor(videoDurationMs / 1000) : metadata.duration}
+            readOnly
+            className="w-full bg-black border border-neon-cyan/30 text-white/60 px-2 py-1 text-sm font-rajdhani rounded cursor-not-allowed"
+            title="Auto-populated from YouTube video"
           />
         </div>
       </div>
@@ -72,7 +80,19 @@ export function MetadataSection({ metadata, updateMetadata }: MetadataSectionPro
           />
         </div>
         <div>
-          <label className="text-xs text-gray-400 font-rajdhani">END (ms)</label>
+          <label className="text-xs text-gray-400 font-rajdhani flex items-center justify-between">
+            <span>END (ms)</span>
+            {videoDurationMs && videoDurationMs > 0 && (
+              <button
+                type="button"
+                onClick={handleAutoFillEnd}
+                className="text-[10px] px-1.5 py-0.5 bg-neon-cyan/20 hover:bg-neon-cyan/30 text-neon-cyan border border-neon-cyan/50 rounded transition-colors"
+                title="Auto-fill from video duration"
+              >
+                AUTO-FILL
+              </button>
+            )}
+          </label>
           <input
             type="number"
             value={metadata.beatmapEnd}

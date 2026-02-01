@@ -203,13 +203,38 @@ export function parseBeatmapTextWithDifficulties(text: string): DifficultyNotes 
 export function parseMetadataFromText(text: string): Partial<BeatmapMetadata> {
   const lines = text.split('\n');
   const metadata: Partial<BeatmapMetadata> = {};
+  let inMetadataSection = false;
 
   lines.forEach(line => {
     const trimmed = line.trim();
-    if (trimmed.startsWith('#')) {
-      const [key, ...valueParts] = trimmed.slice(1).split(':');
+    
+    // Check for [METADATA] section start
+    if (trimmed === '[METADATA]') {
+      inMetadataSection = true;
+      return;
+    }
+    
+    // Check for section end (any other [SECTION])
+    if (trimmed.startsWith('[') && trimmed.endsWith(']') && trimmed !== '[METADATA]') {
+      inMetadataSection = false;
+      return;
+    }
+    
+    // Parse metadata lines (support both formats: with and without #)
+    if (inMetadataSection || trimmed.startsWith('#')) {
+      let content = trimmed;
+      
+      // Remove # prefix if present
+      if (content.startsWith('#')) {
+        content = content.slice(1).trim();
+      }
+      
+      // Skip empty lines and lines without colons
+      if (!content || !content.includes(':')) return;
+      
+      const [key, ...valueParts] = content.split(':');
       const value = valueParts.join(':').trim();
-      const keyLower = key.toLowerCase();
+      const keyLower = key.trim().toLowerCase();
 
       if (keyLower === 'title') metadata.title = value;
       else if (keyLower === 'artist') metadata.artist = value;

@@ -93,12 +93,13 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
       snapEnabled,
       snapDivision,
       bpm: metadata.bpm,
+      beatmapStart: metadata.beatmapStart,
     });
     
     if (clickedNote) {
       // Clicked on a note
       const isAlreadySelected = selectedNoteIds.includes(clickedNote.id);
-      const isMultiSelect = e.ctrlKey || e.metaKey;
+      const isMultiSelect = e.ctrlKey || e.metaKey || e.shiftKey;
       
       if (isAlreadySelected) {
         // Note already selected
@@ -139,11 +140,18 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
       // Clicked empty space - clear selection and potentially create note
       const { lane: closestLane } = mouseToLane(mouseX, mouseY, VANISHING_POINT_X, VANISHING_POINT_Y);
       const { time: timeOffset } = mouseToTime(mouseX, mouseY, VANISHING_POINT_X, VANISHING_POINT_Y, currentTime, LEAD_TIME, JUDGEMENT_RADIUS);
-      const noteTime = snapEnabled ? snapTimeToGrid(timeOffset, metadata.bpm, snapDivision) : timeOffset;
+      const noteTime = snapEnabled ? snapTimeToGrid(timeOffset, metadata.bpm, snapDivision, metadata.beatmapStart) : timeOffset;
+      
+      const isMultiSelect = e.ctrlKey || e.metaKey || e.shiftKey;
       
       // Always clear selection when clicking empty space (unless multi-selecting)
-      if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+      if (!isMultiSelect) {
         clearSelection();
+      }
+      
+      // Don't create notes when holding multi-select modifiers
+      if (isMultiSelect) {
+        return;
       }
       
       // Check if a note already exists at this time/lane
@@ -209,18 +217,19 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
         snapEnabled,
         snapDivision,
         bpm: metadata.bpm,
+        beatmapStart: metadata.beatmapStart,
         draggedNoteId,
         draggedHandle,
         parsedNotes,
       });
       setParsedNotes(updatedNotes);
       const { time: timeOffset } = mouseToTime(mouseX, mouseY, VANISHING_POINT_X, VANISHING_POINT_Y, currentTime, LEAD_TIME, JUDGEMENT_RADIUS);
-      const newTime = snapEnabled ? snapTimeToGrid(timeOffset, metadata.bpm, snapDivision) : timeOffset;
+      const newTime = snapEnabled ? snapTimeToGrid(timeOffset, metadata.bpm, snapDivision, metadata.beatmapStart) : timeOffset;
       setHoveredNote({ lane: closestLane, time: newTime });
     } else if (isDragging && draggedNoteId && !draggedHandle) {
       // Dragging entire note (sliding) - update position
       const { time: timeOffset } = mouseToTime(mouseX, mouseY, VANISHING_POINT_X, VANISHING_POINT_Y, currentTime, LEAD_TIME, JUDGEMENT_RADIUS);
-      const newTime = snapEnabled ? snapTimeToGrid(timeOffset, metadata.bpm, snapDivision) : timeOffset;
+      const newTime = snapEnabled ? snapTimeToGrid(timeOffset, metadata.bpm, snapDivision, metadata.beatmapStart) : timeOffset;
       
       const draggedNote = parsedNotes.find(n => n.id === draggedNoteId);
       if (draggedNote) {
@@ -241,7 +250,7 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
     } else {
       // Hover preview at mouse cursor position depth
       const { time: timeOffset } = mouseToTime(mouseX, mouseY, VANISHING_POINT_X, VANISHING_POINT_Y, currentTime, LEAD_TIME, JUDGEMENT_RADIUS);
-      const noteTime = snapEnabled ? snapTimeToGrid(timeOffset, metadata.bpm, snapDivision) : timeOffset;
+      const noteTime = snapEnabled ? snapTimeToGrid(timeOffset, metadata.bpm, snapDivision, metadata.beatmapStart) : timeOffset;
       setHoveredNote({ lane: closestLane, time: noteTime });
     }
   }, [canvasRef, currentTime, snapEnabled, metadata.bpm, snapDivision, setHoveredNote, isDragging, draggedNoteId, draggedHandle, parsedNotes, setParsedNotes, selectedNoteIds, setDraggedHandle, setIsDragging]);

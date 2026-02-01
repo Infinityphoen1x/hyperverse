@@ -1,6 +1,7 @@
 // src/hooks/useKeyControls.ts
 import { useEffect, useCallback } from 'react';
 import { useGameStore } from '@/stores/useGameStore';
+import { KEY_LANE_MAP, GAMEPLAY_KEYS } from '@/lib/config/input';
 
 interface UseKeyControlsProps {
   onPause?: () => void;
@@ -11,17 +12,6 @@ interface UseKeyControlsProps {
   onTrackHoldEnd?: (lane: number) => void;
 }
 
-const KEY_LANE_MAP: Record<string, number> = {
-  'w': 0, 'W': 0,
-  'o': 1, 'O': 1,
-  'i': 2, 'I': 2,
-  'e': 3, 'E': 3,
-  'q': -1, 'Q': -1,
-  'p': -2, 'P': -2,
-};
-
-const GAMEPLAY_KEYS = new Set(['w', 'W', 'o', 'O', 'i', 'I', 'e', 'E', 'q', 'Q', 'p', 'P']);
-
 export function useKeyControls({ onPause, onResume, onRewind, onHitNote, onTrackHoldStart, onTrackHoldEnd }: UseKeyControlsProps): void {
   const gameState = useGameStore(state => state.gameState);
   const isPaused = useGameStore(state => state.isPaused);
@@ -30,7 +20,7 @@ export function useKeyControls({ onPause, onResume, onRewind, onHitNote, onTrack
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent): void => {
-      if (GAMEPLAY_KEYS.has(e.key)) {
+      if (GAMEPLAY_KEYS.includes(e.key)) {
         e.preventDefault();
       }
       

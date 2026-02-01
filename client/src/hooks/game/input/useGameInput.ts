@@ -132,6 +132,8 @@ export function useGameInput({
      GameErrors.updateNoteStats(updatedNotes);
      
      if (result.success) {
+         // Play sound effect on successful hold press
+         audioManager.play('tapHit');
          startDeckHold(lane);
          
          if (result.scoreChange) {

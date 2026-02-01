@@ -15,18 +15,21 @@ interface DurationInputPopupProps {
 }
 
 export function DurationInputPopup({ visible, lane, time, onConfirm, onCancel }: DurationInputPopupProps) {
+  // Early return BEFORE hooks to avoid hook count mismatch
+  if (!visible) return null;
+
   const [durationInput, setDurationInput] = useState('500'); // Default 500ms
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (visible) {
-      // Focus input when visible
-      setTimeout(() => inputRef.current?.focus(), 50);
-    } else {
-      // Reset input when hidden
+    // Focus input when visible
+    setTimeout(() => inputRef.current?.focus(), 50);
+    
+    // Reset input when unmounting
+    return () => {
       setDurationInput('500');
-    }
-  }, [visible]);
+    };
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -49,8 +52,6 @@ export function DurationInputPopup({ visible, lane, time, onConfirm, onCancel }:
     const value = e.target.value.replace(/[^0-9]/g, '');
     setDurationInput(value);
   };
-
-  if (!visible) return null;
 
   return (
     <div 
