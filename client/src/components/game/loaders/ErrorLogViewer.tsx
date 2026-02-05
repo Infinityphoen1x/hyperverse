@@ -1,6 +1,6 @@
 // src/components/ErrorLogViewer.tsx
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from "@/lib/motion/MotionProvider";
 import { ChevronDown } from 'lucide-react';
 import { useErrorLogs } from '@/hooks/utils/useErrorLogs';
 import { NoteStatsSection } from './NoteStatsSection';
@@ -25,13 +25,13 @@ export function ErrorLogViewer() {
   } = useErrorLogs();
 
   return (
-    <motion.div
+    <m.div
       className="fixed bottom-4 right-4 z-50 pointer-events-auto"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
       {/* Toggle Button */}
-      <motion.button
+      <m.button
         onClick={() => setIsOpen(!isOpen)}
         className="bg-gray-900 border border-cyan-500 text-cyan-400 px-3 py-2 rounded text-sm font-mono flex items-center gap-2 hover:bg-gray-800 transition"
         whileHover={{ scale: 1.05 }}
@@ -43,11 +43,11 @@ export function ErrorLogViewer() {
           size={16}
           className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
-      </motion.button>
+      </m.button>
       {/* Log Panel */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
@@ -85,9 +85,9 @@ export function ErrorLogViewer() {
                 Updated: {new Date().toLocaleTimeString()}
               </div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </m.div>
   );
 }

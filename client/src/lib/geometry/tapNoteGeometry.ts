@@ -86,12 +86,12 @@ export const calculateRayCorners = (
   // DEBUG: Log NaN in calculated corners
   const hasNaN = Object.values(result).some(v => !isFinite(v));
   if (hasNaN) {
-    console.error('[calculateRayCorners] NaN in output:', {
-      input: { vpX, vpY, rayAngle, nearDistance, farDistance, hexCenterX, hexCenterY },
-      safe: { safeVpX, safeVpY, safeHexCenterX, safeHexCenterY },
-      intermediate: { leftRayAngle, rightRayAngle, leftOuterX, leftOuterY, rightOuterX, rightOuterY, farProgress, nearProgress },
-      output: result
-    });
+    // console.error('[calculateRayCorners] NaN in output:', {
+    //   input: { vpX, vpY, rayAngle, nearDistance, farDistance, hexCenterX, hexCenterY },
+    //   safe: { safeVpX, safeVpY, safeHexCenterX, safeHexCenterY },
+    //   intermediate: { leftRayAngle, rightRayAngle, leftOuterX, leftOuterY, rightOuterX, rightOuterY, farProgress, nearProgress },
+    //   output: result
+    // });
   }
   
   return result;

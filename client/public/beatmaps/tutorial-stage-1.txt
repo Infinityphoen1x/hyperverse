@@ -1,0 +1,18 @@
+[METADATA]
+title: Tutorial Stage 1 - Basic TAP
+artist: Hyperverse Tutorial
+bpm: 100
+duration: 20000
+youtube: 6OdwGfJAR1U
+beatmapStart: 0
+beatmapEnd: 20000
+
+[EASY]
+2000|0|TAP
+3500|0|TAP
+5000|0|TAP
+6500|0|TAP
+8000|0|TAP
+9500|0|TAP
+11000|0|TAP
+12500|0|TAP

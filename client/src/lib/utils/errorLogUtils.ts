@@ -21,7 +21,7 @@ export const countErrorsByCategory = (notes: (string | any)[]) => {
   return counts;
 };
 
-export const getLaneNames = (): Record<string, string> => ({
+export const getLaneNames = (): Record<string, string> => ({ // Returns position names for display
   '0': 'W',
   '1': 'O',
   '2': 'I',
@@ -30,10 +30,10 @@ export const getLaneNames = (): Record<string, string> => ({
   '-2': 'P',
 });
 
-export const formatLaneStats = (byLane: Record<number, number>): string => {
+export const formatLaneStats = (byLane: Record<number, number>): string => { // Parameter byLane contains position values
   const laneNames = getLaneNames();
   return Object.entries(byLane)
-    .map(([lane, count]) => `${laneNames[lane] || lane}=${count}`)
+    .map(([lane, count]) => `${laneNames[lane] || lane}=${count}`) // 'lane' represents position value
     .join(' ');
 };
 

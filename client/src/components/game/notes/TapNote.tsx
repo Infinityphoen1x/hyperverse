@@ -1,7 +1,7 @@
 // src/components/TapNote.tsx
 import React, { memo } from 'react';
 import type { Note } from '@/lib/engine/gameTypes';
-import { getLaneAngle, getColorForLane } from '@/lib/utils/laneUtils';
+import { getPositionAngle, getColorForPosition } from '@/lib/utils/laneUtils';
 import { calculateTapNoteGeometry } from "@/lib/geometry/tapNoteGeometry";
 import { calculateTapNoteStyle } from "@/lib/notes/tap/tapNoteStyle";
 import { TapNoteState } from '@/lib/notes/tap/tapNoteHelpers';
@@ -20,10 +20,11 @@ interface TapNoteProps {
 
 const TapNoteComponent = ({ note, currentTime, vpX, vpY, state, progressForGeometry, clampedProgress, rawProgress }: TapNoteProps): React.ReactElement => {
   const tunnelRotation = useTunnelRotation();
-  const tapRayAngle = getLaneAngle(note.lane, tunnelRotation);
-  const noteColor = getColorForLane(note.lane);
+  const position = note.lane; // DEPRECATED: note.lane field, treat as position
+  const tapRayAngle = getPositionAngle(position, tunnelRotation);
+  const noteColor = getColorForPosition(position);
   const geometry = calculateTapNoteGeometry(progressForGeometry, tapRayAngle, vpX, vpY, state.isHit, currentTime, state.isFailed, note.time, state.failureTime, state.isTapMissFailure);
-  const style = calculateTapNoteStyle(clampedProgress, state, noteColor, rawProgress, note.lane);
+  const style = calculateTapNoteStyle(clampedProgress, state, noteColor, rawProgress, position);
   return (
     <polygon
       data-testid={`tap-note-${note.id}`}

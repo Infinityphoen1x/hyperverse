@@ -138,7 +138,7 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
       audioManager.play('tapHit');
     } else {
       // Clicked empty space - clear selection and potentially create note
-      const { lane: closestLane } = mouseToLane(mouseX, mouseY, VANISHING_POINT_X, VANISHING_POINT_Y);
+      const { lane: closestLane, distance: mouseDistance } = mouseToLane(mouseX, mouseY, VANISHING_POINT_X, VANISHING_POINT_Y);
       const { time: timeOffset } = mouseToTime(mouseX, mouseY, VANISHING_POINT_X, VANISHING_POINT_Y, currentTime, LEAD_TIME, JUDGEMENT_RADIUS);
       const noteTime = snapEnabled ? snapTimeToGrid(timeOffset, metadata.bpm, snapDivision, metadata.beatmapStart) : timeOffset;
       
@@ -149,8 +149,11 @@ export function useEditorMouseHandlers(props: UseEditorMouseHandlersProps) {
         clearSelection();
       }
       
-      // Don't create notes when holding multi-select modifiers
-      if (isMultiSelect) {
+      // Check if clicking outside the tunnel (past judgement radius = 187px)
+      const isOutsideTunnel = mouseDistance > JUDGEMENT_RADIUS;
+      
+      // Don't create notes when holding multi-select modifiers or clicking outside tunnel
+      if (isMultiSelect || isOutsideTunnel) {
         return;
       }
       

@@ -9,7 +9,7 @@ import {
 } from '@/lib/config';
 
 interface UseHoldProgressProps {
-  lane?: number;
+  lane?: number; // Position value (-2 to 3)
 }
 
 interface HoldProgressReturn {
@@ -21,7 +21,7 @@ export const useHoldProgress = ({ lane: propLane }: UseHoldProgressProps = {}): 
   const notes = useGameStore(state => state.notes);
   const currentTime = useGameStore(state => state.currentTime);
   const playerSpeed = useGameStore(state => state.playerSpeed) || 20;
-  const lane = propLane ?? -1;
+  const lane = propLane ?? -1; // Default to horizontal position -1
 
   const [isGlowing, setIsGlowing] = useState(false);
   const prevCompletionRef = useRef<boolean>(false);

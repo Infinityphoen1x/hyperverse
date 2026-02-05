@@ -44,12 +44,12 @@ export const calculateLinePoints = (
   
   // DEBUG: Log NaN in calculated line points
   if (!isFinite(x1) || !isFinite(y1) || !isFinite(x2) || !isFinite(y2)) {
-    console.error('[calculateLinePoints] NaN in output:', {
-      input: { vpX, vpY, lineWidth, rotationOffset, hexCenterX, hexCenterY, angle: config.angle },
-      safe: { safeVpX, safeVpY, safeHexCenterX, safeHexCenterY, safeRotation },
-      intermediate: { angle, rad, outerCornerX, outerCornerY, progress, cx, cy, rayAngle, perpRad },
-      output: { x1, y1, x2, y2 }
-    });
+    // console.error('[calculateLinePoints] NaN in output:', {
+    //   input: { vpX, vpY, lineWidth, rotationOffset, hexCenterX, hexCenterY, angle: config.angle },
+    //   safe: { safeVpX, safeVpY, safeHexCenterX, safeHexCenterY, safeRotation },
+    //   intermediate: { angle, rad, outerCornerX, outerCornerY, progress, cx, cy, rayAngle, perpRad },
+    //   output: { x1, y1, x2, y2 }
+    // });
   }
   
   return { x1, y1, x2, y2 };

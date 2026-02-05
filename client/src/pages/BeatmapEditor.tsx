@@ -1,7 +1,8 @@
 import { useCallback, useRef, useEffect, useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from "@/lib/motion/MotionProvider";
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useGameStore } from '@/stores/useGameStore';
+import { useBeatmapStore } from '@/stores/useBeatmapStore';
 import { useEditorCoreStore } from '@/stores/useEditorCoreStore';
 import { useEditorUIStore } from '@/stores/useEditorUIStore';
 import { useEditorGraphicsStore } from '@/stores/useEditorGraphicsStore';
@@ -13,6 +14,7 @@ import { useEditorAnimation } from '@/hooks/editor/useEditorAnimation';
 import { useEditorBeatmapSync } from '@/hooks/editor/useEditorBeatmapSync';
 import { useEditorNoteOperations } from '@/hooks/editor/useEditorNoteOperations';
 import { useEditorKeyboardShortcuts } from '@/hooks/editor/useEditorKeyboardShortcuts';
+import { useEditorVisualEffects } from '@/hooks/editor/useEditorVisualEffects';
 import { YouTubeSetupModal } from '@/components/editor/YouTubeSetupModal';
 import { EditorSidebarManager } from '@/components/editor/EditorSidebarManager';
 import { BpmTapperModal } from '@/components/editor/BpmTapperModal';
@@ -75,22 +77,13 @@ export default function BeatmapEditor({ onBack, playerInitializedRef }: BeatmapE
     setDurationInputState,
   });
 
-  // Load beatmapText from localStorage on mount (if exists)
+  // Load beatmapText from useBeatmapStore on mount (if exists)
   useEffect(() => {
-    const pendingBeatmap = localStorage.getItem('pendingBeatmap');
-    if (pendingBeatmap) {
-      try {
-        const data = JSON.parse(pendingBeatmap);
-        if (data.beatmapText && data.beatmapText.trim()) {
-          console.log('[EDITOR] Loading existing beatmapText from localStorage');
-          // Parse and load the existing beatmap
-          const metadata = parseMetadataFromText(data.beatmapText);
-          coreStore.setMetadata(metadata);
-          coreStore.setBeatmapText(data.beatmapText);
-        }
-      } catch (e) {
-        console.error('[EDITOR] Failed to load beatmapText from localStorage:', e);
-      }
+    const storedBeatmapText = useBeatmapStore.getState().beatmapText;
+    if (storedBeatmapText && storedBeatmapText.trim()) {
+      // console.log('[EDITOR] Loading existing beatmapText from useBeatmapStore, length:', storedBeatmapText.length);
+      // Set beatmap text - the sync hook will parse metadata and notes
+      coreStore.setBeatmapText(storedBeatmapText);
     }
   }, []); // Only run once on mount
 
@@ -146,12 +139,14 @@ export default function BeatmapEditor({ onBack, playerInitializedRef }: BeatmapE
     setNotes(coreStore.parsedNotes);
   }, [coreStore.parsedNotes, setNotes]);
 
-  // Control tunnel rotation based on spinEnabled
-  useEffect(() => {
-    if (!graphicsStore.spinEnabled) {
-      setTunnelRotation(0);
-    }
-  }, [graphicsStore.spinEnabled, setTunnelRotation]);
+  // Visual effects (SPIN/ZOOM) based on active hold notes during playback
+  useEditorVisualEffects({
+    notes: coreStore.parsedNotes,
+    currentTime,
+    isPlaying: coreStore.isPlaying,
+    spinEnabled: graphicsStore.spinEnabled,
+    zoomEnabled: graphicsStore.zoomEnabled,
+  });
 
   // Copy to clipboard
   const copyToClipboard = () => {
@@ -200,12 +195,6 @@ export default function BeatmapEditor({ onBack, playerInitializedRef }: BeatmapE
     setCurrentTime,
   });
 
-  // Update metadata from text
-  const updateFromText = useCallback((text: string) => {
-    const extractedMetadata = parseMetadataFromText(text);
-    coreStore.updateMetadata(extractedMetadata);
-  }, [coreStore.updateMetadata]);
-
   // Validate beatmap
   useEffect(() => {
     const issues = validateBeatmap(coreStore.parsedNotes, coreStore.metadata);
@@ -231,13 +220,6 @@ export default function BeatmapEditor({ onBack, playerInitializedRef }: BeatmapE
           <ChevronLeft className="w-5 h-5" />
           BACK
         </button>
-        <button
-          onClick={() => uiStore.setIsPanelOpen(!uiStore.isPanelOpen)}
-          className="flex items-center gap-2 px-4 py-2 bg-neon-cyan border border-neon-cyan text-black rounded hover:bg-neon-cyan/80 transition-colors font-rajdhani font-bold"
-        >
-          {uiStore.isPanelOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-          {uiStore.isPanelOpen ? 'HIDE' : 'SHOW'} PANEL
-        </button>
       </div>
 
       {/* Editor Canvas - Centered layout matching game */}
@@ -252,7 +234,7 @@ export default function BeatmapEditor({ onBack, playerInitializedRef }: BeatmapE
             currentTime={currentTime}
             parsedNotes={coreStore.parsedNotes}
             metadata={coreStore.metadata}
-            editorMode={coreStore.editorMode}
+            isEditMode={coreStore.isEditMode}
             snapEnabled={uiStore.snapEnabled}
             snapDivision={uiStore.snapDivision}
             hoveredNote={coreStore.hoveredNote}
@@ -296,7 +278,6 @@ export default function BeatmapEditor({ onBack, playerInitializedRef }: BeatmapE
         deleteSelectedNote={deleteSelectedNote}
         copyToClipboard={copyToClipboard}
         downloadBeatmap={downloadBeatmap}
-        updateFromText={updateFromText}
         validationIssues={validationIssues}
         currentTime={currentTime}
         setCurrentTime={setCurrentTime}

@@ -1,0 +1,22 @@
+[METADATA]
+title: Tutorial Stage 7 - Tunnel Spin
+artist: Hyperverse Tutorial
+bpm: 100
+duration: 30000
+youtube: 6OdwGfJAR1U
+beatmapStart: 0
+beatmapEnd: 30000
+
+[EASY]
+2000|0|HOLD|1500|hold_1
+4000|1|TAP
+5000|2|TAP
+7000|1|HOLD|1500|hold_2
+9000|0|TAP
+10000|3|TAP
+12000|2|HOLD|1500|hold_3
+14000|1|TAP
+15000|2|TAP
+17000|3|HOLD|1500|hold_4
+19000|0|TAP
+20000|1|TAP

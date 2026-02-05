@@ -4,7 +4,7 @@ import { GameErrors } from '@/lib/errors/errorLog';
 
 export interface BeatmapNote {
   time: number;
-  lane: number;
+  lane: number; // DEPRECATED: Represents position value (-2 to 3)
   type: 'TAP' | 'HOLD';
   duration?: number;
   holdId?: string;
@@ -13,9 +13,9 @@ export interface BeatmapNote {
 }
 
 export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
-  // Note: SPIN_LEFT/SPIN_RIGHT are lane positions only, not rotation directions
-  // Lane -1 (Q deck, left) → SPIN_LEFT
-  // Lane -2 (P deck, right) → SPIN_RIGHT
+  // Note: SPIN_LEFT/SPIN_RIGHT are position indicators only, not rotation directions
+  // Position -1 (Q deck, left) → SPIN_LEFT
+  // Position -2 (P deck, right) → SPIN_RIGHT
   // Rotation direction alternates at runtime via user key presses, not beatmap
   if (!Array.isArray(beatmapNotes) || beatmapNotes.length === 0) {
     return [];
@@ -25,30 +25,18 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
   for (let i = 0; i < beatmapNotes.length; i++) {
     const note = beatmapNotes[i];
     if (!note || !Number.isFinite(note.time) || !Number.isFinite(note.lane) || !note.type) {
-      GameErrors.log(`BeatmapConverter: Invalid note at index ${i}: time=${note?.time}, lane=${note?.lane}, type=${note?.type}`);
+      GameErrors.log(`BeatmapConverter: Invalid note at index ${i}: time=${note?.time}, position=${note?.lane}, type=${note?.type}`); // note.lane is position
       continue;
     }
-    if (note.lane !== -2 && note.lane !== -1 && (note.lane < 0 || note.lane > 3)) {
-      GameErrors.log(`BeatmapConverter: Invalid lane ${note.lane} at note index ${i}. Valid lanes: -2 (P deck), -1 (Q deck), 0-3 (soundpads)`);
+    if (note.lane !== -2 && note.lane !== -1 && (note.lane < 0 || note.lane > 3)) { // DEPRECATED: note.lane field, treat as position
+      GameErrors.log(`BeatmapConverter: Invalid position ${note.lane} at note index ${i}. Valid positions: -2 (P deck), -1 (Q deck), 0-3 (soundpads)`);
       continue;
     }
 
-    // STRICT ENFORCEMENT: Lanes 0-3 are TAP only. Lanes -1/-2 are HOLD (SPIN) only.
+    // Horizontal positions (-1, -2) enforcement: Force to HOLD if TAP (decks are spin-only)
     let enforcedType = note.type;
-    
-    // Force Soundpads (0-3) to TAP
-    if (note.lane >= 0 && note.lane <= 3) {
-        if (note.type === 'HOLD') {
-            // console.warn(`BeatmapConverter: Lane ${note.lane} forced to TAP (HOLD not supported on soundpads)`);
-            enforcedType = 'TAP';
-        }
-    }
-
-    // Force Decks (-1, -2) to HOLD (SPIN) if they have duration, otherwise TAP (though deck taps might be rare/unsupported?)
-    // User said: "Lanes q and p, or -1 and -2, are reserved for hold notes alone"
-    if (note.lane === -1 || note.lane === -2) {
+    if (note.lane === -1 || note.lane === -2) { // DEPRECATED: note.lane field, treat as horizontal position
         if (note.type === 'TAP') {
-             // console.warn(`BeatmapConverter: Lane ${note.lane} forced to HOLD (TAP not supported on decks)`);
              enforcedType = 'HOLD';
              // Give it a default duration if missing, so it works as a spin
              if (!note.duration) note.duration = 1000; 
@@ -58,8 +46,8 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
     if (enforcedType === 'HOLD') {
       if (note.duration === undefined || !Number.isFinite(note.duration) || note.duration <= 0) {
         // If we forced it to HOLD, we might have just added duration. If it was already HOLD but bad duration:
-        if (note.lane === -1 || note.lane === -2) {
-             note.duration = 1000; // Fallback for decks
+        if (note.lane === -1 || note.lane === -2) { // DEPRECATED: note.lane field, treat as horizontal position
+             note.duration = 1000; // Fallback for horizontal positions
         } else {
              GameErrors.log(`BeatmapConverter: HOLD note at index ${i} has invalid duration. Skipping.`);
              continue;
@@ -90,7 +78,7 @@ export function convertBeatmapNotes(beatmapNotes: BeatmapNote[]): Note[] {
     const id = note.holdId || `note-${note.time}-${i}`;
     const gameNote: Note = {
       id,
-      lane: note.lane,
+      lane: note.lane, // DEPRECATED: note.lane field, represents position value
       time: note.time,
       type,
       hit: false,

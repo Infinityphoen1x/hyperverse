@@ -1,38 +1,38 @@
-import { motion } from "framer-motion";
+import { m } from "@/lib/motion/MotionProvider";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import wheelImg from "/assets/generated_images/neon_glowing_cyber_turntable_interface.png";
 import { GameErrors } from '@/lib/errors/errorLog';
 import { ROTATION_SPEED, SPIN_THRESHOLD, STATE_UPDATE_INTERVAL, DRAG_VELOCITY_THRESHOLD } from '@/lib/config';
 import { useGameStore } from '@/stores/useGameStore';
-import { getLaneAngle, getColorForLane } from '@/lib/utils/laneUtils';
+import { getPositionAngle, getColorForPosition } from '@/lib/utils/laneUtils';
 
 interface CamelotWheelProps {
   side: "left" | "right";
   onSpin: () => void;
-  onHoldStart?: (lane: number) => void;
+  onHoldStart?: (position: number) => void;
   onHoldEnd?: () => void;
   onRotationChange?: (rotation: number) => void;
 }
 
-// Get which lane is aligned with this deck position
-function getAlignedLane(side: "left" | "right", tunnelRotation: number): number {
+// Get which position is aligned with this deck wheel (horizontal position -1 or -2)
+function getAlignedPosition(side: "left" | "right", tunnelRotation: number): number {
   const targetAngle = side === 'left' ? 180 : 0;
-  const lanes = [0, 1, 2, 3, -1, -2];
+  const positions = [0, 1, 2, 3, -1, -2];
   
-  for (const lane of lanes) {
-    const laneAngle = getLaneAngle(lane, tunnelRotation);
-    const normalized = ((laneAngle % 360) + 360) % 360;
+  for (const position of positions) {
+    const positionAngle = getPositionAngle(position, tunnelRotation);
+    const normalized = ((positionAngle % 360) + 360) % 360;
     
     // Check if aligned with deck position
     if (side === 'left' && Math.abs(normalized - 180) < 5) {
-      return lane;
+      return position;
     }
     if (side === 'right' && (normalized < 5 || normalized > 355)) {
-      return lane;
+      return position;
     }
   }
   
-  // Default to original deck lanes
+  // Default to horizontal positions
   return side === 'left' ? -1 : -2;
 }
 
@@ -50,7 +50,7 @@ export function CamelotWheel({
   const shouldSpinRef = useRef(false);
   const lastSpinRotationRef = useRef(0);
   const lastStateUpdateTimeRef = useRef(0);
-  const wheelLane = side === 'left' ? -1 : -2;
+  const wheelPosition = side === 'left' ? -1 : -2; // Horizontal position
   const incrementSpinPressCount = useGameStore(state => state.incrementSpinPressCount);
   const tunnelRotation = useGameStore(state => state.tunnelRotation);
   
@@ -62,64 +62,20 @@ export function CamelotWheel({
   // Deck should spin if either key is pressed OR hold note is active
   const shouldSpin = isKeyPressed || isDeckSpinning;
   
-  // Determine which lane is currently aligned with this deck
-  const alignedLane = useMemo(
-    () => getAlignedLane(side, tunnelRotation),
+  // Determine which position is currently aligned with this deck wheel
+  const alignedPosition = useMemo(
+    () => getAlignedPosition(side, tunnelRotation),
     [side, tunnelRotation]
   );
   
-  // Get color for the aligned lane
-  const laneColor = getColorForLane(alignedLane);
+  // Get color for the aligned position
+  const positionColor = getColorForPosition(alignedPosition);
 
   // Sync refs when state changes
   useEffect(() => {
     isKeyPressedRef.current = isKeyPressed;
     shouldSpinRef.current = shouldSpin;
   }, [isKeyPressed, shouldSpin]);
-
-  // Memoized callbacks to prevent recreation in effects
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.repeat) return;
-    const key = e.key.toLowerCase();
-    const isLeftDeckKey = side === 'left' && key === 'q';
-    const isRightDeckKey = side === 'right' && key === 'p';
-
-    if (isLeftDeckKey || isRightDeckKey) {
-      setIsKeyPressed(true);
-      onHoldStart(wheelLane);
-      // Track key press for spin alternation (every press toggles direction)
-      incrementSpinPressCount(wheelLane);
-    }
-  }, [side, wheelLane, onHoldStart]);
-
-  const handleKeyUp = useCallback((e: KeyboardEvent) => {
-    const key = e.key.toLowerCase();
-    const isLeftDeckKey = side === 'left' && key === 'q';
-    const isRightDeckKey = side === 'right' && key === 'p';
-
-    if (isLeftDeckKey || isRightDeckKey) {
-      setIsKeyPressed(false);
-      onHoldEnd();
-    }
-  }, [side, onHoldEnd]);
-
-  // Single key toggle for spin direction - stable listeners
-  useEffect(() => {
-    // Force release on window blur to prevent stuck keys
-    const handleBlur = () => {
-      setIsKeyPressed(false);
-      onHoldEnd();
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    window.addEventListener('blur', handleBlur);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      window.removeEventListener('blur', handleBlur);
-    };
-  }, [handleKeyDown, handleKeyUp, onHoldEnd]);
 
   // Continuous rotation loop using RAF - batches callbacks
   useEffect(() => {
@@ -173,19 +129,19 @@ export function CamelotWheel({
     }
   }, [onRotationChange, onSpin]);
 
-  // Hitline and border colors based on aligned lane
+  // Hitline and border colors based on aligned position
   const hitlineStyle = {
-    backgroundColor: laneColor,
-    boxShadow: `0 0 20px ${laneColor}`,
+    backgroundColor: positionColor,
+    boxShadow: `0 0 20px ${positionColor}`,
     opacity: 0.7
   };
   
   // Enhanced border glow when deck is spinning (either from key or hold note)
   const borderStyle = {
-    borderColor: shouldSpin ? laneColor : `${laneColor}80`, // Full opacity when spinning, 50% when idle
+    borderColor: shouldSpin ? positionColor : `${positionColor}80`, // Full opacity when spinning, 50% when idle
     boxShadow: shouldSpin 
-      ? `0 0 40px ${laneColor}, 0 0 20px ${laneColor}80` // Brighter double glow when spinning
-      : `0 0 30px ${laneColor}4D` // 30% opacity when idle
+      ? `0 0 40px ${positionColor}, 0 0 20px ${positionColor}80` // Brighter double glow when spinning
+      : `0 0 30px ${positionColor}4D` // 30% opacity when idle
   };
 
   return (
@@ -202,7 +158,7 @@ export function CamelotWheel({
           className={`absolute top-1/2 -translate-y-1/2 w-64 h-64 md:w-80 md:h-80 ${side === 'left' ? 'right-0' : 'left-0'}`}
         >
           {/* The Interactive Wheel (Spins) */}
-          <motion.div
+          <m.div
             className="w-full h-full rounded-full border-4 overflow-hidden relative bg-black cursor-grab active:cursor-grabbing"
             style={{ rotate: internalRotation, ...borderStyle }}
             drag="x"
@@ -227,7 +183,7 @@ export function CamelotWheel({
              <div className="absolute inset-0 m-auto w-20 h-20 rounded-full bg-black border-2 border-neon-cyan flex items-center justify-center z-20">
                 <div className="w-2 h-2 bg-white rounded-full animate-ping" />
              </div>
-          </motion.div>
+          </m.div>
         </div>
       </div>
 

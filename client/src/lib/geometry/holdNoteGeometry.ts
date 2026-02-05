@@ -204,13 +204,13 @@ export const getTrapezoidCorners = (
   // Validate all coordinates are finite (no NaN or Infinity)
   const allFinite = Object.values(corners).every(v => Number.isFinite(v));
   if (!allFinite) {
-    console.error('[getTrapezoidCorners] NaN in output:', {
-      noteId,
-      input: { rayAngle, nearDistance, farDistance, vanishingPointX, vanishingPointY, hexCenterX, hexCenterY },
-      safe: { safeVpX, safeVpY, safeHexCenterX, safeHexCenterY },
-      intermediate: { normalizedAngle, needsSwap, leftAngle, rightAngle, leftOuterX, leftOuterY, rightOuterX, rightOuterY, farProgress, nearProgress },
-      output: corners
-    });
+    // console.error('[getTrapezoidCorners] NaN in output:', {
+    //   noteId,
+    //   input: { rayAngle, nearDistance, farDistance, vanishingPointX, vanishingPointY, hexCenterX, hexCenterY },
+    //   safe: { safeVpX, safeVpY, safeHexCenterX, safeHexCenterY },
+    //   intermediate: { normalizedAngle, needsSwap, leftAngle, rightAngle, leftOuterX, leftOuterY, rightOuterX, rightOuterY, farProgress, nearProgress },
+    //   output: corners
+    // });
   }
   if (!allFinite) {
     if (noteId) {

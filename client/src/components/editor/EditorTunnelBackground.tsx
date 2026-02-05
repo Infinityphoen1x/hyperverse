@@ -27,7 +27,7 @@ export function EditorTunnelBackground({
 }: EditorTunnelBackgroundProps) {
   // DEBUG: Log input props
   if (!isFinite(vpX) || !isFinite(vpY) || !isFinite(hexCenterX) || !isFinite(hexCenterY)) {
-    console.error('[EditorTunnelBackground] NaN in props:', { vpX, vpY, hexCenterX, hexCenterY, health });
+    // console.error('[EditorTunnelBackground] NaN in props:', { vpX, vpY, hexCenterX, hexCenterY, health });
   }
   
   // Validate and sanitize vanishing point coordinates
@@ -35,7 +35,7 @@ export function EditorTunnelBackground({
   
   // DEBUG: Log sanitized values
   if (!isFinite(safeCoords.vpX) || !isFinite(safeCoords.vpY)) {
-    console.error('[EditorTunnelBackground] NaN after sanitization:', safeCoords);
+    // console.error('[EditorTunnelBackground] NaN after sanitization:', safeCoords);
   }
 
   return (

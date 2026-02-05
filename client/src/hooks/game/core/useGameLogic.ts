@@ -73,11 +73,21 @@ export function useGameLogic({
 
   // Deck handlers
   const handleLeftDeckSpin = useCallback(() => {
-    audioManager.play('spinNote');
+    // Only play spin sound if NOT during a hold note
+    // During hold notes, audio is handled by processHoldStart/processHoldEnd
+    const { leftDeckSpinning } = useGameStore.getState();
+    if (!leftDeckSpinning) {
+      audioManager.play('spinNote');
+    }
     hitNote(-1);
   }, [hitNote]);
   const handleRightDeckSpin = useCallback(() => {
-    audioManager.play('spinNote');
+    // Only play spin sound if NOT during a hold note
+    // During hold notes, audio is handled by processHoldStart/processHoldEnd
+    const { rightDeckSpinning } = useGameStore.getState();
+    if (!rightDeckSpinning) {
+      audioManager.play('spinNote');
+    }
     hitNote(-2);
   }, [hitNote]);
 

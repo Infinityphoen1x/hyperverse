@@ -1,0 +1,23 @@
+[METADATA]
+title: Tutorial Stage 10 - Hit Accuracy
+artist: Hyperverse Tutorial
+bpm: 100
+duration: 20000
+youtube: 6OdwGfJAR1U
+beatmapStart: 0
+beatmapEnd: 20000
+disableRotation: true
+
+[EASY]
+2000|0|TAP
+3000|1|TAP
+4000|2|TAP
+5000|3|TAP
+6000|0|TAP
+7000|1|TAP
+8000|2|TAP
+9000|3|TAP
+10000|0|TAP
+11000|1|TAP
+12000|2|TAP
+13000|3|TAP

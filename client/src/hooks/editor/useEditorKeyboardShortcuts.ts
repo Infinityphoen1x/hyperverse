@@ -8,8 +8,8 @@ interface UseEditorKeyboardShortcutsProps {
   deleteSelectedNote: () => void;
   toggleNoteType: () => void;
   nudgeSelectedNotes: (direction: 'left' | 'right') => void;
-  moveSelectedNotesToLane: (direction: 'up' | 'down') => void;
-  selectNoteInLane: (lane: number) => void;
+  moveSelectedNotesToLane: (direction: 'up' | 'down') => void; // Legacy name, moves between positions
+  selectNoteInLane: (lane: number) => void; // Legacy name, selects by position
   setShowPropertiesDialog: (show: boolean) => void;
   copyToClipboard: () => void;
   downloadBeatmap: () => void;
@@ -21,7 +21,7 @@ interface UseEditorKeyboardShortcutsProps {
 
 /**
  * Keyboard shortcuts for the beatmap editor
- * Handles undo/redo, delete, play/pause, seek, lane selection, etc.
+ * Handles undo/redo, delete, play/pause, seek, position selection, etc.
  */
 export function useEditorKeyboardShortcuts({
   deleteSelectedNote,
@@ -76,7 +76,7 @@ export function useEditorKeyboardShortcuts({
       const target = e.target as HTMLElement;
       const inInputField = isInputField(target);
 
-      // Skip lane selection shortcuts during simulation
+      // Skip position selection shortcuts during simulation
       if (simulationMode && (
         matchesShortcut(e, 'selectLane0') ||
         matchesShortcut(e, 'selectLane1') ||
@@ -225,7 +225,7 @@ export function useEditorKeyboardShortcuts({
         }
       }
       
-      // Lane selection shortcuts
+      // Position selection shortcuts (1-6 keys for positions 0-3, -1, -2)
       if (!inInputField) {
         if (matchesShortcut(e, 'selectLane0')) {
           e.preventDefault();

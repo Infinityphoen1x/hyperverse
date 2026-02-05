@@ -32,9 +32,10 @@ interface GameProps {
   onBackToHome?: () => void;
   playerInitializedRef: React.RefObject<boolean>;
   youtubeVideoId?: string | null;
+  beatmapText?: string | null; // For tutorial: bypass localStorage
 }
 
-function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: propYoutubeVideoId }: GameProps) {
+function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: propYoutubeVideoId, beatmapText: propBeatmapText }: GameProps) {
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [customNotes, setCustomNotes] = useState<Note[] | undefined>();
   const setBeatmapBpm = useGameStore(state => state.setBeatmapBpm);
@@ -42,6 +43,9 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
     beatmapText: state.beatmapText,
     youtubeVideoId: state.youtubeVideoId,
   })));
+  
+  // Use prop beatmapText if provided (tutorial mode), otherwise use store
+  const beatmapText = propBeatmapText ?? storedBeatmapText;
 
   // Initialize idle rotation animation
   useIdleRotationManager();
@@ -62,11 +66,6 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
     playerInitializedRef
   });
   
-  // Callback when YouTube confirms playing - triggers game start
-  const handleYouTubePlaying = useCallback(() => {
-    startGameRef.current?.();
-  }, []);
-
   // Game engine - receives YouTube time via hook (with caching)
   const {
     gameState, 
@@ -90,6 +89,12 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
     customNotes, 
     getVideoTime
   });
+  
+  // Callback when YouTube confirms playing - triggers game start
+  const handleYouTubePlaying = useCallback(() => {
+    console.log('[Game] handleYouTubePlaying called, starting game...');
+    startGame();
+  }, [startGame]);
 
   // Store refs for callbacks
   useEffect(() => {
@@ -110,11 +115,11 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
     try {
       const { playYouTubeVideo } = await import('@/lib/youtube');
       await playYouTubeVideo();
-      console.log('[AUTO-START] YouTube video playing - calling onPlaying callback');
+      // console.log('[AUTO-START] YouTube video playing - calling onPlaying callback');
       // YouTube is confirmed playing - trigger game start
       handleYouTubePlaying();
     } catch (err) {
-      console.error('[AUTO-START] YouTube play failed:', err);
+      // console.error('[AUTO-START] YouTube play failed:', err);
     }
   }, [handleYouTubePlaying]);
 
@@ -155,25 +160,26 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
       n.missed || n.tapMissFailure || n.holdMissFailure || n.tapTooEarlyFailure || n.tooEarlyFailure || n.holdReleaseFailure
     );
     const count = missedNotes.length;
-    console.log('[GAME] missCount calculation - total notes:', notes?.length, 'missed:', count);
+    // console.log('[GAME] missCount calculation - total notes:', notes?.length, 'missed:', count);
     if (count > 0) {
-      console.log('[GAME] Missed notes:', missedNotes.map(n => ({ id: n.id, lane: n.lane, flags: { missed: n.missed, tapMiss: n.tapMissFailure, holdMiss: n.holdMissFailure } })));
+      // console.log('[GAME] Missed notes:', missedNotes.map(n => ({ id: n.id, lane: n.lane, flags: { missed: n.missed, tapMiss: n.tapMissFailure, holdMiss: n.holdMissFailure } })));
     }
     return count;
   }, [notes]);
   const scoreDisplay = useMemo(() => score.toString().padStart(6, '0'), [score]);
 
   useEffect(() => {
-    setYoutubeVideoId(storedYoutubeVideoId ?? null);
+    // Use prop youtubeVideoId if provided (tutorial mode), otherwise use store
+    setYoutubeVideoId(propYoutubeVideoId ?? storedYoutubeVideoId ?? null);
 
-    if (!storedBeatmapText) {
+    if (!beatmapText) {
       setCustomNotes(undefined);
       return;
     }
 
     try {
       console.log('[GAME] Parsing beatmap with difficulty:', difficulty);
-      const parsed = parseBeatmap(storedBeatmapText, difficulty);
+      const parsed = parseBeatmap(beatmapText, difficulty);
       if (!parsed.error && parsed.notes) {
         const beatmapStartOffset = parsed.metadata?.beatmapStart || 0;
         const convertedNotes = convertBeatmapNotes(parsed.notes, beatmapStartOffset);
@@ -182,16 +188,19 @@ function Game({ difficulty, onBackToHome, playerInitializedRef, youtubeVideoId: 
         if (parsed.metadata?.bpm) {
           setBeatmapBpm(parsed.metadata.bpm);
         }
+        // Set disableRotation flag from beatmap metadata
+        const setDisableRotation = useGameStore.getState().setDisableRotation;
+        setDisableRotation(parsed.metadata?.disableRotation === true);
       }
     } catch (error) {
       console.error('Failed to parse beatmap from store:', error);
     }
-  }, [difficulty, storedBeatmapText, storedYoutubeVideoId, setBeatmapBpm]);
+  }, [difficulty, beatmapText, propYoutubeVideoId, storedYoutubeVideoId, setBeatmapBpm]);
 
   // Preload audio once on mount
   useEffect(() => {
     audioManager.preload().catch(err => {
-      console.error('[GAME] Failed to preload audio:', err);
+      // console.error('[GAME] Failed to preload audio:', err);
     });
 
     const { soundVolume, soundMuted } = useGameStore.getState();

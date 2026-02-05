@@ -1,17 +1,25 @@
 import { Note, GameConfig } from '@/lib/engine/gameTypes';
 import { ScoringManager } from '@/lib/managers/scoringManager';
+import { NoteValidator } from './noteValidator';
 import { roundTime } from './noteUpdateHelpers';
 import { GameErrors } from '@/lib/errors/errorLog';
 import type { NoteUpdateResult } from './noteUpdateHelpers';
 
 export const checkTapAutoFail = (
   note: Note,
+  allNotes: Note[],
   currentTime: number,
+  effectiveLeadTime: number,
   config: GameConfig,
+  validator: NoteValidator,
   scorer: ScoringManager
 ): NoteUpdateResult | null => {
-  // Trigger miss immediately after hit window expires (no extra buffer delay)
-  const autoFailThreshold = note.time + config.TAP_HIT_WINDOW;
+  // Calculate dynamic detection window for this note
+  const earlyDetection = validator.getEarlyDetectionWindow(allNotes, note.lane, note, effectiveLeadTime);
+  const windows = validator.getJudgmentWindows(earlyDetection);
+  
+  // Trigger miss after OK.late + LATE_MISS_BUFFER window expires
+  const autoFailThreshold = note.time + windows.OK.late + windows.MISS;
   if (currentTime <= autoFailThreshold) return null;
 
   GameErrors.updateHitStats({ tapMissFailures: (GameErrors.hitStats.tapMissFailures || 0) + 1 });
@@ -29,12 +37,20 @@ export const checkTapAutoFail = (
 
 export const checkHoldAutoFail = (
   note: Note,
+  allNotes: Note[],
   currentTime: number,
+  effectiveLeadTime: number,
   config: GameConfig,
+  validator: NoteValidator,
   scorer: ScoringManager
 ): NoteUpdateResult | null => {
-  // Never pressed
-  if (!note.pressHoldTime && currentTime > note.time + config.HOLD_MISS_TIMEOUT) {
+  // Calculate dynamic detection window for this note
+  const earlyDetection = validator.getEarlyDetectionWindow(allNotes, note.lane, note, effectiveLeadTime);
+  const windows = validator.getJudgmentWindows(earlyDetection);
+  
+  // Never pressed - use dynamic miss window
+  const missThreshold = note.time + windows.OK.late + windows.MISS;
+  if (!note.pressHoldTime && currentTime > missThreshold) {
     GameErrors.updateHitStats({ holdMissFailures: (GameErrors.hitStats.holdMissFailures || 0) + 1 });
     GameErrors.log(`[HOLD-MISS] noteId=${note.id} holdMissFailure at ${currentTime}ms (never pressed)`, currentTime);
     return {

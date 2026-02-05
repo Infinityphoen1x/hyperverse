@@ -64,8 +64,8 @@ export function buildYouTubeEmbedUrl(videoId: string, options: {
   params.append('origin', origin);
   
   const url = `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
-  console.log('[YOUTUBE-EMBED] Building URL with origin:', origin);
-  console.log('[YOUTUBE-EMBED] Full URL:', url);
+  // console.log('[YOUTUBE-EMBED] Building URL with origin:', origin);
+  // console.log('[YOUTUBE-EMBED] Full URL:', url);
 
   return url;
 }

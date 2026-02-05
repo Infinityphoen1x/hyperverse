@@ -98,7 +98,12 @@ export function updateNoteFromHandleDrag(params: HandleDragParams): Note[] {
       }
     } else if (draggedHandle === 'far') {
       // Dragging far handle (back of note, closest to VP) - adjusts END time
-      const newEndTime = newTime;
+      // Snap end time to grid if snap is enabled
+      let newEndTime = newTime;
+      if (snapEnabled && note.type === 'HOLD') {
+        newEndTime = snapTimeToGrid(newTime, bpm, snapDivision, beatmapStart);
+      }
+      
       const newDuration = newEndTime - note.time;
 
       proposedStart = note.time;
@@ -108,7 +113,7 @@ export function updateNoteFromHandleDrag(params: HandleDragParams): Note[] {
       const checkStart = newDuration <= MIN_HOLD_DURATION ? proposedStart - TAP_HIT_WINDOW : proposedStart;
       const checkEnd = newDuration <= MIN_HOLD_DURATION ? proposedEnd + TAP_HIT_WINDOW : proposedEnd;
 
-      if (checkNoteOverlap(parsedNotes, draggedNoteId, note.lane, checkStart, checkEnd)) {
+      if (checkNoteOverlap(parsedNotes, draggedNoteId, note.lane, checkStart, checkEnd)) { // DEPRECATED: note.lane field, treat as position
         return note; // Don't change - overlap detected
       }
 
@@ -139,7 +144,7 @@ export function updateNoteFromHandleDrag(params: HandleDragParams): Note[] {
       const checkStart = newDuration <= MIN_HOLD_DURATION ? proposedStart - TAP_HIT_WINDOW : proposedStart;
       const checkEnd = newDuration <= MIN_HOLD_DURATION ? proposedEnd + TAP_HIT_WINDOW : proposedEnd;
 
-      if (checkNoteOverlap(parsedNotes, draggedNoteId, note.lane, checkStart, checkEnd)) {
+      if (checkNoteOverlap(parsedNotes, draggedNoteId, note.lane, checkStart, checkEnd)) { // DEPRECATED: note.lane field, treat as position
         return note; // Don't change - overlap detected
       }
 
@@ -163,7 +168,7 @@ export function updateNoteFromHandleDrag(params: HandleDragParams): Note[] {
       const checkStart = newDuration <= MIN_HOLD_DURATION ? proposedStart - TAP_HIT_WINDOW : proposedStart;
       const checkEnd = newDuration <= MIN_HOLD_DURATION ? proposedEnd + TAP_HIT_WINDOW : proposedEnd;
 
-      if (checkNoteOverlap(parsedNotes, draggedNoteId, note.lane, checkStart, checkEnd)) {
+      if (checkNoteOverlap(parsedNotes, draggedNoteId, note.lane, checkStart, checkEnd)) { // DEPRECATED: note.lane field, treat as position
         return note; // Don't change - overlap detected
       }
 

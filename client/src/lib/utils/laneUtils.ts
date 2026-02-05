@@ -3,43 +3,51 @@ import { GameErrors } from '@/lib/errors/errorLog';
 import { useGameStore } from '@/stores/useGameStore';
 
 /**
- * Lane to angle mapping (degrees)
- * Maps lane index to its base angle in the tunnel
+ * Position to angle mapping (degrees) - absolute coordinates
+ * Maps position index to its base angle in the tunnel
  * 
- * Lanes 0-3: TAP note lanes (WEIO keys)
- * Lanes -1, -2: SPIN deck lanes (Q, P keys)
+ * Positions -1, -2: Horizontal axis (HOLD completion targets, fixed)
+ * Positions 0-3: Diamond formation (rotate during HOLD notes)
+ * 
+ * IMPORTANT: Must match POSITION_BASE_ANGLES in rotationConstants.ts
  */
-export const LANE_ANGLE_MAP: Record<number, number> = {
-  [-2]: 0,   // P key - Right deck
-  [-1]: 180, // Q key - Left deck
-  [0]: 120,  // W key - Top lane
-  [1]: 60,   // O key - Top-right lane
-  [2]: 300,  // I key - Bottom-right lane
-  [3]: 240,  // E key - Bottom-left lane
+export const POSITION_ANGLE_MAP: Record<number, number> = {
+  [-2]: 0,   // P: Right horizontal (HOLD target)
+  [-1]: 180, // Q: Left horizontal (HOLD target)
+  [0]: 120,  // W: Top-left (rotates)
+  [1]: 60,   // O: Top-right (rotates)
+  [2]: 300,  // I: Bottom-right (rotates)
+  [3]: 240,  // E: Bottom-left (rotates)
 };
 
+// Legacy export for backward compatibility
+export const LANE_ANGLE_MAP = POSITION_ANGLE_MAP;
+
 /**
- * Get the angle for a specific lane with optional rotation offset
- * @param lane Lane index (-2, -1, 0-3)
+ * Get the angle for a specific position with optional rotation offset
+ * @param position Position index (-2, -1, 0-3)
  * @param rotationOffset Additional rotation in degrees (default: 0)
  * @returns Angle in degrees
  */
-export const getLaneAngle = (lane: number, rotationOffset: number = 0): number => {
-  const angle = LANE_ANGLE_MAP[lane];
+export const getPositionAngle = (position: number, rotationOffset: number = 0): number => {
+  const angle = POSITION_ANGLE_MAP[position];
   if (!Number.isFinite(angle)) {
-    GameErrors.log(`Invalid lane ${lane}, using default angle 0`);
+    GameErrors.log(`Invalid position ${position}, using default angle 0`);
     return 0;
   }
   return angle + rotationOffset;
 };
 
-// Lane to color mapping with health-based desaturation
-export const getColorForLane = (lane: number, health: number = MAX_HEALTH): string => {
+// Legacy function for backward compatibility
+export const getLaneAngle = getPositionAngle;
+
+// Position to color mapping with health-based desaturation
+export const getColorForPosition = (position: number, health: number = MAX_HEALTH): string => {
   const baseColor = (() => {
-    switch (lane) {
+    switch (position) {
       case -1: return '#00FF00'; // Q - green
       case -2: return '#FF0000'; // P - red
-      case 0: return '#FF6600'; // W - neon orange (was pink #FF007F)
+      case 0: return '#FF6600'; // W - neon orange
       case 1: return '#0096FF'; // O - blue
       case 2: return '#BE00FF'; // I - purple
       case 3: return '#00FFFF'; // E - cyan
@@ -60,3 +68,6 @@ export const getColorForLane = (lane: number, health: number = MAX_HEALTH): stri
 
   return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`.toUpperCase();
 };
+
+// Legacy function for backward compatibility
+export const getColorForLane = getColorForPosition;

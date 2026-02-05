@@ -1,0 +1,14 @@
+[METADATA]
+title: Tutorial Stage 8 - Deck Meters
+artist: Hyperverse Tutorial
+bpm: 100
+duration: 18000
+youtube: 6OdwGfJAR1U
+beatmapStart: 0
+beatmapEnd: 18000
+disableRotation: true
+
+[EASY]
+2000|-1|HOLD|1000|hold_1
+5000|-1|HOLD|2000|hold_2
+9000|-1|HOLD|3000|hold_3

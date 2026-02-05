@@ -24,16 +24,53 @@ export function checkRotationTriggers({
   currentTime,
   rotationManager,
 }: CheckRotationTriggersParams): void {
-  // Find upcoming HOLD notes that require rotation
+  // Find upcoming HOLD notes that require rotation (diamond positions 0-3: W/O/I/E)
   const upcomingHolds = notes.filter(n =>
     n.type === 'HOLD' &&
-    requiresRotation(n.lane) &&
+    requiresRotation(n.lane) && // DEPRECATED: note.lane field, treat as position
     !n.hit &&
     !n.holdMissFailure &&
     n.time > currentTime
   );
   
-  if (upcomingHolds.length === 0) return;
+  // If no diamond position holds upcoming, check if we should rotate back to neutral for horizontal position (Q/P) holds
+  if (upcomingHolds.length === 0) {
+    // Find upcoming Q or P (horizontal position) holds
+    const upcomingDeckHolds = notes.filter(n =>
+      n.type === 'HOLD' &&
+      (n.lane === -1 || n.lane === -2) && // DEPRECATED: note.lane field, treat as horizontal positions
+      !n.hit &&
+      !n.holdMissFailure &&
+      n.time > currentTime
+    );
+    
+    // If deck holds are coming and we're not at neutral rotation, rotate back to 0°
+    if (upcomingDeckHolds.length > 0) {
+      const currentTunnelRotation = useGameStore.getState().tunnelRotation;
+      const normalizedCurrent = ((currentTunnelRotation % 360) + 360) % 360;
+      
+      // Only rotate back if we're significantly off from neutral (more than 5°)
+      if (Math.abs(normalizedCurrent) > 5 && Math.abs(normalizedCurrent - 360) > 5) {
+        upcomingDeckHolds.sort((a, b) => a.time - b.time);
+        const nextDeckHold = upcomingDeckHolds[0];
+        
+        const playerSpeed = useGameStore.getState().playerSpeed || 40;
+        const effectiveLeadTime = MAGIC_MS / playerSpeed;
+        const ROTATION_TRIGGER_ADVANCE = 1700;
+        const rotationStartTime = nextDeckHold.time - effectiveLeadTime - ROTATION_TRIGGER_ADVANCE;
+        
+        if (currentTime >= rotationStartTime) {
+          // Rotate back to 0° (neutral position)
+          const setTunnelRotation = useGameStore.getState().setTunnelRotation;
+          if (rotationManager.shouldOverride(0)) {
+            setTunnelRotation(0);
+            rotationManager.triggerRotation(nextDeckHold.id, 0, currentTime);
+          }
+        }
+      }
+    }
+    return;
+  }
   
   // Sort by time, get the closest one
   upcomingHolds.sort((a, b) => a.time - b.time);
@@ -48,7 +85,7 @@ export function checkRotationTriggers({
   // Trigger rotation if we've reached start time
   if (currentTime >= rotationStartTime) {
     const currentTunnelRotation = useGameStore.getState().tunnelRotation;
-    const rotationDelta = getTargetRotation(nextHold.lane, currentTunnelRotation);
+    const rotationDelta = getTargetRotation(nextHold.lane, currentTunnelRotation); // DEPRECATED: note.lane field, treat as position
     const targetAngle = currentTunnelRotation + rotationDelta;
     
     // Only trigger if we need a new rotation

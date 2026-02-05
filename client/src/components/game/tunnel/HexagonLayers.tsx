@@ -16,7 +16,7 @@ interface HexagonLayersProps {
 export function HexagonLayers({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rotationOffset = 0, zoomIntensity = 0, zoomScale = 1.0 }: HexagonLayersProps) {
   // DEBUG: Log input props
   if (!isFinite(vpX) || !isFinite(vpY) || !isFinite(hexCenterX) || !isFinite(hexCenterY)) {
-    console.error('[HexagonLayers] NaN in props:', { vpX, vpY, hexCenterX, hexCenterY, rotationOffset, zoomIntensity, zoomScale });
+    // console.error('[HexagonLayers] NaN in props:', { vpX, vpY, hexCenterX, hexCenterY, rotationOffset, zoomIntensity, zoomScale });
   }
   
   // Safety check for NaN values using isFinite (handles undefined, NaN, Infinity)
@@ -80,17 +80,17 @@ export function HexagonLayers({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rota
           
           // DEBUG: Check for NaN in hexagon points
           if (!isFinite(x) || !isFinite(y)) {
-            console.error('[HexagonLayers point] NaN detected:', {
-              layerIdx: idx,
-              vertexIdx: i,
-              radius,
-              scaledRadius,
-              progress,
-              angle,
-              outerCornerX, outerCornerY,
-              safeVpX, safeVpY,
-              x, y
-            });
+            // console.error('[HexagonLayers point] NaN detected:', {
+            //   layerIdx: idx,
+            //   vertexIdx: i,
+            //   radius,
+            //   scaledRadius,
+            //   progress,
+            //   angle,
+            //   outerCornerX, outerCornerY,
+            //   safeVpX, safeVpY,
+            //   x, y
+            // });
           }
           
           return `${x},${y}`;
@@ -109,7 +109,10 @@ export function HexagonLayers({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rota
           // Fade in based on both eased zoom intensity and hexagon index (farther = appear first)
           const depthFactor = (idx + 1) / (additionalHexagons + 1); // 0 to 1
           const visibilityThreshold = 1 - depthFactor; // Closer hexagons need more zoom
-          const fadeAmount = Math.max(0, (easedIntensity - visibilityThreshold) / (1 - visibilityThreshold));
+          const linearFadeAmount = Math.max(0, (easedIntensity - visibilityThreshold) / (1 - visibilityThreshold));
+          
+          // Apply ease-out cubic for smoother fade-in (same as rotation/scale)
+          const fadeAmount = 1 - Math.pow(1 - linearFadeAmount, 3);
           opacity *= fadeAmount;
         }
         

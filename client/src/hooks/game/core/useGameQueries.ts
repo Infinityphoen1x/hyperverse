@@ -5,7 +5,7 @@ import type { Note } from '@/types/game';
 export interface UseGameQueriesReturn {
   activeNotes: Note[];
   completedNotes: Note[];
-  activeNotesOnLane: (lane: number) => Note[];
+  activeNotesOnLane: (lane: number) => Note[]; // Legacy name, lane: Position value (-2 to 3)
   isDead: boolean;
 }
 

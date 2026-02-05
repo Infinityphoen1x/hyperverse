@@ -162,28 +162,30 @@ export class NoteProcessor {
     };
   }
 
-  checkAutoFail(note: Note, currentTime: number): NoteUpdateResult | null {
+  checkAutoFail(note: Note, notes: Note[], currentTime: number, effectiveLeadTime: number): NoteUpdateResult | null {
     if (!this.validator.isNoteActive(note)) return null;
 
     if (note.type === 'TAP') {
-      return checkTapAutoFail(note, currentTime, this.config, this.scorer);
+      return checkTapAutoFail(note, notes, currentTime, effectiveLeadTime, this.config, this.validator, this.scorer);
     }
 
     if (note.type === 'HOLD') {
-      return checkHoldAutoFail(note, currentTime, this.config, this.scorer);
+      return checkHoldAutoFail(note, notes, currentTime, effectiveLeadTime, this.config, this.validator, this.scorer);
     }
 
     return null;
   }
 
-  processNotesFrame(notes: Note[], currentTime: number): { updatedNotes: Note[]; shouldGameOver: boolean; scoreState: ScoreState | null } {
+  processNotesFrame(notes: Note[], currentTime: number, playerSpeed: number): { updatedNotes: Note[]; shouldGameOver: boolean; scoreState: ScoreState | null } {
     let shouldGameOver = false;
     let hasChanges = false;
     let scoreUpdated = false;
+    
+    const effectiveLeadTime = 80000 / playerSpeed; // MAGIC_MS / playerSpeed
 
     const updatedNotes = notes.map(note => {
       // Auto-fail check
-      const autoFailResult = this.checkAutoFail(note, currentTime);
+      const autoFailResult = this.checkAutoFail(note, notes, currentTime, effectiveLeadTime);
       if (autoFailResult && !autoFailResult.success) {
         // shouldGameOver = true; // Don't force game over on single miss, rely on health
         hasChanges = true;

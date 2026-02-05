@@ -32,12 +32,12 @@ const DEFAULT_BINDINGS: ShortcutBinding[] = [
   
   // Editing
   { id: 'deleteNote', name: 'Delete Selected', category: 'editing', defaultKey: 'Delete', currentKey: 'Delete', description: 'Delete selected notes' },
-  { id: 'selectLane0', name: 'Select Lane 0', category: 'editing', defaultKey: '1', currentKey: '1', description: 'Jump to lane 0' },
-  { id: 'selectLane1', name: 'Select Lane 1', category: 'editing', defaultKey: '2', currentKey: '2', description: 'Jump to lane 1' },
-  { id: 'selectLane2', name: 'Select Lane 2', category: 'editing', defaultKey: '3', currentKey: '3', description: 'Jump to lane 2' },
-  { id: 'selectLane3', name: 'Select Lane 3', category: 'editing', defaultKey: '4', currentKey: '4', description: 'Jump to lane 3' },
-  { id: 'selectLaneNeg1', name: 'Select Lane -1', category: 'editing', defaultKey: '5', currentKey: '5', description: 'Jump to lane -1' },
-  { id: 'selectLaneNeg2', name: 'Select Lane -2', category: 'editing', defaultKey: '6', currentKey: '6', description: 'Jump to lane -2' },
+  { id: 'selectLane0', name: 'Select Position 0', category: 'editing', defaultKey: '1', currentKey: '1', description: 'Jump to position 0 (W)' },
+  { id: 'selectLane1', name: 'Select Position 1', category: 'editing', defaultKey: '2', currentKey: '2', description: 'Jump to position 1 (O)' },
+  { id: 'selectLane2', name: 'Select Position 2', category: 'editing', defaultKey: '3', currentKey: '3', description: 'Jump to position 2 (I)' },
+  { id: 'selectLane3', name: 'Select Position 3', category: 'editing', defaultKey: '4', currentKey: '4', description: 'Jump to position 3 (E)' },
+  { id: 'selectLaneNeg1', name: 'Select Position -1', category: 'editing', defaultKey: '5', currentKey: '5', description: 'Jump to position -1 (Q)' },
+  { id: 'selectLaneNeg2', name: 'Select Position -2', category: 'editing', defaultKey: '6', currentKey: '6', description: 'Jump to position -2 (P)' },
   { id: 'editProperties', name: 'Edit Properties', category: 'editing', defaultKey: 'Enter', currentKey: 'Enter', description: 'Edit note type, timing & duration' },
   
   // Playback

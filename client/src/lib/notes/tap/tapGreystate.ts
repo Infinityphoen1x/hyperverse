@@ -3,7 +3,7 @@ import {
   GREYSCALE_GLOW_COLOR,
 } from '@/lib/config';
 import { TapNoteState } from './tapNoteHelpers';
-import { getColorForLane } from '@/lib/utils/laneUtils';
+import { getColorForPosition } from '@/lib/utils/laneUtils';
 
 export interface TapNoteColors {
   fillColor: string;
@@ -40,7 +40,7 @@ export const determineTapGreyscaleState = (
 
 export const calculateTapNoteColors = (
   greyscaleState: TapGreyscaleState,
-  lane: number,
+  lane: number, // Position value (-2 to 3)
   baseColor: string
 ): TapNoteColors => {
   if (greyscaleState.isGreyed) {

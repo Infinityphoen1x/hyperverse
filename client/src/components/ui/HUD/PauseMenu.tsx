@@ -1,6 +1,6 @@
 // src/components/PauseMenu.tsx
 import React, { memo, useState } from 'react';
-import { motion } from "framer-motion";
+import { m } from "@/lib/motion/MotionProvider";
 import { useGameStore } from '@/stores/useGameStore';
 import { Slider } from '@/components/ui/slider';
 
@@ -22,6 +22,7 @@ const PauseMenuComponent = ({
   const rewindGameStore = useGameStore(state => state.rewindGame);
   const playerSpeed = useGameStore(state => state.playerSpeed);
   const setPlayerSpeed = useGameStore(state => state.setPlayerSpeed);
+  const setDefaultPlayerSpeed = useGameStore(state => state.setDefaultPlayerSpeed);
   
   const [showSettings, setShowSettings] = useState(false);
 
@@ -31,6 +32,7 @@ const PauseMenuComponent = ({
   
   const handleSpeedChange = (value: number[]) => {
     setPlayerSpeed(value[0]);
+    setDefaultPlayerSpeed(value[0]); // Also persist the change
   };
 
   if (!isPaused) return null;
@@ -40,7 +42,7 @@ const PauseMenuComponent = ({
       <div className="text-center space-y-8">
         {countdownSeconds > 0 ? (
           <>
-            <motion.div
+            <m.div
               className="text-9xl font-orbitron text-neon-cyan neon-glow"
               animate={{ scale: [1, 1.2, 1], textShadow: ['0 0 20px hsl(180, 100%, 50%)', '0 0 40px hsl(180, 100%, 50%)', '0 0 20px hsl(180, 100%, 50%)'] }}
               transition={{ duration: 1, repeat: Infinity }}
@@ -48,7 +50,7 @@ const PauseMenuComponent = ({
               data-testid="countdown-display"
             >
               {countdownSeconds}
-            </motion.div>
+            </m.div>
             <p className="text-neon-cyan font-rajdhani text-lg" data-testid="text-get-ready">GET READY!</p>
           </>
         ) : (

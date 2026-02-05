@@ -41,10 +41,10 @@ export function useSafeVanishingPoint(input: SafeVanishingPointInput): Vanishing
       !isFinite(input.hexCenterX ?? NaN) || 
       !isFinite(input.hexCenterY ?? NaN);
     if (hadNaN) {
-      console.warn('[useSafeVanishingPoint] Sanitized NaN values:', {
-        input,
-        output: result
-      });
+      // console.warn('[useSafeVanishingPoint] Sanitized NaN values:', {
+      //   input,
+      //   output: result
+      // });
     }
     
     return result;

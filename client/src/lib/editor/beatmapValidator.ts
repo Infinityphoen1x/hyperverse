@@ -25,9 +25,9 @@ export interface ValidationIssue {
 export function validateNote(note: Note): string[] {
   const errors: string[] = [];
 
-  // Validate lane using centralized VALID_LANES constant
-  if (!isValidLane(note.lane)) {
-    errors.push(`Invalid lane: ${note.lane}. Must be one of: ${VALID_LANES.join(', ')}`);
+  // Validate position using centralized VALID_LANES constant (represents valid positions)
+  if (!isValidLane(note.lane)) { // DEPRECATED: note.lane field, treat as position
+    errors.push(`Invalid position: ${note.lane}. Must be one of: ${VALID_LANES.join(', ')}`);
   }
 
   // Validate time
@@ -46,7 +46,7 @@ export function validateNote(note: Note): string[] {
 }
 
 /**
- * Check for overlapping notes on the same lane
+ * Check for overlapping notes on the same position
  * @param notes Array of notes to check
  * @returns Array of overlapping note pairs
  */
@@ -59,8 +59,8 @@ export function findOverlappingNotes(notes: Note[]): Array<[Note, Note]> {
       const noteA = sortedNotes[i];
       const noteB = sortedNotes[j];
 
-      // Same lane check
-      if (noteA.lane !== noteB.lane) continue;
+      // Same position check
+      if (noteA.lane !== noteB.lane) continue; // DEPRECATED: note.lane field, compare positions
 
       // Check if notes overlap in time
       const noteAEnd = noteA.type === 'HOLD' ? noteA.time + (noteA.duration || 0) : noteA.time;
@@ -99,12 +99,12 @@ export function validateBeatmap(notes: Note[], metadata: BeatmapMetadata): Valid
       });
     }
 
-    // Check invalid lane using centralized VALID_LANES constant
-    if (!isValidLane(note.lane)) {
+    // Check invalid position using centralized VALID_LANES constant (represents valid positions)
+    if (!isValidLane(note.lane)) { // DEPRECATED: note.lane field, treat as position
       issues.push({
         noteId: note.id,
         type: 'invalid_lane',
-        message: `Invalid lane ${note.lane}. Must be one of: ${VALID_LANES.join(', ')}`,
+        message: `Invalid position ${note.lane}. Must be one of: ${VALID_LANES.join(', ')}`,
         severity: 'error',
       });
     }
@@ -126,7 +126,7 @@ export function validateBeatmap(notes: Note[], metadata: BeatmapMetadata): Valid
     issues.push({
       noteId: noteA.id,
       type: 'overlapping',
-      message: `Overlaps with note at ${noteB.time}ms on lane ${noteB.lane}`,
+      message: `Overlaps with note at ${noteB.time}ms on position ${noteB.lane}`, // DEPRECATED: noteB.lane field
       severity: 'warning',
     });
   });

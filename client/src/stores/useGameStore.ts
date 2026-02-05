@@ -1,11 +1,13 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { GameStoreState } from '@/types/game';
 import { DEFAULT_BEATMAP_BPM } from '@/lib/config';
 import { useShakeStore } from '@/stores/useShakeStore';
 import { destroyYouTubePlayer } from '@/lib/youtube';
 import { useBeatmapStore } from '@/stores/useBeatmapStore';
+import { useEditorStore } from '@/stores/useEditorStore';
 
-export const useGameStore = create<GameStoreState>((set, get) => ({
+export const useGameStore = create<GameStoreState>()(persist((set, get) => ({
   // Initial state
   gameState: 'IDLE',
   difficulty: 'MEDIUM',
@@ -21,15 +23,18 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   beatmapBpm: DEFAULT_BEATMAP_BPM, // Default BPM - will be updated when beatmap loads
   playerSpeed: 20, // Temporary slider value in settings (5-40, higher = faster notes)
   defaultPlayerSpeed: 20, // Persisted default used in gameplay
+  targetFPS: 60, // Target frame rate (30, 60, 120, 144, or 0 for unlimited)
   soundVolume: 0.7, // Master volume for sound effects (0.0 to 1.0)
   soundMuted: false, // Master mute for sound effects
+  inputOffset: 0, // Audio/visual calibration offset in ms (-200 to +200)
+  disableRotation: false, // Disable tunnel rotation (for tutorials)
   tunnelRotation: 0, // Current tunnel rotation in degrees
   targetTunnelRotation: 0, // Target rotation for animation
   animatedTunnelRotation: 0, // Current animated rotation value (shared across all components)
   idleRotation: 0, // Idle sway animation angle
-  spinPressCountPerLane: { '-1': 0, '-2': 0 }, // Track key presses per lane for spin alternation
-  leftDeckSpinning: false, // Tracks if left deck is spinning due to hold note
-  rightDeckSpinning: false, // Tracks if right deck is spinning due to hold note
+  spinPressCountPerLane: { '-1': 0, '-2': 0 }, // Track key presses per position for spin alternation
+  leftDeckSpinning: false, // Visual state: left deck wheel spinning (position -1 HOLD active)
+  rightDeckSpinning: false, // Visual state: right deck wheel spinning (position -2 HOLD active)
 
   // Setters
   setGameState: (gameState) => set({ gameState }),
@@ -43,45 +48,48 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setIsPaused: (isPaused) => set({ isPaused }),
   setCountdownSeconds: (countdownSeconds) => set({ countdownSeconds }),
   setBeatmapBpm: (bpm) => set({ beatmapBpm: bpm }),
-  setPlayerSpeed: (speed) => set({ playerSpeed: Math.max(5, Math.min(40, speed)) }),
-  setDefaultPlayerSpeed: (speed) => set({ defaultPlayerSpeed: Math.max(5, Math.min(40, speed)) }),
+  setPlayerSpeed: (speed) => set({ playerSpeed: Math.max(5, Math.min(80, speed)) }),
+  setDefaultPlayerSpeed: (speed) => set({ defaultPlayerSpeed: Math.max(5, Math.min(80, speed)) }),
+  setTargetFPS: (fps) => set({ targetFPS: fps }),
   setSoundVolume: (volume) => set({ soundVolume: Math.max(0, Math.min(1, volume)) }),
   setSoundMuted: (muted) => set({ soundMuted: muted }),
+  setInputOffset: (offset) => set({ inputOffset: Math.max(-200, Math.min(200, offset)) }),
+  setDisableRotation: (disabled: boolean) => set({ disableRotation: disabled }),
   setTunnelRotation: (angle) => set({ tunnelRotation: angle }),
   setTargetTunnelRotation: (angle) => set({ targetTunnelRotation: angle }),
   setAnimatedTunnelRotation: (angle) => set({ animatedTunnelRotation: angle }),
   setIdleRotation: (angle) => set({ idleRotation: angle }),
-  incrementSpinPressCount: (lane: number) => set((state) => ({
+  incrementSpinPressCount: (position: number) => set((state) => ({
     spinPressCountPerLane: {
       ...state.spinPressCountPerLane,
-      [lane]: (state.spinPressCountPerLane[lane] ?? 0) + 1
+      [position]: (state.spinPressCountPerLane[position] ?? 0) + 1
     }
   })),
   setLeftDeckSpinning: (spinning) => set({ leftDeckSpinning: spinning }),
   setRightDeckSpinning: (spinning) => set({ rightDeckSpinning: spinning }),
 
   // Game actions
-  hitNote: (lane) => {
-    console.log(`[GAME] Hit note on lane ${lane}`);
+  hitNote: (position) => {
+    // console.log(`[GAME] Hit note on position ${position}`);
   },
-  hitPad: (lane) => {
-    console.log(`[GAME] Hit pad on lane ${lane}`);
+  hitPad: (position) => {
+    // console.log(`[GAME] Hit pad on position ${position}`);
   },
-  startDeckHold: (lane) => {
-    console.log(`[GAME] Start deck hold on lane ${lane}`);
-    // Start deck spinning when hold note is pressed
-    if (lane === -1) {
+  startDeckHold: (position) => {
+    // console.log(`[GAME] Start hold on position ${position}`);
+    // Update visual state: deck wheels spin when horizontal positions have active HOLD notes
+    if (position === -1) {
       set({ leftDeckSpinning: true });
-    } else if (lane === -2) {
+    } else if (position === -2) {
       set({ rightDeckSpinning: true });
     }
   },
-  endDeckHold: (lane) => {
-    console.log(`[GAME] End deck hold on lane ${lane}`);
-    // Stop deck spinning when hold note is released
-    if (lane === -1) {
+  endDeckHold: (position) => {
+    // console.log(`[GAME] End hold on position ${position}`);
+    // Update visual state: stop deck wheel spinning when HOLD note ends
+    if (position === -1) {
       set({ leftDeckSpinning: false });
-    } else if (lane === -2) {
+    } else if (position === -2) {
       set({ rightDeckSpinning: false });
     }
   },
@@ -92,7 +100,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     // Destroy YouTube player properly before clearing references
     destroyYouTubePlayer();
 
+    // Clear beatmap store (localStorage)
     useBeatmapStore.getState().clear();
+    
+    // Clear editor store
+    useEditorStore.getState().clearBeatmapData();
+    
     set({ 
       notes: [],
       currentTime: 0,
@@ -131,7 +144,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     // Reset note states - create brand new objects to break stale references
     notes: state.notes.map((note, idx) => ({
       ...note,
-      id: `${note.time}-${note.lane}-${idx}`, // Regenerate ID to ensure fresh objects
+      id: `${note.time}-${note.lane}-${idx}`, // DEPRECATED: note.lane field - Regenerate ID to ensure fresh objects
       hit: false,
       missed: false,
       failureTime: undefined,
@@ -162,6 +175,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       tunnelRotation: 0,
       targetTunnelRotation: 0,
       animatedTunnelRotation: 0,
+      playerSpeed: state.defaultPlayerSpeed, // Restore from persisted default
       spinPressCountPerLane: { '-1': 0, '-2': 0 }, // Reset spin alternation
       // Reset note states - create brand new objects to ensure all references are cleared
       notes: state.notes.map((note, idx) => ({
@@ -202,10 +216,26 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     const { notes } = get();
     return notes.filter(n => n.hit || n.missed);
   },
+  getActiveNotesOnPosition: (position: number) => {
+    return get().getVisibleNotes().filter(n => n.lane === position); // DEPRECATED: note.lane field, treat as position
+  },
+  // Legacy export for backward compatibility
   getActiveNotesOnLane: (lane: number) => {
-    return get().getVisibleNotes().filter(n => n.lane === lane);
+    return get().getVisibleNotes().filter(n => n.lane === lane); // DEPRECATED: note.lane field, treat as position
   },
   isDead: () => {
     return get().health <= 0;
   },
+}), {
+  name: 'game-settings',
+  partialize: (state) => ({
+    defaultPlayerSpeed: state.defaultPlayerSpeed,
+    soundVolume: state.soundVolume,
+    soundMuted: state.soundMuted,
+    inputOffset: state.inputOffset,
+  }),
+  merge: (persistedState, currentState) => ({
+    ...currentState,
+    ...(persistedState as Partial<GameStoreState>),
+  }),
 }));

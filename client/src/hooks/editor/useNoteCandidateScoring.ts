@@ -42,7 +42,7 @@ export function findCandidateNote(
 ): Note | null {
   const { parsedNotes, currentTime, snapEnabled, snapDivision, bpm, beatmapStart } = params;
   
-  const { lane: closestLane, distance: mouseDistance } = mouseToLane(
+  const { lane: closestPosition, distance: mouseDistance } = mouseToLane( // Returns position value in 'lane' field for compatibility
     mouseX, 
     mouseY, 
     VANISHING_POINT_X, 
@@ -64,8 +64,8 @@ export function findCandidateNote(
   // Find all candidate notes that could be clicked, then pick the best match
   const candidateNotes = parsedNotes
     .map(note => {
-      // Only consider notes on the same lane
-      if (note.lane !== closestLane) return null;
+      // Only consider notes on the same position
+      if (note.lane !== closestPosition) return null; // DEPRECATED: note.lane field, compare positions
       
       // For TAP notes, check if click falls within the hit window range
       // For HOLD notes, check if click falls within the note duration

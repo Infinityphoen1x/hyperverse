@@ -1,6 +1,6 @@
 // src/components/GameOverScreen.tsx
 import React, { memo } from 'react';
-import { motion } from "framer-motion";
+import { m } from "@/lib/motion/MotionProvider";
 import { useGameStore } from '@/stores/useGameStore';
 import { ErrorLogViewer } from "@/components/game/loaders/ErrorLogViewer";
 
@@ -30,14 +30,14 @@ const GameOverScreenComponent = ({ onRestart: propOnRestart, errorCount: propErr
           </div>
         )}
       </div>
-      <motion.button
+      <m.button
         whileHover={{ scale: 1.05 }}
         onClick={restartGame}
         className="px-8 py-3 bg-neon-blue text-black font-bold hover:bg-white transition-colors"
         data-testid="button-restart-game"
       >
         REBOOT SYSTEM
-      </motion.button>
+      </m.button>
 
       <ErrorLogViewer />
     </div>

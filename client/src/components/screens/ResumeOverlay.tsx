@@ -1,6 +1,6 @@
 // src/components/ResumeOverlay.tsx
 import React, { memo } from 'react';
-import { motion } from "framer-motion";
+import { m } from "@/lib/motion/MotionProvider";
 import { useGameStore } from '@/stores/useGameStore';
 
 interface ResumeOverlayProps {
@@ -14,7 +14,7 @@ const ResumeOverlayComponent = ({ visible: propVisible, opacity: propOpacity = 0
   if (!isPaused) return null;
 
   return (
-    <motion.div
+    <m.div
       className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
       data-testid="resume-overlay"
       initial={{ opacity: 0 }}

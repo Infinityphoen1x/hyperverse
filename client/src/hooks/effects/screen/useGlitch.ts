@@ -40,7 +40,7 @@ export const useGlitch = ({ missCount, health }: UseGlitchProps): GlitchState =>
   // Screen shake on miss (no glitch)
   useEffect(() => {
     if (missCount > prevMissRef.current) {
-      console.log('[SHAKE] Miss detected! missCount:', missCount, 'prevMiss:', prevMissRef.current);
+      // console.log('[SHAKE] Miss detected! missCount:', missCount, 'prevMiss:', prevMissRef.current);
       prevMissRef.current = missCount;
 
       // Clear existing shake interval
@@ -52,14 +52,14 @@ export const useGlitch = ({ missCount, health }: UseGlitchProps): GlitchState =>
       const SHAKE_MAX_OFFSET = 16; // pixels
       let elapsed = 0;
       
-      console.log('[SHAKE] Starting shake animation');
+      // console.log('[SHAKE] Starting shake animation');
       
       shakeIntervalRef.current = setInterval(() => {
         elapsed += SHAKE_INTERVAL;
         
         if (elapsed >= SHAKE_DURATION) {
           setShakeOffset({ x: 0, y: 0 }); // Reset to center
-          console.log('[SHAKE] Animation complete, reset to 0,0');
+          // console.log('[SHAKE] Animation complete, reset to 0,0');
           if (shakeIntervalRef.current) clearInterval(shakeIntervalRef.current);
           shakeIntervalRef.current = null;
           return;
@@ -69,7 +69,7 @@ export const useGlitch = ({ missCount, health }: UseGlitchProps): GlitchState =>
         const decay = 1 - (elapsed / SHAKE_DURATION);
         const x = (Math.random() - 0.5) * 2 * SHAKE_MAX_OFFSET * decay;
         const y = (Math.random() - 0.5) * 2 * SHAKE_MAX_OFFSET * decay;
-        console.log('[SHAKE] Frame:', { x: x.toFixed(1), y: y.toFixed(1), elapsed });
+        // console.log('[SHAKE] Frame:', { x: x.toFixed(1), y: y.toFixed(1), elapsed });
         setShakeOffset({ x, y });
       }, SHAKE_INTERVAL);
     }

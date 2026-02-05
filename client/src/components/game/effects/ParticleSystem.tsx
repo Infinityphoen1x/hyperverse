@@ -1,5 +1,5 @@
 // src/components/ParticleSystem.tsx
-import { motion } from 'framer-motion';
+import { m } from "@/lib/motion/MotionProvider";
 import { Particle } from '@/types/visualEffects';
 
 interface ParticleSystemProps { particles: Particle[]; }
@@ -7,7 +7,7 @@ interface ParticleSystemProps { particles: Particle[]; }
 export const ParticleSystem: React.FC<ParticleSystemProps> = ({ particles }) => (
   <>
     {particles.map(particle => (
-      <motion.div
+      <m.div
         key={particle.id}
         initial={{ x: `${particle.x}%`, y: `${particle.y}%`, opacity: 1, scale: 1 }}
         animate={{

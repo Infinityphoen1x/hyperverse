@@ -1,5 +1,5 @@
 import { memo, type ReactElement } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from "@/lib/motion/MotionProvider";
 import { Settings, Clock, FileText, Wrench, Monitor, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
 import { SidePanel } from '@/components/editor/SidePanel';
 import { FloatingWindow } from '@/components/editor/FloatingWindow';

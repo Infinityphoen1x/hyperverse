@@ -28,7 +28,7 @@ const ParallaxHexagonLayersComponent = ({
 }: ParallaxHexagonLayersProps) => {
   // DEBUG: Log input props
   if (!isFinite(vpX) || !isFinite(vpY) || !isFinite(hexCenterX) || !isFinite(hexCenterY)) {
-    console.error('[ParallaxHexagonLayers] NaN in props:', { vpX, vpY, hexCenterX, hexCenterY, rotationOffset, zoomIntensity, zoomScale });
+    // console.error('[ParallaxHexagonLayers] NaN in props:', { vpX, vpY, hexCenterX, hexCenterY, rotationOffset, zoomIntensity, zoomScale });
   }
   
   // Safety check for NaN values using isFinite (handles undefined, NaN, Infinity)
@@ -155,17 +155,17 @@ const ParallaxHexagonLayersComponent = ({
           
           // DEBUG: Check for NaN in parallax hexagon points
           if (!isFinite(x) || !isFinite(y)) {
-            console.error('[ParallaxHexagonLayers point] NaN detected:', {
-              layerIdx: idx,
-              vertexIdx: i,
-              radius,
-              layerRotation,
-              progress,
-              angle,
-              outerCornerX, outerCornerY,
-              safeVpX, safeVpY,
-              x, y
-            });
+            // console.error('[ParallaxHexagonLayers point] NaN detected:', {
+            //   layerIdx: idx,
+            //   vertexIdx: i,
+            //   radius,
+            //   layerRotation,
+            //   progress,
+            //   angle,
+            //   outerCornerX, outerCornerY,
+            //   safeVpX, safeVpY,
+            //   x, y
+            // });
           }
           
           return `${x},${y}`;

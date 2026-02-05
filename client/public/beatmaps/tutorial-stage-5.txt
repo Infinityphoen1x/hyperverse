@@ -1,0 +1,19 @@
+[METADATA]
+title: Tutorial Stage 5 - Sync Lines
+artist: Hyperverse Tutorial
+bpm: 100
+duration: 25000
+youtube: 6OdwGfJAR1U
+beatmapStart: 0
+beatmapEnd: 25000
+disableRotation: true
+
+[EASY]
+2000|0|TAP
+2000|1|TAP
+5000|2|TAP
+5000|-1|HOLD|1500|hold_1
+9000|3|HOLD|1500|hold_2
+10500|0|HOLD|1500|hold_3
+13500|-2|TAP
+13500|-1|HOLD|1500|hold_4

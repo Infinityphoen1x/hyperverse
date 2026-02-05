@@ -8,6 +8,7 @@ export interface BeatmapMetadata {
   youtube?: string;
   beatmapStart?: number;
   beatmapEnd?: number;
+  disableRotation?: boolean;
 }
 
 export interface BeatmapData {
@@ -53,6 +54,7 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
           if (k === 'youtube') metadata.youtube = value;
           if (k === 'beatmapstart') metadata.beatmapStart = parseInt(value);
           if (k === 'beatmapend') metadata.beatmapEnd = parseInt(value);
+          if (k === 'disablerotation') metadata.disableRotation = value.toLowerCase() === 'true';
         }
       } else if (currentSection === difficulty) {
         // Parse note line: time|lane|type|duration|id

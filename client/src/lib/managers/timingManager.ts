@@ -35,7 +35,7 @@ export class TimingManager {
    * @param videoTimeMs The current video time in milliseconds
    */
   syncToVideoTime(videoTimeMs: number): void {
-    console.log(`[TIMING-SYNC] Syncing to video time: ${videoTimeMs.toFixed(0)}ms`);
+    // console.log(`[TIMING-SYNC] Syncing to video time: ${videoTimeMs.toFixed(0)}ms`);
     // Reset start time so that getCurrentTime returns the video time
     this.startTime = performance.now() - videoTimeMs;
   }

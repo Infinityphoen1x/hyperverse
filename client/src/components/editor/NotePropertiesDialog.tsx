@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from "@/lib/motion/MotionProvider";
 import { X, Clock, Hash, ArrowRight } from 'lucide-react';
 import { Note } from '@/types/game';
 import { audioManager } from '@/lib/audio/audioManager';
@@ -126,14 +126,14 @@ export function NotePropertiesDialog({
 
   return (
     <AnimatePresence>
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
         onClick={onClose}
       >
-        <motion.div
+        <m.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
@@ -160,7 +160,7 @@ export function NotePropertiesDialog({
               {selectedNotes.length === 1 ? (
                 <>
                   Editing <span className="text-neon-cyan font-bold">1 note</span>
-                  {' '}- Lane {firstNote.lane}
+                  {' '}- Position {firstNote.lane} {/* DEPRECATED: note.lane field, treat as position */}
                 </>
               ) : (
                 <>
@@ -255,8 +255,8 @@ export function NotePropertiesDialog({
           <p className="text-xs text-gray-500 text-center mt-3">
             Press <kbd className="px-1 bg-gray-800 rounded">Enter</kbd> to apply, <kbd className="px-1 bg-gray-800 rounded">Esc</kbd> to cancel
           </p>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </AnimatePresence>
   );
 }

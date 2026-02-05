@@ -31,6 +31,11 @@ export function useEditorYouTube({
   const videoId = metadata?.youtubeUrl ? extractVideoId(metadata.youtubeUrl) : null;
 
   function extractVideoId(url: string): string | null {
+    // If it's already just an ID (11 characters, alphanumeric), return it
+    if (/^[a-zA-Z0-9_-]{11}$/.test(url)) {
+      return url;
+    }
+    // Otherwise try to extract from URL
     const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
     return match ? match[1] : null;
   }
@@ -55,12 +60,12 @@ export function useEditorYouTube({
           const pendingBeatmap = localStorage.getItem('pendingBeatmap');
           if (pendingBeatmap) {
             const data = JSON.parse(pendingBeatmap);
-            if (data.youtubeVideoId || (data.beatmapText && data.beatmapText.includes('youtubeUrl:'))) {
+            if (data.youtubeVideoId || (data.beatmapText && data.beatmapText.includes('youtube:'))) {
               hasValidYouTubeId = true;
             }
           }
         } catch (e) {
-          console.error('[EDITOR] Failed to check localStorage for YouTube ID:', e);
+          // console.error('[EDITOR] Failed to check localStorage for YouTube ID:', e);
         }
       }
       

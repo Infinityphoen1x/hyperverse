@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m } from "@/lib/motion/MotionProvider";
 import { ChevronDown, ChevronUp, Minimize2, X, ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface FloatingWindowProps {
@@ -118,7 +118,7 @@ export function FloatingWindow({
       )}
 
       {/* Floating Window */}
-      <motion.div
+      <m.div
         ref={windowRef}
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -170,7 +170,7 @@ export function FloatingWindow({
             {children}
           </div>
         )}
-      </motion.div>
+      </m.div>
     </>
   );
 }

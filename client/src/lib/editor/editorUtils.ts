@@ -8,11 +8,14 @@ import { MS_PER_MINUTE, BEAT_GRID_OFFSET_FACTOR } from '@/lib/config/editor';
 
 const TAP_HIT_WINDOW = GAME_CONFIG.TAP_HIT_WINDOW;
 
-export interface MouseToLaneResult {
-  lane: number;
+export interface MouseToPositionResult {
+  lane: number; // Position value (-2 to 3)
   angle: number;
   distance: number;
 }
+
+// Legacy export for backward compatibility
+export type MouseToLaneResult = MouseToPositionResult;
 
 export interface MouseToTimeResult {
   time: number;
@@ -21,10 +24,10 @@ export interface MouseToTimeResult {
 }
 
 /**
- * Check if a note would overlap with existing notes on the same lane
+ * Check if a note would overlap with existing notes on the same position
  * @param notes Existing notes
  * @param noteId ID of the note being edited (to exclude it from overlap check)
- * @param lane Lane number
+ * @param lane Position number (-2 to 3)
  * @param startTime Start time of the note
  * @param endTime End time of the note (for hold notes)
  * @returns true if there's an overlap
@@ -40,8 +43,8 @@ export function checkNoteOverlap(
     // Skip the note being edited
     if (note.id === noteId) return false;
     
-    // Only check notes on the same lane
-    if (note.lane !== lane) return false;
+    // Only check notes on the same position
+    if (note.lane !== lane) return false; // DEPRECATED: note.lane field, compare position values
     
     // Get the note's time range with hit window buffer for TAP notes
     // TAP notes need ±TAP_HIT_WINDOW buffer to prevent overlapping hit windows
@@ -61,42 +64,45 @@ export function checkNoteOverlap(
 }
 
 /**
- * Convert mouse coordinates to lane number
+ * Convert mouse coordinates to position number
  * @param mouseX Mouse X position relative to canvas
  * @param mouseY Mouse Y position relative to canvas
  * @param vpX Vanishing point X
  * @param vpY Vanishing point Y
- * @returns Lane number and angle
+ * @returns Position number and angle
  */
-export function mouseToLane(
+export function mouseToPosition(
   mouseX: number,
   mouseY: number,
   vpX: number,
   vpY: number
-): MouseToLaneResult {
+): MouseToPositionResult {
   const dx = mouseX - vpX;
   const dy = mouseY - vpY;
   const distance = Math.sqrt(dx * dx + dy * dy);
   const angle = Math.atan2(dy, dx) * 180 / Math.PI;
   const normalized = ((angle % 360) + 360) % 360;
 
-  // Map to nearest lane (6 lanes at 60° intervals)
-  const laneAngles = [0, 60, 120, 180, 240, 300];
-  const laneMappings = [-2, 1, 0, -1, 3, 2]; // P, O, W, Q, E, I
-  let closestLane = -2;
+  // Map to nearest position (6 positions at 60° intervals)
+  const positionAngles = [0, 60, 120, 180, 240, 300];
+  const positionMappings = [-2, 1, 0, -1, 3, 2]; // P, O, W, Q, E, I
+  let closestPosition = -2;
   let minDiff = 360;
 
-  laneAngles.forEach((laneAngle, index) => {
-    const diff = Math.abs(normalized - laneAngle);
+  positionAngles.forEach((positionAngle, index) => {
+    const diff = Math.abs(normalized - positionAngle);
     const wrappedDiff = Math.min(diff, 360 - diff);
     if (wrappedDiff < minDiff) {
       minDiff = wrappedDiff;
-      closestLane = laneMappings[index];
+      closestPosition = positionMappings[index];
     }
   });
 
-  return { lane: closestLane, angle: normalized, distance };
+  return { lane: closestPosition, angle: normalized, distance };
 }
+
+// Legacy export for backward compatibility
+export const mouseToLane = mouseToPosition;
 
 /**
  * Convert mouse coordinates to note time
@@ -198,27 +204,42 @@ export function generateBeatGrid(
   const snapIntervalMs = beatDurationMs / division;
   const hexagons: Array<{ distance: number; time: number }> = [];
 
-  // Generate grid hexagons for all beat divisions in visible range
-  // Start from first snap point before current visible range
-  const visibleStart = currentTime - leadTime * 0.2; // Show some hexagons behind VP
-  const visibleEnd = currentTime + leadTime; // Show hexagons up to lead time ahead
+  // Always add the fixed outermost hexagon at judgement line (reference line)
+  hexagons.push({ distance: judgementRadius, time: currentTime });
+
+  // Generate grid hexagons for beat divisions along the timeline
+  // These will flow through the fixed outermost hexagon as time progresses
   
-  // Find first snap point at or before visible start
-  const firstSnapTime = Math.floor(visibleStart / snapIntervalMs) * snapIntervalMs;
+  // Calculate time range that maps to visible depth (1 to judgementRadius)
+  // Time at judgement (distance = judgementRadius) = currentTime
+  // Time at VP (distance = 1) = currentTime + leadTime
+  const visibleStart = currentTime;
+  const visibleEnd = currentTime + leadTime;
   
-  // Generate hexagons from first snap point to visible end
+  // Find first snap point at or after beatmapStart that's in visible range
+  const firstSnapOffset = Math.ceil((visibleStart - beatmapStart) / snapIntervalMs);
+  const firstSnapTime = beatmapStart + (firstSnapOffset * snapIntervalMs);
+  
+  // Generate hexagons for each beat division along the timeline
   for (let snapTime = firstSnapTime; snapTime <= visibleEnd; snapTime += snapIntervalMs) {
     // Skip if outside beatmap bounds
     if (snapTime < beatmapStart || snapTime > beatmapEnd) continue;
     
-    // Calculate distance from VP based on time difference
-    const timeDiff = snapTime - currentTime;
-    const progress = timeDiff / leadTime;
+    // Skip the exact currentTime since we already have the fixed hexagon there
+    if (Math.abs(snapTime - currentTime) < 1) continue;
     
-    // Distance formula: closer to currentTime = at judgement line (judgementRadius)
-    //                  further ahead = closer to VP (distance = 1)
-    // Inverted: progress -1 (past) → 0 (now) → 1 (future)
-    const distance = judgementRadius - (progress * (judgementRadius - 1));
+    // Calculate time difference (how far ahead this beat is from current time)
+    const timeDiff = snapTime - currentTime;
+    
+    // Calculate normalized progress: 0 = at currentTime (judgement), 1 = at leadTime ahead (VP)
+    const normalizedProgress = Math.max(0, Math.min(1, timeDiff / leadTime));
+    
+    // Invert progress so that: 0 = VP (distance 1), 1 = judgement (distance judgementRadius)
+    const invertedProgress = 1 - normalizedProgress;
+    
+    // Calculate distance using same formula as notes for consistent z-axis depth
+    // distance ranges from 1 (at VP/far) to judgementRadius (at judgement/near)
+    const distance = 1 + (invertedProgress * (judgementRadius - 1));
 
     // Only include hexagons within valid depth range
     if (distance >= 1 && distance <= judgementRadius) {

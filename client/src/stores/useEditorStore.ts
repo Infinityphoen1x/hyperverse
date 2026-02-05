@@ -45,7 +45,7 @@ export interface EditorStoreState {
   // Selection state
   selectedNoteId: string | null;
   selectedNoteIds: string[];
-  hoveredNote: { lane: number; time: number } | null;
+  hoveredNote: { lane: number; time: number } | null; // lane field represents position value (-2 to 3)
   
   // Difficulty state
   currentDifficulty: 'EASY' | 'MEDIUM' | 'HARD';
@@ -65,7 +65,7 @@ export interface EditorStoreState {
   // Drag state for HOLD notes
   isDragging: boolean;
   dragStartTime: number | null;
-  dragStartLane: number | null;
+  dragStartLane: number | null; // Position value (-2 to 3)
   draggedNoteId: string | null;
   draggedHandle: 'start' | 'end' | 'near' | 'far' | null;
   
@@ -116,7 +116,7 @@ export interface EditorStoreState {
   setSelectedNoteIds: (ids: string[]) => void;
   toggleNoteSelection: (id: string) => void;
   clearSelection: () => void;
-  setHoveredNote: (note: { lane: number; time: number } | null) => void;
+  setHoveredNote: (note: { lane: number; time: number } | null) => void; // lane represents position value
   
   // Difficulty actions
   setCurrentDifficulty: (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => void;
@@ -133,7 +133,7 @@ export interface EditorStoreState {
   setShowShortcutsModal: (show: boolean) => void;
   setIsDragging: (dragging: boolean) => void;
   setDragStartTime: (time: number | null) => void;
-  setDragStartLane: (lane: number | null) => void;
+  setDragStartLane: (lane: number | null) => void; // lane parameter represents position value
   setDraggedNoteId: (id: string | null) => void;
   setDraggedHandle: (handle: 'start' | 'end' | 'near' | 'far' | null) => void;
   setSnapEnabled: (enabled: boolean) => void;
@@ -150,6 +150,7 @@ export interface EditorStoreState {
   updateMetadata: (partial: Partial<BeatmapMetadata>) => void;
   setParsedNotes: (notes: Note[]) => void;
   setBeatmapText: (text: string) => void;
+  clearBeatmapData: () => void;
   
   // History actions
   addToHistory: (notes: Note[]) => void;
@@ -400,4 +401,25 @@ export const useEditorStore = create<EditorStoreState>((set, get) => ({
   setSpinEnabled: (enabled) => set({ spinEnabled: enabled }),
   setIdleMotionEnabled: (enabled) => set({ idleMotionEnabled: enabled }),
   setSimulationMode: (enabled) => set({ simulationMode: enabled }),
+  
+  clearBeatmapData: () => set({
+    beatmapText: '',
+    parsedNotes: [],
+    metadata: {
+      title: '',
+      artist: '',
+      bpm: 120,
+      duration: 0,
+      youtubeUrl: '',
+      beatmapStart: 0,
+      beatmapEnd: 180000,
+    },
+    difficultyNotes: {
+      EASY: [],
+      MEDIUM: [],
+      HARD: [],
+    },
+    history: [],
+    historyIndex: -1,
+  }),
 }));

@@ -7,11 +7,11 @@ import {
   MAGIC_MS,
 } from '@/lib/config';
 
-// Helper: Check if a note is an active (pressed, not failed) hold note on a specific lane
+// Helper: Check if a note is an active (pressed, not failed) hold note on a specific position
 export const isActiveHoldNote = (note: Note, lane: number): boolean => {
   return !!(
     note &&
-    note.lane === lane &&
+    note.lane === lane && // DEPRECATED: note.lane field, compare position values
     note.type === 'HOLD' &&
     !note.hit &&
     !note.tooEarlyFailure &&
@@ -31,7 +31,7 @@ export interface HoldProgressData {
 export const getHoldProgress = (
   notes: Note[],
   currentTime: number,
-  lane: number,
+  lane: number, // Position value (-2 to 3)
   DECK_METER_COMPLETION_THRESHOLD: number,
   DECK_METER_DEFAULT_HOLD_DURATION: number,
   playerSpeed: number = 20
@@ -63,7 +63,7 @@ export const getHoldProgress = (
 
     return progress;
   } catch (error) {
-    GameErrors.log(`DeckMeter getHoldProgress error for lane ${lane}: ${error instanceof Error ? error.message : 'Unknown'}`);
+    GameErrors.log(`DeckMeter getHoldProgress error for position ${lane}: ${error instanceof Error ? error.message : 'Unknown'}`);
     return 0;
   }
 };

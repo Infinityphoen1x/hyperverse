@@ -19,7 +19,7 @@ export async function pauseYouTubeVideo(): Promise<void> {
     if (ytPlayer?.getPlayerState) {
       currentState = ytPlayer.getPlayerState();
       if (currentState === 2) { // Already paused
-        console.log('[YOUTUBE-PAUSE] Already paused, skipping');
+        // console.log('[YOUTUBE-PAUSE] Already paused, skipping');
         return;
       }
     }
@@ -37,7 +37,7 @@ export async function pauseYouTubeVideo(): Promise<void> {
       // Execute synchronously if possible
       ytPlayer.pauseVideo();
       
-      console.log(`[YOUTUBE-PAUSE] Official API: Paused at ${minutes}:${seconds} (${currentTime.toFixed(2)}s total)`);
+      // console.log(`[YOUTUBE-PAUSE] Official API: Paused at ${minutes}:${seconds} (${currentTime.toFixed(2)}s total)`);
     } else if (youtubeIframeElement?.contentWindow) {
       youtubeIframeElement.contentWindow.postMessage(
         JSON.stringify({
@@ -47,13 +47,13 @@ export async function pauseYouTubeVideo(): Promise<void> {
         }),
         'https://www.youtube.com'
       );
-      console.log(`[YOUTUBE-PAUSE] PostMessage fallback: Paused at tracked time ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s`);
+      // console.log(`[YOUTUBE-PAUSE] PostMessage fallback: Paused at tracked time ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s`);
     } else {
-      console.error('[YOUTUBE-PAUSE] No pause method available - ytPlayer:', ytPlayer ? 'exists' : 'null', 'iframe:', youtubeIframeElement ? 'exists' : 'null');
+      // console.error('[YOUTUBE-PAUSE] No pause method available - ytPlayer:', ytPlayer ? 'exists' : 'null', 'iframe:', youtubeIframeElement ? 'exists' : 'null');
       throw new Error('No pause method available');
     }
   } catch (error) {
-    console.error('[YOUTUBE-PAUSE] Failed:', error);
+    // console.error('[YOUTUBE-PAUSE] Failed:', error);
     throw error;
   }
 }

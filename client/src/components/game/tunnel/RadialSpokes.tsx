@@ -16,7 +16,7 @@ interface RadialSpokesProps {
 const RadialSpokesComponent = ({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rotationOffset = 0, zoomIntensity = 0, zoomScale = 1.0 }: RadialSpokesProps) => {
   // DEBUG: Log input props
   if (!isFinite(vpX) || !isFinite(vpY) || !isFinite(hexCenterX) || !isFinite(hexCenterY) || !isFinite(rotationOffset)) {
-    console.error('[RadialSpokes] NaN in props:', { vpX, vpY, hexCenterX, hexCenterY, rotationOffset, zoomIntensity, zoomScale });
+    // console.error('[RadialSpokes] NaN in props:', { vpX, vpY, hexCenterX, hexCenterY, rotationOffset, zoomIntensity, zoomScale });
   }
   
   // Safety check for NaN values using isFinite (handles undefined, NaN, Infinity)
@@ -46,14 +46,14 @@ const RadialSpokesComponent = ({ rayColor, vpX, vpY, hexCenterX, hexCenterY, rot
               
               // DEBUG: Check for NaN in radial spoke coordinates
               if (!isFinite(x1) || !isFinite(y1) || !isFinite(x2) || !isFinite(y2)) {
-                console.error('[RadialSpokes segment] NaN detected:', {
-                  angle,
-                  segIdx,
-                  segProgress,
-                  cornerX, cornerY,
-                  safeVpX, safeVpY,
-                  x1, y1, x2, y2
-                });
+                // console.error('[RadialSpokes segment] NaN detected:', {
+                //   angle,
+                //   segIdx,
+                //   segProgress,
+                //   cornerX, cornerY,
+                //   safeVpX, safeVpY,
+                //   x1, y1, x2, y2
+                // });
               }
               
               const strokeWidth = 0.3 + segProgress * 3.5;

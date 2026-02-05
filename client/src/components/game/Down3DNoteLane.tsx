@@ -14,7 +14,7 @@ import { TapNotes } from './notes/TapNotes';
 interface Down3DNoteLaneProps {
   health?: number;
   combo?: number;
-  onPadHit?: (lane: number) => void;
+  onPadHit?: (position: number) => void; // Position value (-2 to 3)
 }
 
 const Down3DNoteLaneComponent = ({

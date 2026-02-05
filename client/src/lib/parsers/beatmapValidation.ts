@@ -11,7 +11,7 @@ export interface ValidationError {
 
 /**
  * Validate HOLD note pairings in a beatmap
- * HOLD notes that overlap in time must be on opposite lanes (180° apart)
+ * HOLD notes that overlap in time must be on opposite positions (180° apart)
  */
 export function validateHoldNotePairings(notes: Note[]): ValidationError[] {
   const errors: ValidationError[] = [];
@@ -37,11 +37,11 @@ export function validateHoldNotePairings(notes: Note[]): ValidationError[] {
       );
       
       if (overlaps) {
-        // Overlapping HOLD notes must be on opposite lanes
-        if (!areOpposite(note1.lane, note2.lane)) {
+        // Overlapping HOLD notes must be on opposite positions
+        if (!areOpposite(note1.lane, note2.lane)) { // DEPRECATED: note.lane fields, treat as positions
           errors.push({
             type: 'error',
-            message: `Overlapping HOLD notes on non-opposite lanes (${note1.lane} and ${note2.lane}). Valid pairs: W+I, O+E, Q+P`,
+            message: `Overlapping HOLD notes on non-opposite positions (${note1.lane} and ${note2.lane}). Valid pairs: W+I, O+E, Q+P`,
             noteIds: [note1.id, note2.id],
             timestamp: note1.time,
           });

@@ -1,4 +1,5 @@
 // src/utils/parseBeatmap.ts
+// Parses beatmap text files. Note: 'lane' field throughout represents position values (-2 to 3)
 import { GameErrors } from '@/lib/errors/errorLog';
 
 export interface BeatmapMetadata {
@@ -24,7 +25,7 @@ export interface ParsedBeatmap {
   metadata: BeatmapMetadata;
   notes: Array<{
     time: number;
-    lane: number;
+    lane: number; // DEPRECATED: Represents position value (-2 to 3)
     type: 'TAP' | 'HOLD';
     duration?: number;
     holdId?: string;
@@ -118,16 +119,16 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
       }
 
       const time = parseInt(parts[0]);
-      const lane = parseInt(parts[1]);
+      const lane = parseInt(parts[1]); // Position value (-2 to 3)
       const type = parts[2].toUpperCase();
 
       if (isNaN(time) || isNaN(lane)) {
-        GameErrors.log(`BeatmapParser: Line ${lineIdx} invalid time or lane: time=${parts[0]}, lane=${parts[1]}`);
+        GameErrors.log(`BeatmapParser: Line ${lineIdx} invalid time or position: time=${parts[0]}, position=${parts[1]}`);
         continue;
       }
 
       if (lane !== -2 && lane !== -1 && (lane < 0 || lane > 3)) {
-        GameErrors.log(`BeatmapParser: Line ${lineIdx} invalid lane ${lane}. Valid lanes: -2 (P deck), -1 (Q deck), 0-3 (soundpads)`);
+        GameErrors.log(`BeatmapParser: Line ${lineIdx} invalid position ${lane}. Valid positions: -2 (P deck), -1 (Q deck), 0-3 (soundpads)`);
         continue;
       }
 
@@ -189,7 +190,7 @@ export function parseBeatmap(text: string, difficulty: 'EASY' | 'MEDIUM' | 'HARD
       const end = holdEnds[holdId];
 
       if (start.lane !== end.lane) {
-        GameErrors.log(`BeatmapParser: HOLD "${holdId}" has mismatched lanes: start lane=${start.lane}, end lane=${end.lane}`);
+        GameErrors.log(`BeatmapParser: HOLD "${holdId}" has mismatched positions: start position=${start.lane}, end position=${end.lane}`);
         continue;
       }
 

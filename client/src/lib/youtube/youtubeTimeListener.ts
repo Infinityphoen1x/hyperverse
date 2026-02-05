@@ -5,17 +5,17 @@ import { useYoutubeStore } from '@/stores/useYoutubeStore';
  * YouTube IFrame communicates internally via postMessage - we listen for time changes
  */
 export function initYouTubeTimeListener(): void {
-  console.log('[YOUTUBE-TIME-LISTENER] Initializing postMessage listener...');
+  // console.log('[YOUTUBE-TIME-LISTENER] Initializing postMessage listener...');
   let messageCount = 0;
   
   const handleMessage = (event: MessageEvent) => {
     messageCount++;
     const originMatch = event.origin === 'https://www.youtube.com';
-    console.log(`[YOUTUBE-MESSAGE] #${messageCount} origin: ${event.origin} (match: ${originMatch}), data type: ${typeof event.data}`);
+    // console.log(`[YOUTUBE-MESSAGE] #${messageCount} origin: ${event.origin} (match: ${originMatch}), data type: ${typeof event.data}`);
     
     // Strict origin check for security
     if (event.origin !== 'https://www.youtube.com') {
-      console.log(`[YOUTUBE-MESSAGE] #${messageCount} Ignored: wrong origin`);
+      // console.log(`[YOUTUBE-MESSAGE] #${messageCount} Ignored: wrong origin`);
       return;
     }
 
@@ -27,16 +27,16 @@ export function initYouTubeTimeListener(): void {
       } else {
         data = event.data;
       }
-      console.log(`[YOUTUBE-MESSAGE] #${messageCount} Parsed data:`, JSON.stringify(data).slice(0, 100));
+      // console.log(`[YOUTUBE-MESSAGE] #${messageCount} Parsed data:`, JSON.stringify(data).slice(0, 100));
     } catch (e) {
       // Ignore non-JSON (e.g., plain "YT.ready")
-      console.log(`[YOUTUBE-MESSAGE] #${messageCount} Failed to parse, ignoring (likely non-JSON)`);
+      // console.log(`[YOUTUBE-MESSAGE] #${messageCount} Failed to parse, ignoring (likely non-JSON)`);
       return;
     }
 
     // Handle state changes
     if (data.event === 'onStateChange') {
-      console.log('[YOUTUBE-MESSAGE] State change:', data.data);
+      // console.log('[YOUTUBE-MESSAGE] State change:', data.data);
     }
 
     // Time updates: Primarily from infoDelivery (fires ~1s during play)
@@ -46,7 +46,7 @@ export function initYouTubeTimeListener(): void {
       if (Math.abs(newTimeMs - youtubeCurrentTimeMs) > 50) { // Avoid micro-jitters
         setYoutubeCurrentTimeMs(newTimeMs);
         setLastTimeUpdate(Date.now());
-        console.log(`[YOUTUBE-MESSAGE] Time update (infoDelivery): ${(data.info.currentTime).toFixed(2)}s (was ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s)`);
+        // console.log(`[YOUTUBE-MESSAGE] Time update (infoDelivery): ${(data.info.currentTime).toFixed(2)}s (was ${(youtubeCurrentTimeMs / 1000).toFixed(2)}s)`);
       }
       return;
     }
@@ -54,27 +54,27 @@ export function initYouTubeTimeListener(): void {
     // Fallback keys for other formats
     const { setYoutubeCurrentTimeMs, setLastTimeUpdate } = useYoutubeStore.getState();
     if (typeof data.currentTime === 'number') {
-      console.log(`[YOUTUBE-MESSAGE] #${messageCount} Found currentTime in fallback format: ${data.currentTime}`);
+      // console.log(`[YOUTUBE-MESSAGE] #${messageCount} Found currentTime in fallback format: ${data.currentTime}`);
       setYoutubeCurrentTimeMs(data.currentTime * 1000);
       setLastTimeUpdate(Date.now());
     } else if (data.info?.currentTime !== undefined) {
-      console.log(`[YOUTUBE-MESSAGE] #${messageCount} Found currentTime in info format: ${data.info.currentTime}`);
+      // console.log(`[YOUTUBE-MESSAGE] #${messageCount} Found currentTime in info format: ${data.info.currentTime}`);
       setYoutubeCurrentTimeMs(data.info.currentTime * 1000);
       setLastTimeUpdate(Date.now());
     } else if (data.time !== undefined && typeof data.time === 'number') {
-      console.log(`[YOUTUBE-MESSAGE] #${messageCount} Found time in legacy format: ${data.time}`);
+      // console.log(`[YOUTUBE-MESSAGE] #${messageCount} Found time in legacy format: ${data.time}`);
       setYoutubeCurrentTimeMs(data.time * 1000);
       setLastTimeUpdate(Date.now());
     }
 
     // Query responses (e.g., getCurrentTime)
     if (data.event === 'onApiChange' && data.data?.currentTime !== undefined) {
-      console.log(`[YOUTUBE-MESSAGE] #${messageCount} API change with currentTime: ${data.data.currentTime}`);
+      // console.log(`[YOUTUBE-MESSAGE] #${messageCount} API change with currentTime: ${data.data.currentTime}`);
       setYoutubeCurrentTimeMs(data.data.currentTime * 1000);
       setLastTimeUpdate(Date.now());
     }
   };
 
   window.addEventListener('message', handleMessage);
-  console.log('[YOUTUBE-TIME-LISTENER] postMessage listener initialized and attached to window');
+  // console.log('[YOUTUBE-TIME-LISTENER] postMessage listener initialized and attached to window');
 }

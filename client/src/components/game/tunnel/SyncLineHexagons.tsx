@@ -14,7 +14,7 @@ interface SyncLineHexagonsProps {
 const SyncLineHexagonsComponent = ({ vpX, vpY, rotationOffset = 0, zoomScale = 1.0 }: SyncLineHexagonsProps) => {
   // DEBUG: Log input props
   if (!isFinite(vpX) || !isFinite(vpY) || !isFinite(rotationOffset)) {
-    console.error('[SyncLineHexagons] NaN in props:', { vpX, vpY, rotationOffset, zoomScale });
+    // console.error('[SyncLineHexagons] NaN in props:', { vpX, vpY, rotationOffset, zoomScale });
   }
   
   // Safety check for NaN values using isFinite (handles undefined, NaN, Infinity)

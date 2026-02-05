@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from "@/lib/motion/MotionProvider";
 import { ArrowLeftRight, Settings, Clock, FileText, Wrench } from 'lucide-react';
 import { CollapsibleSection } from './CollapsibleSection';
 import { ToolsSection } from './ToolsSection';
@@ -56,7 +56,6 @@ interface EditorSidebarProps {
   setLoopEnd: (time: number | null) => void;
   beatmapText: string;
   setBeatmapText: (text: string) => void;
-  updateFromText: (text: string) => void;
   resizeRef: React.RefObject<HTMLDivElement>;
   setIsResizing: (resizing: boolean) => void;
   videoDurationMs?: number;
@@ -106,7 +105,6 @@ export function EditorSidebar({
   setLoopEnd,
   beatmapText,
   setBeatmapText,
-  updateFromText,
   resizeRef,
   setIsResizing,
   videoDurationMs,
@@ -114,7 +112,7 @@ export function EditorSidebar({
   return (
     <AnimatePresence>
       {isPanelOpen && (
-        <motion.div
+        <m.div
           initial={{ x: panelSide === 'left' ? -panelWidth : panelWidth, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: panelSide === 'left' ? -panelWidth : panelWidth, opacity: 0 }}
@@ -308,7 +306,6 @@ export function EditorSidebar({
                 <BeatmapTextSection
                   beatmapText={beatmapText}
                   setBeatmapText={setBeatmapText}
-                  updateFromText={updateFromText}
                 />
               </CollapsibleSection>
             )}
@@ -320,7 +317,7 @@ export function EditorSidebar({
             onMouseDown={() => setIsResizing(true)}
             className="absolute right-0 top-0 w-1 h-full cursor-ew-resize hover:bg-neon-cyan/50 transition-colors"
           />
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

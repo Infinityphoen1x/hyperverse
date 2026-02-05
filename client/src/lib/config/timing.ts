@@ -38,6 +38,28 @@ export interface GameConfigConstants {
   ACCURACY_NORMAL_POINTS: number;
   /** Game health system maximum (also MAX_HEALTH export) */
   MAX_HEALTH: number;
+  
+  // Dynamic judgment window scaling factors
+  /** PERFECT early window scale: percentage of detection window (8%) */
+  PERFECT_EARLY_SCALE: number;
+  /** GOOD early window scale: percentage of detection window (20%) */
+  GOOD_EARLY_SCALE: number;
+  /** OK early window scale: percentage of detection window (32%) */
+  OK_EARLY_SCALE: number;
+  /** Minimum PERFECT early window to prevent impossibly tight timing */
+  MIN_PERFECT_EARLY: number;
+  /** Minimum GOOD early window to prevent impossibly tight timing */
+  MIN_GOOD_EARLY: number;
+  /** Minimum OK early window to prevent impossibly tight timing */
+  MIN_OK_EARLY: number;
+  /** Late miss buffer: extends detection window after OK.late */
+  LATE_MISS_BUFFER: number;
+  /** Fixed late windows for PERFECT timing (human reaction time) */
+  PERFECT_LATE: number;
+  /** Fixed late windows for GOOD timing */
+  GOOD_LATE: number;
+  /** Fixed late windows for OK timing */
+  OK_LATE: number;
 }
 
 export const GAME_CONFIG: GameConfigConstants = {
@@ -49,13 +71,25 @@ export const GAME_CONFIG: GameConfigConstants = {
   HOLD_RELEASE_WINDOW: 150,
   HOLD_ACTIVATION_WINDOW: 150,
   LEAD_TIME: 4000,
-  MAGIC_MS: 80000, // effectiveLeadTime = MAGIC_MS / playerSpeed (speed 20 = 4000ms default)
+  MAGIC_MS: 80000, // effectiveLeadTime = MAGIC_MS / playerSpeed (speed 40 = 2000ms default)
   ACCURACY_PERFECT_MS: 50,
   ACCURACY_GREAT_MS: 100,
   ACCURACY_PERFECT_POINTS: 100,
   ACCURACY_GREAT_POINTS: 75,
   ACCURACY_NORMAL_POINTS: 50,
   MAX_HEALTH: 200,
+  
+  // Dynamic judgment window constants
+  PERFECT_EARLY_SCALE: 0.08,   // 8% of detection window
+  GOOD_EARLY_SCALE: 0.20,      // 20% of detection window
+  OK_EARLY_SCALE: 0.32,        // 32% of detection window
+  MIN_PERFECT_EARLY: 20,       // Minimum 20ms for PERFECT early
+  MIN_GOOD_EARLY: 40,          // Minimum 40ms for GOOD early
+  MIN_OK_EARLY: 60,            // Minimum 60ms for OK early
+  LATE_MISS_BUFFER: 200,       // 200ms after OK.late for miss detection
+  PERFECT_LATE: 30,            // Fixed late window for PERFECT
+  GOOD_LATE: 70,               // Fixed late window for GOOD
+  OK_LATE: 120,                // Fixed late window for OK
 };
 
 export const TAP_HIT_WINDOW = GAME_CONFIG.TAP_HIT_WINDOW;
@@ -73,6 +107,18 @@ export const ACCURACY_PERFECT_POINTS = GAME_CONFIG.ACCURACY_PERFECT_POINTS;
 export const ACCURACY_GREAT_POINTS = GAME_CONFIG.ACCURACY_GREAT_POINTS;
 export const ACCURACY_NORMAL_POINTS = GAME_CONFIG.ACCURACY_NORMAL_POINTS;
 export const MAX_HEALTH = GAME_CONFIG.MAX_HEALTH;
+
+// Dynamic judgment window exports
+export const PERFECT_EARLY_SCALE = GAME_CONFIG.PERFECT_EARLY_SCALE;
+export const GOOD_EARLY_SCALE = GAME_CONFIG.GOOD_EARLY_SCALE;
+export const OK_EARLY_SCALE = GAME_CONFIG.OK_EARLY_SCALE;
+export const MIN_PERFECT_EARLY = GAME_CONFIG.MIN_PERFECT_EARLY;
+export const MIN_GOOD_EARLY = GAME_CONFIG.MIN_GOOD_EARLY;
+export const MIN_OK_EARLY = GAME_CONFIG.MIN_OK_EARLY;
+export const LATE_MISS_BUFFER = GAME_CONFIG.LATE_MISS_BUFFER;
+export const PERFECT_LATE = GAME_CONFIG.PERFECT_LATE;
+export const GOOD_LATE = GAME_CONFIG.GOOD_LATE;
+export const OK_LATE = GAME_CONFIG.OK_LATE;
 
 /**
  * Game engine timing - BPM ranges, note generation, and sync intervals

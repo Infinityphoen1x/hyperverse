@@ -11,7 +11,7 @@ import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT, LEAD_TIME } from '@/li
 import { VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config';
 import { GAME_CONFIG } from '@/lib/config/timing';
 import { useGameStore } from '@/stores/useGameStore';
-import { getLaneAngle } from '@/lib/utils/laneUtils';
+import { getPositionAngle } from '@/lib/utils/laneUtils';
 import { calculateTapNoteGeometry } from '@/lib/geometry/tapNoteGeometry';
 import { getTrapezoidCorners } from '@/lib/geometry/holdNoteGeometry';
 import { calculateApproachGeometry } from '@/lib/geometry/holdNoteGeometry';
@@ -62,7 +62,7 @@ const SelectionBoundingBoxComponent = ({
       LEAD_TIME // effectiveLeadTime
     );
     
-    const rayAngle = getLaneAngle(selectedNote.lane, tunnelRotation);
+    const rayAngle = getPositionAngle(selectedNote.lane, tunnelRotation); // DEPRECATED: note.lane field, treat as position
     const corners = getTrapezoidCorners(
       rayAngle, 
       holdGeometry.nearDistance, 
@@ -83,7 +83,7 @@ const SelectionBoundingBoxComponent = ({
     
     if (progress < 0 || progress > 1.2) return null;
     
-    const rayAngle = getLaneAngle(selectedNote.lane, tunnelRotation);
+    const rayAngle = getPositionAngle(selectedNote.lane, tunnelRotation); // DEPRECATED: note.lane field, treat as position
     const tapGeometry = calculateTapNoteGeometry(
       progress, 
       rayAngle, 
@@ -113,7 +113,7 @@ const SelectionBoundingBoxComponent = ({
 
   const padding = 4;
   
-  const rayAngle = getLaneAngle(selectedNote.lane, tunnelRotation);
+  const rayAngle = getPositionAngle(selectedNote.lane, tunnelRotation); // DEPRECATED: note.lane field, treat as position
   
   // Memoize handle positions - expensive geometry calculations
   const { nearHandlePos, farHandlePos } = useMemo(() => {

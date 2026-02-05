@@ -37,7 +37,7 @@ export function useFadeAnimation({
       if (progress < 1.0) {
         animationFrameIdRef.current = requestAnimationFrame(animate);
       } else {
-        console.log('[RESUME-ANIM] Fade complete, unfreezing engine...');
+        // console.log('[RESUME-ANIM] Fade complete, unfreezing engine...');
         // YouTube-first resume: play YouTube, then sync game to it
         playYouTubeVideo()
           .then(() => {
@@ -46,7 +46,7 @@ export function useFadeAnimation({
             setGameState('PLAYING');
           })
           .catch(err => {
-            console.error('[RESUME-ANIM] YouTube play failed:', err);
+            // console.error('[RESUME-ANIM] YouTube play failed:', err);
             // Fallback: resume anyway
             resumeGame();
             setGameState('PLAYING');

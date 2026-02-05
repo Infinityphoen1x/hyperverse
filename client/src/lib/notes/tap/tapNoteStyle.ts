@@ -55,7 +55,7 @@ export const calculateTapNoteStyle = (
   state: TapNoteState,
   noteColor: string,
   rawProgress: number = 0,
-  lane: number = 0
+  lane: number = 0 // Position value (-2 to 3)
 ): TapNoteStyle => {
   const hitFlashIntensity = calculateHitFlashIntensity(state);
   const greyscaleState = determineTapGreyscaleState(state, rawProgress);

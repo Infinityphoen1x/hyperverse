@@ -28,9 +28,10 @@ export class GameEngineQueries {
   }
 
   /**
-   * Get active notes on a specific lane
+   * Get active notes on a specific position
+   * @param lane Position value (-2 to 3)
    */
-  getActiveNotesOnLane(lane: number): Note[] {
+  getActiveNotesOnLane(lane: number): Note[] { // Legacy name, operates on position values
     return this.validator.getActiveNotesOnLane(this.notes, lane);
   }
 

@@ -31,7 +31,7 @@ const TunnelBackgroundComponent = ({
 
   // DEBUG: Log input props
   if (!isFinite(vpX) || !isFinite(vpY) || !isFinite(hexCenterX) || !isFinite(hexCenterY)) {
-    console.error('[TunnelBackground] NaN in props:', { vpX, vpY, hexCenterX, hexCenterY, health });
+    // console.error('[TunnelBackground] NaN in props:', { vpX, vpY, hexCenterX, hexCenterY, health });
   }
 
   // Sanitize coordinates to prevent NaN rendering issues
@@ -42,7 +42,7 @@ const TunnelBackgroundComponent = ({
   
   // DEBUG: Log sanitized values
   if (!isFinite(safeVpX) || !isFinite(safeVpY)) {
-    console.error('[TunnelBackground] NaN after sanitization:', { safeVpX, safeVpY, safeHexCenterX, safeHexCenterY });
+    // console.error('[TunnelBackground] NaN after sanitization:', { safeVpX, safeVpY, safeHexCenterX, safeHexCenterY });
   }
 
   const rayColor = getHealthBasedRayColor(health);
@@ -51,6 +51,11 @@ const TunnelBackgroundComponent = ({
   // ZOOM effect: compression + rotation + scale
   const { zoomIntensity, zoomRotation, zoomScale } = useZoomEffect();
   
+  // DEBUG: Log zoom values
+  if (zoomIntensity > 0 || zoomScale > 1.01) {
+    console.log(`[TunnelBackground] ZOOM VALUES: intensity=${zoomIntensity.toFixed(2)}, rotation=${zoomRotation.toFixed(1)}°, scale=${zoomScale.toFixed(2)}`);
+  }
+  
   // Sanitize rotation values and calculate final rotation
   const safeBaseRotation = isFinite(baseTunnelRotation) ? baseTunnelRotation : 0;
   const safeZoomRotation = isFinite(zoomRotation) ? zoomRotation : 0;
@@ -58,15 +63,15 @@ const TunnelBackgroundComponent = ({
   
   // DEBUG: Log rotation values
   if (!isFinite(tunnelRotation)) {
-    console.error('[TunnelBackground] NaN in rotation:', {
-      baseTunnelRotation,
-      safeBaseRotation,
-      zoomRotation,
-      safeZoomRotation,
-      zoomIntensity,
-      zoomScale,
-      tunnelRotation
-    });
+    // console.error('[TunnelBackground] NaN in rotation:', {
+    //   baseTunnelRotation,
+    //   safeBaseRotation,
+    //   zoomRotation,
+    //   safeZoomRotation,
+    //   zoomIntensity,
+    //   zoomScale,
+    //   tunnelRotation
+    // });
   }
 
   return (

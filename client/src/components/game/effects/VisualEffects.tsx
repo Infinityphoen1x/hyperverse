@@ -22,14 +22,14 @@ export function VisualEffects({ combo: propCombo, health: propHealth, missCount:
   // Refs to track previous values
   const prevComboRef = useRef(0);
 
-  console.log('[VISUAL-EFFECTS] Props received - combo:', propCombo, 'health:', propHealth, 'missCount:', propMissCount);
+  // console.log('[VISUAL-EFFECTS] Props received - combo:', propCombo, 'health:', propHealth, 'missCount:', propMissCount);
 
   // Pull from Zustand individually to prevent unnecessary re-renders
   const combo = useGameStore(state => propCombo ?? state.combo);
   const health = useGameStore(state => propHealth ?? state.health);
   const missCount = useGameStore(state => propMissCount ?? state.missCount);
   
-  console.log('[VISUAL-EFFECTS] Final values - combo:', combo, 'health:', health, 'missCount:', missCount);
+  // console.log('[VISUAL-EFFECTS] Final values - combo:', combo, 'health:', health, 'missCount:', missCount);
 
   // Validation (runs on prop/store changes)
   useEffect(() => {
@@ -41,7 +41,7 @@ export function VisualEffects({ combo: propCombo, health: propHealth, missCount:
   const particles = useParticles();
   const chromaticIntensity = useChromatic({ combo });
   
-  console.log('[VISUAL-EFFECTS] Calling useGlitch - missCount:', missCount);
+  // console.log('[VISUAL-EFFECTS] Calling useGlitch - missCount:', missCount);
   
   const { glitch, glitchPhase, glitchOpacityMultiplier } = useGlitch({ 
     missCount, 

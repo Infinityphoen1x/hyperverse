@@ -65,9 +65,12 @@ export function StatSection({ title, titleColor = 'purple', textColor = 'purple'
   );
 }
 
-export const formatLaneStats = (lanes: any) => {
-  if (!lanes) return 'N/A';
-  return Object.entries(lanes)
-    .map(([lane, count]) => `L${lane}:${count}`)
+export const formatPositionStats = (positions: any) => {
+  if (!positions) return 'N/A';
+  return Object.entries(positions)
+    .map(([position, count]) => `P${position}:${count}`)
     .join(' ');
 };
+
+// Legacy export for backward compatibility
+export const formatLaneStats = formatPositionStats;

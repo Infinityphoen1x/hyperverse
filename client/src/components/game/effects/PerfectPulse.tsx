@@ -1,11 +1,11 @@
 // src/components/PerfectPulse.tsx
-import { motion } from 'framer-motion';
+import { m } from "@/lib/motion/MotionProvider";
 import { COMBO_PERFECT_MILESTONE, COLOR_PARTICLE_GREEN, COLOR_PARTICLE_RED } from '@/lib/config';
 
 interface PerfectPulseProps { combo: number; }
 
 export const PerfectPulse: React.FC<PerfectPulseProps> = ({ combo }) => (
-  <motion.div
+  <m.div
     initial={{ scale: 0.5, opacity: 1 }}
     animate={{ scale: 3, opacity: 0 }}
     transition={{ duration: 0.6, ease: 'easeOut' }}

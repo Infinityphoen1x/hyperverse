@@ -8,7 +8,7 @@ import { MIN_HOLD_DURATION } from '@/lib/config/editor';
 
 interface DurationInputPopupProps {
   visible: boolean;
-  lane: number;
+  lane: number; // Position value (-2 to 3)
   time: number;
   onConfirm: (duration: number) => void;
   onCancel: () => void;

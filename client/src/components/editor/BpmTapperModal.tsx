@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from "@/lib/motion/MotionProvider";
 import { X } from 'lucide-react';
 
 interface BpmTapperModalProps {
@@ -35,14 +35,14 @@ export function BpmTapperModal({ onClose, onBpmDetected }: BpmTapperModalProps) 
   };
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
       onClick={onClose}
     >
-      <motion.div
+      <m.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
@@ -98,7 +98,7 @@ export function BpmTapperModal({ onClose, onBpmDetected }: BpmTapperModalProps) 
             </button>
           </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 }

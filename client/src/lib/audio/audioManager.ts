@@ -94,17 +94,17 @@ class AudioManager {
 
     await Promise.all(loadPromises);
     this.loaded = true;
-    console.log('[AudioManager] All sound effects preloaded');
+    // console.log('[AudioManager] All sound effects preloaded');
   }
 
   play(sound: SoundEffect): void {
     if (!this.loaded) {
-      console.warn(`[AudioManager] Cannot play ${sound} - sounds not loaded yet`);
+      // console.warn(`[AudioManager] Cannot play ${sound} - sounds not loaded yet`);
       return;
     }
     
     if (this.muted) {
-      console.log(`[AudioManager] Skipping ${sound} - muted`);
+      // console.log(`[AudioManager] Skipping ${sound} - muted`);
       return;
     }
 
@@ -114,11 +114,12 @@ class AudioManager {
         const pool = this.pools.get(sound)!;
         const audio = pool.sounds[pool.currentIndex];
         
-        console.log(`[AudioManager] Playing ${sound} from pool (index ${pool.currentIndex})`);
+        // console.log(`[AudioManager] Playing ${sound} from pool (index ${pool.currentIndex})`);
         
         // Reset and play
         audio.currentTime = 0;
-        audio.play().catch(err => console.warn(`[AudioManager] Play failed for ${sound}:`, err));
+        // audio.play().catch(err => console.warn(`[AudioManager] Play failed for ${sound}:`, err));
+        audio.play().catch(() => {}); // Silenced
         
         // Move to next in pool
         pool.currentIndex = (pool.currentIndex + 1) % pool.sounds.length;
@@ -126,15 +127,16 @@ class AudioManager {
         // Single audio element
         const audio = this.sounds.get(sound);
         if (audio) {
-          console.log(`[AudioManager] Playing ${sound}`);
+          // console.log(`[AudioManager] Playing ${sound}`);
           audio.currentTime = 0;
-          audio.play().catch(err => console.warn(`[AudioManager] Play failed for ${sound}:`, err));
+          // audio.play().catch(err => console.warn(`[AudioManager] Play failed for ${sound}:`, err));
+          audio.play().catch(() => {}); // Silenced
         } else {
-          console.warn(`[AudioManager] Sound ${sound} not found`);
+          // console.warn(`[AudioManager] Sound ${sound} not found`);
         }
       }
     } catch (err) {
-      console.warn(`[AudioManager] Error playing ${sound}:`, err);
+      // console.warn(`[AudioManager] Error playing ${sound}:`, err);
     }
   }
 

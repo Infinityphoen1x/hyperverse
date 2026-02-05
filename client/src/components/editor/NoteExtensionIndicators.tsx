@@ -14,7 +14,7 @@ import {
 } from '@/lib/config/editor';
 import { calculateDistances, calculateRayCorners } from '@/lib/geometry/tapNoteGeometry';
 import { calculateApproachGeometry } from '@/lib/geometry/holdNoteGeometry';
-import { getLaneAngle } from '@/lib/utils/laneUtils';
+import { getPositionAngle } from '@/lib/utils/laneUtils';
 import { useTunnelRotation } from '@/hooks/effects/tunnel/useTunnelRotation';
 
 const TAP_HIT_WINDOW = GAME_CONFIG.TAP_HIT_WINDOW;
@@ -96,8 +96,8 @@ export function NoteExtensionIndicators({ selectedNote, currentTime, vpX, vpY }:
     }
   }
 
-  // Get lane angle with tunnel rotation applied
-  const laneRayAngle = getLaneAngle(selectedNote.lane, tunnelRotation);
+  // Get position angle with tunnel rotation applied
+  const positionRayAngle = getPositionAngle(selectedNote.lane, tunnelRotation); // DEPRECATED: note.lane field, treat as position
 
   return (
     <svg 
@@ -110,7 +110,7 @@ export function NoteExtensionIndicators({ selectedNote, currentTime, vpX, vpY }:
     >
       {indicators.map((indicator, idx) => {
         // Reuse the exact same corner calculation as notes
-        const corners = calculateRayCorners(safeVpX, safeVpY, laneRayAngle, indicator.nearDistance, indicator.farDistance);
+        const corners = calculateRayCorners(safeVpX, safeVpY, positionRayAngle, indicator.nearDistance, indicator.farDistance);
         
         // Check if this is a single-line indicator (near === far) or dual-line (near !== far)
         const isSingleLine = Math.abs(indicator.nearDistance - indicator.farDistance) < 0.1;

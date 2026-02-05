@@ -40,8 +40,8 @@ interface EditorCanvasProps {
   setIsDragging: (dragging: boolean) => void;
   dragStartTime: number | null;
   setDragStartTime: (time: number | null) => void;
-  dragStartLane: number | null;
-  setDragStartLane: (lane: number | null) => void;
+  dragStartPosition: number | null;
+  setDragStartPosition: (position: number | null) => void;
   draggedNoteId: string | null;
   setDraggedNoteId: (id: string | null) => void;
   draggedHandle: 'start' | 'end' | 'near' | 'far' | null;
@@ -78,8 +78,8 @@ const EditorCanvasComponent = ({
   setIsDragging,
   dragStartTime,
   setDragStartTime,
-  dragStartLane,
-  setDragStartLane,
+  dragStartPosition,
+  setDragStartPosition,
   draggedNoteId,
   setDraggedNoteId,
   draggedHandle,
@@ -104,13 +104,13 @@ const EditorCanvasComponent = ({
   const actualZoomScale = (zoomEnabled && typeof zoomScale === 'number' && isFinite(zoomScale)) ? zoomScale : 1.0;  
   // DEBUG: Log NaN values in EditorCanvas
   if (!isFinite(vpX) || !isFinite(vpY)) {
-    console.error('[EditorCanvas] NaN detected:', {
-      vpX, vpY,
-      vpOffset,
-      vpOffsetX, vpOffsetY,
-      VANISHING_POINT_X, VANISHING_POINT_Y,
-      dynamicVPEnabled
-    });
+    // console.error('[EditorCanvas] NaN detected:', {
+    //   vpX, vpY,
+    //   vpOffset,
+    //   vpOffsetX, vpOffsetY,
+    //   VANISHING_POINT_X, VANISHING_POINT_Y,
+    //   dynamicVPEnabled
+    // });
   }  
   // Extract mouse handlers to custom hook
   const { handleCanvasMouseDown, handleCanvasMouseMove, handleCanvasMouseUp } = useEditorMouseHandlers({
@@ -125,7 +125,7 @@ const EditorCanvasComponent = ({
     draggedNoteId,
     draggedHandle,
     dragStartTime,
-    dragStartLane,
+    dragStartPosition,
     currentDifficulty,
     isPlaying,
     toggleNoteSelection,
@@ -133,7 +133,7 @@ const EditorCanvasComponent = ({
     setSelectedNoteId,
     setIsDragging,
     setDragStartTime,
-    setDragStartLane,
+    setDragStartPosition,
     setDraggedNoteId,
     setDraggedHandle,
     setHoveredNote,
@@ -166,15 +166,15 @@ const EditorCanvasComponent = ({
           setSelectedNoteId(newSelectedIds[0]);
         }
       } else {
-        // Check if we can add this note (max 6 notes, one per lane)
+        // Check if we can add this note (max 6 notes, one per position)
         const selectedNotes = parsedNotes.filter(n => selectedNoteIds.includes(n.id));
-        const laneTaken = selectedNotes.some(n => n.lane === note.lane);
+        const positionTaken = selectedNotes.some(n => n.lane === note.lane); // DEPRECATED: note.lane field
         
-        if (laneTaken) {
-          // Lane already has a selected note - replace it
-          const oldNoteInLane = selectedNotes.find(n => n.lane === note.lane);
-          if (oldNoteInLane) {
-            toggleNoteSelection(oldNoteInLane.id); // Remove old note
+        if (positionTaken) {
+          // Position already has a selected note - replace it
+          const oldNoteAtPosition = selectedNotes.find(n => n.lane === note.lane); // DEPRECATED: note.lane field
+          if (oldNoteAtPosition) {
+            toggleNoteSelection(oldNoteAtPosition.id); // Remove old note
           }
           toggleNoteSelection(note.id); // Add new note
           setSelectedNoteId(note.id);
@@ -210,9 +210,9 @@ const EditorCanvasComponent = ({
     if (!selectedNoteIds.includes(note.id)) {
       setDraggedNoteId(note.id);
       setDragStartTime(note.time);
-      setDragStartLane(note.lane);
+      setDragStartPosition(note.lane); // DEPRECATED: note.lane field, treat as position
     }
-  }, [isPlaying, selectedNoteIds, setDraggedNoteId, setDragStartTime, setDragStartLane]);
+  }, [isPlaying, selectedNoteIds, setDraggedNoteId, setDragStartTime, setDragStartPosition]);
 
   const handleBoundingBoxHandleMouseDown = useCallback((noteId: string, handle: 'start' | 'end' | 'near' | 'far', event: React.MouseEvent) => {
     if (isPlaying) return;
@@ -225,10 +225,10 @@ const EditorCanvasComponent = ({
     setSelectedNoteId(noteId);
     setDraggedNoteId(noteId);
     setDragStartTime(selectedNote.time);
-    setDragStartLane(selectedNote.lane);
+    setDragStartPosition(selectedNote.lane); // DEPRECATED: note.lane field, treat as position
     setDraggedHandle(handle);
     setIsDragging(true);
-  }, [isPlaying, parsedNotes, setDraggedNoteId, setDragStartTime, setDragStartLane, setDraggedHandle, setIsDragging, setSelectedNoteId]);
+  }, [isPlaying, parsedNotes, setDraggedNoteId, setDragStartTime, setDragStartPosition, setDraggedHandle, setIsDragging, setSelectedNoteId]);
 
   return (
     <div
@@ -341,12 +341,14 @@ const EditorCanvasComponent = ({
             // Stricter bounds check - only show if clearly within judgement area
             if (progress < 0 || progress > 1 || distance < 10 || distance > JUDGEMENT_RADIUS) return null;
             
-            const laneAngles = [-2, 1, 0, -1, 3, 2];
-            const laneAngle = laneAngles[note.lane] === -2 ? 0 : 
-                             laneAngles[note.lane] === 1 ? 60 :
-                             laneAngles[note.lane] === 0 ? 120 :
-                             laneAngles[note.lane] === -1 ? 180 :
-                             laneAngles[note.lane] === 3 ? 240 : 300;
+            const positionAngles = [-2, 1, 0, -1, 3, 2];
+            const position = note.lane; // DEPRECATED: note.lane field, treat as position
+            const posAngle = positionAngles[position] === -2 ? 0 : 
+                             positionAngles[position] === 1 ? 60 :
+                             positionAngles[position] === 0 ? 120 :
+                             positionAngles[position] === -1 ? 180 :
+                             positionAngles[position] === 3 ? 240 : 300;
+            const angleRad = (posAngle * Math.PI) / 180;
             const angleRad = (laneAngle * Math.PI) / 180;
             const x = VANISHING_POINT_X + distance * Math.cos(angleRad);
             const y = VANISHING_POINT_Y + distance * Math.sin(angleRad);

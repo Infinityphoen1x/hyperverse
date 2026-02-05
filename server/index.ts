@@ -1,10 +1,27 @@
 import express, { type Request, Response, NextFunction } from "express";
+import compression from "compression";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 
 const app = express();
 const httpServer = createServer(app);
+
+// Enable Brotli and Gzip compression for all responses
+// Brotli provides ~20% better compression than gzip
+app.use(compression({
+  // Enable Brotli compression (br) with fallback to gzip
+  threshold: 1024, // Only compress responses > 1KB
+  level: 6, // Compression level (0-9, 6 is balanced)
+  filter: (req, res) => {
+    // Don't compress if client sends 'x-no-compression' header
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    // Use compression's default filter for everything else
+    return compression.filter(req, res);
+  }
+}));
 
 declare module "http" {
   interface IncomingMessage {

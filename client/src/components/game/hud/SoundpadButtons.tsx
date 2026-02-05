@@ -10,7 +10,7 @@ interface SoundpadButtonsProps {
   // Optional overrides; defaults to fixed VP for outer hexagon alignment
   vpX?: number;
   vpY?: number;
-  onPadHit?: (lane: number) => void;
+  onPadHit?: (position: number) => void;
   zoomScale?: number;
 }
 
@@ -34,14 +34,16 @@ export function SoundpadButtons(props: SoundpadButtonsProps = {}) {
       }}
     >
       {BUTTON_CONFIG.map(({ lane, angle }) => {
-        const position = calculateButtonPosition(angle, fixedVpX, fixedVpY, tunnelRotation, zoomScale);
+        // BUTTON_CONFIG still uses 'lane' field, which represents position
+        const buttonPosition = lane; // The position (0-3) from config
+        const coordinates = calculateButtonPosition(angle, fixedVpX, fixedVpY, tunnelRotation, zoomScale);
         return (
           <SoundpadButton
-            key={`soundpad-button-${lane}`}
-            lane={lane}
-            position={position}
+            key={`soundpad-button-${buttonPosition}`}
+            position={buttonPosition}
+            coordinates={coordinates}
             onPadHit={onPadHit}
-            data-testid={`soundpad-button-${lane}`}
+            data-testid={`soundpad-button-${buttonPosition}`}
           />
         );
       })}

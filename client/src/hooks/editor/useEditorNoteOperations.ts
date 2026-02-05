@@ -15,7 +15,7 @@ interface UseEditorNoteOperationsProps {
 
 /**
  * Note CRUD operations for the editor
- * Delete, toggle type, update properties, select by lane
+ * Delete, toggle type, update properties, select by position
  */
 export function useEditorNoteOperations({
   currentTime,
@@ -118,23 +118,23 @@ export function useEditorNoteOperations({
     snapDivision,
   ]);
 
-  // Batch move selected notes to different lanes
-  const moveSelectedNotesToLane = useCallback((direction: 'up' | 'down') => {
+  // Batch move selected notes to different positions
+  const moveSelectedNotesToPosition = useCallback((direction: 'up' | 'down') => {
     if (selectedNoteIds.length === 0) return;
     
-    const lanes = [-2, -1, 0, 1, 2, 3];
+    const positions = [-2, -1, 0, 1, 2, 3];
     const delta = direction === 'up' ? -1 : 1;
     
     // Calculate new positions
     const newNotes = parsedNotes.map(note => {
       if (selectedNoteIds.includes(note.id)) {
-        const currentIndex = lanes.indexOf(note.lane);
+        const currentIndex = positions.indexOf(note.lane); // DEPRECATED: note.lane field, treat as position
         if (currentIndex === -1) return note;
         
         const newIndex = currentIndex + delta;
-        if (newIndex < 0 || newIndex >= lanes.length) return note;
+        if (newIndex < 0 || newIndex >= positions.length) return note;
         
-        return { ...note, lane: lanes[newIndex] };
+        return { ...note, lane: positions[newIndex] }; // DEPRECATED: note.lane field update
       }
       return note;
     });
@@ -195,20 +195,20 @@ export function useEditorNoteOperations({
     currentDifficulty,
   ]);
 
-  // Select nearest note in a specific lane
-  const selectNoteInLane = useCallback((lane: number) => {
+  // Select nearest note in a specific position
+  const selectNoteInPosition = useCallback((position: number) => {
     const TIME_WINDOW = 5000;
     
-    const notesInLane = parsedNotes.filter(n => 
-      n.lane === lane && Math.abs(n.time - currentTime) <= TIME_WINDOW
+    const notesInPosition = parsedNotes.filter(n => 
+      n.lane === position && Math.abs(n.time - currentTime) <= TIME_WINDOW // DEPRECATED: note.lane field, treat as position
     );
     
-    if (notesInLane.length === 0) {
+    if (notesInPosition.length === 0) {
       audioManager.play('noteMiss');
       return;
     }
 
-    const closestNote = notesInLane.reduce((closest, note) => {
+    const closestNote = notesInPosition.reduce((closest, note) => {
       const currentDist = Math.abs(note.time - currentTime);
       const closestDist = Math.abs(closest.time - currentTime);
       return currentDist < closestDist ? note : closest;
@@ -251,8 +251,10 @@ export function useEditorNoteOperations({
     deleteSelectedNote,
     toggleNoteType,
     nudgeSelectedNotes,
-    moveSelectedNotesToLane,
+    moveSelectedNotesToPosition,
+    moveSelectedNotesToLane: moveSelectedNotesToPosition, // Legacy alias
     handlePropertiesUpdate,
-    selectNoteInLane,
+    selectNoteInPosition,
+    selectNoteInLane: selectNoteInPosition, // Legacy alias
   };
 }

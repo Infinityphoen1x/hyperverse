@@ -11,6 +11,71 @@ export class NoteValidator {
     // Note speed multiplier handles visual rendering speed only
   }
 
+  /**
+   * Gap-based early detection window calculation
+   * Prevents overlapping detection windows by limiting early detection to the gap since the previous note
+   * @param notes All notes in the beatmap
+   * @param lane The position to check (parameter name 'lane' for compatibility)
+   * @param targetNote The note to calculate detection window for
+   * @param effectiveLeadTime The render lead time (MAGIC_MS / playerSpeed)
+   * @returns Early detection window in milliseconds
+   */
+  getEarlyDetectionWindow(
+    notes: Note[],
+    lane: number, // Position value (-2 to 3)
+    targetNote: Note,
+    effectiveLeadTime: number
+  ): number {
+    // Find previous note on this position
+    const prevNotes = notes.filter(n => n.lane === lane && n.time < targetNote.time); // DEPRECATED: note.lane field
+    if (prevNotes.length === 0) {
+      return effectiveLeadTime; // First note: use full render window
+    }
+
+    const prevNote = prevNotes.reduce((latest, n) => 
+      n.time > latest.time ? n : latest
+    );
+    
+    const prevEnd = prevNote.type === 'HOLD' 
+      ? prevNote.time + (prevNote.duration ?? 0) 
+      : prevNote.time;
+    
+    const gap = Math.max(0, targetNote.time - prevEnd);
+    
+    // Use minimum: can't detect before visible OR before previous note ends
+    return Math.min(gap, effectiveLeadTime);
+  }
+
+  /**
+   * Dynamic judgment window calculation
+   * Scales early windows with detection window for density-adaptive difficulty
+   * Late windows stay fixed based on human reaction time
+   * @param earlyDetectionMs The early detection window for this note
+   * @returns Judgment windows for PERFECT, GOOD, OK, and TOO_EARLY/MISS
+   */
+  getJudgmentWindows(earlyDetectionMs: number) {
+    const PERFECT_EARLY = Math.max(
+      this.config.MIN_PERFECT_EARLY, 
+      earlyDetectionMs * this.config.PERFECT_EARLY_SCALE
+    );
+    const GOOD_EARLY = Math.max(
+      this.config.MIN_GOOD_EARLY, 
+      earlyDetectionMs * this.config.GOOD_EARLY_SCALE
+    );
+    const OK_EARLY = Math.max(
+      this.config.MIN_OK_EARLY, 
+      earlyDetectionMs * this.config.OK_EARLY_SCALE
+    );
+
+    return {
+      PERFECT: { early: PERFECT_EARLY, late: this.config.PERFECT_LATE },
+      GOOD: { early: GOOD_EARLY, late: this.config.GOOD_LATE },
+      OK: { early: OK_EARLY, late: this.config.OK_LATE },
+      TOO_EARLY: earlyDetectionMs,  // Everything before OK.early
+      MISS: this.config.LATE_MISS_BUFFER  // Everything after OK.late
+    };
+  }
+
   isNoteActive(note: Note): boolean {
     return !note.hit && 
            !note.missed && 
@@ -40,15 +105,23 @@ export class NoteValidator {
     return false;
   }
 
-  findPressableTapNote(notes: Note[], lane: number, currentTime: number): Note | null {
-    // Find all TAP notes on this lane within the hit window
-    const candidates = notes.filter(n => 
-      n.lane === lane &&
-      n.type === 'TAP' &&
-      this.isNoteActive(n) &&
-      currentTime >= n.time - this.config.TAP_HIT_WINDOW &&
-      currentTime <= n.time + this.config.TAP_HIT_WINDOW
-    );
+  findPressableTapNote(notes: Note[], lane: number, currentTime: number, effectiveLeadTime: number): Note | null { // lane: Position value
+    // Find all TAP notes on this position that are within their dynamic detection window
+    const candidates = notes.filter(n => {
+      if (n.lane !== lane || n.type !== 'TAP' || !this.isNoteActive(n)) { // DEPRECATED: note.lane field
+        return false;
+      }
+      
+      // Calculate dynamic detection window for this note
+      const earlyDetection = this.getEarlyDetectionWindow(notes, lane, n, effectiveLeadTime);
+      const windows = this.getJudgmentWindows(earlyDetection);
+      
+      // Check if current time is within detection window
+      const detectionStart = n.time - earlyDetection;
+      const detectionEnd = n.time + windows.MISS;
+      
+      return currentTime >= detectionStart && currentTime <= detectionEnd;
+    });
     
     // If multiple notes are pressable, return the closest one
     if (candidates.length === 0) return null;
@@ -59,9 +132,9 @@ export class NoteValidator {
     );
   }
 
-  findClosestActiveNote(notes: Note[], lane: number, type: NoteType, currentTime: number): Note | null {
+  findClosestActiveNote(notes: Note[], lane: number, type: NoteType, currentTime: number): Note | null { // lane: Position value
     const candidates = notes.filter(n => 
-      n.lane === lane && 
+      n.lane === lane && // DEPRECATED: note.lane field
       n.type === type && 
       this.isNoteActive(n) &&
       Number.isFinite(n.time)
@@ -74,15 +147,23 @@ export class NoteValidator {
     );
   }
 
-  findPressableHoldNote(notes: Note[], lane: number, currentTime: number): Note | null {
-    // Find all HOLD notes on this lane within the hit window
-    const candidates = notes.filter(n => 
-      n.lane === lane &&
-      n.type === 'HOLD' &&
-      this.isNoteActive(n) &&
-      currentTime >= n.time - this.config.HOLD_HIT_WINDOW &&
-      currentTime <= n.time + this.config.HOLD_ACTIVATION_WINDOW
-    );
+  findPressableHoldNote(notes: Note[], lane: number, currentTime: number, effectiveLeadTime: number): Note | null { // lane: Position value
+    // Find all HOLD notes on this position that are within their dynamic detection window
+    const candidates = notes.filter(n => {
+      if (n.lane !== lane || n.type !== 'HOLD' || !this.isNoteActive(n)) { // DEPRECATED: note.lane field
+        return false;
+      }
+      
+      // Calculate dynamic detection window for this note
+      const earlyDetection = this.getEarlyDetectionWindow(notes, lane, n, effectiveLeadTime);
+      const windows = this.getJudgmentWindows(earlyDetection);
+      
+      // Check if current time is within detection window
+      const detectionStart = n.time - earlyDetection;
+      const detectionEnd = n.time + windows.MISS;
+      
+      return currentTime >= detectionStart && currentTime <= detectionEnd;
+    });
     
     // If multiple notes are pressable, return the closest one
     if (candidates.length === 0) return null;
@@ -93,9 +174,9 @@ export class NoteValidator {
     );
   }
 
-  findActiveHoldNote(notes: Note[], lane: number, currentTime: number): Note | null {
+  findActiveHoldNote(notes: Note[], lane: number, currentTime: number): Note | null { // lane: Position value
     return notes.find(n => 
-      n.lane === lane &&
+      n.lane === lane && // DEPRECATED: note.lane field
       n.type === 'HOLD' &&
       n.pressHoldTime !== undefined &&
       n.pressHoldTime > 0 &&
@@ -112,8 +193,8 @@ export class NoteValidator {
     return notes.filter(n => n.hit || this.isNoteFailed(n));
   }
 
-  getActiveNotesOnLane(notes: Note[], lane: number): Note[] {
-    return notes.filter(n => n.lane === lane && this.isNoteActive(n));
+  getActiveNotesOnLane(notes: Note[], lane: number): Note[] { // Legacy name, lane: Position value
+    return notes.filter(n => n.lane === lane && this.isNoteActive(n)); // DEPRECATED: note.lane field
   }
 
   /**

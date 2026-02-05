@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m } from "@/lib/motion/MotionProvider";
 import { useState, useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { BeatmapLoader } from "@/components/game/loaders/BeatmapLoader";
@@ -12,9 +12,10 @@ interface HomeProps {
   onStartGame: (difficulty: 'EASY' | 'MEDIUM' | 'HARD') => void;
   onOpenSettings: () => void;
   onOpenEditor?: () => void;
+  onOpenTutorial?: () => void;
 }
 
-export default function Home({ onStartGame, onOpenSettings, onOpenEditor }: HomeProps) {
+export default function Home({ onStartGame, onOpenSettings, onOpenEditor, onOpenTutorial }: HomeProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
   const [isLoaderOpen, setIsLoaderOpen] = useState(false);
   const unloadBeatmap = useGameStore(state => state.unloadBeatmap);
@@ -87,7 +88,7 @@ export default function Home({ onStartGame, onOpenSettings, onOpenEditor }: Home
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none z-1" />
       <div className="absolute top-0 left-0 w-full h-full bg-grid-white/[0.01] pointer-events-none z-1" />
 
-      <motion.div 
+      <m.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="z-20 text-center space-y-12 relative"
@@ -120,7 +121,7 @@ export default function Home({ onStartGame, onOpenSettings, onOpenEditor }: Home
               style={{ backgroundImage: `linear-gradient(to left, rgb(0, 0, 0), transparent)` }}
             />
             
-            <motion.div
+            <m.div
               className="font-rajdhani text-xl uppercase whitespace-nowrap font-semibold tracking-wider"
               style={{ color: colors[colorIndex] }}
               initial={{ x: 0 }}
@@ -128,7 +129,7 @@ export default function Home({ onStartGame, onOpenSettings, onOpenEditor }: Home
               transition={{ duration: 35, ease: 'linear', repeat: Infinity, repeatType: 'loop' }}
             >
               {continuousText}
-            </motion.div>
+            </m.div>
           </div>
         </div>
 
@@ -153,7 +154,22 @@ export default function Home({ onStartGame, onOpenSettings, onOpenEditor }: Home
         </div>
 
         <div className="flex gap-4 justify-center items-center flex-nowrap flex-wrap">
-          <motion.button 
+          {onOpenTutorial && (
+            <m.button 
+              onClick={() => {
+                audioManager.play('difficultySettingsApply');
+                onOpenTutorial();
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-8 py-4 text-neon-cyan font-bold font-orbitron rounded-sm border-2 border-neon-cyan/50 bg-transparent hover:bg-neon-cyan/10 hover:border-neon-cyan transition-colors text-sm whitespace-nowrap"
+              data-testid="button-open-tutorial"
+            >
+              📖 TUTORIAL
+            </m.button>
+          )}
+          
+          <m.button 
             onClick={() => {
               audioManager.play('startSession');
               onStartGame(selectedDifficulty);
@@ -169,11 +185,11 @@ export default function Home({ onStartGame, onOpenSettings, onOpenEditor }: Home
             data-testid="button-start-session"
           >
             START SESSION
-          </motion.button>
+          </m.button>
           
           {beatmapLoaded && (
             <>
-              <motion.button 
+              <m.button 
                 onClick={() => { 
                   audioManager.play('difficultySettingsApply');
                   setIsLoaderOpen(true); 
@@ -184,9 +200,9 @@ export default function Home({ onStartGame, onOpenSettings, onOpenEditor }: Home
                 data-testid="button-load-new-beatmap"
               >
                 LOAD NEW
-              </motion.button>
+              </m.button>
               
-              <motion.button 
+              <m.button 
                 onClick={() => {
                   audioManager.play('difficultySettingsApply');
                   handleUnloadBeatmap();
@@ -197,11 +213,11 @@ export default function Home({ onStartGame, onOpenSettings, onOpenEditor }: Home
                 data-testid="button-unload-beatmap"
               >
                 UNLOAD
-              </motion.button>
+              </m.button>
             </>
           )}
 
-          <motion.button 
+          <m.button 
             onClick={() => {
               audioManager.play('difficultySettingsApply');
               onOpenSettings();
@@ -212,10 +228,10 @@ export default function Home({ onStartGame, onOpenSettings, onOpenEditor }: Home
             data-testid="button-open-settings"
           >
             ⚙ SETTINGS
-          </motion.button>
+          </m.button>
 
           {onOpenEditor && (
-            <motion.button 
+            <m.button 
               onClick={() => {
                 audioManager.play('difficultySettingsApply');
                 onOpenEditor();
@@ -226,10 +242,10 @@ export default function Home({ onStartGame, onOpenSettings, onOpenEditor }: Home
               data-testid="button-open-editor"
             >
               ✎ EDITOR
-            </motion.button>
+            </m.button>
           )}
         </div>
-      </motion.div>
+      </m.div>
       
       {/* Footer */}
       <div className="absolute bottom-8 text-white/30 text-xs font-mono z-20">

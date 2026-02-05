@@ -13,7 +13,7 @@ import { TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT, LEAD_TIME } from '@/li
 import { VANISHING_POINT_X, VANISHING_POINT_Y } from '@/lib/config';
 import { useGameStore } from '@/stores/useGameStore';
 import { useEditorCoreStore } from '@/stores/useEditorCoreStore';
-import { getLaneAngle } from '@/lib/utils/laneUtils';
+import { getPositionAngle } from '@/lib/utils/laneUtils';
 import { calculateTapNoteGeometry } from '@/lib/geometry/tapNoteGeometry';
 import { getTrapezoidCorners } from '@/lib/geometry/holdNoteGeometry';
 import { useTunnelRotation } from '@/hooks/effects/tunnel/useTunnelRotation';
@@ -108,7 +108,7 @@ const EditorInteractionLayerComponent = ({
             false, // useFixedDepth
             LEAD_TIME // effectiveLeadTime
           );
-          const rayAngle = getLaneAngle(note.lane, tunnelRotation);
+          const rayAngle = getPositionAngle(note.lane, tunnelRotation); // DEPRECATED: note.lane field, treat as position
           const corners = getTrapezoidCorners(
             rayAngle, 
             holdGeometry.nearDistance, 
@@ -129,7 +129,7 @@ const EditorInteractionLayerComponent = ({
           
           if (progress < 0 || progress > 1.2) return null;
           
-          const rayAngle = getLaneAngle(note.lane, tunnelRotation);
+          const rayAngle = getPositionAngle(note.lane, tunnelRotation); // DEPRECATED: note.lane field, treat as position
           const tapGeometry = calculateTapNoteGeometry(
             progress, 
             rayAngle, 

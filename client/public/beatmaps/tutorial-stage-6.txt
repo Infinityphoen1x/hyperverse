@@ -1,0 +1,21 @@
+[METADATA]
+title: Tutorial Stage 6 - Zoom Effect
+artist: Hyperverse Tutorial
+bpm: 100
+duration: 28000
+youtube: 6OdwGfJAR1U
+beatmapStart: 0
+beatmapEnd: 28000
+disableRotation: true
+
+[EASY]
+2000|-1|HOLD|1500|hold_1
+2000|-2|HOLD|1500|hold_2
+6000|0|HOLD|1500|hold_3
+6000|2|HOLD|1500|hold_4
+10000|1|HOLD|1500|hold_5
+10000|3|HOLD|1500|hold_6
+14000|-1|HOLD|2000|hold_7
+14000|-2|HOLD|2000|hold_8
+19000|0|HOLD|1500|hold_9
+19000|1|HOLD|1500|hold_10

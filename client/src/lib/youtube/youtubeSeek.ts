@@ -27,7 +27,7 @@ export async function seekYouTubeVideo(timeSeconds: number, signal?: AbortSignal
     if (ytPlayer && typeof ytPlayer.seekTo === 'function') {
       // Don't force pause before seek - it slows things down. Just seek.
       ytPlayer.seekTo(clampedTime, true); 
-      console.log(`[YOUTUBE-SEEK] Official API: Seeking to ${minutes}:${seconds}`);
+      // console.log(`[YOUTUBE-SEEK] Official API: Seeking to ${minutes}:${seconds}`);
     } else if (youtubeIframeElement?.contentWindow) {
       // Fallback postMessage
       youtubeIframeElement.contentWindow.postMessage(
@@ -38,10 +38,10 @@ export async function seekYouTubeVideo(timeSeconds: number, signal?: AbortSignal
         }),
         'https://www.youtube.com'
       );
-      console.log(`[YOUTUBE-SEEK] PostMessage fallback: Seeking to ${minutes}:${seconds}`);
+      // console.log(`[YOUTUBE-SEEK] PostMessage fallback: Seeking to ${minutes}:${seconds}`);
     } else {
       // If no player, just return (don't throw/block gameplay)
-      console.warn('[YOUTUBE-SEEK] No seek method available');
+      // console.warn('[YOUTUBE-SEEK] No seek method available');
       return;
     }
 
@@ -55,10 +55,10 @@ export async function seekYouTubeVideo(timeSeconds: number, signal?: AbortSignal
         const current = getYouTubeVideoTime();
         // Looser tolerance (0.5s) for quick seeking
         if (current !== null && Math.abs(current / 1000 - clampedTime) < 0.5) { 
-          console.log(`[YOUTUBE-SEEK] Confirmed: ${(current / 1000).toFixed(2)}s`);
+          // console.log(`[YOUTUBE-SEEK] Confirmed: ${(current / 1000).toFixed(2)}s`);
           resolve();
         } else if (attempts >= maxAttempts) {
-          console.log(`[YOUTUBE-SEEK] Proceeding (timeout or unconfirmed)`);
+          // console.log(`[YOUTUBE-SEEK] Proceeding (timeout or unconfirmed)`);
           resolve(); 
         } else {
           setTimeout(poll, 50);
@@ -67,7 +67,7 @@ export async function seekYouTubeVideo(timeSeconds: number, signal?: AbortSignal
       setTimeout(poll, 50);
     });
   } catch (error) {
-    console.error('[YOUTUBE-SEEK] Failed:', error);
+    // console.error('[YOUTUBE-SEEK] Failed:', error);
     // Don't throw - let game continue
   }
 }

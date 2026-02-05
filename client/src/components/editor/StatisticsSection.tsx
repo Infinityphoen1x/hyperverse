@@ -15,9 +15,9 @@ export function StatisticsSection({
   draggedHandle,
   draggedNoteId
 }: StatisticsSectionProps) {
-  // Count notes per lane
-  const notesPerLane = parsedNotes.reduce((acc, note) => {
-    acc[note.lane] = (acc[note.lane] || 0) + 1;
+  // Count notes per position
+  const notesPerPosition = parsedNotes.reduce((acc, note) => {
+    acc[note.lane] = (acc[note.lane] || 0) + 1; // DEPRECATED: note.lane field, treat as position
     return acc;
   }, {} as Record<number, number>);
 
@@ -26,8 +26,8 @@ export function StatisticsSection({
   const tapNotesCount = parsedNotes.filter(n => n.type === 'TAP').length;
 
   // Count spin notes (HOLD notes that trigger tunnel rotation to align with x-axis)
-  // Lanes 0-3 require rotation, lanes -1/-2 (Q/P) are always on x-axis
-  const spinNotes = parsedNotes.filter(n => n.type === 'HOLD' && n.lane >= 0 && n.lane <= 3);
+  // Diamond positions 0-3 require rotation, horizontal positions -1/-2 (Q/P) are always on x-axis
+  const spinNotes = parsedNotes.filter(n => n.type === 'HOLD' && n.lane >= 0 && n.lane <= 3); // DEPRECATED: note.lane field
   const spinNotesCount = spinNotes.length;
 
   // Count zoom notes (synced HOLD notes - pairs with same start time and duration)
@@ -65,7 +65,7 @@ export function StatisticsSection({
     currentAction = `${selectedNoteIds.length} note${selectedNoteIds.length > 1 ? 's' : ''} selected`;
   }
 
-  const laneNames: Record<number, string> = {
+  const positionNames: Record<number, string> = {
     [-2]: 'P',
     [-1]: 'Q',
     [0]: 'W',
@@ -123,7 +123,7 @@ export function StatisticsSection({
 
         <div className="flex justify-between pt-2 border-t border-cyan-500/10">
           <span className="text-gray-400">SPIN Notes:</span>
-          <span className="text-pink-400 font-semibold" title="HOLD notes that trigger tunnel rotation to align with x-axis (W/O/I/E lanes)">{spinNotesCount}</span>
+          <span className="text-pink-400 font-semibold" title="HOLD notes that trigger tunnel rotation to align with x-axis (W/O/I/E positions)">{spinNotesCount}</span>
         </div>
 
         <div className="flex justify-between">
@@ -132,16 +132,16 @@ export function StatisticsSection({
         </div>
       </div>
 
-      {/* Notes per Lane */}
+      {/* Notes per Position */}
       <div className="pt-3 border-t border-neon-cyan/20">
-        <div className="text-cyan-400 text-xs font-semibold mb-2">NOTES PER LANE</div>
+        <div className="text-cyan-400 text-xs font-semibold mb-2">NOTES PER POSITION</div>
         <div className="space-y-1">
-          {Object.entries(laneNames).map(([laneNum, laneName]) => {
-            const lane = parseInt(laneNum);
-            const count = notesPerLane[lane] || 0;
+          {Object.entries(positionNames).map(([posNum, posName]) => {
+            const position = parseInt(posNum);
+            const count = notesPerPosition[position] || 0;
             return (
-              <div key={lane} className="flex justify-between text-xs">
-                <span className="text-gray-400">Lane {laneName}:</span>
+              <div key={position} className="flex justify-between text-xs">
+                <span className="text-gray-400">Position {posName}:</span>
                 <span className="text-cyan-300">{count}</span>
               </div>
             );

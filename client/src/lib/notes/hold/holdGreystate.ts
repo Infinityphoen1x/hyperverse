@@ -15,7 +15,7 @@ export interface HoldNoteColors {
 
 export const calculateHoldNoteColors = (
   isGreyed: boolean,
-  lane: number,
+  lane: number, // Position value (-2 to 3)
   baseColor: string
 ): HoldNoteColors => {
   if (isGreyed) {
@@ -26,6 +26,7 @@ export const calculateHoldNoteColors = (
     };
   }
   
+  // Horizontal positions (-1/-2) use deck colors, diamond positions use base color
   const fillColor = lane === -1 
     ? COLOR_DECK_LEFT 
     : lane === -2 

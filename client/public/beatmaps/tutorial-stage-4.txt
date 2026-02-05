@@ -1,0 +1,17 @@
+[METADATA]
+title: Tutorial Stage 4 - All Position HOLD Notes
+artist: Hyperverse Tutorial
+bpm: 100
+duration: 21000
+youtube: 6OdwGfJAR1U
+beatmapStart: 0
+beatmapEnd: 21000
+disableRotation: true
+
+[EASY]
+2000|0|HOLD|1500|hold_1
+5000|1|HOLD|1500|hold_2
+8000|2|HOLD|1500|hold_3
+11000|3|HOLD|1500|hold_4
+14000|-1|HOLD|1500|hold_5
+17000|-2|HOLD|1500|hold_6

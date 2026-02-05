@@ -1,0 +1,18 @@
+[METADATA]
+title: Tutorial Stage 2 - All Positions
+artist: Hyperverse Tutorial
+bpm: 100
+duration: 18000
+youtube: 6OdwGfJAR1U
+beatmapStart: 0
+beatmapEnd: 18000
+
+[EASY]
+2000|0|TAP
+4000|0|TAP
+6000|1|TAP
+8000|2|TAP
+10000|3|TAP
+12000|-1|TAP
+14000|-2|TAP
+16000|1|TAP

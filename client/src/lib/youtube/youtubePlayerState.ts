@@ -21,7 +21,7 @@ export async function waitForPlayerReady(maxWaitMs: number = 5000): Promise<bool
 
   while (performance.now() - startTime < maxWaitMs) {
     if (isPlayerReady()) {
-      console.log(`[YOUTUBE-READY] Player ready after ${(performance.now() - startTime).toFixed(0)}ms`);
+      // console.log(`[YOUTUBE-READY] Player ready after ${(performance.now() - startTime).toFixed(0)}ms`);
       return true;
     }
     await new Promise(resolve => setTimeout(resolve, waitTime));
@@ -29,7 +29,7 @@ export async function waitForPlayerReady(maxWaitMs: number = 5000): Promise<bool
   }
 
   // Player not ready but continue anyway - postMessage fallback will handle it
-  console.log(`[YOUTUBE-READY] Player API not available after ${maxWaitMs}ms, continuing with postMessage fallback`);
+  // console.log(`[YOUTUBE-READY] Player API not available after ${maxWaitMs}ms, continuing with postMessage fallback`);
   return false;
 }
 

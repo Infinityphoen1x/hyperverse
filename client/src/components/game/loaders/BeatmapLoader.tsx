@@ -75,20 +75,20 @@ export function BeatmapLoader({ difficulty, isOpen, setIsOpen, onBeatmapLoad }: 
                   </div>
                   <div className="space-y-1">
                     <p className="text-neon-cyan mt-2">TAP:</p>
-                    <p className="font-mono ml-2 text-white/50">time|lane|TAP</p>
+                    <p className="font-mono ml-2 text-white/50">time|position|TAP</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-neon-cyan">HOLD:</p>
-                    <p className="font-mono ml-2 text-white/50 text-xs">start|lane</p>
+                    <p className="font-mono ml-2 text-white/50 text-xs">start|position</p>
                     <p className="font-mono ml-2 text-white/50 text-xs">|HOLD_START</p>
-                    <p className="font-mono ml-2 text-white/50 text-xs">end|lane</p>
+                    <p className="font-mono ml-2 text-white/50 text-xs">end|position</p>
                     <p className="font-mono ml-2 text-white/50 text-xs">|HOLD_END</p>
                   </div>
                   <div className="space-y-1 mt-2">
-                    <p className="text-white/50 text-xs">Lanes:</p>
-                    <p className="ml-2 text-white/40 text-xs">0-3: pads</p>
-                    <p className="ml-2 text-white/40 text-xs">-1: Q (left)</p>
-                    <p className="ml-2 text-white/40 text-xs">-2: P (right)</p>
+                    <p className="text-white/50 text-xs">Positions:</p>
+                    <p className="ml-2 text-white/40 text-xs">0-3: diamond (W/O/I/E)</p>
+                    <p className="ml-2 text-white/40 text-xs">-1: horizontal (Q)</p>
+                    <p className="ml-2 text-white/40 text-xs">-2: horizontal (P)</p>
                   </div>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { m } from "@/lib/motion/MotionProvider";
 import { ArrowLeftRight } from 'lucide-react';
 import { CollapsibleSection } from './CollapsibleSection';
 import type { Difficulty } from '@/lib/editor/beatmapTextUtils';
@@ -62,7 +62,7 @@ export function SidePanel({
   );
 
   return (
-    <motion.div
+    <m.div
       initial={{ x: side === 'left' ? -panelWidth : panelWidth, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: side === 'left' ? -panelWidth : panelWidth, opacity: 0 }}
@@ -189,6 +189,6 @@ export function SidePanel({
         onMouseDown={() => setIsResizing(true)}
         className={`absolute ${side === 'left' ? 'right-0' : 'left-0'} top-0 w-1 h-full cursor-ew-resize hover:bg-neon-cyan/50 transition-colors`}
       />
-    </motion.div>
+    </m.div>
   );
 }

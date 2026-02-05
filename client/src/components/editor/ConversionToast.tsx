@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from "@/lib/motion/MotionProvider";
 
 interface ConversionToast {
   id: string;
@@ -49,7 +49,7 @@ export function ConversionToastContainer() {
     <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 pointer-events-none">
       <AnimatePresence>
         {toasts.map((toast, index) => (
-          <motion.div
+          <m.div
             key={toast.id}
             initial={{ opacity: 0, y: -20, scale: 0.8 }}
             animate={{ opacity: 1, y: index * 60, scale: 1 }}
@@ -58,7 +58,7 @@ export function ConversionToastContainer() {
             className="bg-cyan-900/90 border-2 border-cyan-400 rounded-lg px-4 py-2 text-cyan-100 text-sm font-rajdhani font-bold shadow-lg mb-2"
           >
             {toast.message}
-          </motion.div>
+          </m.div>
         ))}
       </AnimatePresence>
     </div>

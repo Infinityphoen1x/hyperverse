@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Note } from '@/types/game';
 
 interface EditorNotesPanelProps {
@@ -8,16 +9,16 @@ interface EditorNotesPanelProps {
   draggedNoteId: string | null;
 }
 
-export function EditorNotesPanel({ 
+const EditorNotesPanelComponent = ({ 
   parsedNotes, 
   selectedNoteIds, 
   isDragging,
   draggedHandle,
   draggedNoteId
 }: EditorNotesPanelProps) {
-  // Count notes per lane
-  const notesPerLane = parsedNotes.reduce((acc, note) => {
-    acc[note.lane] = (acc[note.lane] || 0) + 1;
+  // Count notes per position
+  const notesPerPosition = parsedNotes.reduce((acc, note) => {
+    acc[note.lane] = (acc[note.lane] || 0) + 1; // DEPRECATED: note.lane field, treat as position
     return acc;
   }, {} as Record<number, number>);
 
@@ -43,7 +44,7 @@ export function EditorNotesPanel({
     currentAction = `${selectedNoteIds.length} note${selectedNoteIds.length > 1 ? 's' : ''} selected`;
   }
 
-  const laneNames: Record<number, string> = {
+  const positionNames: Record<number, string> = {
     [-2]: 'P',
     [-1]: 'Q',
     [0]: 'W',
@@ -72,14 +73,14 @@ export function EditorNotesPanel({
           <span className="text-cyan-300 font-bold">{holdNotesCount}</span>
         </div>
 
-        <div className="mt-3 mb-2 text-cyan-400 text-xs font-semibold">NOTES PER LANE</div>
+        <div className="mt-3 mb-2 text-cyan-400 text-xs font-semibold">NOTES PER POSITION</div>
         <div className="space-y-1 pl-2">
-          {Object.entries(laneNames).map(([laneNum, laneName]) => {
-            const lane = parseInt(laneNum);
-            const count = notesPerLane[lane] || 0;
+          {Object.entries(positionNames).map(([posNum, posName]) => {
+            const position = parseInt(posNum);
+            const count = notesPerPosition[position] || 0;
             return (
-              <div key={lane} className="flex justify-between text-xs">
-                <span className="text-gray-400">Lane {laneName}:</span>
+              <div key={position} className="flex justify-between text-xs">
+                <span className="text-gray-400">Key {posName}:</span>
                 <span className="text-cyan-300">{count}</span>
               </div>
             );
@@ -115,4 +116,6 @@ export function EditorNotesPanel({
       </div>
     </div>
   );
-}
+};
+
+export const EditorNotesPanel = memo(EditorNotesPanelComponent);

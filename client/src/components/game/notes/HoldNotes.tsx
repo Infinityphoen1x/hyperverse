@@ -38,6 +38,13 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
     const holdNotes = notes.filter(n => n.type === 'HOLD');
     const tapNotes = notes.filter(n => n.type === 'TAP');
     
+    // Debug: Log HOLD notes on diamond positions 0-3
+    const holdNotesOnSoundpads = holdNotes.filter(n => n.lane >= 0 && n.lane <= 3); // DEPRECATED: note.lane field
+    if (holdNotesOnSoundpads.length > 0) {
+      console.log(`[HOLD-RENDER] Found ${holdNotesOnSoundpads.length} HOLD notes on soundpad positions:`, 
+        holdNotesOnSoundpads.map(n => ({ id: n.id, lane: n.lane, time: n.time, duration: n.duration }))); // DEPRECATED: note.lane
+    }
+    
     return notes.filter(n => {
       // Skip completed hold notes
       if (n.type === 'HOLD' && n.hit && n.releaseTime) {
@@ -58,6 +65,12 @@ const HoldNotesComponent = ({ vpX: propVpX = 350, vpY: propVpY = 300 }: HoldNote
       // Lower bound: hitCleanupWindow after it ends (holdDuration past start)
       if (isHoldNote) {
         const isVisible = noteStartTime <= currentTime + effectiveLeadTime && noteEndTime >= currentTime - hitCleanupWindow;
+        
+        // Debug: Log visibility check for soundpad HOLD notes
+        if (n.lane >= 0 && n.lane <= 3 && noteStartTime <= currentTime + effectiveLeadTime * 1.5) {
+          console.log(`[HOLD-RENDER] Note ${n.id} position ${n.lane} at ${n.time}ms: isVisible=${isVisible}, currentTime=${currentTime.toFixed(0)}, window=[${(currentTime - hitCleanupWindow).toFixed(0)}, ${(currentTime + effectiveLeadTime).toFixed(0)}]`); // DEPRECATED: note.lane
+        }
+        
         return isVisible;
       }
       

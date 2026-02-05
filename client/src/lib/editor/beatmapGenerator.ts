@@ -37,9 +37,9 @@ export function generateBeatmapText(
   
   sortedNotes.forEach(note => {
     if (note.type === 'TAP') {
-      lines.push(`${note.time}|${note.lane}|TAP`);
+      lines.push(`${note.time}|${note.lane}|TAP`); // DEPRECATED: note.lane field, outputs position value
     } else if (note.type === 'HOLD') {
-      lines.push(`${note.time}|${note.lane}|HOLD|${note.duration || 500}`);
+      lines.push(`${note.time}|${note.lane}|HOLD|${note.duration || 500}`); // DEPRECATED: note.lane field, outputs position value
     }
   });
 
@@ -78,9 +78,9 @@ export function generateBeatmapTextWithDifficulties(
       const sortedNotes = [...notes].sort((a, b) => a.time - b.time);
       sortedNotes.forEach(note => {
         if (note.type === 'TAP') {
-          lines.push(`${note.time}|${note.lane}|TAP`);
+          lines.push(`${note.time}|${note.lane}|TAP`); // DEPRECATED: note.lane field, outputs position value
         } else if (note.type === 'HOLD') {
-          lines.push(`${note.time}|${note.lane}|HOLD|${note.duration || 500}`);
+          lines.push(`${note.time}|${note.lane}|HOLD|${note.duration || 500}`); // DEPRECATED: note.lane field, outputs position value
         }
       });
       lines.push('');

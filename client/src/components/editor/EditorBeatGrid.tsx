@@ -1,8 +1,9 @@
+import { memo } from 'react';
 import { generateBeatGrid } from '@/lib/editor/editorUtils';
-import { VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT, TUNNEL_MAX_DISTANCE } from '@/lib/config';
-import { JUDGEMENT_RADIUS, HEXAGON_RADII } from '@/lib/config/geometry';
-import { LEAD_TIME } from '@/lib/config/timing';
+import { VANISHING_POINT_X, VANISHING_POINT_Y, TUNNEL_CONTAINER_WIDTH, TUNNEL_CONTAINER_HEIGHT, TUNNEL_MAX_DISTANCE, MAGIC_MS, TAP_JUDGEMENT_LINE_WIDTH } from '@/lib/config';
+import { JUDGEMENT_RADIUS } from '@/lib/config/geometry';
 import { useTunnelRotation } from '@/hooks/effects/tunnel/useTunnelRotation';
+import { useGameStore } from '@/stores/useGameStore';
 
 interface EditorBeatGridProps {
   currentTime: number;
@@ -12,20 +13,24 @@ interface EditorBeatGridProps {
   vpY: number;
 }
 
-export function EditorBeatGrid({ currentTime, bpm, snapDivision, vpX, vpY }: EditorBeatGridProps) {
+// Line angles matching TAP judgement lines + HOLD deck lines
+const GRID_LINE_ANGLES = [120, 60, 300, 240, 180, 0];
+
+const EditorBeatGridComponent = ({ currentTime, bpm, snapDivision, vpX, vpY }: EditorBeatGridProps) => {
   const tunnelRotation = useTunnelRotation();
+  const playerSpeed = useGameStore(state => state.playerSpeed) || 40;
+  
+  // Calculate effective lead time based on player speed
+  const effectiveLeadTime = MAGIC_MS / playerSpeed;
   
   // DEBUG: Log input props
   if (!isFinite(vpX) || !isFinite(vpY)) {
-    console.error('[EditorBeatGrid] NaN in props:', { vpX, vpY, currentTime, bpm, snapDivision });
+    // console.error('[EditorBeatGrid] NaN in props:', { vpX, vpY, currentTime, bpm, snapDivision });
   }
   
   // Sanitize VP coordinates to prevent NaN propagation
   const safeVpX = isFinite(vpX) ? vpX : VANISHING_POINT_X;
   const safeVpY = isFinite(vpY) ? vpY : VANISHING_POINT_Y;
-  
-  // Use the maximum hexagon radius as reference (248)
-  const maxRadius = HEXAGON_RADII[HEXAGON_RADII.length - 1];
   
   return (
     <svg 
@@ -38,46 +43,65 @@ export function EditorBeatGrid({ currentTime, bpm, snapDivision, vpX, vpY }: Edi
         transformOrigin: `${safeVpX}px ${safeVpY}px`
       }}
     >
-      {generateBeatGrid(currentTime, bpm, snapDivision, LEAD_TIME, JUDGEMENT_RADIUS, 0).map((gridPoint, i) => {
+      {generateBeatGrid(currentTime, bpm, snapDivision, effectiveLeadTime, JUDGEMENT_RADIUS, 0).map((gridPoint, i) => {
         // gridPoint.distance is in range [1, JUDGEMENT_RADIUS]
-        // Map this to actual hexagon radius using the same formula as notes
-        // progress = 0 at VP (distance = 1), progress = 1 at judgement (distance = JUDGEMENT_RADIUS)
+        // Calculate progress: 0 at VP (distance = 1), 1 at judgement (distance = JUDGEMENT_RADIUS)
         const progress = (gridPoint.distance - 1) / (JUDGEMENT_RADIUS - 1);
         
-        // Calculate hexagon radius using the same scaling as tunnel hexagons
-        const hexRadius = progress * maxRadius;
-        
-        // Draw hexagon by calculating vertices along the 6 rays
-        const hexPoints = Array.from({ length: 6 }).map((_, vertexIdx) => {
-          const angle = (vertexIdx * 60 * Math.PI) / 180;
-          
-          // Calculate fixed outer corner position at max distance
-          const outerCornerX = safeVpX + TUNNEL_MAX_DISTANCE * Math.cos(angle);
-          const outerCornerY = safeVpY + TUNNEL_MAX_DISTANCE * Math.sin(angle);
-          
-          // Position vertex along ray from VP to outer corner based on hexRadius
-          const vertexProgress = hexRadius / maxRadius;
-          const x = safeVpX + (outerCornerX - safeVpX) * vertexProgress;
-          const y = safeVpY + (outerCornerY - safeVpY) * vertexProgress;
-          
-          return `${x},${y}`;
-        }).join(' ');
-        
         // Visual properties that scale with progress
-        const strokeWidth = 0.5 + progress * 1.5;
-        const opacity = 0.15 + progress * 0.25;
+        const strokeWidth = 1.5 + progress * 1.0; // Thinner than judgement lines
+        const opacity = 0.2 + progress * 0.3; // Fade in as approaching
         
-        return (
-          <polygon
-            key={`beat-grid-${i}-${gridPoint.time}`}
-            points={hexPoints}
-            fill="none"
-            stroke="rgba(0, 255, 255, 0.6)"
-            strokeWidth={strokeWidth}
-            opacity={opacity}
-          />
-        );
+        // Line length scales with distance for perspective shortening/lengthening
+        // Use actual distance ratio for true perspective scaling
+        const perspectiveScale = gridPoint.distance / JUDGEMENT_RADIUS;
+        const baseLineWidth = TAP_JUDGEMENT_LINE_WIDTH * 1.2; // 20% longer than judgement lines
+        const lineWidth = baseLineWidth * perspectiveScale; // Full perspective scaling
+        
+        // Draw lines at each angle (matching tap judgement line angles)
+        return GRID_LINE_ANGLES.map((angle, lineIdx) => {
+          // Calculate fixed outer corner position (no additional rotation - SVG container handles it)
+          const rad = (angle * Math.PI) / 180;
+          const outerCornerX = safeVpX + TUNNEL_MAX_DISTANCE * Math.cos(rad);
+          const outerCornerY = safeVpY + TUNNEL_MAX_DISTANCE * Math.sin(rad);
+          
+          // Calculate actual ray length from VP to outer corner (accounts for dynamic VP)
+          const rayLength = Math.sqrt(
+            (outerCornerX - safeVpX) * (outerCornerX - safeVpX) + 
+            (outerCornerY - safeVpY) * (outerCornerY - safeVpY)
+          );
+          
+          // Position line along ray from VP to outer corner at gridPoint.distance
+          // Use actual ray length instead of TUNNEL_MAX_DISTANCE for proper perspective
+          const lineProgress = gridPoint.distance / rayLength;
+          const cx = safeVpX + (outerCornerX - safeVpX) * lineProgress;
+          const cy = safeVpY + (outerCornerY - safeVpY) * lineProgress;
+          
+          // Calculate perpendicular direction for line width
+          const rayAngle = Math.atan2(outerCornerY - safeVpY, outerCornerX - safeVpX);
+          const perpRad = rayAngle + Math.PI / 2;
+          const x1 = cx + Math.cos(perpRad) * (lineWidth / 2);
+          const y1 = cy + Math.sin(perpRad) * (lineWidth / 2);
+          const x2 = cx - Math.cos(perpRad) * (lineWidth / 2);
+          const y2 = cy - Math.sin(perpRad) * (lineWidth / 2);
+          
+          return (
+            <line
+              key={`beat-grid-${i}-${gridPoint.time}-${lineIdx}`}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              stroke="rgba(0, 255, 255, 0.6)"
+              strokeWidth={strokeWidth}
+              opacity={opacity}
+              strokeLinecap="round"
+            />
+          );
+        });
       })}
     </svg>
   );
-}
+};
+
+export const EditorBeatGrid = memo(EditorBeatGridComponent);

@@ -1,11 +1,11 @@
 // src/components/ChromaticAberration.tsx
-import { motion } from 'framer-motion';
+import { m } from "@/lib/motion/MotionProvider";
 import { CHROMATIC_OFFSET_PX } from '@/lib/config';
 
 interface ChromaticAberrationProps { intensity: number; }
 
 export const ChromaticAberration: React.FC<ChromaticAberrationProps> = ({ intensity }) => (
-  <motion.div
+  <m.div
     className="absolute inset-0"
     initial={{ filter: 'none' }}
     animate={{ 

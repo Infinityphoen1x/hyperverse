@@ -3,10 +3,10 @@
  * Converts beatmap text format into Note objects
  * 
  * Supported Formats:
- * - New (pipe-delimited): time|lane|TYPE|duration|id
+ * - New (pipe-delimited): time|position|TYPE|duration|id
  *   Example: 1000|0|TAP or 2000|1|HOLD|500
  * 
- * - Legacy (space-delimited): TYPE lane time duration
+ * - Legacy (space-delimited): TYPE position time duration
  *   Example: TAP 0 1000 or HOLD 1 2000 500
  * 
  * Auto-detects format based on presence of pipe character.
@@ -49,25 +49,25 @@ export function parseBeatmapText(text: string): Note[] {
       if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('[')) return;
 
       // Support both formats:
-      // New format: time|lane|TYPE|duration|id
-      // Old format: TYPE lane time duration
+      // New format: time|position|TYPE|duration|id
+      // Old format: TYPE position time duration
       const parts = trimmed.includes('|') ? trimmed.split('|') : trimmed.split(/\s+/);
       if (parts.length < 3) return;
 
       let type: string, lane: number, time: number, duration: number | undefined;
 
       if (trimmed.includes('|')) {
-        // New pipe-delimited format: time|lane|TYPE|duration|id
+        // New pipe-delimited format: time|position|TYPE|duration|id
         time = parseInt(parts[0]);
-        lane = parseInt(parts[1]);
+        lane = parseInt(parts[1]); // Position value (-2 to 3)
         type = parts[2].toUpperCase();
         if (parts.length >= 4) {
           duration = parseInt(parts[3]);
         }
       } else {
-        // Old space-delimited format: TYPE lane time duration
+        // Old space-delimited format: TYPE position time duration
         type = parts[0].toUpperCase();
-        lane = parseInt(parts[1]);
+        lane = parseInt(parts[1]); // Position value (-2 to 3)
         time = parseInt(parts[2]);
         if (parts.length >= 4) {
           duration = parseInt(parts[3]);
@@ -100,7 +100,7 @@ export function parseBeatmapText(text: string): Note[] {
 
     return notes;
   } catch (error) {
-    console.error('[BEATMAP-PARSER] Failed to parse beatmap text:', error);
+    // console.error('[BEATMAP-PARSER] Failed to parse beatmap text:', error);
     return []; // Return empty array on parse failure
   }
 }
@@ -137,25 +137,25 @@ export function parseBeatmapTextWithDifficulties(text: string): DifficultyNotes 
     if (!trimmed || trimmed.startsWith('#')) return;
 
     // Support both formats:
-    // New format: time|lane|TYPE|duration|id
-    // Old format: TYPE lane time duration
+    // New format: time|position|TYPE|duration|id
+    // Old format: TYPE position time duration
     const parts = trimmed.includes('|') ? trimmed.split('|') : trimmed.split(/\s+/);
     if (parts.length < 3) return;
 
     let type: string, lane: number, time: number, duration: number | undefined;
 
     if (trimmed.includes('|')) {
-      // New pipe-delimited format: time|lane|TYPE|duration|id
+      // New pipe-delimited format: time|position|TYPE|duration|id
       time = parseInt(parts[0]);
-      lane = parseInt(parts[1]);
+      lane = parseInt(parts[1]); // Position value (-2 to 3)
       type = parts[2].toUpperCase();
       if (parts.length >= 4) {
         duration = parseInt(parts[3]);
       }
     } else {
-      // Old space-delimited format: TYPE lane time duration
+      // Old space-delimited format: TYPE position time duration
       type = parts[0].toUpperCase();
-      lane = parseInt(parts[1]);
+      lane = parseInt(parts[1]); // Position value (-2 to 3)
       time = parseInt(parts[2]);
       if (parts.length >= 4) {
         duration = parseInt(parts[3]);
@@ -191,7 +191,7 @@ export function parseBeatmapTextWithDifficulties(text: string): DifficultyNotes 
 
   return difficultyNotes;
   } catch (error) {
-    console.error('[BEATMAP-PARSER] Failed to parse difficulty-based beatmap:', error);
+    // console.error('[BEATMAP-PARSER] Failed to parse difficulty-based beatmap:', error);
     return { EASY: [], MEDIUM: [], HARD: [] }; // Return empty difficulties on parse failure
   }
 }

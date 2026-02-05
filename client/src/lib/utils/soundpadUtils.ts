@@ -17,12 +17,12 @@ export const calculateButtonPosition = (angle: number, vpX: number, vpY: number,
   
   // DEBUG: Log NaN in calculated position
   if (!isFinite(cx) || !isFinite(cy)) {
-    console.error('[calculateButtonPosition] NaN in output:', {
-      input: { angle, vpX, vpY, rotationOffset, zoomScale },
-      safe: { safeVpX, safeVpY, safeRotation, safeZoom },
-      intermediate: { buttonRadius, rad },
-      output: { cx, cy }
-    });
+    // console.error('[calculateButtonPosition] NaN in output:', {
+    //   input: { angle, vpX, vpY, rotationOffset, zoomScale },
+    //   safe: { safeVpX, safeVpY, safeRotation, safeZoom },
+    //   intermediate: { buttonRadius, rad },
+    //   output: { cx, cy }
+    // });
   }
   
   return { cx, cy };
