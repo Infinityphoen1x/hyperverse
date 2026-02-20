@@ -6,6 +6,7 @@ import { metaImagesPlugin } from "./vite-plugin-meta-images";
 import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig({
+  base: './', // Use relative paths for Electron compatibility
   plugins: [
     react(),
     tailwindcss(),
