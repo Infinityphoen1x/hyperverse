@@ -1,10 +1,6 @@
-/**
- * Editor tunnel background component
- * Thin wrapper providing NaN safety for vanishing point coordinates
- * Maintains identical structure to gameplay - no additional containers
- */
+// Editor wrapper for TunnelBackground - matches gameplay structure exactly
+import { useEffect, useRef } from 'react';
 import { TunnelBackground } from '@/components/game/tunnel/TunnelBackground';
-import { useSafeVanishingPoint } from '@/hooks/utils/useSafeVanishingPoint';
 
 interface EditorTunnelBackgroundProps {
   vpX: number;
@@ -14,10 +10,6 @@ interface EditorTunnelBackgroundProps {
   health: number;
 }
 
-/**
- * Editor-specific tunnel background with coordinate validation
- * Ensures safe rendering even with potentially invalid VP values
- */
 export function EditorTunnelBackground({
   vpX,
   vpY,
@@ -25,23 +17,24 @@ export function EditorTunnelBackground({
   hexCenterY,
   health,
 }: EditorTunnelBackgroundProps) {
-  // DEBUG: Log input props
-  if (!isFinite(vpX) || !isFinite(vpY) || !isFinite(hexCenterX) || !isFinite(hexCenterY)) {
-    // console.error('[EditorTunnelBackground] NaN in props:', { vpX, vpY, hexCenterX, hexCenterY, health });
-  }
-  
-  // Validate and sanitize vanishing point coordinates
-  const safeCoords = useSafeVanishingPoint({ vpX, vpY, hexCenterX, hexCenterY });
-  
-  // DEBUG: Log sanitized values
-  if (!isFinite(safeCoords.vpX) || !isFinite(safeCoords.vpY)) {
-    // console.error('[EditorTunnelBackground] NaN after sanitization:', safeCoords);
-  }
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  // Safety check for NaN values
+  const safeVpX = isNaN(vpX) ? 350 : vpX;
+  const safeVpY = isNaN(vpY) ? 300 : vpY;
+  const safeHexCenterX = isNaN(hexCenterX) ? 350 : hexCenterX;
+  const safeHexCenterY = isNaN(hexCenterY) ? 300 : hexCenterY;
+
+  // Use TunnelBackground exactly as in gameplay - no modifications
   return (
-    <TunnelBackground
-      {...safeCoords}
-      health={health}
-    />
+    <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
+      <TunnelBackground
+        vpX={safeVpX}
+        vpY={safeVpY}
+        hexCenterX={safeHexCenterX}
+        hexCenterY={safeHexCenterY}
+        health={health}
+      />
+    </div>
   );
 }

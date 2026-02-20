@@ -24,7 +24,24 @@ function createWindow() {
   });
 
   // Load the built app
-  mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+  // In packaged app: use app.getAppPath() to get correct asar path
+  const basePath = app.isPackaged ? app.getAppPath() : __dirname;
+  const indexPath = app.isPackaged 
+    ? path.join(basePath, 'dist', 'public', 'index.html')
+    : path.join(__dirname, '../dist/public/index.html');
+  
+  mainWindow.loadFile(indexPath)
+    .catch(err => {
+      console.error('Failed to load index.html:', err);
+      console.error('Attempted path:', indexPath);
+      console.error('Base path:', basePath);
+      console.error('Is packaged:', app.isPackaged);
+    });
+
+  // Open DevTools in development
+  if (!app.isPackaged) {
+    mainWindow.webContents.openDevTools();
+  }
 
   mainWindow.on('closed', () => {
     mainWindow = null;

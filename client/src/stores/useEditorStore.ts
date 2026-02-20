@@ -146,6 +146,7 @@ export interface EditorStoreState {
   setJudgementLinesEnabled: (enabled: boolean) => void;
   setSpinEnabled: (enabled: boolean) => void;
   setIdleMotionEnabled: (enabled: boolean) => void;
+  setSimulationMode: (enabled: boolean) => void;
   setMetadata: (metadata: BeatmapMetadata) => void;
   updateMetadata: (partial: Partial<BeatmapMetadata>) => void;
   setParsedNotes: (notes: Note[]) => void;
