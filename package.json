@@ -1,6 +1,8 @@
 {
   "name": "hyperverse",
   "version": "1.0.0",
+  "description": "A cyberpunk rhythm game where you decrypt neural pathways through quantum sync protocol",
+  "author": "Cassia Taylor <cassia.taylor@icloud.com>",
   "type": "module",
   "license": "MIT",
   "main": "dist-electron/main.js",
