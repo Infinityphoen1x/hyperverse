@@ -225,7 +225,7 @@ export default function Tutorial({ onBack, playerInitializedRef }: TutorialProps
 
   const loadTutorialStage = async (stage: TutorialStage) => {
     try {
-      const response = await fetch(`/beatmaps/tutorial-stage-${stage}.txt`);
+      const response = await fetch(`./beatmaps/tutorial-stage-${stage}.txt`);
       if (!response.ok) throw new Error('Failed to load tutorial beatmap');
       
       const beatmapText = await response.text();

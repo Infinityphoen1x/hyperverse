@@ -140,7 +140,7 @@ export const useBeatmapLoader = ({ difficulty, onBeatmapLoad }: UseBeatmapLoader
   const handleQuickLoadEscapingGravity = async () => {
     setError("");
     try {
-      const response = await fetch("/escaping-gravity.txt");
+      const response = await fetch("./escaping-gravity.txt");
       if (!response.ok) throw new Error("Failed to load beatmap file");
       const content = await response.text();
       setBeatmapText(content);
