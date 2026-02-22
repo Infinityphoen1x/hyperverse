@@ -7,6 +7,9 @@ import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig({
   base: './', // Use relative paths for Electron compatibility
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react/jsx-runtime'],
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -35,6 +38,10 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+    },
     rollupOptions: {
       output: {
         manualChunks: (id) => {
