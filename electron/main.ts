@@ -53,11 +53,11 @@ function registerLocalResourceProtocol() {
     try {
       const data = await readFile(filePath);
       
-      // Determine MIME type
+      // Determine MIME type with charset
       let mimeType = 'text/plain';
-      if (filePath.endsWith('.html')) mimeType = 'text/html';
-      else if (filePath.endsWith('.css')) mimeType = 'text/css';
-      else if (filePath.endsWith('.js')) mimeType = 'application/javascript';
+      if (filePath.endsWith('.html')) mimeType = 'text/html; charset=utf-8';
+      else if (filePath.endsWith('.css')) mimeType = 'text/css; charset=utf-8';
+      else if (filePath.endsWith('.js')) mimeType = 'application/javascript; charset=utf-8';
       else if (filePath.endsWith('.json')) mimeType = 'application/json';
       else if (filePath.endsWith('.png')) mimeType = 'image/png';
       else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) mimeType = 'image/jpeg';
@@ -67,6 +67,8 @@ function registerLocalResourceProtocol() {
       else if (filePath.endsWith('.ttf')) mimeType = 'font/ttf';
       else if (filePath.endsWith('.wav')) mimeType = 'audio/wav';
       else if (filePath.endsWith('.mp3')) mimeType = 'audio/mpeg';
+      
+      console.log('Protocol handler - MIME type:', mimeType);
       
       return new Response(data, {
         headers: { 'Content-Type': mimeType }

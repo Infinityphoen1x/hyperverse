@@ -42,14 +42,14 @@ function registerLocalResourceProtocol() {
         console.log('Protocol handler - exists:', existsSync(filePath));
         try {
             const data = await readFile(filePath);
-            // Determine MIME type
+            // Determine MIME type with charset
             let mimeType = 'text/plain';
             if (filePath.endsWith('.html'))
-                mimeType = 'text/html';
+                mimeType = 'text/html; charset=utf-8';
             else if (filePath.endsWith('.css'))
-                mimeType = 'text/css';
+                mimeType = 'text/css; charset=utf-8';
             else if (filePath.endsWith('.js'))
-                mimeType = 'application/javascript';
+                mimeType = 'application/javascript; charset=utf-8';
             else if (filePath.endsWith('.json'))
                 mimeType = 'application/json';
             else if (filePath.endsWith('.png'))
@@ -68,6 +68,7 @@ function registerLocalResourceProtocol() {
                 mimeType = 'audio/wav';
             else if (filePath.endsWith('.mp3'))
                 mimeType = 'audio/mpeg';
+            console.log('Protocol handler - MIME type:', mimeType);
             return new Response(data, {
                 headers: { 'Content-Type': mimeType }
             });
