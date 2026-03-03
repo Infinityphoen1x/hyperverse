@@ -42,35 +42,56 @@ function registerLocalResourceProtocol() {
         console.log('Protocol handler - exists:', existsSync(filePath));
         try {
             const data = await readFile(filePath);
-            // Determine MIME type with charset
+            // Determine MIME type based on file extension
+            const ext = path.extname(filePath).toLowerCase();
+            console.log('Protocol handler - extension:', ext);
             let mimeType = 'text/plain';
-            if (filePath.endsWith('.html'))
-                mimeType = 'text/html; charset=utf-8';
-            else if (filePath.endsWith('.css'))
-                mimeType = 'text/css; charset=utf-8';
-            else if (filePath.endsWith('.js'))
-                mimeType = 'application/javascript; charset=utf-8';
-            else if (filePath.endsWith('.json'))
-                mimeType = 'application/json';
-            else if (filePath.endsWith('.png'))
-                mimeType = 'image/png';
-            else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg'))
-                mimeType = 'image/jpeg';
-            else if (filePath.endsWith('.svg'))
-                mimeType = 'image/svg+xml';
-            else if (filePath.endsWith('.woff'))
-                mimeType = 'font/woff';
-            else if (filePath.endsWith('.woff2'))
-                mimeType = 'font/woff2';
-            else if (filePath.endsWith('.ttf'))
-                mimeType = 'font/ttf';
-            else if (filePath.endsWith('.wav'))
-                mimeType = 'audio/wav';
-            else if (filePath.endsWith('.mp3'))
-                mimeType = 'audio/mpeg';
+            switch (ext) {
+                case '.html':
+                    mimeType = 'text/html; charset=utf-8';
+                    break;
+                case '.css':
+                    mimeType = 'text/css; charset=utf-8';
+                    break;
+                case '.js':
+                case '.mjs':
+                    mimeType = 'application/javascript; charset=utf-8';
+                    break;
+                case '.json':
+                    mimeType = 'application/json';
+                    break;
+                case '.png':
+                    mimeType = 'image/png';
+                    break;
+                case '.jpg':
+                case '.jpeg':
+                    mimeType = 'image/jpeg';
+                    break;
+                case '.svg':
+                    mimeType = 'image/svg+xml';
+                    break;
+                case '.woff':
+                    mimeType = 'font/woff';
+                    break;
+                case '.woff2':
+                    mimeType = 'font/woff2';
+                    break;
+                case '.ttf':
+                    mimeType = 'font/ttf';
+                    break;
+                case '.wav':
+                    mimeType = 'audio/wav';
+                    break;
+                case '.mp3':
+                    mimeType = 'audio/mpeg';
+                    break;
+            }
             console.log('Protocol handler - MIME type:', mimeType);
             return new Response(data, {
-                headers: { 'Content-Type': mimeType }
+                headers: {
+                    'Content-Type': mimeType,
+                    'Content-Length': data.length.toString()
+                }
             });
         }
         catch (error) {
