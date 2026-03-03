@@ -36,7 +36,12 @@ function registerLocalResourceProtocol() {
     const decodedUrl = decodeURI(url);
     
     // Remove leading slash if present (handles both /assets/... and assets/...)
-    const relativePath = decodedUrl.startsWith('/') ? decodedUrl.slice(1) : decodedUrl;
+    let relativePath = decodedUrl.startsWith('/') ? decodedUrl.slice(1) : decodedUrl;
+    
+    // Handle empty path, './', or just '/' - serve index.html
+    if (relativePath === '' || relativePath === './' || relativePath === '.') {
+      relativePath = 'index.html';
+    }
     
     // Get the base path for assets
     // app.getAppPath() returns the asar path when packaged, which Electron handles transparently
@@ -132,26 +137,15 @@ function createWindow() {
   });
 
   // Load the built app
-  // In development: load from dist/public
-  // In packaged app: files are in the app root (electron-builder extracts them)
-  const indexPath = app.isPackaged 
-    ? path.join(process.resourcesPath, 'app.asar', 'dist', 'public', 'index.html')
-    : path.join(__dirname, '../dist/public/index.html');
-  
-  console.log('Loading index from:', indexPath);
+  // Use app://./  so relative paths resolve correctly (app://./assets/... instead of app://index.html/assets/...)
+  console.log('Loading index from: app://./');
   console.log('Is packaged:', app.isPackaged);
   console.log('App path:', app.getAppPath());
-  console.log('Resources path:', process.resourcesPath);
   
   // Use custom protocol to load the app
-  mainWindow.loadURL('app://index.html')
+  mainWindow.loadURL('app://./')
     .catch(err => {
       console.error('Failed to load app:', err);
-      console.error('Falling back to loadFile...');
-      // Fallback to loadFile if protocol fails
-      mainWindow?.loadFile(indexPath).catch(e => {
-        console.error('Fallback also failed:', e);
-      });
     });
 
   // Open DevTools in development
