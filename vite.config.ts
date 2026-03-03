@@ -10,6 +10,14 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react', 'react-dom', 'react/jsx-runtime'],
   },
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+    alias: {
+      "@": path.resolve(import.meta.dirname, "client", "src"),
+      "@shared": path.resolve(import.meta.dirname, "shared"),
+      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -22,13 +30,6 @@ export default defineConfig({
       filename: 'dist/stats.html',
     }),
   ],
-  resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
-      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
-    },
-  },
   css: {
     postcss: {
       plugins: [],
