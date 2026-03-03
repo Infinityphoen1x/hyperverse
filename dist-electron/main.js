@@ -32,8 +32,9 @@ function registerLocalResourceProtocol() {
         // Remove leading slash if present (handles both /assets/... and assets/...)
         const relativePath = decodedUrl.startsWith('/') ? decodedUrl.slice(1) : decodedUrl;
         // Get the base path for assets
+        // app.getAppPath() returns the asar path when packaged, which Electron handles transparently
         const basePath = app.isPackaged
-            ? path.join(process.resourcesPath, 'app.asar', 'dist', 'public')
+            ? path.join(app.getAppPath(), 'dist', 'public')
             : path.join(__dirname, '../dist/public');
         const filePath = path.normalize(path.join(basePath, relativePath));
         console.log('Protocol handler - requested:', url);
