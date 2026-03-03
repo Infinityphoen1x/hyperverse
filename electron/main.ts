@@ -9,6 +9,26 @@ const __dirname = path.dirname(__filename);
 
 let mainWindow: BrowserWindow | null = null;
 
+// Register the app protocol as privileged before app is ready
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'app',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: false
+    }
+  }
+]);
+
+// Register protocol as privileged before app is ready
+app.whenReady().then(() => {
+  // Register custom protocol before creating window
+  registerLocalResourceProtocol();
+  createWindow();
+});
+
 // Register custom protocol for loading local files
 function registerLocalResourceProtocol() {
   protocol.handle('app', async (request) => {
@@ -106,12 +126,6 @@ function createWindow() {
     mainWindow = null;
   });
 }
-
-app.on('ready', () => {
-  // Register custom protocol before creating window
-  registerLocalResourceProtocol();
-  createWindow();
-});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
