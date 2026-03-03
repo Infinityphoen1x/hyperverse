@@ -1,11 +1,62 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, protocol } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { readFile } from 'fs/promises';
+import { existsSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let mainWindow: BrowserWindow | null = null;
+
+// Register custom protocol for loading local files
+function registerLocalResourceProtocol() {
+  protocol.handle('app', async (request) => {
+    let url = request.url.replace('app://', '');
+    const decodedUrl = decodeURI(url);
+    
+    // Remove leading slash if present (handles both /assets/... and assets/...)
+    const relativePath = decodedUrl.startsWith('/') ? decodedUrl.slice(1) : decodedUrl;
+    
+    // Get the base path for assets
+    const basePath = app.isPackaged 
+      ? path.join(process.resourcesPath, 'app.asar', 'dist', 'public')
+      : path.join(__dirname, '../dist/public');
+    
+    const filePath = path.normalize(path.join(basePath, relativePath));
+    
+    console.log('Protocol handler - requested:', url);
+    console.log('Protocol handler - relative:', relativePath);
+    console.log('Protocol handler - resolved:', filePath);
+    console.log('Protocol handler - exists:', existsSync(filePath));
+    
+    try {
+      const data = await readFile(filePath);
+      
+      // Determine MIME type
+      let mimeType = 'text/plain';
+      if (filePath.endsWith('.html')) mimeType = 'text/html';
+      else if (filePath.endsWith('.css')) mimeType = 'text/css';
+      else if (filePath.endsWith('.js')) mimeType = 'application/javascript';
+      else if (filePath.endsWith('.json')) mimeType = 'application/json';
+      else if (filePath.endsWith('.png')) mimeType = 'image/png';
+      else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) mimeType = 'image/jpeg';
+      else if (filePath.endsWith('.svg')) mimeType = 'image/svg+xml';
+      else if (filePath.endsWith('.woff')) mimeType = 'font/woff';
+      else if (filePath.endsWith('.woff2')) mimeType = 'font/woff2';
+      else if (filePath.endsWith('.ttf')) mimeType = 'font/ttf';
+      else if (filePath.endsWith('.wav')) mimeType = 'audio/wav';
+      else if (filePath.endsWith('.mp3')) mimeType = 'audio/mpeg';
+      
+      return new Response(data, {
+        headers: { 'Content-Type': mimeType }
+      });
+    } catch (error) {
+      console.error('Failed to load resource:', filePath, error);
+      return new Response('File not found', { status: 404 });
+    }
+  });
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -24,18 +75,26 @@ function createWindow() {
   });
 
   // Load the built app
-  // In packaged app: use app.getAppPath() to get correct asar path
-  const basePath = app.isPackaged ? app.getAppPath() : __dirname;
+  // In development: load from dist/public
+  // In packaged app: files are in the app root (electron-builder extracts them)
   const indexPath = app.isPackaged 
-    ? path.join(basePath, 'dist', 'public', 'index.html')
+    ? path.join(process.resourcesPath, 'app.asar', 'dist', 'public', 'index.html')
     : path.join(__dirname, '../dist/public/index.html');
   
-  mainWindow.loadFile(indexPath)
+  console.log('Loading index from:', indexPath);
+  console.log('Is packaged:', app.isPackaged);
+  console.log('App path:', app.getAppPath());
+  console.log('Resources path:', process.resourcesPath);
+  
+  // Use custom protocol to load the app
+  mainWindow.loadURL('app://index.html')
     .catch(err => {
-      console.error('Failed to load index.html:', err);
-      console.error('Attempted path:', indexPath);
-      console.error('Base path:', basePath);
-      console.error('Is packaged:', app.isPackaged);
+      console.error('Failed to load app:', err);
+      console.error('Falling back to loadFile...');
+      // Fallback to loadFile if protocol fails
+      mainWindow?.loadFile(indexPath).catch(e => {
+        console.error('Fallback also failed:', e);
+      });
     });
 
   // Open DevTools in development
@@ -48,7 +107,11 @@ function createWindow() {
   });
 }
 
-app.on('ready', createWindow);
+app.on('ready', () => {
+  // Register custom protocol before creating window
+  registerLocalResourceProtocol();
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
