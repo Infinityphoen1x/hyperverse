@@ -48,12 +48,13 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
+        // Ensure vendor-react loads first by naming it with a prefix
         manualChunks: (id) => {
           // Vendor chunks - split large dependencies
           if (id.includes('node_modules')) {
-            // CRITICAL: React must be in its own chunk first
+            // CRITICAL: React must load FIRST - use '0-' prefix to ensure it loads before others
             if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler') || id.includes('react/')) {
-              return 'vendor-react';
+              return '0-vendor-react';
             }
             // Exclude anything that might include React from other chunks
             if (id.includes('framer-motion')) {
