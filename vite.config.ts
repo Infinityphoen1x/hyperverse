@@ -16,6 +16,9 @@ export default defineConfig({
       "@": path.resolve(import.meta.dirname, "client", "src"),
       "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
+      // Force all React imports to resolve to the same instance
+      'react': path.resolve(import.meta.dirname, 'node_modules', 'react'),
+      'react-dom': path.resolve(import.meta.dirname, 'node_modules', 'react-dom'),
     },
   },
   plugins: [
@@ -48,9 +51,11 @@ export default defineConfig({
         manualChunks: (id) => {
           // Vendor chunks - split large dependencies
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+            // CRITICAL: React must be in its own chunk first
+            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler') || id.includes('react/')) {
               return 'vendor-react';
             }
+            // Exclude anything that might include React from other chunks
             if (id.includes('framer-motion')) {
               return 'vendor-framer';
             }
@@ -59,6 +64,9 @@ export default defineConfig({
             }
             if (id.includes('@tanstack')) {
               return 'vendor-tanstack';
+            }
+            if (id.includes('@radix-ui')) {
+              return 'vendor-radix';
             }
             // Other node_modules
             return 'vendor-libs';
