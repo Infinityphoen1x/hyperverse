@@ -55,10 +55,8 @@ export default defineConfig({
             if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
               return undefined; // Include in main chunk
             }
-            // Split other large vendor libraries
-            if (id.includes('framer-motion')) {
-              return 'vendor-framer';
-            }
+            // Keep Framer Motion with other libs to avoid circular deps
+            // (it has peer deps that can create cycles when separated)
             if (id.includes('@radix-ui')) {
               return 'vendor-radix';
             }
@@ -68,7 +66,8 @@ export default defineConfig({
             if (id.includes('zustand')) {
               return 'vendor-zustand';
             }
-            // Catch-all for remaining node_modules
+            // Everything else (including framer-motion) goes to vendor-libs
+            // This prevents circular imports between vendor chunks
             return 'vendor-libs';
           }
           // Don't manually chunk app code - let Rollup handle it to avoid cycles
