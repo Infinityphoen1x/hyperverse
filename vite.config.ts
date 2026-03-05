@@ -49,60 +49,30 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Vendor chunks - split large dependencies
+          // Only split node_modules - never split app code to avoid circular deps
           if (id.includes('node_modules')) {
-            // DON'T split React - let it be in the main entry chunk
-            // This ensures it loads before anything else
-            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler') || id.includes('react/')) {
-              return undefined; // undefined = include in main chunk
+            // DON'T split React - keep it in main entry to load first
+            if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+              return undefined; // Include in main chunk
             }
+            // Split other large vendor libraries
             if (id.includes('framer-motion')) {
               return 'vendor-framer';
-            }
-            if (id.includes('zustand')) {
-              return 'vendor-zustand';
-            }
-            if (id.includes('@tanstack')) {
-              return 'vendor-tanstack';
             }
             if (id.includes('@radix-ui')) {
               return 'vendor-radix';
             }
-            // Other node_modules
+            if (id.includes('@tanstack')) {
+              return 'vendor-tanstack';
+            }
+            if (id.includes('zustand')) {
+              return 'vendor-zustand';
+            }
+            // Catch-all for remaining node_modules
             return 'vendor-libs';
           }
-          
-          // Zustand stores - state management
-          if (id.includes('/stores/')) {
-            return 'stores';
-          }
-          
-          // Game engine - note processing, validators, game logic
-          if (id.includes('/lib/engine/') || 
-              id.includes('/lib/notes/') ||
-              id.includes('/lib/beatmap/') ||
-              id.includes('/hooks/game/')) {
-            return 'game-engine';
-          }
-          
-          // Editor - editor-specific code
-          if (id.includes('/pages/BeatmapEditor') ||
-              id.includes('/hooks/editor/') ||
-              id.includes('/components/editor/')) {
-            return 'editor';
-          }
-          
-          // YouTube player
-          if (id.includes('/lib/youtube/')) {
-            return 'youtube';
-          }
-          
-          // Visual effects and rendering
-          if (id.includes('/components/game/effects/') ||
-              id.includes('/hooks/effects/') ||
-              id.includes('/lib/geometry/')) {
-            return 'effects';
-          }
+          // Don't manually chunk app code - let Rollup handle it to avoid cycles
+          return undefined;
         },
       },
     },
