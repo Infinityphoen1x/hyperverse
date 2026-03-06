@@ -11,18 +11,8 @@ export function destroyYouTubePlayer(): void {
   const ytPlayer = state.ytPlayer;
   const iframeElement = state.youtubeIframeElement;
   
-  // Manually remove the iframe from DOM before calling destroy() to prevent removeChild errors
-  if (iframeElement && iframeElement.parentNode) {
-    try {
-      // console.log('[YOUTUBE-CLEANUP] Manually removing iframe from DOM');
-      iframeElement.parentNode.removeChild(iframeElement);
-      // console.log('[YOUTUBE-CLEANUP] Iframe removed successfully');
-    } catch (error) {
-      // console.warn('[YOUTUBE-CLEANUP] Error manually removing iframe:', error);
-    }
-  }
-  
   // Call destroy on the YouTube Player API if it exists
+  // The destroy() method automatically removes the iframe from the DOM
   if (ytPlayer && typeof ytPlayer.destroy === 'function') {
     try {
       // console.log('[YOUTUBE-CLEANUP] Calling ytPlayer.destroy()');
@@ -30,9 +20,27 @@ export function destroyYouTubePlayer(): void {
       // console.log('[YOUTUBE-CLEANUP] ytPlayer.destroy() completed');
     } catch (error) {
       // console.warn('[YOUTUBE-CLEANUP] Error destroying YouTube player:', error);
+      
+      // Fallback: manually remove iframe if destroy() failed
+      if (iframeElement && iframeElement.parentNode) {
+        try {
+          iframeElement.parentNode.removeChild(iframeElement);
+        } catch (removeError) {
+          // console.warn('[YOUTUBE-CLEANUP] Error manually removing iframe:', removeError);
+        }
+      }
     }
   } else {
     // console.log('[YOUTUBE-CLEANUP] No ytPlayer to destroy or destroy method not available');
+    
+    // No player API available, manually remove iframe if it exists
+    if (iframeElement && iframeElement.parentNode) {
+      try {
+        iframeElement.parentNode.removeChild(iframeElement);
+      } catch (error) {
+        // console.warn('[YOUTUBE-CLEANUP] Error manually removing iframe:', error);
+      }
+    }
   }
   
   // Clear all store references
