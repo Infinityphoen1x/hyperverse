@@ -104,7 +104,7 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            webSecurity: true, // Re-enabled with custom protocol
+            webSecurity: false, // Required for YouTube iframe postMessage with app:// protocol
         },
         backgroundColor: '#000000',
         title: 'Hyperverse',
