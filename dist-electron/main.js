@@ -13,7 +13,7 @@ protocol.registerSchemesAsPrivileged([
             standard: true,
             secure: true,
             supportFetchAPI: true,
-            corsEnabled: false
+            corsEnabled: true // Enable CORS for YouTube iframe communication
         }
     }
 ]);
@@ -105,6 +105,7 @@ function createWindow() {
             nodeIntegration: false,
             contextIsolation: true,
             webSecurity: false, // Required for YouTube iframe postMessage with app:// protocol
+            allowRunningInsecureContent: true, // Allow mixed content (http/https)
         },
         backgroundColor: '#000000',
         title: 'Hyperverse',
@@ -117,6 +118,15 @@ function createWindow() {
     mainWindow.loadURL('app://./')
         .catch(err => {
         console.error('Failed to load app:', err);
+    });
+    // Disable CSP headers to allow YouTube iframe cross-origin communication
+    mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+        callback({
+            responseHeaders: {
+                ...details.responseHeaders,
+                'Content-Security-Policy': ['default-src * \'unsafe-inline\' \'unsafe-eval\' data: blob:;']
+            }
+        });
     });
     // Open DevTools in development
     if (!app.isPackaged) {
