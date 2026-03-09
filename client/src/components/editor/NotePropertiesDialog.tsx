@@ -21,12 +21,6 @@ export function NotePropertiesDialog({
   const selectedNotes = notes.filter(n => selectedNoteIds.includes(n.id));
   const firstNote = selectedNotes[0];
   
-  // If no notes selected, close dialog immediately
-  useEffect(() => {
-    if (selectedNotes.length === 0) {
-      onClose();
-    }
-  }, [selectedNotes.length, onClose]);
   const [startTime, setStartTime] = useState(() => firstNote?.time.toString() || '0');
   const [endTime, setEndTime] = useState(() => 
     firstNote?.type === 'HOLD' && firstNote.duration
@@ -39,15 +33,18 @@ export function NotePropertiesDialog({
       : '0'
   );
   
-  // If no first note, don't render
-  if (!firstNote) {
-    return null;
-  }
+  // If no notes selected, close dialog immediately
+  useEffect(() => {
+    if (selectedNotes.length === 0) {
+      onClose();
+    }
+  }, [selectedNotes.length, onClose]);
 
+  // All hooks must be called before any conditional returns
   // Check if all selected notes share the same values
-  const hasMultipleStartTimes = selectedNotes.length > 1 && 
+  const hasMultipleStartTimes = firstNote && selectedNotes.length > 1 && 
     !selectedNotes.every(n => n.time === firstNote.time);
-  const hasMultipleDurations = selectedNotes.length > 1 &&
+  const hasMultipleDurations = firstNote && selectedNotes.length > 1 &&
     !selectedNotes.every(n => {
       const dur1 = n.type === 'HOLD' && n.duration ? n.duration : 0;
       const dur2 = firstNote.type === 'HOLD' && firstNote.duration ? firstNote.duration : 0;
@@ -123,6 +120,11 @@ export function NotePropertiesDialog({
       onClose();
     }
   };
+
+  // If no first note, don't render anything (hooks already called above)
+  if (!firstNote) {
+    return null;
+  }
 
   return (
     <AnimatePresence>
