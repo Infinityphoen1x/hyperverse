@@ -27,3 +27,5 @@ Thumbs.db
 # Editor dirs
 .vscode/settings.json
 .idea/
+# Prevent nested project directory duplicates
+hyperverse/
