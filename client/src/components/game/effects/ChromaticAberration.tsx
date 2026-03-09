@@ -11,6 +11,7 @@ export const ChromaticAberration: React.FC<ChromaticAberrationProps> = ({ intens
     animate={{ 
       filter: `drop-shadow(${intensity * CHROMATIC_OFFSET_PX}px 0 0 rgb(255, 0, 127)) drop-shadow(${-intensity * CHROMATIC_OFFSET_PX}px 0 0 rgb(0, 255, 255))` 
     }}
+    exit={{ filter: 'none' }} // Properly animate out on unmount
     transition={{ duration: 0.3 }} // CHROMATIC_DURATION / 1000
   />
 );

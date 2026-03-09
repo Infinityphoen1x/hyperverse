@@ -1,5 +1,6 @@
 // src/components/VisualEffects.tsx
 import React, { useEffect, useRef, useCallback, useState } from 'react';
+import { AnimatePresence } from '@/lib/motion/MotionProvider';
 import { useGameStore } from '@/stores/useGameStore'; // Your game store (e.g., with combo, health, missCount)
 import { useParticles } from '@/hooks/effects/geometry/useParticles';
 import { useChromatic } from '@/hooks/effects/screen/useChromatic';
@@ -117,7 +118,9 @@ export function VisualEffects({ combo: propCombo, health: propHealth, missCount:
           glitchOpacityMultiplier={glitchOpacityMultiplier} 
         />
       )}
-      {chromaticIntensity > 0 && <ChromaticAberration intensity={chromaticIntensity} />}
+      <AnimatePresence>
+        {chromaticIntensity > 0 && <ChromaticAberration key="chromatic" intensity={chromaticIntensity} />}
+      </AnimatePresence>
       {showPerfectPulse && <PerfectPulse combo={combo} />}
     </div>
   );
