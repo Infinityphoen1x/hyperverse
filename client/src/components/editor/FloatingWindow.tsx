@@ -120,9 +120,11 @@ export function FloatingWindow({
       {/* Floating Window */}
       <m.div
         ref={windowRef}
+        layout="position"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
+        transition={{ layout: { type: "spring", stiffness: 300, damping: 30 } }}
         className={`fixed bg-gray-900 border-2 border-neon-cyan rounded-lg shadow-[0_0_30px_rgba(0,255,255,0.5)] z-[70] ${
           isDragging ? 'cursor-grabbing' : 'cursor-grab'
         }`}
@@ -165,11 +167,13 @@ export function FloatingWindow({
         </div>
 
         {/* Content */}
-        {!collapsed && (
-          <div className="p-4 overflow-y-auto max-h-[calc(80vh-60px)]">
-            {children}
-          </div>
-        )}
+        <div 
+          key="floating-content" 
+          className="p-4 overflow-y-auto max-h-[calc(80vh-60px)]"
+          style={{ display: collapsed ? 'none' : 'block' }}
+        >
+          {children}
+        </div>
       </m.div>
     </>
   );
