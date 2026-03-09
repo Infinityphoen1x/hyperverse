@@ -60,8 +60,8 @@ export function initYouTubePlayer(containerElement: HTMLDivElement | null, video
           modestbranding: 1,
           rel: 0,
           enablejsapi: 1,
-          origin: origin,
-          widget_referrer: origin
+          // Don't specify origin in Electron - postMessage validation fails with app:// protocol
+          ...(origin.startsWith('http') ? { origin, widget_referrer: origin } : {})
         },
         events: {
           onReady: () => {
