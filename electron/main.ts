@@ -204,8 +204,8 @@ function createWindow() {
 }
 
 app.on('window-all-closed', () => {
-  // In packaged DMG, quit when window closes (single-window app behavior)
-  // In dev, keep macOS standard behavior for easier debugging
+  // Windows/Linux: Always quit when all windows close
+  // macOS: Only quit when packaged (standard macOS behavior - stay open in dev)
   if (process.platform !== 'darwin' || app.isPackaged) {
     app.quit();
   }
