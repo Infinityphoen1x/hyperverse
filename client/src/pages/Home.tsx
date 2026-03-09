@@ -249,7 +249,7 @@ export default function Home({ onStartGame, onOpenSettings, onOpenEditor, onOpen
       
       {/* Footer */}
       <div className="absolute bottom-8 text-white/30 text-xs font-mono z-20">
-        SYSTEM_READY // V.1.2.0 // REPLIT_MOCKUP
+        SYSTEM_READY // V.1.2.0 // Copywrite 2026 Infinityphoenix
       </div>
     </div>
   );

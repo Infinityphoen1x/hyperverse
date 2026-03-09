@@ -2,7 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
-import { metaImagesPlugin } from "./vite-plugin-meta-images";
 import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig({
@@ -24,7 +23,6 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    metaImagesPlugin(),
     // Bundle analyzer - generates stats.html after build
     visualizer({
       open: false, // Set to true to auto-open in browser
