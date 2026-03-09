@@ -207,8 +207,9 @@ function createWindow() {
     });
 }
 app.on('window-all-closed', () => {
-    // On macOS, keep app running in dock when all windows closed (standard behavior)
-    if (process.platform !== 'darwin') {
+    // In packaged DMG, quit when window closes (single-window app behavior)
+    // In dev, keep macOS standard behavior for easier debugging
+    if (process.platform !== 'darwin' || app.isPackaged) {
         app.quit();
     }
 });
