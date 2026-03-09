@@ -204,10 +204,7 @@ function createWindow() {
 }
 
 app.on('window-all-closed', () => {
-  if (localServer) {
-    localServer.close();
-    localServer = null;
-  }
+  // On macOS, keep app running in dock when all windows closed (standard behavior)
   if (process.platform !== 'darwin') {
     app.quit();
   }
@@ -219,9 +216,32 @@ app.on('activate', () => {
   }
 });
 
-app.on('quit', () => {
+// Properly clean up server before quit
+app.on('before-quit', (event) => {
   if (localServer) {
-    localServer.close();
+    console.log('Closing local server before quit...');
+    try {
+      localServer.close(() => {
+        console.log('Local server closed successfully');
+      });
+      // Force close all connections
+      localServer.closeAllConnections?.();
+    } catch (error) {
+      console.error('Error closing server:', error);
+    }
+    localServer = null;
+  }
+});
+
+app.on('will-quit', () => {
+  // Final cleanup
+  if (localServer) {
+    try {
+      localServer.close();
+      localServer.closeAllConnections?.();
+    } catch (error) {
+      console.error('Error in will-quit cleanup:', error);
+    }
     localServer = null;
   }
 });
