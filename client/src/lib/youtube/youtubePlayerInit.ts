@@ -44,10 +44,6 @@ export function initYouTubePlayer(containerElement: HTMLDivElement | null, video
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     const origin = window.location.origin;
     
-    // For Electron (app:// protocol), use a fake HTTP origin that YouTube will accept
-    // YouTube requires a valid HTTP/HTTPS origin to allow embedding (Error 153 otherwise)
-    const youtubeOrigin = origin.startsWith('http') ? origin : 'https://hyperverse.app';
-    
     // console.log('[YOUTUBE-PLAYER-INIT] initPlayer() called, window.YT:', window.YT ? 'available' : 'undefined');
     // console.log('[YOUTUBE-PLAYER-INIT] Browser:', isSafari ? 'Safari' : 'Other', 'Origin:', origin);
     
@@ -64,8 +60,8 @@ export function initYouTubePlayer(containerElement: HTMLDivElement | null, video
           modestbranding: 1,
           rel: 0,
           enablejsapi: 1,
-          origin: youtubeOrigin,
-          widget_referrer: youtubeOrigin
+          origin: origin,
+          widget_referrer: origin
         },
         events: {
           onReady: () => {

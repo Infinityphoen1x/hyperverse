@@ -2,9 +2,12 @@ import { app, BrowserWindow, protocol } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { readFile } from 'fs/promises';
+import { createServer } from 'http';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 let mainWindow = null;
+let localServer = null;
+const LOCAL_PORT = 45362; // Random high port to avoid conflicts
 // Register the app protocol as privileged before app is ready
 protocol.registerSchemesAsPrivileged([
     {
@@ -18,9 +21,85 @@ protocol.registerSchemesAsPrivileged([
     }
 ]);
 app.whenReady().then(() => {
-    registerLocalResourceProtocol();
+    startLocalServer();
+    registerLocalResourceProtocol(); // Keep as fallback
     createWindow();
 });
+// Start a local HTTP server to serve the app (avoids YouTube postMessage origin issues)
+function startLocalServer() {
+    const basePath = app.isPackaged
+        ? path.join(app.getAppPath(), 'dist', 'public')
+        : path.join(__dirname, '../dist/public');
+    localServer = createServer(async (req, res) => {
+        let filePath = req.url === '/' ? '/index.html' : req.url || '/index.html';
+        filePath = decodeURI(filePath);
+        const fullPath = path.normalize(path.join(basePath, filePath));
+        try {
+            const data = await readFile(fullPath);
+            const ext = path.extname(fullPath).toLowerCase();
+            let mimeType = 'text/plain';
+            switch (ext) {
+                case '.html':
+                    mimeType = 'text/html; charset=utf-8';
+                    break;
+                case '.js':
+                    mimeType = 'application/javascript; charset=utf-8';
+                    break;
+                case '.css':
+                    mimeType = 'text/css; charset=utf-8';
+                    break;
+                case '.json':
+                    mimeType = 'application/json';
+                    break;
+                case '.png':
+                    mimeType = 'image/png';
+                    break;
+                case '.jpg':
+                case '.jpeg':
+                    mimeType = 'image/jpeg';
+                    break;
+                case '.gif':
+                    mimeType = 'image/gif';
+                    break;
+                case '.svg':
+                    mimeType = 'image/svg+xml';
+                    break;
+                case '.ico':
+                    mimeType = 'image/x-icon';
+                    break;
+                case '.woff':
+                    mimeType = 'font/woff';
+                    break;
+                case '.woff2':
+                    mimeType = 'font/woff2';
+                    break;
+                case '.ttf':
+                    mimeType = 'font/ttf';
+                    break;
+                case '.wav':
+                    mimeType = 'audio/wav';
+                    break;
+                case '.mp3':
+                    mimeType = 'audio/mpeg';
+                    break;
+            }
+            res.writeHead(200, {
+                'Content-Type': mimeType,
+                'Content-Length': data.length,
+                'Access-Control-Allow-Origin': '*'
+            });
+            res.end(data);
+        }
+        catch (error) {
+            console.error('Failed to load resource:', fullPath, error);
+            res.writeHead(404);
+            res.end('File not found');
+        }
+    });
+    localServer.listen(LOCAL_PORT, 'localhost', () => {
+        console.log(`Local server started at http://localhost:${LOCAL_PORT}`);
+    });
+}
 // Register custom protocol for loading local files
 function registerLocalResourceProtocol() {
     protocol.handle('app', async (request) => {
@@ -104,29 +183,20 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            webSecurity: false, // Required for YouTube iframe postMessage with app:// protocol
-            allowRunningInsecureContent: true, // Allow mixed content (http/https)
+            webSecurity: true, // Can be enabled with localhost
         },
         backgroundColor: '#000000',
         title: 'Hyperverse',
         autoHideMenuBar: true,
     });
-    // Load using app:// custom protocol (appears as https-like to YouTube API)
-    console.log('Loading from: app://./');
+    // Load using local HTTP server (provides proper origin for YouTube iframe)
+    const loadUrl = `http://localhost:${LOCAL_PORT}`;
+    console.log('Loading from:', loadUrl);
     console.log('Is packaged:', app.isPackaged);
     console.log('App path:', app.getAppPath());
-    mainWindow.loadURL('app://./')
+    mainWindow.loadURL(loadUrl)
         .catch(err => {
         console.error('Failed to load app:', err);
-    });
-    // Disable CSP headers to allow YouTube iframe cross-origin communication
-    mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
-        callback({
-            responseHeaders: {
-                ...details.responseHeaders,
-                'Content-Security-Policy': ['default-src * \'unsafe-inline\' \'unsafe-eval\' data: blob:;']
-            }
-        });
     });
     // Open DevTools in development
     if (!app.isPackaged) {
@@ -137,6 +207,10 @@ function createWindow() {
     });
 }
 app.on('window-all-closed', () => {
+    if (localServer) {
+        localServer.close();
+        localServer = null;
+    }
     if (process.platform !== 'darwin') {
         app.quit();
     }
@@ -144,5 +218,11 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
     if (mainWindow === null) {
         createWindow();
+    }
+});
+app.on('quit', () => {
+    if (localServer) {
+        localServer.close();
+        localServer = null;
     }
 });
